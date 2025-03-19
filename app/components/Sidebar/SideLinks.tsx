@@ -1,19 +1,16 @@
-import {
-  Home,
-  Box,
-  Users,
-  Settings,
-  BarChart2,
-  Layers,
-  Clipboard,
-  Package,
-  Globe,
-  PlusCircle,
-  ShoppingBag,
-  CircleUser,
-  CircleHelp,
-  Tag,
-} from "lucide-react";
+
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import HomeWorkIcon from '@mui/icons-material/HomeWork';
+import InventoryIcon from '@mui/icons-material/Inventory';
+import PermDataSettingIcon from '@mui/icons-material/PermDataSetting';
+import StoreIcon from '@mui/icons-material/Store';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import GroupIcon from '@mui/icons-material/Group';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import WorkIcon from '@mui/icons-material/Work';
+import PaymentsIcon from '@mui/icons-material/Payments';
+import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
+import SettingsIcon from '@mui/icons-material/Settings';
 import React, { JSX } from "react";
 
 interface SideLink {
@@ -24,138 +21,125 @@ interface SideLink {
 }
 
 const SideLinks: SideLink[] = [
-  { title: "Dashboard", pathname: "dashboard", icon: <BarChart2 /> },
+  { title: "Dashboard", pathname: "dashboard", icon: <DashboardIcon/> },
   {
     title: "Home Catalog",
     pathname: "home-catalog",
-    icon: <Home />,
+    icon: <HomeWorkIcon/>,
     subMenu: [
       { title: "Residence Types", pathname: "home-catalog/residence-types" },
       { title: "Room Types", pathname: "home-catalog/room-types" },
-      { title: "Themes", pathname: "home-catalog/themes", icon: <Layers /> },
+      { title: "Themes", pathname: "home-catalog/themes", },
+      { title: "Design", pathname: "home-catalog/design", },
     ],
   },
   {
     title: "Product Catalog",
     pathname: "product-catalog",
-    icon: <ShoppingBag />,
+    icon: <InventoryIcon/>,
     subMenu: [
       {
         title: "Category",
         pathname: "product-catalog/category",
-        icon: <Tag />,
+        
       },
       {
         title: "Sub Category",
         pathname: "product-catalog/sub-category",
-        icon: <Tag />,
+        
       },
       {
         title: "Products",
         pathname: "product-catalog/products",
-        icon: <Box />,
       },
     ],
   },
   {
     title: "Attribute Catalog",
     pathname: "attribute-catalog",
-    icon: <Box />,
+    icon: <PermDataSettingIcon/>,
     subMenu: [
       {
         title: "Attributes",
         pathname: "attribute-catalog/attributes",
-        icon: <Box />,
+        
       },
       {
         title: "Attribute Groups",
         pathname: "attribute-catalog/attributes-groups",
-        icon: <Layers />,
+        
       },
     ],
   },
   {
     title: "Vendors",
     pathname: "vendors",
-    icon: <Users />,
+    icon: <StoreIcon/>,
     subMenu: [
-      { title: "Merchants", pathname: "vendors/merchants", icon: <Package /> },
-      { title: "Shops", pathname: "vendors/shops", icon: <Package /> },
+      { title: "Merchants", pathname: "vendors/merchants",  },
+      { title: "Shops", pathname: "vendors/shops",  },
     ],
   },
   {
     title: "Orders",
     pathname: "orders",
-    icon: <Clipboard />,
-    subMenu: [
-      {
-        title: "New Orders",
-        pathname: "orders/new-orders",
-        icon: <Clipboard />,
-      },
-      {
-        title: "List Orders",
-        pathname: "orders/list-orders",
-        icon: <Clipboard />,
-      },
-      {
-        title: "Cancelled Orders",
-        pathname: "orders/canceled-orders",
-        icon: <Clipboard />,
-      },
-    ],
+    icon: <ShoppingCartIcon/>,
+    
   },
-  // New menus added as per your request:
-
-  // Settings Menu
-
-  // Users Menu
+  
   {
     title: "Users",
     pathname: "users",
-    icon: <Users />,
-    subMenu: [
-      {
-        title: "Add New Users",
-        pathname: "users/add-new-user",
-        icon: <PlusCircle />,
-      },
-      { title: "Users", pathname: "users", icon: <Users /> },
-    ],
+    icon: <GroupIcon/>,
   },
 
   // Projects Menu
   {
     title: "Projects",
     pathname: "projects",
-    icon: <Box />,
+    icon: <AssignmentIcon/>,
   },
   {
-    title: "Account",
-    pathname: "edit-profile",
-    icon: <CircleUser />,
+    title: "Payment Orders",
+    pathname: "payment-orders",
+    icon: <PaymentsIcon/>,
   },
+  {
+    title: "Kiosk Management",
+    pathname: "kiosk-management",
+    icon: <PointOfSaleIcon/>,
+  },
+  {
+    title: "Work",
+    pathname: "work",
+    icon: <WorkIcon />,
+    subMenu: [
+      { title: "work Group", pathname: "settings/user-roles", },
+      {
+        title: "Work Task",
+        pathname: "settings/system-settings",
+        
+      },
+      { title: "Work Ordering", pathname: "settings/languages",  },
+    ],
+  },
+  
   {
     title: "Settings",
     pathname: "settings",
-    icon: <Settings />,
+    icon: <SettingsIcon/>,
     subMenu: [
-      { title: "User Roles", pathname: "settings/user-roles", icon: <Users /> },
       {
         title: "System Settings",
         pathname: "settings/system-settings",
-        icon: <Settings />,
+        
       },
-      { title: "Languages", pathname: "settings/languages", icon: <Globe /> },
+      { title: "Languages", pathname: "settings/languages",  },
+      { title: "Location", pathname: "settings/location",  },
     ],
   },
 
-  // Help Menu
-  {
-    title: "Help",
-    pathname: "help",
-    icon: <CircleHelp />,
-  },
+  
 ];
 
 export default SideLinks;

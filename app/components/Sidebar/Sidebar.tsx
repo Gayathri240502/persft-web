@@ -75,7 +75,7 @@ export default function Sidebar() {
 
         {/* Logo */}
         <div className="flex gap-x-4 items-center p-4">
-          <Link href="/dashboard">
+          <Link href="admin/dashboard">
             {" "}
             <Image
               width={100}

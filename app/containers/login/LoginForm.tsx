@@ -50,7 +50,7 @@ const LoginForm = () => {
         if (session?.accessToken && session?.roles) {
           sessionStorage.setItem("token", session.accessToken);
           sessionStorage.setItem("role", session.roles);
-          router.push(`/dashboard`);
+          router.push(`admin/dashboard`);
         }
       } else {
         throw new Error("Login failed");

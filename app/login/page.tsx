@@ -12,7 +12,7 @@ const Login = () => {
       <div className="w-full max-w-[540px] mx-auto px-4">
         {/* Logo Section */}
         <div className="flex justify-center mb-8">
-          <Link href="/">
+          <Link href="/admin/dashboard">
             <Image
               src="/logo.png"
               width={200}

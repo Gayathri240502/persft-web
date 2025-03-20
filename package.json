@@ -15,6 +15,7 @@
     "@mui/icons-material": "^6.4.8",
     "@mui/material": "^6.4.8",
     "@mui/styled-engine-sc": "^6.4.6",
+    "@mui/x-data-grid": "^7.28.0",
     "@toolpad/core": "^0.12.0",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.474.0",

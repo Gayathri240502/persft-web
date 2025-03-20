@@ -21,16 +21,16 @@ interface SideLink {
 }
 
 const SideLinks: SideLink[] = [
-  { title: "Dashboard", pathname: "dashboard", icon: <DashboardIcon/> },
+  { title: "Dashboard", pathname: "admin/dashboard", icon: <DashboardIcon/> },
   {
     title: "Home Catalog",
     pathname: "home-catalog",
     icon: <HomeWorkIcon/>,
     subMenu: [
-      { title: "Residence Types", pathname: "home-catalog/residence-types" },
-      { title: "Room Types", pathname: "home-catalog/room-types" },
-      { title: "Themes", pathname: "home-catalog/themes", },
-      { title: "Design", pathname: "home-catalog/design", },
+      { title: "Residence Types", pathname: "admin/home-catalog/residence-types" },
+      { title: "Room Types", pathname: "admin/home-catalog/room-types" },
+      { title: "Themes", pathname: "admin/home-catalog/themes", },
+      { title: "Design", pathname: "admin/home-catalog/design", },
     ],
   },
   {
@@ -40,17 +40,17 @@ const SideLinks: SideLink[] = [
     subMenu: [
       {
         title: "Category",
-        pathname: "product-catalog/category",
+        pathname: "admin/product-catalog/category",
         
       },
       {
         title: "Sub Category",
-        pathname: "product-catalog/sub-category",
+        pathname: "admin/product-catalog/sub-category",
         
       },
       {
         title: "Products",
-        pathname: "product-catalog/products",
+        pathname: "admin/product-catalog/products",
       },
     ],
   },
@@ -61,12 +61,12 @@ const SideLinks: SideLink[] = [
     subMenu: [
       {
         title: "Attributes",
-        pathname: "attribute-catalog/attributes",
+        pathname: "admin/attribute-catalog/attributes",
         
       },
       {
         title: "Attribute Groups",
-        pathname: "attribute-catalog/attributes-groups",
+        pathname: "admin/attribute-catalog/attributes-groups",
         
       },
     ],
@@ -76,37 +76,37 @@ const SideLinks: SideLink[] = [
     pathname: "vendors",
     icon: <StoreIcon/>,
     subMenu: [
-      { title: "Merchants", pathname: "vendors/merchants",  },
-      { title: "Shops", pathname: "vendors/shops",  },
+      { title: "Merchants", pathname: "admin/vendors/merchants",  },
+      { title: "Shops", pathname: "admin/vendors/shops",  },
     ],
   },
   {
     title: "Orders",
-    pathname: "orders",
+    pathname: "admin/orders",
     icon: <ShoppingCartIcon/>,
     
   },
   
   {
     title: "Users",
-    pathname: "users",
+    pathname: "admin/users",
     icon: <GroupIcon/>,
   },
 
   // Projects Menu
   {
     title: "Projects",
-    pathname: "projects",
+    pathname: "admin/projects",
     icon: <AssignmentIcon/>,
   },
   {
     title: "Payment Orders",
-    pathname: "payment-orders",
+    pathname: "admin/payment-orders",
     icon: <PaymentsIcon/>,
   },
   {
     title: "Kiosk Management",
-    pathname: "kiosk-management",
+    pathname: "admin/kiosk-management",
     icon: <PointOfSaleIcon/>,
   },
   {
@@ -114,13 +114,13 @@ const SideLinks: SideLink[] = [
     pathname: "work",
     icon: <WorkIcon />,
     subMenu: [
-      { title: "work Group", pathname: "settings/user-roles", },
+      { title: "work Group", pathname: "admin/work/work-group", },
       {
         title: "Work Task",
-        pathname: "settings/system-settings",
+        pathname: "admin/work/work-task",
         
       },
-      { title: "Work Ordering", pathname: "settings/languages",  },
+      { title: "Work Ordering", pathname: "admin/work/work-ordering",  },
     ],
   },
   
@@ -131,11 +131,11 @@ const SideLinks: SideLink[] = [
     subMenu: [
       {
         title: "System Settings",
-        pathname: "settings/system-settings",
+        pathname: "admin/settings/system-settings",
         
       },
-      { title: "Languages", pathname: "settings/languages",  },
-      { title: "Location", pathname: "settings/location",  },
+      { title: "Languages", pathname: "admin/settings/languages",  },
+      { title: "Location", pathname: "admin/settings/location",  },
     ],
   },
 

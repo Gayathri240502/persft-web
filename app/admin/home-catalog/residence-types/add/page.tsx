@@ -1,8 +1,10 @@
 "use client";
 
 import React from "react";
-import { Box, Typography,Button, TextField } from "@mui/material";
+import { Box, Typography, Button, TextField } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import ReusableButton from "@/app/components/Button";
+import CancelButton from "@/app/components/CancelButton";
 
 const AddResidenceType = () => {
   return (
@@ -16,7 +18,13 @@ const AddResidenceType = () => {
       <TextField label="Name" fullWidth sx={{ mb: 3 }} />
 
       {/* Description Field */}
-      <TextField label="Description" multiline rows={3} fullWidth sx={{ mb: 3 }} />
+      <TextField
+        label="Description"
+        multiline
+        rows={3}
+        fullWidth
+        sx={{ mb: 3 }}
+      />
 
       {/* Thumbnail Upload Section (Different Format) */}
       <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
@@ -24,7 +32,11 @@ const AddResidenceType = () => {
           variant="outlined"
           component="label"
           startIcon={<UploadFileIcon />}
-          sx={{ color: "#05344c", borderColor: "#05344c", "&:hover": { backgroundColor: "#f0f4f8" } }}
+          sx={{
+            color: "#05344c",
+            borderColor: "#05344c",
+            "&:hover": { backgroundColor: "#f0f4f8" },
+          }}
         >
           Upload Thumbnail
           <input type="file" hidden />
@@ -36,12 +48,8 @@ const AddResidenceType = () => {
 
       {/* Submit and Cancel Buttons */}
       <Box sx={{ display: "flex", gap: 2 }}>
-        <Button variant="contained" sx={{ backgroundColor: "#05344c", "&:hover": { backgroundColor: "#042a3b" } }}>
-          Submit
-        </Button>
-        <Button variant="contained" color="secondary" href="/admin/home-catalog/residence-types">
-          Cancel
-        </Button>
+        <ReusableButton>Submit</ReusableButton>
+        <CancelButton>Cancel</CancelButton>
       </Box>
     </Box>
   );

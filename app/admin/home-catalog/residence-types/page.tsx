@@ -1,5 +1,5 @@
 "use client";
-
+import ReusableButton from "@/app/components/Button";
 import React, { useState } from "react";
 import {
   Box,
@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
+import { useRouter } from "next/navigation";
 
 // Column Definitions
 const columns: GridColDef[] = [
@@ -28,16 +29,17 @@ const columns: GridColDef[] = [
 const rows = Array.from({ length: 5 }, (_, index) => ({
   id: index + 1,
   name: "-",
-  description:"-",
+  description: "-",
   category: "-",
   type: "-",
   status: "-",
   price: "-",
   createdby: "-",
-  action:"-",
+  action: "-",
 }));
 
-const ResidenceType= () => {
+const ResidenceType = () => {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
@@ -68,14 +70,13 @@ const ResidenceType= () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-       <Button
-  variant="contained"
-  sx={{ backgroundColor: "#05344c", "&:hover": { backgroundColor: "#042a3b" } }}
-  fullWidth={isSmallScreen}
-  href="residence-types/add"
->
-  ADD
-</Button>
+        <ReusableButton
+          onClick={() => {
+            router.push("/admin/home-catalog/residence-types/add");
+          }}
+        >
+          ADD
+        </ReusableButton>
       </Box>
 
       {/* Data Grid */}
@@ -86,7 +87,11 @@ const ResidenceType= () => {
           pageSizeOptions={[5, 10, 25]}
           autoHeight
           disableColumnMenu={isSmallScreen} // Hide menu on small screens
-          sx={{ "& .MuiDataGrid-columnHeaders": { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }}
+          sx={{
+            "& .MuiDataGrid-columnHeaders": {
+              fontSize: isSmallScreen ? "0.8rem" : "1rem",
+            },
+          }}
         />
       </Box>
     </Box>

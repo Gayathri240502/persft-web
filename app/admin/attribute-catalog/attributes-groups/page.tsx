@@ -2,7 +2,7 @@
 import ReusableButton from "@/app/components/Button";
 import React, { useState } from "react";
 import { Box, Typography, TextField, useMediaQuery } from "@mui/material";
-import { DataGrid, GridColDef, GridToolbar } from "@mui/x-data-grid";
+import { DataGrid, GridColDef,} from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 
@@ -85,14 +85,6 @@ const AttributeGroups = () => {
             sx={{
               "& .MuiDataGrid-columnHeaders": {
                 fontSize: isSmallScreen ? "0.8rem" : "1rem",
-              },
-            }}
-            components={{
-              Toolbar: GridToolbar,
-            }}
-            componentsProps={{
-              toolbar: {
-                showQuickFilter: true,
               },
             }}
           />

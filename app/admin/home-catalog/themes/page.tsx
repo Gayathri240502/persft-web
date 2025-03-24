@@ -10,7 +10,7 @@ import {
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import ReusableButton from "@/app/components/Button";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 // Column Definitions
 const columns: GridColDef[] = [

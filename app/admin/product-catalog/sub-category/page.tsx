@@ -8,15 +8,10 @@ import {
   TextField,
   useMediaQuery,
 } from "@mui/material";
-import { DataGrid, GridColDef, GridToolbar } from "@mui/x-data-grid";
+import { DataGrid, GridColDef,} from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
-import {
-  GridCsvExport,
-  GridExcelExport,
-  GridPdfExport,
-  GridPrintExport,
-} from "@mui/x-data-grid";
+
 
 // Column Definitions
 const columns: GridColDef[] = [
@@ -121,14 +116,7 @@ const SubCategory = () => {
               fontSize: isSmallScreen ? "0.8rem" : "1rem",
             },
           }}
-          components={{
-            Toolbar: GridToolbar, // Optionally add default toolbar with export buttons
-          }}
-          componentsProps={{
-            toolbar: {
-              showQuickFilter: true, // Enable search filter in toolbar if needed
-            },
-          }}
+         
         />
       </Box>
     </Box>

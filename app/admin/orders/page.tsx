@@ -13,35 +13,32 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import ReusableButton from "@/app/components/Button";
-import { useRouter } from "next/navigation";
 
 // Column Definitions for Orders
 const columns: GridColDef[] = [
-  { field: "sno", headerName: "S.No", width: 80 },
-  { field: "id", headerName: "ID", width: 160 },
-  { field: "customer", headerName: "Name", width: 160 },
-  { field: "view", headerName: "View", width: 160 },
-  { field: "uniqid", headerName: "Uniq ID", width: 160 },
-  { field: "Created", headerName: "Created At", width: 160 },
+  { field: "id", headerName: "S.No", width: 80 },
+  { field: "order", headerName: "Order ID", width: 160 },
+  { field: "customer", headerName: "Customer Name", width: 160 },
+  { field: "product", headerName: "Product", width: 160 },
+  { field: "quantity", headerName: "Quantity", width: 160 },
+  { field: "date", headerName: "Order Date", width: 160 },
   { field: "status", headerName: "Status", width: 160 },
   { field: "option", headerName: "Options", width: 160 },
 ];
 
 // Sample Order Data (Empty Rows for UI)
 const rows = Array.from({ length: 5 }, (_, index) => ({
-  sno: index + 1,
-  id:"-",
+  id: index + 1,
   order:"-",
   customer: "-",
-  view: "-",
-  uniqid: "-",
-  created: "-",
- status : "-",
+  product: "-",
+  qantity: "-",
+  date: "-",
+  status: "-",
   option: "-",
 }));
 
-const Projects = () => {
-  const router = useRouter();
+const Orders = () => {
   const [search, setSearch] = useState("");
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
@@ -50,7 +47,7 @@ const Projects = () => {
     <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
       {/* Heading */}
       <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-        Projects
+        Orders
       </Typography>
 
       {/* Search Bar & Buttons Above Table */}
@@ -78,31 +75,23 @@ const Projects = () => {
             <FilterListIcon />
           </IconButton>
           {/* Export Orders Button */}
-          <ReusableButton onClick={() => {
-            router.push("/admin/projects/create")
-          }}
-          >
-            Create Project
-          </ReusableButton>
-          <Button
-            variant="contained"
-            sx={{ backgroundColor: "#05344c", "&:hover": { backgroundColor: "#042a3b" } }}
+          <ReusableButton
           >
             Export Orders
-          </Button>
+          </ReusableButton>
           {/* Print Button */}
           <Button
             variant="contained"
             sx={{ backgroundColor: "#05344c", "&:hover": { backgroundColor: "#042a3b" } }}
           >
-            Import Project
+            Print
           </Button>
           {/* PDF Button */}
           <Button
             variant="contained"
             sx={{ backgroundColor: "#05344c", "&:hover": { backgroundColor: "#042a3b" } }}
           >
-            Export Project
+            PDF
           </Button>
         </Box>
       </Box>
@@ -122,4 +111,4 @@ const Projects = () => {
   );
 };
 
-export default Projects;
+export default Orders;

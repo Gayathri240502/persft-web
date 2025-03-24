@@ -15,22 +15,22 @@ import { useRouter } from "next/navigation";
 // Column Definitions
 const columns: GridColDef[] = [
   { field: "id", headerName: "SN", width: 80 },
-  { field: "name", headerName: "Setting Name", width: 280 },
-  { field: "value", headerName: "Value", width: 280 },
-  { field: "status", headerName: "Status", width: 270 },
-  { field: "action", headerName: "Action", width: 280 },
+  { field: "location", headerName: "Location", width: 280 },
+  { field: "state", headerName: "State", width: 280 },
+  { field: "city", headerName: "City", width: 270 },
+  { field: "option", headerName: "Option", width: 280 },
 ];
 
 // Sample Data (Empty Rows for UI)
 const rows = Array.from({ length: 5 }, (_, index) => ({
   id: index + 1,
-  name: "-",
-  value: "-",
-  status: "-",
-  action: "-",
+  location: "-",
+  state: "-",
+  city: "-",
+  option: "-",
 }));
 
-const SystemSettings = () => {
+const LocationSettings = () => {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const theme = useTheme();
@@ -40,7 +40,7 @@ const SystemSettings = () => {
     <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
       {/* Heading */}
       <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-        System Settings
+        Location Settings
       </Typography>
 
       {/* Search Bar & Add Button Above Table */}
@@ -64,7 +64,7 @@ const SystemSettings = () => {
         />
         <ReusableButton
           onClick={() => {
-            router.push("/admin/settings/system-settings/add");
+            router.push("/admin/settings/location/add");
           }}
         >
           ADD
@@ -111,4 +111,4 @@ const SystemSettings = () => {
   );
 };
 
-export default SystemSettings;
+export default LocationSettings;

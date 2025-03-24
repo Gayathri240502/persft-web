@@ -3,6 +3,8 @@
 import React from "react";
 import { Box, Typography,Button, TextField } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import ReusableButton from "@/app/components/Button";
+import CancelButton from "@/app/components/CancelButton";
 
 const EditResidenceType = () => {
   return (
@@ -36,12 +38,12 @@ const EditResidenceType = () => {
 
       {/* Submit and Cancel Buttons */}
       <Box sx={{ display: "flex", gap: 2 }}>
-        <Button variant="contained" sx={{ backgroundColor: "#05344c", "&:hover": { backgroundColor: "#042a3b" } }}>
+        <ReusableButton>
           Submit
-        </Button>
-        <Button variant="contained" color="secondary" href="/admin/home-catalog/residence-types">
+        </ReusableButton>
+        <CancelButton href="/admin/home-catalog/residence-types">
           Cancel
-        </Button>
+        </CancelButton>
       </Box>
     </Box>
   );

@@ -1,25 +1,32 @@
 "use client";
 
 import React from "react";
-import {
-  Box,
-  Typography,
-  Button,
-  TextField,
-  FormControlLabel,
-  Checkbox,
-} from "@mui/material";
+import { Box, Typography, Button, TextField, MenuItem } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 
-const EditThemeType = () => {
+const EditSystemSettings = () => {
   return (
     <Box sx={{ p: 3 }}>
       {/* Heading */}
       <Typography variant="h5" sx={{ mb: 2 }}>
-        Edit New Theme
+        Edit System Settings
       </Typography>
+
+      {/* System Name Dropdown */}
+      <TextField select label="System Name" fullWidth sx={{ mb: 3 }}>
+        <MenuItem value="system1">System 1</MenuItem>
+        <MenuItem value="system2">System 2</MenuItem>
+        <MenuItem value="system3">System 3</MenuItem>
+      </TextField>
+
+      {/* Category Name Dropdown */}
+      <TextField select label="Category Name" fullWidth sx={{ mb: 3 }}>
+        <MenuItem value="category1">Category 1</MenuItem>
+        <MenuItem value="category2">Category 2</MenuItem>
+        <MenuItem value="category3">Category 3</MenuItem>
+      </TextField>
 
       {/* Name Field */}
       <TextField label="Name" fullWidth sx={{ mb: 3 }} />
@@ -33,7 +40,11 @@ const EditThemeType = () => {
           variant="outlined"
           component="label"
           startIcon={<UploadFileIcon />}
-          sx={{ color: "#05344c", borderColor: "#05344c", "&:hover": { backgroundColor: "#f0f4f8" } }}
+          sx={{
+            color: "#05344c",
+            borderColor: "#05344c",
+            "&:hover": { backgroundColor: "#f0f4f8" },
+          }}
         >
           Upload Thumbnail
           <input type="file" hidden />
@@ -43,27 +54,13 @@ const EditThemeType = () => {
         </Typography>
       </Box>
 
-      {/* Residence Mapping */}
-      <Typography variant="h6" sx={{ mb: 1 }}>
-        Room Mapping
-      </Typography>
-      <Box sx={{ mb: 3, display: "flex", flexDirection: "column", gap: 1 }}>
-        <FormControlLabel control={<Checkbox />} label="Kitchen" />
-        <FormControlLabel control={<Checkbox />} label="Living Room" />
-        <FormControlLabel control={<Checkbox />} label="Master Bed Room" />
-      </Box>
-
       {/* Submit and Cancel Buttons */}
       <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton>
-          Submit
-        </ReusableButton>
-        <CancelButton href="/admin/home-catalog/themes">
-          Cancel
-        </CancelButton>
+        <ReusableButton>Submit</ReusableButton>
+        <CancelButton href="/admin/settings/system-settings">Cancel</CancelButton>
       </Box>
     </Box>
   );
 };
 
-export default EditThemeType;
+export default EditSystemSettings;

@@ -1,37 +1,38 @@
 "use client";
-import ReusableButton from "@/app/components/Button";
+
 import React, { useState } from "react";
 import {
   Box,
   Typography,
   TextField,
   useMediaQuery,
-  Button,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
-import { useRouter } from "next/navigation";
 
 // Column Definitions
 const columns: GridColDef[] = [
   { field: "id", headerName: "SN", width: 80 },
-  { field: "name", headerName: "Setting Name", width: 280 },
-  { field: "value", headerName: "Value", width: 280 },
-  { field: "status", headerName: "Status", width: 270 },
-  { field: "action", headerName: "Action", width: 280 },
+  { field: "name", headerName: "Name", width: 185 },
+  { field: "date", headerName: "Date", width: 185 },
+  { field: "project", headerName: "Project", width: 185 },
+  { field: "amount", headerName: "Amount", width: 185 },
+  { field: "status", headerName: "Status", width: 185 },
+  { field: "kiosk", headerName: "Kiosk", width: 185 },
 ];
 
 // Sample Data (Empty Rows for UI)
 const rows = Array.from({ length: 5 }, (_, index) => ({
   id: index + 1,
   name: "-",
-  value: "-",
-  status: "-",
-  action: "-",
+  date:"-",
+  project: "-",
+  amount: "-",
+  status:"-",
+  kiosk:"-",
 }));
 
-const SystemSettings = () => {
-  const router = useRouter();
+const PaymentOrders= () => {
   const [search, setSearch] = useState("");
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
@@ -40,7 +41,7 @@ const SystemSettings = () => {
     <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
       {/* Heading */}
       <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-        System Settings
+        Payment Orders
       </Typography>
 
       {/* Search Bar & Add Button Above Table */}
@@ -62,34 +63,6 @@ const SystemSettings = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <ReusableButton
-          onClick={() => {
-            router.push("/admin/settings/system-settings/add");
-          }}
-        >
-          ADD
-        </ReusableButton>
-      </Box>
-      <Box sx={{
-          display: "flex",
-          flexDirection: isSmallScreen ? "column" : "row",
-          alignItems: "right",
-          mb: 2,
-          gap: isSmallScreen ? 2 : 1,
-        }}
-      >
-        <Button variant="contained" color="primary">
-          Copy
-        </Button>
-        <Button variant="contained" color="primary">
-          Excel
-        </Button>
-        <Button variant="contained" color="primary">
-          Pdf
-        </Button>
-        <Button variant="contained" color="primary">
-          Print
-        </Button>
       </Box>
 
       {/* Data Grid */}
@@ -100,15 +73,11 @@ const SystemSettings = () => {
           pageSizeOptions={[5, 10, 25]}
           autoHeight
           disableColumnMenu={isSmallScreen} // Hide menu on small screens
-          sx={{
-            "& .MuiDataGrid-columnHeaders": {
-              fontSize: isSmallScreen ? "0.8rem" : "1rem",
-            },
-          }}
+          sx={{ "& .MuiDataGrid-columnHeaders": { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }}
         />
       </Box>
     </Box>
   );
 };
 
-export default SystemSettings;
+export default PaymentOrders;

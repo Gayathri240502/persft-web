@@ -10,6 +10,8 @@ import {
   Checkbox,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import ReusableButton from "@/app/components/Button";
+import CancelButton from "@/app/components/CancelButton";
 
 const AddThemeType = () => {
   return (
@@ -53,12 +55,12 @@ const AddThemeType = () => {
 
       {/* Submit and Cancel Buttons */}
       <Box sx={{ display: "flex", gap: 2 }}>
-        <Button variant="contained" sx={{ backgroundColor: "#05344c", "&:hover": { backgroundColor: "#042a3b" } }}>
+        <ReusableButton>
           Submit
-        </Button>
-        <Button variant="contained" color="secondary" href="/admin/home-catalog/themes">
+        </ReusableButton>
+        <CancelButton href="/admin/home-catalog/themes">
           Cancel
-        </Button>
+        </CancelButton>
       </Box>
     </Box>
   );

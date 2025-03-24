@@ -11,6 +11,9 @@ import {
   Grid,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import ReusableButton from "@/app/components/Button";
+import { Cancel } from "@mui/icons-material";
+import CancelButton from "@/app/components/CancelButton";
 
 const EditDesignType = () => {
   return (
@@ -88,12 +91,12 @@ const EditDesignType = () => {
 
       {/* Submit and Cancel Buttons */}
       <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
-        <Button variant="contained" sx={{ backgroundColor: "#05344c", "&:hover": { backgroundColor: "#042a3b" } }}>
+        <ReusableButton>
           Submit
-        </Button>
-        <Button variant="contained" color="secondary" href="/admin/home-catalog/design">
+        </ReusableButton>
+        <CancelButton href="/admin/home-catalog/design">
           Cancel
-        </Button>
+        </CancelButton>
       </Box>
     </Box>
   );

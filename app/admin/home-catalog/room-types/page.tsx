@@ -4,12 +4,13 @@ import React, { useState } from "react";
 import {
   Box,
   Typography,
-  Button,
   TextField,
   useMediaQuery,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
+import ReusableButton from "@/app/components/Button";
+import { useRouter } from "next/navigation";
 
 // Column Definitions
 const columns: GridColDef[] = [
@@ -34,6 +35,7 @@ const rows = Array.from({ length: 5 }, (_, index) => ({
 }));
 
 const RoomType= () => {
+   const router = useRouter();
   const [search, setSearch] = useState("");
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
@@ -64,11 +66,11 @@ const RoomType= () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <Button  variant="contained"
-  sx={{ backgroundColor: "#05344c", "&:hover": { backgroundColor: "#042a3b" } }}
-  fullWidth={isSmallScreen} href="room-types/add">
+        <ReusableButton onClick={() => {
+            router.push("/admin/home-catalog/room-types/add");
+          }}>
           ADD
-        </Button>
+        </ReusableButton>
       </Box>
 
       {/* Data Grid */}

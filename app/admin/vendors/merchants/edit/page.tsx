@@ -1,22 +1,16 @@
 "use client";
 
 import React from "react";
-import {
-  Box,
-  Typography,
-  TextField,
-  Grid,
-  Divider,
-} from "@mui/material";
+import { Box, Typography, TextField, Grid, Divider } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 
-const AddMerchant = () => {
+const EditMerchant = () => {
   return (
     <Box sx={{ p: 3 }}>
       {/* Heading */}
       <Typography variant="h5" sx={{ mb: 2, fontWeight: "bold" }}>
-        Add Merchant Details
+        Edit Merchant Details
       </Typography>
 
       <Grid container spacing={4}>
@@ -54,4 +48,4 @@ const AddMerchant = () => {
   );
 };
 
-export default AddMerchant;
+export default EditMerchant;

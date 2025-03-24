@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import ReusableButton from "@/app/components/Button";
-import { Cancel } from "@mui/icons-material";
+import CancelButton from "@/app/components/CancelButton";
 
 const AddDesignType = () => {
   return (
@@ -89,15 +89,13 @@ const AddDesignType = () => {
       </Grid>
 
       {/* Submit and Cancel Buttons */}
-      <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
-        <ReusableButton>
+      <ReusableButton>
           Submit
         </ReusableButton>
-        <Cancel href="/admin/home-catalog/design">
+        <CancelButton href="/admin/home-catalog/design">
           Cancel
-        </Cancel>
+        </CancelButton>
       </Box>
-    </Box>
   );
 };
 

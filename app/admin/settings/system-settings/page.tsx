@@ -78,16 +78,16 @@ const SystemSettings = () => {
           gap: isSmallScreen ? 2 : 1,
         }}
       >
-        <Button variant="contained" color="primary">
+        <Button variant="outlined" color="primary">
           Copy
         </Button>
-        <Button variant="contained" color="primary">
+        <Button variant="outlined" color="primary">
           Excel
         </Button>
-        <Button variant="contained" color="primary">
+        <Button variant="outlined" color="primary">
           Pdf
         </Button>
-        <Button variant="contained" color="primary">
+        <Button variant="outlined" color="primary">
           Print
         </Button>
       </Box>

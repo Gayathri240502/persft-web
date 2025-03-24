@@ -1,102 +1,140 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Box,
+  Typography,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  FormControlLabel,
+  Checkbox,
   Grid,
 } from "@mui/material";
+import ReusableButton from "@/app/components/Button";
+import CancelButton from "@/app/components/CancelButton";
 
-const EditForm = () => {
+const EditCategory = () => {
+  // State for form fields and room types
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [thumbnail, setThumbnail] = useState("");
+  const [roomMapping, setRoomTypes] = useState({
+    group1: false,
+    group2: false,
+    group3: false,
+  });
+
+  const handleRoomTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRoomTypes({
+      ...roomMapping,
+      [event.target.name]: event.target.checked,
+    });
+  };
+
+  const handleSubmit = () => {
+    // Handle form submission logic here
+    console.log("Form Submitted:", {
+      name,
+      description,
+      thumbnail,
+      roomMapping,
+    });
+  };
+
+  const handleCancel = () => {
+    // Reset form fields or redirect to another page
+    setName("");
+    setDescription("");
+    setThumbnail("");
+    setRoomTypes({
+      group1: false,
+      group2: false,
+      group3: false,
+    });
+  };
+
   return (
-    <Dialog open={true} fullWidth maxWidth="sm">
-      <DialogTitle>Edit Category</DialogTitle>
-      <DialogContent>
-        <Grid container spacing={2} sx={{ mt: 1 }}>
-          {/* ID */}
-          <Grid item xs={12} sm={6}>
-            <TextField 
-              fullWidth 
-              label="ID" 
-              name="id" 
-              variant="outlined" 
-              disabled 
+    <Box sx={{ p: 3 }}>
+      {/* Heading */}
+      <Typography variant="h5" sx={{ mb: 2 }}>
+        Edit Category
+      </Typography>
+
+      {/* Name Field */}
+      <TextField
+        label="Name"
+        fullWidth
+        sx={{ mb: 3 }}
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+
+      {/* Description Field */}
+      <TextField
+        label="Description"
+        multiline
+        rows={3}
+        fullWidth
+        sx={{ mb: 3 }}
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+      />
+
+      <TextField
+        label="Thumbnail"
+        fullWidth
+        sx={{ mb: 3 }}
+        value={thumbnail}
+        onChange={(e) => setThumbnail(e.target.value)}
+      />
+
+      {/* Room Mapping */}
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={4}>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            Room Types
+          </Typography>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={roomMapping.group1}
+                  onChange={handleRoomTypeChange}
+                  name="group1"
+                />
+              }
+              label="Group 1"
             />
-          </Grid>
-
-          {/* Name */}
-          <Grid item xs={12} sm={6}>
-            <TextField 
-              fullWidth 
-              label="Name" 
-              name="name" 
-              required 
-              variant="outlined" 
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={roomMapping.group2}
+                  onChange={handleRoomTypeChange}
+                  name="group2"
+                />
+              }
+              label="Group 2"
             />
-          </Grid>
-
-          {/* Description */}
-          <Grid item xs={12}>
-            <TextField 
-              fullWidth 
-              label="Description" 
-              name="description" 
-              multiline 
-              rows={3} 
-              variant="outlined" 
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={roomMapping.group3}
+                  onChange={handleRoomTypeChange}
+                  name="group3"
+                />
+              }
+              label="Group 3"
             />
-          </Grid>
-
-          {/* Type */}
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth variant="outlined">
-              <InputLabel>Type</InputLabel>
-              <Select name="type" label="Type">
-                <MenuItem value="Standard">Standard</MenuItem>
-                <MenuItem value="Premium">Premium</MenuItem>
-                <MenuItem value="Custom">Custom</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-
-          {/* Added By */}
-          <Grid item xs={12} sm={6}>
-            <TextField 
-              fullWidth 
-              label="Added By" 
-              name="addedBy" 
-              required 
-              variant="outlined" 
-            />
-          </Grid>
-
-          {/* Option */}
-          <Grid item xs={12}>
-            <FormControl fullWidth variant="outlined">
-              <InputLabel>Option</InputLabel>
-              <Select name="option" label="Option">
-                <MenuItem value="Enabled">Enabled</MenuItem>
-                <MenuItem value="Disabled">Disabled</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
+          </Box>
         </Grid>
-      </DialogContent>
+      </Grid>
 
-      <DialogActions>
-        <Button href="/product-catalog/category">Cancel</Button>
-        <Button color="primary" variant="contained">Save</Button>
-      </DialogActions>
-    </Dialog>
+      {/* Submit and Cancel Buttons */}
+      <Box sx={{ display: "flex", gap: 2 }}>
+        <ReusableButton onClick={handleSubmit}>Submit</ReusableButton>
+        <CancelButton onClick={handleCancel}>Cancel</CancelButton>
+      </Box>
+    </Box>
   );
 };
 
-export default EditForm;
+export default EditCategory;

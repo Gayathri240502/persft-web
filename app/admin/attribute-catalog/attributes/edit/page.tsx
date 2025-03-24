@@ -5,12 +5,12 @@ import { Box, Typography, TextField } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 
-const AddAttribute = () => {
+const EditAttribute = () => {
   return (
     <Box sx={{ p: 3 }}>
       {/* Heading */}
       <Typography variant="h5" sx={{ mb: 2 }}>
-        Add New Attributes
+        Edit Attributes
       </Typography>
 
       <TextField label="Type" fullWidth sx={{ mb: 3 }} type="text" />
@@ -36,4 +36,4 @@ const AddAttribute = () => {
   );
 };
 
-export default AddAttribute;
+export default EditAttribute;

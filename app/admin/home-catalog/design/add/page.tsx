@@ -27,7 +27,13 @@ const AddDesignType = () => {
       <TextField label="Name" fullWidth sx={{ mb: 3 }} />
 
       {/* Description Field */}
-      <TextField label="Description" multiline rows={3} fullWidth sx={{ mb: 3 }} />
+      <TextField
+        label="Description"
+        multiline
+        rows={3}
+        fullWidth
+        sx={{ mb: 3 }}
+      />
 
       {/* Thumbnail Upload Section */}
       <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
@@ -35,7 +41,11 @@ const AddDesignType = () => {
           variant="outlined"
           component="label"
           startIcon={<UploadFileIcon />}
-          sx={{ color: "#05344c", borderColor: "#05344c", "&:hover": { backgroundColor: "#f0f4f8" } }}
+          sx={{
+            color: "#05344c",
+            borderColor: "#05344c",
+            "&:hover": { backgroundColor: "#f0f4f8" },
+          }}
         >
           Upload Thumbnail
           <input type="file" hidden />
@@ -88,10 +98,20 @@ const AddDesignType = () => {
 
       {/* Submit and Cancel Buttons */}
       <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
-        <Button variant="contained" sx={{ backgroundColor: "#05344c", "&:hover": { backgroundColor: "#042a3b" } }}>
+        <Button
+          variant="contained"
+          sx={{
+            backgroundColor: "#05344c",
+            "&:hover": { backgroundColor: "#042a3b" },
+          }}
+        >
           Submit
         </Button>
-        <Button variant="contained" color="secondary" href="/admin/home-catalog/design">
+        <Button
+          variant="contained"
+          color="secondary"
+          href="/admin/home-catalog/design"
+        >
           Cancel
         </Button>
       </Box>

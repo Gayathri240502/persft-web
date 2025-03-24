@@ -13,12 +13,12 @@ import {
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 
-const AddAttributeGroups = () => {
+const EditAttributeGroups = () => {
   return (
     <Box sx={{ p: 3 }}>
       {/* Heading */}
       <Typography variant="h5" sx={{ mb: 2 }}>
-        Add New Attributes Groups
+        Edit Attributes Groups
       </Typography>
 
       {/* Name Field */}
@@ -53,4 +53,4 @@ const AddAttributeGroups = () => {
   );
 };
 
-export default AddAttributeGroups;
+export default EditAttributeGroups;

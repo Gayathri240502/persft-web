@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Spinner from "../components/spinner/Spinner";
+import Spinner from "@/app/components/spinner/Spinner";
 import { useRouter } from "next/navigation";
-import { getTokenAndRole } from "../containers/utils/session/CheckSession";
+import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import {
   Table,
   TableBody,

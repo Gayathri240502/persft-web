@@ -30,28 +30,6 @@ const AddSubCategory = () => {
     });
   };
 
-  const handleSubmit = () => {
-    // Handle form submission logic here
-    console.log("Form Submitted:", {
-      name,
-      description,
-      thumbnail,
-      roomMapping,
-    });
-  };
-
-  const handleCancel = () => {
-    // Reset form fields or redirect to another page
-    setName("");
-    setDescription("");
-    setThumbnail("");
-    setRoomTypes({
-      group1: false,
-      group2: false,
-      group3: false,
-    });
-  };
-
   return (
     <Box sx={{ p: 3 }}>
       {/* Heading */}
@@ -138,8 +116,10 @@ const AddSubCategory = () => {
 
       {/* Submit and Cancel Buttons */}
       <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton onClick={handleSubmit}>Submit</ReusableButton>
-        <CancelButton onClick={handleCancel}>Cancel</CancelButton>
+        <ReusableButton>Submit</ReusableButton>
+        <CancelButton href="/admin/product-catalog/sub-category">
+          Cancel
+        </CancelButton>
       </Box>
     </Box>
   );

@@ -1,13 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Box,
-  Typography,
-  TextField,
-  Grid,
-  Divider,
-} from "@mui/material";
+import { Box, Typography, TextField, Grid, Divider } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 
@@ -180,8 +174,10 @@ const AddProducts = () => {
 
       {/* Submit and Cancel Buttons */}
       <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
-        <ReusableButton onClick={handleSubmit}>Submit</ReusableButton>
-        <CancelButton onClick={handleCancel}>Cancel</CancelButton>
+        <ReusableButton>Submit</ReusableButton>
+        <CancelButton href="/admin/product-catalog/products">
+          Cancel
+        </CancelButton>
       </Box>
     </Box>
   );

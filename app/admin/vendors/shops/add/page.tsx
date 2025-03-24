@@ -40,7 +40,7 @@ const AddShop = () => {
       {/* Buttons (Without Form Handling) */}
       <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
         <ReusableButton>Submit</ReusableButton>
-        <CancelButton>Cancel</CancelButton>
+        <CancelButton href="/admin/vendors/shops">Cancel</CancelButton>
       </Box>
     </Box>
   );

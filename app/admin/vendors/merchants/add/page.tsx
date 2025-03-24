@@ -1,13 +1,7 @@
 "use client";
 
 import React from "react";
-import {
-  Box,
-  Typography,
-  TextField,
-  Grid,
-  Divider,
-} from "@mui/material";
+import { Box, Typography, TextField, Grid, Divider } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 
@@ -48,7 +42,7 @@ const AddMerchant = () => {
       {/* Buttons (Without Form Handling) */}
       <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
         <ReusableButton>Submit</ReusableButton>
-        <CancelButton>Cancel</CancelButton>
+        <CancelButton href="/admin/vendors/merchants">Cancel</CancelButton>
       </Box>
     </Box>
   );

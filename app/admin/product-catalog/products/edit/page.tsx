@@ -184,8 +184,10 @@ const AddProducts = () => {
 
         {/* Submit and Cancel Buttons */}
         <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
-          <ReusableButton onClick={handleSubmit}>Submit</ReusableButton>
-          <CancelButton onClick={handleCancel}>Cancel</CancelButton>
+          <ReusableButton>Submit</ReusableButton>
+          <CancelButton href="/admin/product-catalog/products">
+            Cancel
+          </CancelButton>
         </Box>
       </Paper>
     </Box>

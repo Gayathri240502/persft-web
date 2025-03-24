@@ -130,8 +130,10 @@ const AddCategory = () => {
 
       {/* Submit and Cancel Buttons */}
       <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton onClick={handleSubmit}>Submit</ReusableButton>
-        <CancelButton onClick={handleCancel}>Cancel</CancelButton>
+        <ReusableButton>Submit</ReusableButton>
+        <CancelButton href="/admin/product-catalog/category">
+          Cancel
+        </CancelButton>
       </Box>
     </Box>
   );

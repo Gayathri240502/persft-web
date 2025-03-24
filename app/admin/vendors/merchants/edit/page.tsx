@@ -42,7 +42,7 @@ const EditMerchant = () => {
       {/* Buttons (Without Form Handling) */}
       <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
         <ReusableButton>Submit</ReusableButton>
-        <CancelButton>Cancel</CancelButton>
+        <CancelButton href="/admin/vendors/merchants">Cancel</CancelButton>
       </Box>
     </Box>
   );

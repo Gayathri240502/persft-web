@@ -47,7 +47,9 @@ const AddAttributeGroups = () => {
       {/* Submit and Cancel Buttons */}
       <Box sx={{ display: "flex", gap: 2 }}>
         <ReusableButton>Submit</ReusableButton>
-        <CancelButton>Cancel</CancelButton>
+        <CancelButton href="/admin/attribute-catalog/attributes-groups">
+          Cancel
+        </CancelButton>
       </Box>
     </Box>
   );

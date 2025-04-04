@@ -1,67 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import {
   Box,
   Typography,
   TextField,
   Grid,
-  Paper,
   Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 
-const AddProducts = () => {
-  // State for form fields
-  const [name, setName] = useState("");
-  const [thumbnail, setThumbnail] = useState("");
-  const [category, setCategory] = useState("");
-  const [price, setPrice] = useState("");
-  const [workshop, setWorkshop] = useState("");
-  const [comhomId, setComhomId] = useState("");
-  const [sku, setSku] = useState("");
-  const [subCategory, setSubCategory] = useState("");
-  const [brand, setBrand] = useState("");
-  const [wordTask, setWordTask] = useState("");
-  const [attribute1, setAttribute1] = useState("");
-  const [attribute2, setAttribute2] = useState("");
-
-  // Handle form submission
-  const handleSubmit = () => {
-    const formData = {
-      name,
-      thumbnail,
-      category,
-      price,
-      workshop,
-      comhomId,
-      sku,
-      subCategory,
-      brand,
-      wordTask,
-      attribute1,
-      attribute2,
-    };
-    console.log("Form Submitted", formData);
-  };
-
-  // Handle cancel (clear form or go back)
-  const handleCancel = () => {
-    setName("");
-    setThumbnail("");
-    setCategory("");
-    setPrice("");
-    setWorkshop("");
-    setComhomId("");
-    setSku("");
-    setSubCategory("");
-    setBrand("");
-    setWordTask("");
-    setAttribute1("");
-    setAttribute2("");
-  };
-
+const EditProducts = () => {
   return (
     <Box sx={{ p: 3 }}>
       {/* Heading */}
@@ -69,129 +23,87 @@ const AddProducts = () => {
         Edit New Products
       </Typography>
 
-      {/* Paper Container to mimic a 'paper' feel */}
-      <Paper sx={{ padding: 3, boxShadow: 3 }}>
-        {/* Grid Layout for main fields */}
-        <Grid container spacing={4}>
-          {/* Left Column */}
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Name"
-              fullWidth
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              sx={{ mb: 3 }}
-            />
-            <TextField
-              label="Thumbnail"
-              fullWidth
-              value={thumbnail}
-              onChange={(e) => setThumbnail(e.target.value)}
-              sx={{ mb: 3 }}
-            />
-            <TextField
-              label="Category"
-              fullWidth
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              sx={{ mb: 3 }}
-            />
-            <TextField
-              label="Price"
-              fullWidth
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              sx={{ mb: 3 }}
-            />
-            <TextField
-              label="Workshop"
-              fullWidth
-              value={workshop}
-              onChange={(e) => setWorkshop(e.target.value)}
-              sx={{ mb: 3 }}
-            />
-          </Grid>
+      <Grid container spacing={4}>
+        {/* Left Column */}
+        <Grid item xs={12} sm={6}>
+          <TextField label="Name" fullWidth sx={{ mb: 3 }} />
+          <TextField label="Thumbnail" fullWidth sx={{ mb: 3 }} />
 
-          {/* Right Column */}
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Comhom ID"
-              fullWidth
-              value={comhomId}
-              onChange={(e) => setComhomId(e.target.value)}
-              sx={{ mb: 3 }}
-            />
-            <TextField
-              label="SKU"
-              fullWidth
-              value={sku}
-              onChange={(e) => setSku(e.target.value)}
-              sx={{ mb: 3 }}
-            />
-            <TextField
-              label="Sub Category"
-              fullWidth
-              value={subCategory}
-              onChange={(e) => setSubCategory(e.target.value)}
-              sx={{ mb: 3 }}
-            />
-            <TextField
-              label="Brand"
-              fullWidth
-              value={brand}
-              onChange={(e) => setBrand(e.target.value)}
-              sx={{ mb: 3 }}
-            />
-            <TextField
-              label="Word Task"
-              fullWidth
-              value={wordTask}
-              onChange={(e) => setWordTask(e.target.value)}
-              sx={{ mb: 3 }}
-            />
-          </Grid>
+          <FormControl fullWidth sx={{ mb: 3 }}>
+            <InputLabel>Category</InputLabel>
+            <Select label="Category">
+              <MenuItem value="Living Room">Living Room</MenuItem>
+              <MenuItem value="Bedroom">Bedroom</MenuItem>
+              <MenuItem value="Kitchen">Kitchen</MenuItem>
+            </Select>
+          </FormControl>
+
+          <TextField label="Price" fullWidth sx={{ mb: 3 }} />
+
+          <FormControl fullWidth sx={{ mb: 3 }}>
+            <InputLabel>Workshop</InputLabel>
+            <Select label="Workshop">
+              <MenuItem value="Workshop A">Workshop A</MenuItem>
+              <MenuItem value="Workshop B">Workshop B</MenuItem>
+              <MenuItem value="Workshop C">Workshop C</MenuItem>
+            </Select>
+          </FormControl>
         </Grid>
 
-        {/* Divider between fields and attributes */}
-        <Divider sx={{ my: 3 }} />
+        {/* Right Column */}
+        <Grid item xs={12} sm={6}>
+          <TextField label="Comhom ID" fullWidth sx={{ mb: 3 }} />
+          <TextField label="SKU" fullWidth sx={{ mb: 3 }} />
 
-        {/* Separate Section for Attributes */}
-        <Box sx={{ mt: 3 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Attributes
-          </Typography>
-          <Grid container spacing={4}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Attribute 1"
-                fullWidth
-                value={attribute1}
-                onChange={(e) => setAttribute1(e.target.value)}
-                sx={{ mb: 3 }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Attribute 2"
-                fullWidth
-                value={attribute2}
-                onChange={(e) => setAttribute2(e.target.value)}
-                sx={{ mb: 3 }}
-              />
-            </Grid>
+          <FormControl fullWidth sx={{ mb: 3 }}>
+            <InputLabel>Sub Category</InputLabel>
+            <Select label="Sub Category">
+              <MenuItem value="Sofas">Sofas</MenuItem>
+              <MenuItem value="Tables">Tables</MenuItem>
+              <MenuItem value="Chairs">Chairs</MenuItem>
+            </Select>
+          </FormControl>
+
+          <TextField label="Brand" fullWidth sx={{ mb: 3 }} />
+
+          <FormControl fullWidth sx={{ mb: 3 }}>
+            <InputLabel>Word Task</InputLabel>
+            <Select label="Word Task">
+              <MenuItem value="Assemble">Assemble</MenuItem>
+              <MenuItem value="Paint">Paint</MenuItem>
+              <MenuItem value="Package">Package</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+      </Grid>
+
+      {/* Divider */}
+      <Divider sx={{ my: 3 }} />
+
+      {/* Attributes Section */}
+      <Box sx={{ mt: 3 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          Attributes
+        </Typography>
+        <Grid container spacing={4}>
+          <Grid item xs={12} sm={6}>
+            <TextField label="Attribute 1" fullWidth sx={{ mb: 3 }} />
           </Grid>
-        </Box>
+          <Grid item xs={12} sm={6}>
+            <TextField label="Attribute 2" fullWidth sx={{ mb: 3 }} />
+          </Grid>
+        </Grid>
+      </Box>
 
-        {/* Submit and Cancel Buttons */}
-        <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
-          <ReusableButton>Submit</ReusableButton>
-          <CancelButton href="/admin/product-catalog/products">
-            Cancel
-          </CancelButton>
-        </Box>
-      </Paper>
+      {/* Buttons */}
+      <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
+        <ReusableButton>Submit</ReusableButton>
+        <CancelButton href="/admin/product-catalog/products">
+          Cancel
+        </CancelButton>
+      </Box>
     </Box>
   );
 };
 
-export default AddProducts;
+export default EditProducts;

@@ -53,7 +53,10 @@ const WorkGroup = () => {
       {/* PO Date */}
       <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
         <Typography>PO Date:</Typography>
-        <TextField type="date" sx={{ width: 150 }} />
+        <TextField
+          type="date"
+          sx={{ width: 150 }}
+        />
       </Box>
 
       {/* Submit and Cancel Buttons */}

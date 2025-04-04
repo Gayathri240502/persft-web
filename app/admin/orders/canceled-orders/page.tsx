@@ -7,11 +7,10 @@ import {
   Button,
   TextField,
   useMediaQuery,
-  IconButton,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
-import FilterListIcon from "@mui/icons-material/FilterList";
+import CancelButton from "@/app/components/CancelButton";
 
 // Column Definitions for Orders
 const columns: GridColDef[] = [
@@ -70,9 +69,9 @@ const CancelOrders = () => {
         />
         <Box sx={{ display: "flex", gap: 1 }}>
           {/* Filter Button */}
-          <IconButton sx={{ color: "#05344c" }}>
-            <FilterListIcon />
-          </IconButton>
+          <CancelButton href="/admin/orders">
+            Back
+          </CancelButton>
           {/* Export Orders Button */}
           <Button
             variant="contained"

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Box, Typography, TextField } from "@mui/material";
+import { Box, Typography, TextField, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 
@@ -13,7 +13,14 @@ const EditAttribute = () => {
         Edit Attributes
       </Typography>
 
-      <TextField label="Type" fullWidth sx={{ mb: 3 }} type="text" />
+      <FormControl fullWidth sx={{ mb: 3 }}>
+            <InputLabel>Type</InputLabel>
+            <Select label="Type">
+              <MenuItem value="Type1">Type1</MenuItem>
+              <MenuItem value="Type2">Type2</MenuItem>
+              <MenuItem value="Type3">Type3</MenuItem>
+            </Select>
+          </FormControl>
 
       {/* Name Field */}
       <TextField label="Name" fullWidth sx={{ mb: 3 }} />

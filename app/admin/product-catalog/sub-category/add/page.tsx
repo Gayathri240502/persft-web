@@ -54,7 +54,7 @@ const AddSubCategory = () => {
       <Grid container spacing={2}>
         <Grid item xs={12} md={4}>
           <Typography variant="h6" sx={{ mb: 1 }}>
-            Room Types
+            Room Mapping
           </Typography>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             <FormControlLabel control={<Checkbox />} label="Group 1" />

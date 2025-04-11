@@ -1,53 +1,143 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
   TextField,
   useMediaQuery,
+  IconButton,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import ReusableButton from "@/app/components/Button";
 import { useRouter } from "next/navigation";
+import { Visibility, Edit, Delete } from "@mui/icons-material";
+import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
-// Column Definitions
-const columns: GridColDef[] = [
-  { field: "id", headerName: "SN", width: 80 },
-  { field: "code", headerName: "ID", width: 185 },
-  { field: "name", headerName: "Name", width: 185 },
-  { field: "group", headerName: "Group", width: 185 },
-  { field: "createdby", headerName: "Created By", width: 185 },
-  { field: "date", headerName: "Date", width: 185 },
-  { field: "action", headerName: "Action", width: 185 },
-];
+interface RoomTypesReference {
+  _id: string;
+  name: string;
+}
 
-// Sample Data (Empty Rows for UI)
-const rows = Array.from({ length: 5 }, (_, index) => ({
-  id: index + 1,
-  code:"-",
-  name: "-",
-  group:"-",
-  createdby: "-",
-  date: "-",
-  action:"-",
-}));
+interface ThemeType {
+  _id: string;
+  name: string;
+  description: string;
+  roomTypes: RoomTypesReference[];
+  archive: boolean;
+  id?: string;
+  sn?: number;
+}
 
-const RoomType= () => {
+const ThemesPage = () => {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
+  const [themes, setThemes] = useState<ThemeType[]>([]);
+  const { token } = getTokenAndRole();
+
+  const fetchThemes = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/themes`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.error("Failed to fetch themes:", response.status);
+        return;
+      }
+
+      const result = await response.json();
+      console.log("Fetched themes:", result);
+
+      if (Array.isArray(result.themes)) {
+        const themesWithExtras = result.themes.map((item, index) => ({
+          ...item,
+          id: item._id,
+          sn: index + 1,
+        }));
+        setThemes(themesWithExtras);
+      } else {
+        setThemes([]);
+      }
+    } catch (error) {
+      console.error("Error fetching themes:", error);
+      setThemes([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchThemes();
+  }, []);
+
+  const filteredThemes = themes.filter((theme) =>
+    Object.values(theme)
+      .flatMap((val) =>
+        Array.isArray(val)
+          ? val.map((sub) =>
+              typeof sub === "object" ? JSON.stringify(sub) : sub
+            )
+          : typeof val === "object"
+          ? JSON.stringify(val)
+          : val
+      )
+      .join(" ")
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
+
+  const columns: GridColDef[] = [
+    { field: "sn", headerName: "SN", width: 80 },
+    { field: "name", headerName: "Theme Name", width: 180 },
+    { field: "description", headerName: "Description", width: 220 },
+    {
+      field: "roomTypes",
+      headerName: "Room Types",
+      width: 250,
+      valueGetter: (params) => {
+        const roomTypes: RoomTypesReference[] = params.row?.roomTypes;
+        if (Array.isArray(roomTypes) && roomTypes.length > 0) {
+          return roomTypes.map((r) => r.name || "Unknown").join(", ");
+        }
+        return "N/A";
+      },
+    },
+    { field: "archive", headerName: "Archived", width: 100, type: "boolean" },
+    {
+      field: "action",
+      headerName: "Action",
+      width: 180,
+      renderCell: () => (
+        <Box>
+          <IconButton color="info" size="small">
+            <Visibility fontSize="small" />
+          </IconButton>
+          <IconButton color="primary" size="small">
+            <Edit fontSize="small" />
+          </IconButton>
+          <IconButton color="error" size="small">
+            <Delete fontSize="small" />
+          </IconButton>
+        </Box>
+      ),
+    },
+  ];
+
   return (
     <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-      {/* Heading */}
       <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-        Themes Types
+        Themes
       </Typography>
 
-      {/* Search Bar & Add Button Above Table */}
       <Box
         sx={{
           display: "flex",
@@ -66,26 +156,31 @@ const RoomType= () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <ReusableButton onClick={() => {
-          router.push("themes/add")
-        }}>
-          ADD
-        </ReusableButton>
+        <ReusableButton onClick={() => router.push("themes/add")}>ADD</ReusableButton>
       </Box>
 
-      {/* Data Grid */}
-      <Box sx={{ height: 400, width: "99%", overflowX: "auto" }}>
+      <Box sx={{ height: 400, width: "100%", overflowX: "auto" }}>
         <DataGrid
           columns={columns}
-          rows={rows}
+          rows={filteredThemes}
           pageSizeOptions={[5, 10, 25]}
           autoHeight
-          disableColumnMenu={isSmallScreen} // Hide menu on small screens
-          sx={{ "& .MuiDataGrid-columnHeaders": { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }}
+          disableColumnMenu={isSmallScreen}
+          sx={{
+            "& .MuiDataGrid-columnHeaders": {
+              fontSize: isSmallScreen ? "0.8rem" : "1rem",
+            },
+            "& .MuiDataGrid-row:nth-of-type(even)": {
+              backgroundColor: "#f9f9f9",
+            },
+            "& .MuiDataGrid-row:nth-of-type(odd)": {
+              backgroundColor: "#ffffff",
+            },
+          }}
         />
       </Box>
     </Box>
   );
 };
 
-export default RoomType;
+export default ThemesPage;

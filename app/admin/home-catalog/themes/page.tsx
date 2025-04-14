@@ -8,13 +8,18 @@ import {
   useMediaQuery,
   IconButton,
 } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  GridColDef,
+  GridPaginationModel,
+} from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import ReusableButton from "@/app/components/Button";
 import { useRouter } from "next/navigation";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
+// Interfaces
 interface RoomTypesReference {
   _id: string;
   name: string;
@@ -32,11 +37,17 @@ interface ThemeType {
 
 const ThemesPage = () => {
   const router = useRouter();
-  const [search, setSearch] = useState("");
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
-
+  const [search, setSearch] = useState("");
   const [themes, setThemes] = useState<ThemeType[]>([]);
+  const [rowCount, setRowCount] = useState(0);
+
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
+    pageSize: 5,
+  });
+
   const { token } = getTokenAndRole();
 
   const fetchThemes = async () => {
@@ -63,21 +74,24 @@ const ThemesPage = () => {
         const themesWithExtras = result.themes.map((item, index) => ({
           ...item,
           id: item._id,
-          sn: index + 1,
+          sn: paginationModel.page * paginationModel.pageSize + index + 1,
         }));
         setThemes(themesWithExtras);
+        setRowCount(result.total || result.themes.length);
       } else {
         setThemes([]);
+        setRowCount(0);
       }
     } catch (error) {
       console.error("Error fetching themes:", error);
       setThemes([]);
+      setRowCount(0);
     }
   };
 
   useEffect(() => {
     fetchThemes();
-  }, []);
+  }, [paginationModel, search]);
 
   const filteredThemes = themes.filter((theme) =>
     Object.values(theme)
@@ -161,8 +175,13 @@ const ThemesPage = () => {
 
       <Box sx={{ height: 400, width: "100%", overflowX: "auto" }}>
         <DataGrid
-          columns={columns}
           rows={filteredThemes}
+          columns={columns}
+          rowCount={rowCount}
+          pagination
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={(model) => setPaginationModel(model)}
           pageSizeOptions={[5, 10, 25]}
           autoHeight
           disableColumnMenu={isSmallScreen}

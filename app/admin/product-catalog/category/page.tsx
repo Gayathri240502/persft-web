@@ -1,6 +1,5 @@
 "use client";
 
-import ReusableButton from "@/app/components/Button";
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -11,12 +10,12 @@ import {
   IconButton,
 } from "@mui/material";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
+import ReusableButton from "@/app/components/Button";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
-// Interface for each category
 interface Category {
   _id?: string;
   name: string;
@@ -27,33 +26,6 @@ interface Category {
   sn?: number;
 }
 
-// Column definitions for DataGrid
-const columns: GridColDef[] = [
-  { field: "sn", headerName: "SN", width: 80 },
-  { field: "name", headerName: "Name", width: 180 },
-  { field: "description", headerName: "Description", width: 250 },
-  { field: "thumbnail", headerName: "Thumbnail", width: 200 },
-  { field: "archive", headerName: "Archived", width: 120, type: "boolean" },
-  {
-    field: "action",
-    headerName: "Action",
-    width: 150,
-    renderCell: () => (
-      <Box>
-        <IconButton color="info" size="small">
-          <Visibility fontSize="small" />
-        </IconButton>
-        <IconButton color="primary" size="small">
-          <Edit fontSize="small" />
-        </IconButton>
-        <IconButton color="error" size="small">
-          <Delete fontSize="small" />
-        </IconButton>
-      </Box>
-    ),
-  },
-];
-
 const Category = () => {
   const router = useRouter();
   const theme = useTheme();
@@ -61,9 +33,15 @@ const Category = () => {
 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<Category[]>([]);
+  const [rowCount, setRowCount] = useState(0);
+
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
+    pageSize: 5,
+  });
+
   const { token } = getTokenAndRole();
 
-  // Fetch categories from API
   const fetchCategory = async () => {
     try {
       const response = await fetch(
@@ -79,17 +57,17 @@ const Category = () => {
       const result = await response.json();
       console.log("Fetched categories:", result);
 
-      // ✅ Correct key: result.categories
       if (Array.isArray(result.categories)) {
         const categoryWithExtras = result.categories.map((item, index) => ({
           ...item,
           id: item._id,
-          sn: index + 1,
+          sn: paginationModel.page * paginationModel.pageSize + index + 1,
         }));
         setCategory(categoryWithExtras);
+        setRowCount(result.total || result.categories.length);
       } else {
-        console.error("Invalid category data format:", result);
         setCategory([]);
+        setRowCount(0);
       }
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -99,9 +77,8 @@ const Category = () => {
 
   useEffect(() => {
     fetchCategory();
-  }, []);
+  }, [paginationModel, search]);
 
-  // Filtered data based on search
   const filteredCategory = category.filter((cat) =>
     Object.values(cat)
       .flatMap((val) =>
@@ -118,13 +95,39 @@ const Category = () => {
       .includes(search.toLowerCase())
   );
 
+  const columns: GridColDef[] = [
+    { field: "sn", headerName: "SN", width: 80 },
+    { field: "name", headerName: "Name", width: 180 },
+    { field: "description", headerName: "Description", width: 250 },
+    { field: "thumbnail", headerName: "Thumbnail", width: 200 },
+    { field: "archive", headerName: "Archived", width: 120, type: "boolean" },
+    {
+      field: "action",
+      headerName: "Action",
+      width: 150,
+      renderCell: () => (
+        <Box>
+          <IconButton color="info" size="small">
+            <Visibility fontSize="small" />
+          </IconButton>
+          <IconButton color="primary" size="small">
+            <Edit fontSize="small" />
+          </IconButton>
+          <IconButton color="error" size="small">
+            <Delete fontSize="small" />
+          </IconButton>
+        </Box>
+      ),
+    },
+  ];
+
   return (
     <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
       <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
         Category
       </Typography>
 
-      {/* Search and Add Button */}
+      {/* Search and Add */}
       <Box
         sx={{
           display: "flex",
@@ -152,7 +155,7 @@ const Category = () => {
         </ReusableButton>
       </Box>
 
-      {/* Export Buttons - Placeholder */}
+      {/* Export Buttons (Optional Feature) */}
       <Box
         sx={{
           display: "flex",
@@ -162,37 +165,35 @@ const Category = () => {
           alignItems: "center",
         }}
       >
-        <Button variant="outlined" size="small">
-          Show Rows
-        </Button>
-        <Button variant="outlined" size="small">
-          Copy
-        </Button>
-        <Button variant="outlined" size="small">
-          CSV
-        </Button>
-        <Button variant="outlined" size="small">
-          Excel
-        </Button>
-        <Button variant="outlined" size="small">
-          PDF
-        </Button>
-        <Button variant="outlined" size="small">
-          Print
-        </Button>
+        {["Show Rows", "Copy", "CSV", "Excel", "PDF", "Print"].map((label) => (
+          <Button key={label} variant="outlined" size="small">
+            {label}
+          </Button>
+        ))}
       </Box>
 
-      {/* Data Grid */}
-      <Box sx={{ height: 400, width: "99%", overflowX: "auto" }}>
+      {/* DataGrid */}
+      <Box sx={{ height: 400, width: "100%", overflowX: "auto" }}>
         <DataGrid
-          columns={columns}
           rows={filteredCategory}
+          columns={columns}
+          rowCount={rowCount}
+          pagination
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
           pageSizeOptions={[5, 10, 25]}
           autoHeight
           disableColumnMenu={isSmallScreen}
           sx={{
             "& .MuiDataGrid-columnHeaders": {
               fontSize: isSmallScreen ? "0.8rem" : "1rem",
+            },
+            "& .MuiDataGrid-row:nth-of-type(even)": {
+              backgroundColor: "#f9f9f9",
+            },
+            "& .MuiDataGrid-row:nth-of-type(odd)": {
+              backgroundColor: "#ffffff",
             },
           }}
         />

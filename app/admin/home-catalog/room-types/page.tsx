@@ -8,7 +8,11 @@ import {
   useMediaQuery,
   IconButton,
 } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  GridColDef,
+  GridPaginationModel,
+} from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import ReusableButton from "@/app/components/Button";
 import { useRouter } from "next/navigation";
@@ -32,19 +36,32 @@ interface RoomType {
 }
 
 // Component
-const RoomType = () => {
+const RoomTypes = () => {
   const router = useRouter();
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [search, setSearch] = useState("");
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
+    pageSize: 10,
+  });
+  const [rowCount, setRowCount] = useState(0);
   const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
   const { token } = getTokenAndRole();
 
   // Fetch Room Types
   const fetchRoomTypes = async () => {
+    const { page, pageSize } = paginationModel;
+
     try {
+      const queryParams = new URLSearchParams({
+        page: String(page + 1), // Assuming backend uses 1-based index
+        limit: String(pageSize),
+        searchTerm: search,
+      });
+
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/room-types`,
+        `${process.env.NEXT_PUBLIC_API_URL}/room-types?${queryParams}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -62,20 +79,20 @@ const RoomType = () => {
       console.log("Fetched room types raw:", result);
 
       if (Array.isArray(result.roomTypes)) {
-        const typesWithId = result.roomTypes.map((item, index) => {
-          console.log(`RoomType ${index + 1}:`, item);
-          return {
-            ...item,
-            residenceTypes: Array.isArray(item.residenceTypes)
-              ? item.residenceTypes
-              : [],
-            id: item._id,
-            sn: index + 1,
-          };
-        });
+        const typesWithId = result.roomTypes.map((item, index) => ({
+          ...item,
+          residenceTypes: Array.isArray(item.residenceTypes)
+            ? item.residenceTypes
+            : [],
+          id: item._id,
+          sn: page * pageSize + index + 1,
+        }));
+
         setRoomTypes(typesWithId);
+        setRowCount(result.totalDocs || typesWithId.length); // fallback
       } else {
         setRoomTypes([]);
+        setRowCount(0);
       }
     } catch (error) {
       console.error("Error fetching room types:", error);
@@ -85,32 +102,11 @@ const RoomType = () => {
 
   useEffect(() => {
     fetchRoomTypes();
-  }, []);
-
-  // Filter room types
-  const filteredRoomTypes = roomTypes.filter((room) =>
-    Object.values(room)
-      .flatMap((val) =>
-        Array.isArray(val)
-          ? val.map((sub) =>
-              typeof sub === "object" ? JSON.stringify(sub) : sub
-            )
-          : typeof val === "object"
-          ? JSON.stringify(val)
-          : val
-      )
-      .join(" ")
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  );
+  }, [paginationModel, search]);
 
   // Table columns
   const columns: GridColDef[] = [
-    {
-      field: "sn",
-      headerName: "SN",
-      width: 80,
-    },
+    { field: "sn", headerName: "SN", width: 80 },
     { field: "name", headerName: "Room Name", width: 180 },
     { field: "description", headerName: "Description", width: 220 },
     {
@@ -119,10 +115,9 @@ const RoomType = () => {
       width: 250,
       valueGetter: (params) => {
         const resTypes: ResidenceTypeReference[] = params.row?.residenceTypes;
-        if (Array.isArray(resTypes) && resTypes.length > 0) {
-          return resTypes.map((r) => r.name || "Unknown").join(", ");
-        }
-        return "N/A";
+        return Array.isArray(resTypes) && resTypes.length > 0
+          ? resTypes.map((r) => r.name || "Unknown").join(", ")
+          : "N/A";
       },
     },
     {
@@ -173,12 +168,13 @@ const RoomType = () => {
           size="small"
           fullWidth={isSmallScreen}
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPaginationModel({ ...paginationModel, page: 0 }); // reset to first page
+          }}
         />
         <ReusableButton
-          onClick={() => {
-            router.push("/admin/home-catalog/room-types/add");
-          }}
+          onClick={() => router.push("/admin/home-catalog/room-types/add")}
         >
           ADD
         </ReusableButton>
@@ -186,8 +182,13 @@ const RoomType = () => {
 
       <Box sx={{ height: 400, width: "100%", overflowX: "auto" }}>
         <DataGrid
-          rows={filteredRoomTypes}
+          rows={roomTypes}
           columns={columns}
+          rowCount={rowCount}
+          pagination
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
           pageSizeOptions={[5, 10, 25]}
           autoHeight
           disableColumnMenu={isSmallScreen}
@@ -208,4 +209,4 @@ const RoomType = () => {
   );
 };
 
-export default RoomType;
+export default RoomTypes;

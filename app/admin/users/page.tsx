@@ -8,12 +8,14 @@ import {
   useMediaQuery,
   Switch,
   CircularProgress,
+  IconButton,
 } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { GridColDef } from "@mui/x-data-grid";
+import { Edit, Delete } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
-
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 interface UserProps {
   _id?: string;
   keycloakId?: string;
@@ -38,22 +40,22 @@ const Users = () => {
   const { token } = getTokenAndRole();
 
   const columns: GridColDef[] = [
-    { field: "username", headerName: "User Name", width: 140 },
-    { field: "firstName", headerName: "First Name", width: 140 },
-    { field: "lastName", headerName: "Last Name", width: 140 },
-    { field: "email", headerName: "Email", width: 140 },
-    { field: "phone", headerName: "Phone", width: 140 },
+    { field: "username", headerName: "User Name", flex: 1 },
+    { field: "firstName", headerName: "First Name", flex: 1 },
+    { field: "lastName", headerName: "Last Name", flex: 1 },
+    { field: "email", headerName: "Email", flex: 1 },
+    { field: "phone", headerName: "Phone", flex: 1 },
     {
       field: "role",
       headerName: "Roles",
-      width: 140,
+      flex: 1,
       renderCell: (params) =>
         Array.isArray(params.row?.role) ? params.row.role.join(", ") : "—",
     },
     {
       field: "enabled",
       headerName: "Status",
-      width: 140,
+      flex: 1,
       renderCell: (params) => (
         <Switch
           checked={params.row.enabled}
@@ -91,9 +93,18 @@ const Users = () => {
     },
     {
       field: "options",
-      headerName: "Options",
-      width: 140,
-      renderCell: () => <span>—</span>,
+      headerName: "Actions",
+      flex: 1,
+      renderCell: () => (
+        <div>
+          <IconButton color="primary" size="small">
+            <Edit fontSize="small" />
+          </IconButton>
+          <IconButton color="error" size="small">
+            <Delete fontSize="small" />
+          </IconButton>
+        </div>
+      ),
     },
   ];
 
@@ -147,15 +158,13 @@ const Users = () => {
   );
 
   return (
-    <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-      <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-        Users
-      </Typography>
+    <Box>
+      <Typography sx={{ mb: 2 }}>Users</Typography>
 
       <Box
         sx={{
           display: "fixed",
-          flexDirection: isSmallScreen ? "column" : "row",
+
           justifyContent: "space-between",
           alignItems: "center",
           mb: 2,
@@ -191,25 +200,11 @@ const Users = () => {
             No users found.
           </Typography>
         ) : (
-          <DataGrid
+          <StyledDataGrid
             columns={columns}
             rows={filteredData}
             pageSizeOptions={[5, 10, 25]}
-            autoHeight
             loading={loading}
-            hideFooterSelectedRowCount
-            disableColumnMenu={isSmallScreen}
-            sx={{
-              "& .MuiDataGrid-columnHeaders": {
-                fontSize: isSmallScreen ? "0.8rem" : "1rem",
-              },
-              "& .MuiDataGrid-row:nth-of-type(even)": {
-                backgroundColor: "#f9f9f9",
-              },
-              "& .MuiDataGrid-row:nth-of-type(odd)": {
-                backgroundColor: "#ffffff",
-              },
-            }}
           />
         )}
       </Box>

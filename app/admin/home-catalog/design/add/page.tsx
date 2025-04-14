@@ -29,7 +29,13 @@ const AddDesignType = () => {
       <TextField label="Name" fullWidth sx={{ mb: 3 }} />
 
       {/* Description Field */}
-      <TextField label="Description" multiline rows={3} fullWidth sx={{ mb: 3 }} />
+      <TextField
+        label="Description"
+        multiline
+        rows={3}
+        fullWidth
+        sx={{ mb: 3 }}
+      />
 
       {/* Thumbnail Upload Section */}
       <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
@@ -37,7 +43,11 @@ const AddDesignType = () => {
           variant="outlined"
           component="label"
           startIcon={<UploadFileIcon />}
-          sx={{ color: "#05344c", borderColor: "#05344c", "&:hover": { backgroundColor: "#f0f4f8" } }}
+          sx={{
+            color: "#05344c",
+            borderColor: "#05344c",
+            "&:hover": { backgroundColor: "#f0f4f8" },
+          }}
         >
           Upload Thumbnail
           <input type="file" hidden />
@@ -89,13 +99,9 @@ const AddDesignType = () => {
       </Grid>
 
       {/* Submit and Cancel Buttons */}
-      <ReusableButton>
-          Submit
-        </ReusableButton>
-        <CancelButton href="/admin/home-catalog/design">
-          Cancel
-        </CancelButton>
-      </Box>
+      <ReusableButton>Submit</ReusableButton>
+      <CancelButton href="/admin/home-catalog/design">Cancel</CancelButton>
+    </Box>
   );
 };
 

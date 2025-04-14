@@ -8,11 +8,7 @@ import {
   useMediaQuery,
   IconButton,
 } from "@mui/material";
-import {
-  DataGrid,
-  GridColDef,
-  GridPaginationModel,
-} from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import ReusableButton from "@/app/components/Button";
 import { useRouter } from "next/navigation";
@@ -106,9 +102,9 @@ const RoomTypes = () => {
 
   // Table columns
   const columns: GridColDef[] = [
-    { field: "sn", headerName: "SN", width: 80 },
-    { field: "name", headerName: "Room Name", width: 180 },
-    { field: "description", headerName: "Description", width: 220 },
+    { field: "sn", headerName: "SN", flex: 1 },
+    { field: "name", headerName: "Room Name", flex: 1 },
+    { field: "description", headerName: "Description", flex: 1 },
     {
       field: "residenceTypes",
       headerName: "Residence Types",

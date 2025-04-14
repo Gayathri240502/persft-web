@@ -1,12 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Box,
-  Typography,
-  TextField,
-  useMediaQuery,
-} from "@mui/material";
+import { Box, Typography, TextField, useMediaQuery } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
@@ -26,15 +21,15 @@ const columns: GridColDef[] = [
 // Sample Data (Empty Rows for UI)
 const rows = Array.from({ length: 5 }, (_, index) => ({
   id: index + 1,
-  code:"-",
+  code: "-",
   name: "-",
-  group:"-",
+  group: "-",
   createdby: "-",
   date: "-",
-  action:"-",
+  action: "-",
 }));
 
-const DesignType= () => {
+const DesignType = () => {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const theme = useTheme();
@@ -66,9 +61,11 @@ const DesignType= () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <ReusableButton onClick={() => {
-          router.push("design/add")
-        }}  >
+        <ReusableButton
+          onClick={() => {
+            router.push("design/add");
+          }}
+        >
           ADD
         </ReusableButton>
       </Box>
@@ -81,7 +78,11 @@ const DesignType= () => {
           pageSizeOptions={[5, 10, 25]}
           autoHeight
           disableColumnMenu={isSmallScreen} // Hide menu on small screens
-          sx={{ "& .MuiDataGrid-columnHeaders": { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }}
+          sx={{
+            "& .MuiDataGrid-columnHeaders": {
+              fontSize: isSmallScreen ? "0.8rem" : "1rem",
+            },
+          }}
         />
       </Box>
     </Box>

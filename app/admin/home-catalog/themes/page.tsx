@@ -110,13 +110,13 @@ const ThemesPage = () => {
   );
 
   const columns: GridColDef[] = [
-    { field: "sn", headerName: "SN", width: 80 },
-    { field: "name", headerName: "Theme Name", width: 180 },
-    { field: "description", headerName: "Description", width: 220 },
+    { field: "sn", headerName: "SN", flex:1 },
+    { field: "name", headerName: "Theme Name",flex:1 },
+    { field: "description", headerName: "Description", flex:1 },
     {
       field: "roomTypes",
       headerName: "Room Types",
-      width: 250,
+      flex:1,
       valueGetter: (params) => {
         const roomTypes: RoomTypesReference[] = params.row?.roomTypes;
         if (Array.isArray(roomTypes) && roomTypes.length > 0) {
@@ -125,11 +125,11 @@ const ThemesPage = () => {
         return "N/A";
       },
     },
-    { field: "archive", headerName: "Archived", width: 100, type: "boolean" },
+    { field: "archive", headerName: "Archived",flex:1, type: "boolean" },
     {
       field: "action",
       headerName: "Action",
-      width: 180,
+      flex:1,
       renderCell: () => (
         <Box>
           <IconButton color="info" size="small">

@@ -108,7 +108,7 @@ const RoomTypes = () => {
     {
       field: "residenceTypes",
       headerName: "Residence Types",
-      width: 250,
+      flex:1,
       valueGetter: (params) => {
         const resTypes: ResidenceTypeReference[] = params.row?.residenceTypes;
         return Array.isArray(resTypes) && resTypes.length > 0
@@ -119,13 +119,13 @@ const RoomTypes = () => {
     {
       field: "archive",
       headerName: "Archived",
-      width: 100,
+      flex:1,
       type: "boolean",
     },
     {
       field: "action",
       headerName: "Action",
-      width: 180,
+      flex:1,
       renderCell: (params) => (
         <Box>
           <IconButton color="info" size="small">

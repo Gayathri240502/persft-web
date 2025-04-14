@@ -86,15 +86,15 @@ const ResidenceTypePage = () => {
   }, [paginationModel, search]);
 
   const columns: GridColDef[] = [
-    { field: "sn", headerName: "SN", width: 80 },
-    { field: "name", headerName: "Name", width: 200 },
-    { field: "description", headerName: "Description", width: 270 },
-    { field: "thumbnail", headerName: "Thumbnail", width: 200 },
-    { field: "archive", headerName: "Archive", width: 120, type: "boolean" },
+    { field: "sn", headerName: "SN", flex:1 },
+    { field: "name", headerName: "Name", flex:1 },
+    { field: "description", headerName: "Description", flex:1 },
+    { field: "thumbnail", headerName: "Thumbnail", flex:1 },
+    { field: "archive", headerName: "Archive", flex:1, type: "boolean" },
     {
       field: "action",
       headerName: "Action",
-      width: 180,
+      flex:1,
       renderCell: () => (
         <div>
           <IconButton color="info" size="small">

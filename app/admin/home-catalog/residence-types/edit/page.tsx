@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Typography,
@@ -15,12 +15,12 @@ import CancelButton from "@/app/components/CancelButton";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
-const AddOrEditResidenceType = () => {
+const EditResidenceType = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { token } = getTokenAndRole();
 
-  const id = searchParams.get("id");
+  const id = useMemo(() => searchParams.get("id"), [searchParams]);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -31,14 +31,16 @@ const AddOrEditResidenceType = () => {
   const [error, setError] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
 
-  // Fetch existing data if editing
   useEffect(() => {
-    const fetchData = async () => {
-      if (!id) {
-        setInitialLoading(false);
-        return;
-      }
+    console.log("Edit ID from searchParams:", id);
+    console.log("Edit ID from searchParams:", id);
 
+    if (!id) {
+      setInitialLoading(false);
+      return;
+    }
+
+    const fetchData = async () => {
       try {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/residence-types/${id}`,
@@ -55,9 +57,6 @@ const AddOrEditResidenceType = () => {
         }
 
         const data = await response.json();
-        console.log("Fetched data:", data);
-
-        // Adjust if your API nests data inside `data`
         const residenceType = data.data || data;
 
         setName(residenceType.name || "");
@@ -107,14 +106,9 @@ const AddOrEditResidenceType = () => {
         thumbnail,
       });
 
-      const endpoint = id
-        ? `${process.env.NEXT_PUBLIC_API_URL}/residence-types/${id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/residence-types`;
-
-      const method = id ? "PUT" : "POST";
-
+      const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/residence-types/${id}`;
       const response = await fetch(endpoint, {
-        method,
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -123,7 +117,7 @@ const AddOrEditResidenceType = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to save residence type.");
+        throw new Error("Failed to update residence type.");
       }
 
       router.push("/admin/home-catalog/residence-types");
@@ -139,7 +133,7 @@ const AddOrEditResidenceType = () => {
   return (
     <Box sx={{ p: 3 }} component="form" onSubmit={handleSubmit}>
       <Typography variant="h5" sx={{ mb: 2 }}>
-        {id ? "Edit Residence Type" : "Add Residence Type"}
+        Edit Residence Type
       </Typography>
 
       {error && (
@@ -207,7 +201,7 @@ const AddOrEditResidenceType = () => {
               {loading ? (
                 <CircularProgress size={24} color="inherit" />
               ) : (
-                "Submit"
+                "Update"
               )}
             </ReusableButton>
             <CancelButton href="/admin/home-catalog/residence-types">
@@ -220,4 +214,4 @@ const AddOrEditResidenceType = () => {
   );
 };
 
-export default AddOrEditResidenceType;
+export default EditResidenceType;

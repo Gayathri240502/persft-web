@@ -165,7 +165,7 @@ const ResidenceTypePage = () => {
             size="small"
             onClick={() =>
               router.push(
-                `/admin/home-catalog/residence-types/add?id=${params.row.id}`
+                `/admin/home-catalog/residence-types/edit?id=${params.row.id}`
               )
             }
           >

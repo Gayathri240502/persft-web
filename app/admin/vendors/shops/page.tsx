@@ -1,48 +1,138 @@
 "use client";
-import ReusableButton from "@/app/components/Button";
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
   Button,
   TextField,
   useMediaQuery,
+  IconButton,
+  CircularProgress,
 } from "@mui/material";
-import { DataGrid, GridColDef,  } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
+import { Visibility, Edit, Delete } from "@mui/icons-material";
+import ReusableButton from "@/app/components/Button";
+import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
+interface Shop {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+  phone: string;
+  enabled: boolean;
+  role: string[];
+  archive: boolean;
+  ownerName: string;
+}
 
-// Column Definitions
-const columns: GridColDef[] = [
-  { field: "id", headerName: "SN", width: 120 },
-  { field: "uniqueId", headerName: "ID", width: 120 },
-  { field: "name", headerName: "Name", width: 120 },
-  { field: "description", headerName: "Description", width: 120 },
-  { field: "type", headerName: "Type", width: 120 },
-  { field: "addedBy", headerName: "Added By", width: 120 },
-  { field: "action", headerName: "Action", width: 120 },
-];
-
-const rows = Array.from({ length: 5 }, (_, index) => ({
-  id: index + 1,
-  uniqueId: `UID-${index + 1}`,
-  name: "-",
-  description: "-",
-  type: "-",
-  addedBy: "-",
-  action: "-",
-}));
+interface ShopResponse {
+  shops: Shop[];
+  total: number;
+}
 
 const Shop = () => {
   const router = useRouter();
-  const [search, setSearch] = useState("");
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
+  const [search, setSearch] = useState("");
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
+    pageSize: 10,
+  });
+  const [rowCount, setRowCount] = useState(0);
+  const [rows, setRows] = useState<Shop[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { token } = getTokenAndRole();
+
+  const fetchShops = async () => {
+    const { page, pageSize } = paginationModel;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const queryParams = new URLSearchParams({
+        page: String(page + 1),
+        limit: String(pageSize),
+        searchTerm: search,
+      });
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/shops?${queryParams}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch shops");
+      }
+
+      const result: ShopResponse = await response.json();
+
+      if (Array.isArray(result.shops)) {
+        const dataWithSN = result.shops.map((shop, index) => ({
+          ...shop,
+          id: shop._id,
+          sn: page * pageSize + index + 1,
+        }));
+
+        setRows(dataWithSN);
+        setRowCount(result.total || dataWithSN.length);
+      }
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchShops();
+  }, [paginationModel, search]);
+
+  const columns: GridColDef[] = [
+    { field: "sn", headerName: "SN", flex: 0.3 },
+    { field: "firstName", headerName: "First Name", flex: 0.8 },
+    { field: "lastName", headerName: "Last Name", flex: 0.8 },
+    { field: "username", headerName: "Username", flex: 1 },
+    { field: "email", headerName: "Email", flex: 1.2 },
+    { field: "phone", headerName: "Phone", flex: 1 },
+    { field: "ownerName", headerName: "Owner Name", flex: 1 },
+    { field: "enabled", headerName: "Enabled", type: "boolean", flex: 0.5 },
+    { field: "archive", headerName: "Archived", type: "boolean", flex: 0.5 },
+    {
+      field: "action",
+      headerName: "Action",
+      flex: 0.8,
+      renderCell: () => (
+        <Box display="flex" gap={1}>
+          <IconButton color="info" size="small">
+            <Visibility fontSize="small" />
+          </IconButton>
+          <IconButton color="primary" size="small">
+            <Edit fontSize="small" />
+          </IconButton>
+          <IconButton color="error" size="small">
+            <Delete fontSize="small" />
+          </IconButton>
+        </Box>
+      ),
+    },
+  ];
+
   return (
     <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-      {/* Heading */}
       <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
         Shop
       </Typography>
@@ -65,11 +155,7 @@ const Shop = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <ReusableButton
-          onClick={() => {
-            router.push("/admin/vendors/shops/add");
-          }}
-        >
+        <ReusableButton onClick={() => router.push("/admin/vendors/shops/add")}>
           ADD
         </ReusableButton>
       </Box>
@@ -83,41 +169,59 @@ const Shop = () => {
           alignItems: "center",
         }}
       >
-        <Button variant="outlined" size="small">
-          Show Rows
-        </Button>
-        <Button variant="outlined" size="small">
-          Copy
-        </Button>
-        <Button variant="outlined" size="small">
-          CSV
-        </Button>
-        <Button variant="outlined" size="small">
-          Excel
-        </Button>
-        <Button variant="outlined" size="small">
-          PDF
-        </Button>
-        <Button variant="outlined" size="small">
-          Print
-        </Button>
+        {["Show Rows", "Copy", "CSV", "Excel", "PDF", "Print"].map((label) => (
+          <Button key={label} variant="outlined" size="small">
+            {label}
+          </Button>
+        ))}
       </Box>
 
-      {/* Data Grid */}
-      <Box sx={{ height: 400, width: "99%", overflowX: "auto" }}>
-        <DataGrid
-          columns={columns}
-          rows={rows}
-          pageSizeOptions={[5, 10, 25]}
-          autoHeight
-          disableColumnMenu={isSmallScreen} // Hide menu on small screens
-          sx={{
-            "& .MuiDataGrid-columnHeaders": {
-              fontSize: isSmallScreen ? "0.8rem" : "1rem",
-            },
-          }}
-         
-        />
+      <Box sx={{ minHeight: 400, width: "99%", overflowX: "auto" }}>
+        {loading ? (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: 300,
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        ) : error ? (
+          <Typography color="error" sx={{ mt: 2 }}>
+            {error}
+          </Typography>
+        ) : (
+          <DataGrid
+            columns={columns}
+            rows={rows}
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            rowCount={rowCount}
+            paginationMode="server"
+            pageSizeOptions={[5, 10, 25]}
+            autoHeight
+            disableColumnMenu={isSmallScreen}
+            sx={{
+              borderRadius: 2,
+              boxShadow: 1,
+              "& .MuiDataGrid-columnHeaders": {
+                fontSize: isSmallScreen ? "0.8rem" : "1rem",
+                backgroundColor: "#f0f0f0",
+              },
+              "& .MuiDataGrid-row:nth-of-type(even)": {
+                backgroundColor: "#f9f9f9",
+              },
+              "& .MuiDataGrid-row:nth-of-type(odd)": {
+                backgroundColor: "#ffffff",
+              },
+              "& .MuiDataGrid-cell": {
+                fontSize: isSmallScreen ? "0.75rem" : "0.9rem",
+              },
+            }}
+          />
+        )}
       </Box>
     </Box>
   );

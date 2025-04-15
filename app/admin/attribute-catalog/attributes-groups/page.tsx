@@ -7,6 +7,8 @@ import {
   TextField,
   useMediaQuery,
   IconButton,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import {
   DataGrid,
@@ -44,12 +46,17 @@ const AttributeGroups = () => {
   });
   const [rowCount, setRowCount] = useState(0);
   const [attributeGroups, setAttributeGroups] = useState<AttributeGroup[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const { token } = getTokenAndRole();
 
   const fetchAttributeGroups = async () => {
     const { page, pageSize } = paginationModel;
 
     try {
+      setLoading(true);
+      setError("");
+
       const queryParams = new URLSearchParams({
         page: String(page + 1),
         limit: String(pageSize),
@@ -67,19 +74,19 @@ const AttributeGroups = () => {
       );
 
       if (!response.ok) {
-        console.error("Failed to fetch attribute-groups:", response.status);
-        return;
+        throw new Error("Failed to fetch attribute groups.");
       }
 
       const result = await response.json();
-      console.log("Fetched attribute-groups:", result);
 
       if (Array.isArray(result.attributeGroups)) {
-        const groupsWithMeta = result.attributeGroups.map((item: AttributeGroup, index: number) => ({
-          ...item,
-          id: item._id,
-          sn: page * pageSize + index + 1,
-        }));
+        const groupsWithMeta = result.attributeGroups.map(
+          (item: AttributeGroup, index: number) => ({
+            ...item,
+            id: item._id,
+            sn: page * pageSize + index + 1,
+          })
+        );
 
         setAttributeGroups(groupsWithMeta);
         setRowCount(result.totalDocs || groupsWithMeta.length);
@@ -87,9 +94,11 @@ const AttributeGroups = () => {
         setAttributeGroups([]);
         setRowCount(0);
       }
-    } catch (error) {
-      console.error("Error fetching attribute groups:", error);
+    } catch (err: any) {
+      setError(err.message || "Something went wrong.");
       setAttributeGroups([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -171,7 +180,26 @@ const AttributeGroups = () => {
         </ReusableButton>
       </Box>
 
-      <Box sx={{ height: 400, width: "100%", overflowX: "auto" }}>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      <Box sx={{ height: 500, width: "100%", position: "relative" }}>
+        {loading && (
+          <Box
+            sx={{
+              position: "absolute",
+              top: "40%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              zIndex: 1,
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        )}
         <DataGrid
           columns={Columns}
           rows={attributeGroups}
@@ -183,9 +211,11 @@ const AttributeGroups = () => {
           pageSizeOptions={[5, 10, 25]}
           autoHeight
           disableColumnMenu={isSmallScreen}
+          loading={loading}
           sx={{
             "& .MuiDataGrid-columnHeaders": {
               fontSize: isSmallScreen ? "0.8rem" : "1rem",
+              backgroundColor: "#f1f1f1",
             },
             "& .MuiDataGrid-row:nth-of-type(even)": {
               backgroundColor: "#f9f9f9",

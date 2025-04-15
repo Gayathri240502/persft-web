@@ -8,6 +8,7 @@ import {
   TextField,
   useMediaQuery,
   IconButton,
+  CircularProgress,
 } from "@mui/material";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
 import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
@@ -34,6 +35,8 @@ const Category = () => {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<Category[]>([]);
   const [rowCount, setRowCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
@@ -43,6 +46,9 @@ const Category = () => {
   const { token } = getTokenAndRole();
 
   const fetchCategory = async () => {
+    setLoading(true);
+    setError("");
+
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/categories`,
@@ -53,6 +59,10 @@ const Category = () => {
           },
         }
       );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch: ${response.statusText}`);
+      }
 
       const result = await response.json();
       console.log("Fetched categories:", result);
@@ -69,9 +79,12 @@ const Category = () => {
         setCategory([]);
         setRowCount(0);
       }
-    } catch (error) {
-      console.error("Error fetching categories:", error);
+    } catch (err: any) {
+      console.error("Error fetching categories:", err);
+      setError(err.message || "Something went wrong");
       setCategory([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -155,7 +168,7 @@ const Category = () => {
         </ReusableButton>
       </Box>
 
-      {/* Export Buttons (Optional Feature) */}
+      {/* Export Buttons */}
       <Box
         sx={{
           display: "flex",
@@ -172,12 +185,27 @@ const Category = () => {
         ))}
       </Box>
 
+      {/* Loading or Error */}
+      {loading && (
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+          <CircularProgress size={20} sx={{ mr: 1 }} />
+          <Typography variant="body2">Loading categories...</Typography>
+        </Box>
+      )}
+
+      {error && (
+        <Typography variant="body2" color="error" sx={{ mb: 2 }}>
+          {error}
+        </Typography>
+      )}
+
       {/* DataGrid */}
       <Box sx={{ height: 400, width: "100%", overflowX: "auto" }}>
         <DataGrid
           rows={filteredCategory}
           columns={columns}
           rowCount={rowCount}
+          loading={loading}
           pagination
           paginationMode="server"
           paginationModel={paginationModel}

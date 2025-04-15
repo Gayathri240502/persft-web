@@ -1,4 +1,5 @@
 "use client";
+
 import ReusableButton from "@/app/components/Button";
 import React, { useState, useEffect } from "react";
 import {
@@ -8,6 +9,8 @@ import {
   TextField,
   useMediaQuery,
   IconButton,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import {
   DataGrid,
@@ -54,10 +57,15 @@ const SubCategory = () => {
   });
   const [rowCount, setRowCount] = useState(0);
   const [rows, setRows] = useState<SubCategory[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const { token } = getTokenAndRole();
 
   const fetchSubCategories = async () => {
+    setLoading(true);
+    setError(null); // Reset error before making the request
+
     const { page, pageSize } = paginationModel;
 
     try {
@@ -78,8 +86,7 @@ const SubCategory = () => {
       );
 
       if (!response.ok) {
-        console.error("Failed to fetch sub-categories:", response.status);
-        return;
+        throw new Error(`Failed to fetch sub-categories: ${response.status}`);
       }
 
       const result = await response.json();
@@ -102,9 +109,12 @@ const SubCategory = () => {
         setRows([]);
         setRowCount(0);
       }
-    } catch (error) {
-      console.error("Error fetching sub-categories:", error);
+    } catch (err: any) {
+      console.error("Error fetching sub-categories:", err);
+      setError(err.message || "Something went wrong");
       setRows([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -239,6 +249,20 @@ const SubCategory = () => {
         </Button>
       </Box>
 
+      {/* Show Loading Spinner */}
+      {loading && (
+        <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+          <CircularProgress />
+        </Box>
+      )}
+
+      {/* Show Error Message */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
       <Box sx={{ width: "100%", overflowX: "auto" }}>
         <DataGrid
           columns={columns}
@@ -253,6 +277,12 @@ const SubCategory = () => {
           sx={{
             "& .MuiDataGrid-columnHeaders": {
               fontSize: isSmallScreen ? "0.8rem" : "1rem",
+            },
+            "& .MuiDataGrid-row:nth-of-type(even)": {
+              backgroundColor: "#f9f9f9",
+            },
+            "& .MuiDataGrid-row:nth-of-type(odd)": {
+              backgroundColor: "#ffffff",
             },
           }}
         />

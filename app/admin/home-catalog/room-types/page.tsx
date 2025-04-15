@@ -7,6 +7,8 @@ import {
   TextField,
   useMediaQuery,
   IconButton,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
@@ -37,6 +39,8 @@ const RoomTypes = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null); // Error state
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
     pageSize: 10,
@@ -48,6 +52,8 @@ const RoomTypes = () => {
   // Fetch Room Types
   const fetchRoomTypes = async () => {
     const { page, pageSize } = paginationModel;
+    setLoading(true);
+    setError(null); // Reset error before fetching
 
     try {
       const queryParams = new URLSearchParams({
@@ -68,7 +74,7 @@ const RoomTypes = () => {
 
       if (!response.ok) {
         console.error("Failed to fetch room types:", response.status);
-        return;
+        throw new Error("Failed to fetch room types");
       }
 
       const result = await response.json();
@@ -91,8 +97,9 @@ const RoomTypes = () => {
         setRowCount(0);
       }
     } catch (error) {
-      console.error("Error fetching room types:", error);
-      setRoomTypes([]);
+      setError(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+    } finally {
+      setLoading(false); // End loading
     }
   };
 
@@ -108,7 +115,7 @@ const RoomTypes = () => {
     {
       field: "residenceTypes",
       headerName: "Residence Types",
-      flex:1,
+      flex: 1,
       valueGetter: (params) => {
         const resTypes: ResidenceTypeReference[] = params.row?.residenceTypes;
         return Array.isArray(resTypes) && resTypes.length > 0
@@ -119,13 +126,13 @@ const RoomTypes = () => {
     {
       field: "archive",
       headerName: "Archived",
-      flex:1,
+      flex: 1,
       type: "boolean",
     },
     {
       field: "action",
       headerName: "Action",
-      flex:1,
+      flex: 1,
       renderCell: (params) => (
         <Box>
           <IconButton color="info" size="small">
@@ -176,31 +183,39 @@ const RoomTypes = () => {
         </ReusableButton>
       </Box>
 
-      <Box sx={{ height: 400, width: "100%", overflowX: "auto" }}>
-        <DataGrid
-          rows={roomTypes}
-          columns={columns}
-          rowCount={rowCount}
-          pagination
-          paginationMode="server"
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25]}
-          autoHeight
-          disableColumnMenu={isSmallScreen}
-          sx={{
-            "& .MuiDataGrid-columnHeaders": {
-              fontSize: isSmallScreen ? "0.8rem" : "1rem",
-            },
-            "& .MuiDataGrid-row:nth-of-type(even)": {
-              backgroundColor: "#f9f9f9",
-            },
-            "& .MuiDataGrid-row:nth-of-type(odd)": {
-              backgroundColor: "#ffffff",
-            },
-          }}
-        />
-      </Box>
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>} {/* Show error alert */}
+      
+      {loading ? ( // Show loading spinner while fetching data
+        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <Box sx={{ height: 400, width: "100%", overflowX: "auto" }}>
+          <DataGrid
+            rows={roomTypes}
+            columns={columns}
+            rowCount={rowCount}
+            pagination
+            paginationMode="server"
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            pageSizeOptions={[5, 10, 25]}
+            autoHeight
+            disableColumnMenu={isSmallScreen}
+            sx={{
+              "& .MuiDataGrid-columnHeaders": {
+                fontSize: isSmallScreen ? "0.8rem" : "1rem",
+              },
+              "& .MuiDataGrid-row:nth-of-type(even)": {
+                backgroundColor: "#f9f9f9",
+              },
+              "& .MuiDataGrid-row:nth-of-type(odd)": {
+                backgroundColor: "#ffffff",
+              },
+            }}
+          />
+        </Box>
+      )}
     </Box>
   );
 };

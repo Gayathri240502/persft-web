@@ -7,6 +7,8 @@ import {
   TextField,
   useMediaQuery,
   IconButton,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import {
   DataGrid,
@@ -42,6 +44,8 @@ const ThemesPage = () => {
   const [search, setSearch] = useState("");
   const [themes, setThemes] = useState<ThemeType[]>([]);
   const [rowCount, setRowCount] = useState(0);
+  const [loading, setLoading] = useState(false); // Loading state
+  const [error, setError] = useState<string | null>(null); // Error state
 
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
@@ -51,6 +55,8 @@ const ThemesPage = () => {
   const { token } = getTokenAndRole();
 
   const fetchThemes = async () => {
+    setLoading(true);
+    setError(null); // Reset error state before each request
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/themes`,
@@ -63,8 +69,7 @@ const ThemesPage = () => {
       );
 
       if (!response.ok) {
-        console.error("Failed to fetch themes:", response.status);
-        return;
+        throw new Error(`Failed to fetch themes: ${response.status}`);
       }
 
       const result = await response.json();
@@ -84,8 +89,10 @@ const ThemesPage = () => {
       }
     } catch (error) {
       console.error("Error fetching themes:", error);
-      setThemes([]);
-      setRowCount(0);
+      setError(error instanceof Error ? error.message : "Unknown error");
+      setRowCount(0); // Reset row count on error
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -110,13 +117,13 @@ const ThemesPage = () => {
   );
 
   const columns: GridColDef[] = [
-    { field: "sn", headerName: "SN", flex:1 },
-    { field: "name", headerName: "Theme Name",flex:1 },
-    { field: "description", headerName: "Description", flex:1 },
+    { field: "sn", headerName: "SN", flex: 1 },
+    { field: "name", headerName: "Theme Name", flex: 1 },
+    { field: "description", headerName: "Description", flex: 1 },
     {
       field: "roomTypes",
       headerName: "Room Types",
-      flex:1,
+      flex: 1,
       valueGetter: (params) => {
         const roomTypes: RoomTypesReference[] = params.row?.roomTypes;
         if (Array.isArray(roomTypes) && roomTypes.length > 0) {
@@ -125,11 +132,11 @@ const ThemesPage = () => {
         return "N/A";
       },
     },
-    { field: "archive", headerName: "Archived",flex:1, type: "boolean" },
+    { field: "archive", headerName: "Archived", flex: 1, type: "boolean" },
     {
       field: "action",
       headerName: "Action",
-      flex:1,
+      flex: 1,
       renderCell: () => (
         <Box>
           <IconButton color="info" size="small">
@@ -172,6 +179,14 @@ const ThemesPage = () => {
         />
         <ReusableButton onClick={() => router.push("themes/add")}>ADD</ReusableButton>
       </Box>
+
+      {loading && (
+        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+          <CircularProgress />
+        </Box>
+      )}
+
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>} {/* Show error alert */}
 
       <Box sx={{ height: 400, width: "100%", overflowX: "auto" }}>
         <DataGrid

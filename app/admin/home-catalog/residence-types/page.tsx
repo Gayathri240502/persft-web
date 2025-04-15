@@ -9,6 +9,12 @@ import {
   IconButton,
   CircularProgress,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
 } from "@mui/material";
 import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
@@ -32,7 +38,7 @@ const ResidenceTypePage = () => {
 
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null); // Error state
+  const [error, setError] = useState<string | null>(null);
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
     pageSize: 10,
@@ -40,15 +46,18 @@ const ResidenceTypePage = () => {
   const [rowCount, setRowCount] = useState(0);
   const [residenceTypes, setResidenceTypes] = useState<ResidenceType[]>([]);
 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
+
   const { token } = getTokenAndRole();
 
   const fetchResidenceTypes = async () => {
     const { page, pageSize } = paginationModel;
-    setLoading(true); // Start loading
+    setLoading(true);
 
     try {
       const queryParams = new URLSearchParams({
-        page: String(page + 1), // Backend usually expects 1-based page
+        page: String(page + 1),
         limit: String(pageSize),
         searchTerm: search,
       });
@@ -81,15 +90,55 @@ const ResidenceTypePage = () => {
       setResidenceTypes(typesWithId);
       setRowCount(result.totalCount || 0);
     } catch (error) {
-      setError(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setError(
+        `Error: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     } finally {
-      setLoading(false); // End loading
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchResidenceTypes();
   }, [paginationModel, search]);
+
+  const handleDeleteClick = (id: string) => {
+    setSelectedDeleteId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setSelectedDeleteId(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedDeleteId) return;
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/residence-types/${selectedDeleteId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete residence type");
+      }
+
+      setDeleteDialogOpen(false);
+      setSelectedDeleteId(null);
+      fetchResidenceTypes(); // Refresh list
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Failed to delete item"
+      );
+    }
+  };
 
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", flex: 1 },
@@ -101,15 +150,33 @@ const ResidenceTypePage = () => {
       field: "action",
       headerName: "Action",
       flex: 1,
-      renderCell: () => (
+      renderCell: (params) => (
         <div>
-          <IconButton color="info" size="small">
+          <IconButton
+            color="info"
+            size="small"
+            onClick={() => console.log("View", params.row.id)}
+          >
             <Visibility fontSize="small" />
           </IconButton>
-          <IconButton color="primary" size="small">
+
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() =>
+              router.push(
+                `/admin/home-catalog/residence-types/add?id=${params.row.id}`
+              )
+            }
+          >
             <Edit fontSize="small" />
           </IconButton>
-          <IconButton color="error" size="small">
+
+          <IconButton
+            color="error"
+            size="small"
+            onClick={() => handleDeleteClick(params.row.id)}
+          >
             <Delete fontSize="small" />
           </IconButton>
         </div>
@@ -145,17 +212,19 @@ const ResidenceTypePage = () => {
           }}
         />
         <ReusableButton
-          onClick={() =>
-            router.push("/admin/home-catalog/residence-types/add")
-          }
+          onClick={() => router.push("/admin/home-catalog/residence-types/add")}
         >
           ADD
         </ReusableButton>
       </Box>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>} {/* Show error alert */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
-      {loading ? ( // Show loading spinner while fetching data
+      {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
           <CircularProgress />
         </Box>
@@ -189,6 +258,23 @@ const ResidenceTypePage = () => {
           />
         </Box>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+        <DialogTitle>Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this residence type? This action
+            cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

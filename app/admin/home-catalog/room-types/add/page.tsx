@@ -8,6 +8,7 @@ import {
   TextField,
   FormControlLabel,
   Checkbox,
+  FormGroup,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import ReusableButton from "@/app/components/Button";
@@ -40,14 +41,13 @@ const AddRoomType = () => {
     const fetchResidenceTypes = async () => {
       try {
         setLoadingResidences(true);
-        if (!process.env.NEXT_PUBLIC_API_URL) {
-          throw new Error("API URL is not configured");
-        }
+
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/residence-types`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
             },
           }
         );
@@ -94,7 +94,7 @@ const AddRoomType = () => {
     if (file) {
       setFormData((prev) => ({
         ...prev,
-        thumbnail: file.name,
+        thumbnail: file.name, // NOTE: You may want to upload this file later
       }));
     }
   };
@@ -156,7 +156,7 @@ const AddRoomType = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" sx={{ mb: 2 }}>
-        Add New Room Types
+        Add New Room Type
       </Typography>
 
       <TextField
@@ -201,7 +201,7 @@ const AddRoomType = () => {
       <Typography variant="h6" sx={{ mb: 1 }}>
         Residence Mapping
       </Typography>
-      <Box sx={{ mb: 3, display: "flex", flexDirection: "column", gap: 1 }}>
+      <FormGroup sx={{ mb: 3 }}>
         {loadingResidences ? (
           <Typography>Loading residence types...</Typography>
         ) : Array.isArray(residenceTypes) && residenceTypes.length > 0 ? (
@@ -211,6 +211,7 @@ const AddRoomType = () => {
               control={
                 <Checkbox
                   value={residence._id}
+                  checked={formData.residenceTypes.includes(residence._id)}
                   onChange={handleCheckboxChange}
                 />
               }
@@ -220,9 +221,13 @@ const AddRoomType = () => {
         ) : (
           <Typography>No residence types available</Typography>
         )}
-      </Box>
+      </FormGroup>
 
-      {error && <Typography color="error">{error}</Typography>}
+      {error && (
+        <Typography sx={{ mb: 2, color: "error.main", fontWeight: "bold" }}>
+          {error}
+        </Typography>
+      )}
 
       <Box sx={{ display: "flex", gap: 2 }}>
         <ReusableButton onClick={handleSubmit} disabled={loading}>

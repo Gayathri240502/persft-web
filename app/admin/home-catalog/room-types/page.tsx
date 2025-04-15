@@ -9,6 +9,12 @@ import {
   IconButton,
   CircularProgress,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
 } from "@mui/material";
 import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
@@ -38,9 +44,10 @@ const RoomTypes = () => {
   const router = useRouter();
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null); // Error state
+  const [error, setError] = useState<string | null>(null);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
     pageSize: 10,
@@ -49,15 +56,18 @@ const RoomTypes = () => {
   const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
   const { token } = getTokenAndRole();
 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
+
   // Fetch Room Types
   const fetchRoomTypes = async () => {
     const { page, pageSize } = paginationModel;
     setLoading(true);
-    setError(null); // Reset error before fetching
+    setError(null);
 
     try {
       const queryParams = new URLSearchParams({
-        page: String(page + 1), // Assuming backend uses 1-based index
+        page: String(page + 1),
         limit: String(pageSize),
         searchTerm: search,
       });
@@ -73,12 +83,10 @@ const RoomTypes = () => {
       );
 
       if (!response.ok) {
-        console.error("Failed to fetch room types:", response.status);
         throw new Error("Failed to fetch room types");
       }
 
       const result = await response.json();
-      console.log("Fetched room types raw:", result);
 
       if (Array.isArray(result.roomTypes)) {
         const typesWithId = result.roomTypes.map((item, index) => ({
@@ -91,15 +99,17 @@ const RoomTypes = () => {
         }));
 
         setRoomTypes(typesWithId);
-        setRowCount(result.totalDocs || typesWithId.length); // fallback
+        setRowCount(result.totalDocs || typesWithId.length);
       } else {
         setRoomTypes([]);
         setRowCount(0);
       }
     } catch (error) {
-      setError(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setError(
+        `Error: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     } finally {
-      setLoading(false); // End loading
+      setLoading(false);
     }
   };
 
@@ -107,7 +117,45 @@ const RoomTypes = () => {
     fetchRoomTypes();
   }, [paginationModel, search]);
 
-  // Table columns
+  // Handle delete
+  const handleDeleteClick = (id: string) => {
+    setSelectedDeleteId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setSelectedDeleteId(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedDeleteId) return;
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/room-types/${selectedDeleteId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete room type");
+      }
+
+      setDeleteDialogOpen(false);
+      setSelectedDeleteId(null);
+      fetchRoomTypes();
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Failed to delete item"
+      );
+    }
+  };
+
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", flex: 1 },
     { field: "name", headerName: "Room Name", flex: 1 },
@@ -123,12 +171,7 @@ const RoomTypes = () => {
           : "N/A";
       },
     },
-    {
-      field: "archive",
-      headerName: "Archived",
-      flex: 1,
-      type: "boolean",
-    },
+    { field: "archive", headerName: "Archived", flex: 1, type: "boolean" },
     {
       field: "action",
       headerName: "Action",
@@ -138,10 +181,22 @@ const RoomTypes = () => {
           <IconButton color="info" size="small">
             <Visibility fontSize="small" />
           </IconButton>
-          <IconButton color="primary" size="small">
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() =>
+              router.push(
+                `/admin/home-catalog/room-types/add?id=${params.row.id}`
+              )
+            }
+          >
             <Edit fontSize="small" />
           </IconButton>
-          <IconButton color="error" size="small">
+          <IconButton
+            color="error"
+            size="small"
+            onClick={() => handleDeleteClick(params.row.id)}
+          >
             <Delete fontSize="small" />
           </IconButton>
         </Box>
@@ -173,7 +228,7 @@ const RoomTypes = () => {
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
-            setPaginationModel({ ...paginationModel, page: 0 }); // reset to first page
+            setPaginationModel({ ...paginationModel, page: 0 });
           }}
         />
         <ReusableButton
@@ -183,9 +238,13 @@ const RoomTypes = () => {
         </ReusableButton>
       </Box>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>} {/* Show error alert */}
-      
-      {loading ? ( // Show loading spinner while fetching data
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
           <CircularProgress />
         </Box>
@@ -216,6 +275,23 @@ const RoomTypes = () => {
           />
         </Box>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+        <DialogTitle>Delete Room Type</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this room type? This action will
+            archive the item and cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

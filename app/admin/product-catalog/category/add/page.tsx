@@ -8,12 +8,16 @@ import {
   FormControlLabel,
   Checkbox,
   Grid,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
+import { useRouter } from "next/navigation";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
+import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 const AddCategory = () => {
-  // State for form fields and room types
+  // State for form fields, room types, and loading/error states
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [thumbnail, setThumbnail] = useState("");
@@ -22,6 +26,12 @@ const AddCategory = () => {
     group2: false,
     group3: false,
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const router = useRouter();
+  const { token } = getTokenAndRole();
 
   const handleRoomTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRoomTypes({
@@ -30,14 +40,63 @@ const AddCategory = () => {
     });
   };
 
-  const handleSubmit = () => {
-    // Handle form submission logic here
-    console.log("Form Submitted:", {
+  // Validate form fields
+  const validateForm = () => {
+    if (!name || !description || !thumbnail) {
+      setError("Name, description, and thumbnail are required.");
+      return false;
+    }
+    return true;
+  };
+
+  // Handle form submission
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    const categoryData = {
       name,
       description,
       thumbnail,
-      roomMapping,
-    });
+      roomMapping: {
+        group1: roomMapping.group1,
+        group2: roomMapping.group2,
+        group3: roomMapping.group3,
+      },
+    };
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/categories`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(categoryData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to create category");
+      }
+
+      const result = await response.json();
+      setSuccess("Category successfully created!");
+      router.push("/admin/product-catalog/category");
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "An error occurred while creating the category."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -128,9 +187,23 @@ const AddCategory = () => {
         </Grid>
       </Grid>
 
+      {/* Error and Success Alerts */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      {success && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          {success}
+        </Alert>
+      )}
+
       {/* Submit and Cancel Buttons */}
       <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton>Submit</ReusableButton>
+        <ReusableButton onClick={handleSubmit} disabled={loading}>
+          {loading ? <CircularProgress size={24} /> : "Submit"}
+        </ReusableButton>
         <CancelButton href="/admin/product-catalog/category">
           Cancel
         </CancelButton>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Typography,
@@ -16,21 +16,29 @@ import CancelButton from "@/app/components/CancelButton";
 import { useRouter } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
+<<<<<<< HEAD
 interface ResidenceType {
   _id: string;
   name: string;
 }
 
 const AddRoomType = () => {
+=======
+const EditResidenceType = () => {
+>>>>>>> ee884bc0d6936210ee3140ce88abdf7240e075d1
   const router = useRouter();
   const { token } = getTokenAndRole();
 
+<<<<<<< HEAD
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     thumbnail: "",
     residenceTypes: [] as string[],
   });
+=======
+  const id = useMemo(() => searchParams.get("id"), [searchParams]);
+>>>>>>> ee884bc0d6936210ee3140ce88abdf7240e075d1
 
   const [residenceTypes, setResidenceTypes] = useState<ResidenceType[]>([]);
   const [loading, setLoading] = useState(false);
@@ -38,7 +46,18 @@ const AddRoomType = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+<<<<<<< HEAD
     const fetchResidenceTypes = async () => {
+=======
+    console.log("Edit ID from searchParams:", id);
+
+    if (!id) {
+      setInitialLoading(false);
+      return;
+    }
+
+    const fetchData = async () => {
+>>>>>>> ee884bc0d6936210ee3140ce88abdf7240e075d1
       try {
         setLoadingResidences(true);
         const response = await fetch(
@@ -55,12 +74,24 @@ const AddRoomType = () => {
           throw new Error("Failed to fetch residence types");
         }
 
+<<<<<<< HEAD
         const result = await response.json();
         setResidenceTypes(result.residenceTypes || []);
       } catch (error) {
         setError(
           error instanceof Error ? error.message : "Something went wrong"
         );
+=======
+        const data = await response.json();
+        const residenceType = data.data || data;
+
+        setName(residenceType.name || "");
+        setDescription(residenceType.description || "");
+        setThumbnail(residenceType.thumbnail || "");
+        setSelectedFileName("Existing Thumbnail");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error fetching data");
+>>>>>>> ee884bc0d6936210ee3140ce88abdf7240e075d1
       } finally {
         setLoadingResidences(false);
       }
@@ -125,6 +156,7 @@ const AddRoomType = () => {
     }
 
     try {
+<<<<<<< HEAD
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/room-types`,
         {
@@ -139,6 +171,26 @@ const AddRoomType = () => {
 
       if (!response.ok) {
         throw new Error("Failed to create room type");
+=======
+      const body = JSON.stringify({
+        name,
+        description,
+        thumbnail,
+      });
+
+      const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/residence-types/${id}`;
+      const response = await fetch(endpoint, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update residence type.");
+>>>>>>> ee884bc0d6936210ee3140ce88abdf7240e075d1
       }
 
       router.push("/admin/home-catalog/room-types");
@@ -154,7 +206,11 @@ const AddRoomType = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" sx={{ mb: 2 }}>
+<<<<<<< HEAD
         Add New Room Type
+=======
+        Edit Residence Type
+>>>>>>> ee884bc0d6936210ee3140ce88abdf7240e075d1
       </Typography>
 
       <TextField
@@ -228,6 +284,7 @@ const AddRoomType = () => {
         </Typography>
       )}
 
+<<<<<<< HEAD
       <Box sx={{ display: "flex", gap: 2 }}>
         <ReusableButton onClick={handleSubmit} disabled={loading}>
           {loading ? "Submitting..." : "Submit"}
@@ -236,8 +293,82 @@ const AddRoomType = () => {
           Cancel
         </CancelButton>
       </Box>
+=======
+      {initialLoading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <>
+          <TextField
+            label="Name"
+            fullWidth
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            sx={{ mb: 3 }}
+          />
+
+          <TextField
+            label="Description"
+            multiline
+            rows={3}
+            fullWidth
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            sx={{ mb: 3 }}
+          />
+
+          <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<UploadFileIcon />}
+              sx={{
+                color: "#05344c",
+                borderColor: "#05344c",
+                "&:hover": { backgroundColor: "#f0f4f8" },
+              }}
+            >
+              Upload Thumbnail
+              <input type="file" hidden onChange={handleThumbnailChange} />
+            </Button>
+            <Typography variant="body2" sx={{ color: "#666" }}>
+              {selectedFileName}
+            </Typography>
+          </Box>
+
+          {thumbnail && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2">Preview:</Typography>
+              <img
+                src={thumbnail}
+                alt="Thumbnail Preview"
+                style={{ width: 200, borderRadius: 8 }}
+              />
+            </Box>
+          )}
+
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <ReusableButton type="submit" disabled={loading}>
+              {loading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                "Update"
+              )}
+            </ReusableButton>
+            <CancelButton href="/admin/home-catalog/residence-types">
+              Cancel
+            </CancelButton>
+          </Box>
+        </>
+      )}
+>>>>>>> ee884bc0d6936210ee3140ce88abdf7240e075d1
     </Box>
   );
 };
 
+<<<<<<< HEAD
 export default AddRoomType;
+=======
+export default EditResidenceType;
+>>>>>>> ee884bc0d6936210ee3140ce88abdf7240e075d1

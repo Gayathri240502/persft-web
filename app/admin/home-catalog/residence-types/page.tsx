@@ -21,6 +21,7 @@ import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 interface ResidenceType {
   id: string;
@@ -141,25 +142,16 @@ const ResidenceTypePage = () => {
   };
 
   const columns: GridColDef[] = [
-    { field: "sn", headerName: "SN", flex: 1 },
+    { field: "sn", headerName: "SN", width: 70 },
     { field: "name", headerName: "Name", flex: 1 },
     { field: "description", headerName: "Description", flex: 1 },
     { field: "thumbnail", headerName: "Thumbnail", flex: 1 },
-    { field: "archive", headerName: "Archive", flex: 1, type: "boolean" },
     {
       field: "action",
       headerName: "Action",
       flex: 1,
       renderCell: (params) => (
         <div>
-          <IconButton
-            color="info"
-            size="small"
-            onClick={() => console.log("View", params.row.id)}
-          >
-            <Visibility fontSize="small" />
-          </IconButton>
-
           <IconButton
             color="primary"
             size="small"
@@ -230,7 +222,7 @@ const ResidenceTypePage = () => {
         </Box>
       ) : (
         <Box sx={{ height: 500, width: "100%", overflowX: "auto" }}>
-          <DataGrid
+          <StyledDataGrid
             rows={residenceTypes}
             columns={columns}
             rowCount={rowCount}
@@ -244,17 +236,6 @@ const ResidenceTypePage = () => {
             pageSizeOptions={[5, 10, 25]}
             autoHeight
             disableColumnMenu={isSmallScreen}
-            sx={{
-              "& .MuiDataGrid-columnHeaders": {
-                fontSize: isSmallScreen ? "0.8rem" : "1rem",
-              },
-              "& .MuiDataGrid-row:nth-of-type(even)": {
-                backgroundColor: "#f9f9f9",
-              },
-              "& .MuiDataGrid-row:nth-of-type(odd)": {
-                backgroundColor: "#ffffff",
-              },
-            }}
           />
         </Box>
       )}

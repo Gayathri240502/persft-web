@@ -1,71 +1,214 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Box, Typography, TextField, MenuItem,} from "@mui/material";
-import ReusableButton from "@/app/components/Button";
-import CancelButton from "@/app/components/CancelButton";
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  TextField,
+  useMediaQuery,
+  IconButton,
+} from '@mui/material';
+import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+import { useTheme } from '@mui/material/styles';
+import { useRouter } from 'next/navigation';
+import { Visibility, Edit, Delete } from '@mui/icons-material';
+import ReusableButton from '@/app/components/Button';
+import { getTokenAndRole } from '@/app/containers/utils/session/CheckSession';
 
+interface WorkGroup {
+  _id: string;
+  name: string;
+}
 
-const WorkGroup = () => {
+interface WorkTask {
+  _id: string;
+  name: string;
+  description: string;
+  workGroup?: WorkGroup;
+  targetDays: number;
+  bufferDays: number;
+  poDays: number;
+  archive: boolean;
+  id?: string;
+  sn?: number;
+}
+
+const WorkTasksPage = () => {
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  const router = useRouter();
+  const { token } = getTokenAndRole();
+
+  const [search, setSearch] = useState('');
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
+    pageSize: 10,
+  });
+  const [rowCount, setRowCount] = useState(0);
+  const [tasks, setTasks] = useState<WorkTask[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const fetchWorkTasks = async () => {
+    setLoading(true);
+    setError('');
+    const { page, pageSize } = paginationModel;
+
+    try {
+      const queryParams = new URLSearchParams({
+        page: String(page + 1),
+        limit: String(pageSize),
+        searchTerm: search,
+      });
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/work-tasks?${queryParams}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}`);
+      }
+
+      const result = await response.json();
+      const formatted = result.workTasks.map((task: WorkTask, index: number) => ({
+        ...task,
+        id: task._id,
+        sn: page * pageSize + index + 1,
+        workGroup: task.workGroup ? task.workGroup : { name: 'N/A' },
+      }));
+
+      setTasks(formatted);
+      setRowCount(result.totalDocs || formatted.length);
+    } catch (err: any) {
+      console.error('Fetch error:', err);
+      setError('Failed to fetch work tasks');
+      setTasks([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWorkTasks();
+  }, [paginationModel, search]);
+
+  const columns: GridColDef[] = [
+    { field: 'sn', headerName: 'SN', flex: 0.5 },
+    { field: 'name', headerName: 'Name', flex: 1 },
+    { field: 'description', headerName: 'Description', flex: 1.5 },
+    {
+      field: 'workGroup',
+      headerName: 'Work Group',
+      flex: 1,
+      valueGetter: (params) => {
+        // Ensure that workGroup is present and is an object
+        const workGroup = params.row?.workGroup;
+    
+        // If workGroup exists and has a name property, return the name, otherwise return 'N/A'
+        return workGroup && workGroup.name ? workGroup.name : 'N/A';
+      },
+    },
+    { field: 'targetDays', headerName: 'Target Days', flex: 0.8 },
+    { field: 'bufferDays', headerName: 'Buffer Days', flex: 0.8 },
+    { field: 'poDays', headerName: 'PO Days', flex: 0.8 },
+    {
+      field: 'archive',
+      headerName: 'Archived',
+      flex: 0.7,
+      type: 'boolean',
+    },
+    {
+      field: 'actions',
+      headerName: 'Actions',
+      flex: 1,
+      renderCell: (params) => (
+        <Box>
+          <IconButton color="info" size="small">
+            <Visibility fontSize="small" />
+          </IconButton>
+          <IconButton color="primary" size="small">
+            <Edit fontSize="small" />
+          </IconButton>
+          <IconButton color="error" size="small">
+            <Delete fontSize="small" />
+          </IconButton>
+        </Box>
+      ),
+    },
+  ];
+
   return (
-    <Box sx={{ p: 3 }}>
-      {/* Heading */}
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Work Group
+    <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
+      <Typography variant={isSmallScreen ? 'h6' : 'h5'} sx={{ mb: 2 }}>
+        Work Tasks
       </Typography>
 
-      {/* Name Field */}
-      <TextField label="Name" fullWidth sx={{ mb: 3 }} />
-
-      {/* Description Field */}
-      <TextField
-        label="Description"
-        multiline
-        rows={3}
-        fullWidth
-        sx={{ mb: 3 }}
-      />
-
-      {/* Work Task Dropdown */}
-      <TextField
-        select
-        label="Work Task"
-        fullWidth
-        sx={{ mb: 3 }}
+      {/* Search and Add Button */}
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: isSmallScreen ? 'column' : 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 2,
+          mb: 2,
+        }}
       >
-        <MenuItem value="task1">Task 1</MenuItem>
-        <MenuItem value="task2">Task 2</MenuItem>
-        <MenuItem value="task3">Task 3</MenuItem>
-      </TextField>
-
-      {/* Target Days */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-        <Typography>Target Days:</Typography>
-        <TextField type="number" sx={{ width: 120 }} defaultValue={0} />
-      </Box>
-
-      {/* Buffer Days */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-        <Typography>Buffer Days:</Typography>
-        <TextField type="number" sx={{ width: 120 }} defaultValue={0} />
-      </Box>
-
-      {/* PO Date */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-        <Typography>PO Date:</Typography>
         <TextField
-          type="date"
-          sx={{ width: 150 }}
+          label="Search"
+          variant="outlined"
+          size="small"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          fullWidth={isSmallScreen}
         />
+        <ReusableButton onClick={() => router.push('/admin/work/work-task/add')}>
+          ADD
+        </ReusableButton>
       </Box>
 
-      {/* Submit and Cancel Buttons */}
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton>Submit</ReusableButton>
-        <CancelButton href="/admin">Cancel</CancelButton>
+      {/* Error Message */}
+      {error && (
+        <Typography color="error" sx={{ mb: 2 }}>
+          {error}
+        </Typography>
+      )}
+
+      {/* DataGrid */}
+      <Box sx={{ height: 500, width: '100%', overflowX: 'auto' }}>
+        <DataGrid
+          columns={columns}
+          rows={tasks}
+          rowCount={rowCount}
+          pagination
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          pageSizeOptions={[5, 10, 25]}
+          loading={loading}
+          autoHeight
+          disableColumnMenu={isSmallScreen}
+          sx={{
+            '& .MuiDataGrid-columnHeaders': {
+              fontSize: isSmallScreen ? '0.8rem' : '1rem',
+            },
+            '& .MuiDataGrid-row:nth-of-type(even)': {
+              backgroundColor: '#f9f9f9',
+            },
+            '& .MuiDataGrid-row:nth-of-type(odd)': {
+              backgroundColor: '#ffffff',
+            },
+          }}
+        />
       </Box>
     </Box>
   );
 };
 
-export default WorkGroup;
+export default WorkTasksPage;

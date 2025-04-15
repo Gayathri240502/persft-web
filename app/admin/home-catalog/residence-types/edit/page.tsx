@@ -33,7 +33,6 @@ const EditResidenceType = () => {
 
   useEffect(() => {
     console.log("Edit ID from searchParams:", id);
-    console.log("Edit ID from searchParams:", id);
 
     if (!id) {
       setInitialLoading(false);

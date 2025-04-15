@@ -9,12 +9,14 @@ import {
   IconButton,
   CircularProgress,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
 } from "@mui/material";
-import {
-  DataGrid,
-  GridColDef,
-  GridPaginationModel,
-} from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import ReusableButton from "@/app/components/Button";
 import { useRouter } from "next/navigation";
@@ -44,19 +46,22 @@ const ThemesPage = () => {
   const [search, setSearch] = useState("");
   const [themes, setThemes] = useState<ThemeType[]>([]);
   const [rowCount, setRowCount] = useState(0);
-  const [loading, setLoading] = useState(false); // Loading state
-  const [error, setError] = useState<string | null>(null); // Error state
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
     pageSize: 5,
   });
 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
+
   const { token } = getTokenAndRole();
 
   const fetchThemes = async () => {
     setLoading(true);
-    setError(null); // Reset error state before each request
+    setError(null);
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/themes`,
@@ -73,8 +78,6 @@ const ThemesPage = () => {
       }
 
       const result = await response.json();
-      console.log("Fetched themes:", result);
-
       if (Array.isArray(result.themes)) {
         const themesWithExtras = result.themes.map((item, index) => ({
           ...item,
@@ -90,7 +93,7 @@ const ThemesPage = () => {
     } catch (error) {
       console.error("Error fetching themes:", error);
       setError(error instanceof Error ? error.message : "Unknown error");
-      setRowCount(0); // Reset row count on error
+      setRowCount(0);
     } finally {
       setLoading(false);
     }
@@ -100,6 +103,39 @@ const ThemesPage = () => {
     fetchThemes();
   }, [paginationModel, search]);
 
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setSelectedThemeId(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedThemeId) return;
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/themes/${selectedThemeId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete theme: ${response.status}`);
+      }
+
+      fetchThemes(); // Refresh themes after deletion
+    } catch (err) {
+      console.error("Delete error:", err);
+      setError("Failed to delete theme.");
+    } finally {
+      handleDeleteCancel();
+    }
+  };
+
   const filteredThemes = themes.filter((theme) =>
     Object.values(theme)
       .flatMap((val) =>
@@ -108,8 +144,8 @@ const ThemesPage = () => {
               typeof sub === "object" ? JSON.stringify(sub) : sub
             )
           : typeof val === "object"
-          ? JSON.stringify(val)
-          : val
+            ? JSON.stringify(val)
+            : val
       )
       .join(" ")
       .toLowerCase()
@@ -137,7 +173,7 @@ const ThemesPage = () => {
       field: "action",
       headerName: "Action",
       flex: 1,
-      renderCell: () => (
+      renderCell: (params) => (
         <Box>
           <IconButton color="info" size="small">
             <Visibility fontSize="small" />
@@ -145,7 +181,14 @@ const ThemesPage = () => {
           <IconButton color="primary" size="small">
             <Edit fontSize="small" />
           </IconButton>
-          <IconButton color="error" size="small">
+          <IconButton
+            color="error"
+            size="small"
+            onClick={() => {
+              setSelectedThemeId(params.row._id);
+              setDeleteDialogOpen(true);
+            }}
+          >
             <Delete fontSize="small" />
           </IconButton>
         </Box>
@@ -177,7 +220,9 @@ const ThemesPage = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <ReusableButton onClick={() => router.push("themes/add")}>ADD</ReusableButton>
+        <ReusableButton onClick={() => router.push("themes/add")}>
+          ADD
+        </ReusableButton>
       </Box>
 
       {loading && (
@@ -186,7 +231,11 @@ const ThemesPage = () => {
         </Box>
       )}
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>} {/* Show error alert */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       <Box sx={{ height: 400, width: "100%", overflowX: "auto" }}>
         <DataGrid
@@ -213,6 +262,23 @@ const ThemesPage = () => {
           }}
         />
       </Box>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+        <DialogTitle>Delete Theme</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to archive this theme? This action cannot be
+            undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

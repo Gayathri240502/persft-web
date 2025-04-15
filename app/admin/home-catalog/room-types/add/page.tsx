@@ -32,15 +32,17 @@ const AddRoomType = () => {
     residenceTypes: [] as string[],
   });
 
-  const [residenceTypes, setResidenceTypes] = useState<ResidenceType[]>([]);
+  const [residenceTypeList, setResidenceTypeList] = useState<ResidenceType[]>(
+    []
+  );
   const [loading, setLoading] = useState(false);
-  const [loadingResidences, setLoadingResidences] = useState(true);
+  const [loadingResidenceTypes, setLoadingResidenceTypes] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchResidenceTypes = async () => {
       try {
-        setLoadingResidences(true);
+        setLoadingResidenceTypes(true);
 
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/residence-types`,
@@ -53,18 +55,26 @@ const AddRoomType = () => {
         );
 
         if (!response.ok) {
-          throw new Error("Failed to fetch residence types");
+          throw new Error(
+            `Failed to fetch residence types: ${response.status}`
+          );
         }
 
-        const data = await response.json();
-        console.log("API Response:", data);
-        setResidenceTypes(data.data || []);
+        const result = await response.json();
+
+        // Use same key as the first component
+        const types = result.residenceTypes || [];
+
+        setResidenceTypeList(types);
       } catch (error) {
+        console.error("Fetch error:", error);
         setError(
-          error instanceof Error ? error.message : "Something went wrong"
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch residence types"
         );
       } finally {
-        setLoadingResidences(false);
+        setLoadingResidenceTypes(false);
       }
     };
 
@@ -94,7 +104,7 @@ const AddRoomType = () => {
     if (file) {
       setFormData((prev) => ({
         ...prev,
-        thumbnail: file.name, // NOTE: You may want to upload this file later
+        thumbnail: file.name, // consider uploading the file and saving base64 or URL
       }));
     }
   };
@@ -130,12 +140,7 @@ const AddRoomType = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            name: formData.name,
-            description: formData.description,
-            thumbnail: formData.thumbnail,
-            residenceTypes: formData.residenceTypes,
-          }),
+          body: JSON.stringify(formData),
         }
       );
 
@@ -202,10 +207,10 @@ const AddRoomType = () => {
         Residence Mapping
       </Typography>
       <FormGroup sx={{ mb: 3 }}>
-        {loadingResidences ? (
+        {loadingResidenceTypes ? (
           <Typography>Loading residence types...</Typography>
-        ) : Array.isArray(residenceTypes) && residenceTypes.length > 0 ? (
-          residenceTypes.map((residence) => (
+        ) : residenceTypeList.length > 0 ? (
+          residenceTypeList.map((residence) => (
             <FormControlLabel
               key={residence._id}
               control={

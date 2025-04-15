@@ -6,42 +6,43 @@ import {
   Typography,
   Button,
   TextField,
-  CircularProgress,
-  Alert,
+  FormControlLabel,
+  Checkbox,
+  FormGroup,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
-const AddOrEditResidenceType = () => {
+interface ResidenceType {
+  _id: string;
+  name: string;
+}
+
+const AddRoomType = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { token } = getTokenAndRole();
 
-  const id = searchParams.get("id");
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    thumbnail: "",
+    residenceTypes: [] as string[],
+  });
 
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [thumbnail, setThumbnail] = useState<string>("");
-  const [selectedFileName, setSelectedFileName] =
-    useState<string>("No file selected");
+  const [residenceTypes, setResidenceTypes] = useState<ResidenceType[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingResidences, setLoadingResidences] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [initialLoading, setInitialLoading] = useState<boolean>(true);
 
-  // Fetch existing data if editing
   useEffect(() => {
-    const fetchData = async () => {
-      if (!id) {
-        setInitialLoading(false);
-        return;
-      }
-
+    const fetchResidenceTypes = async () => {
       try {
+        setLoadingResidences(true);
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/residence-types/${id}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/residence-types?page=1&limit=100`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -51,85 +52,99 @@ const AddOrEditResidenceType = () => {
         );
 
         if (!response.ok) {
-          throw new Error("Failed to fetch residence type details.");
+          throw new Error("Failed to fetch residence types");
         }
 
-        const data = await response.json();
-        console.log("Fetched data:", data);
-
-        // Adjust if your API nests data inside `data`
-        const residenceType = data.data || data;
-
-        setName(residenceType.name || "");
-        setDescription(residenceType.description || "");
-        setThumbnail(residenceType.thumbnail || "");
-        setSelectedFileName("Existing Thumbnail");
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Error fetching data");
+        const result = await response.json();
+        setResidenceTypes(result.residenceTypes || []);
+      } catch (error) {
+        setError(
+          error instanceof Error ? error.message : "Something went wrong"
+        );
       } finally {
-        setInitialLoading(false);
+        setLoadingResidences(false);
       }
     };
 
-    fetchData();
-  }, [id, token]);
+    fetchResidenceTypes();
+  }, [token]);
 
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      residenceTypes: checked
+        ? [...prev.residenceTypes, value]
+        : prev.residenceTypes.filter((type) => type !== value),
+    }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setSelectedFileName(file.name);
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
-        setThumbnail(base64String);
+        setFormData((prev) => ({
+          ...prev,
+          thumbnail: base64String,
+        }));
       };
       reader.readAsDataURL(file);
     }
   };
 
   const validateForm = () => {
-    if (!name) return setError("Name is required"), false;
-    if (!description) return setError("Description is required"), false;
-    if (!thumbnail) return setError("Thumbnail is required"), false;
-    setError(null);
+    if (
+      !formData.name ||
+      !formData.description ||
+      formData.residenceTypes.length === 0
+    ) {
+      setError("All fields are required");
+      return false;
+    }
     return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
-
     setLoading(true);
+    setError(null);
+
+    if (!validateForm()) {
+      setLoading(false);
+      return;
+    }
+
     try {
-      const body = JSON.stringify({
-        name,
-        description,
-        thumbnail,
-      });
-
-      const endpoint = id
-        ? `${process.env.NEXT_PUBLIC_API_URL}/residence-types/${id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/residence-types`;
-
-      const method = id ? "PUT" : "POST";
-
-      const response = await fetch(endpoint, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body,
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/room-types`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error("Failed to save residence type.");
+        throw new Error("Failed to create room type");
       }
 
-      router.push("/admin/home-catalog/residence-types");
+      router.push("/admin/home-catalog/room-types");
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Unexpected error occurred"
+        err instanceof Error ? err.message : "An error occurred while creating"
       );
     } finally {
       setLoading(false);
@@ -137,87 +152,92 @@ const AddOrEditResidenceType = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }} component="form" onSubmit={handleSubmit}>
+    <Box sx={{ p: 3 }}>
       <Typography variant="h5" sx={{ mb: 2 }}>
-        {id ? "Edit Residence Type" : "Add Residence Type"}
+        Add New Room Type
       </Typography>
 
+      <TextField
+        label="Name"
+        name="name"
+        value={formData.name}
+        onChange={handleInputChange}
+        fullWidth
+        sx={{ mb: 3 }}
+      />
+
+      <TextField
+        label="Description"
+        name="description"
+        value={formData.description}
+        onChange={handleInputChange}
+        multiline
+        rows={3}
+        fullWidth
+        sx={{ mb: 3 }}
+      />
+
+      <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
+        <Button
+          variant="outlined"
+          component="label"
+          startIcon={<UploadFileIcon />}
+          sx={{
+            color: "#05344c",
+            borderColor: "#05344c",
+            "&:hover": { backgroundColor: "#f0f4f8" },
+          }}
+        >
+          Upload Thumbnail
+          <input type="file" hidden onChange={handleFileChange} />
+        </Button>
+        <Typography variant="body2" sx={{ color: "#666" }}>
+          {formData.thumbnail ? "Image uploaded" : "No file selected"}
+        </Typography>
+      </Box>
+
+      <Typography variant="h6" sx={{ mb: 1 }}>
+        Residence Mapping
+      </Typography>
+
+      <FormGroup sx={{ mb: 3 }}>
+        {loadingResidences ? (
+          <Typography>Loading residence types...</Typography>
+        ) : Array.isArray(residenceTypes) && residenceTypes.length > 0 ? (
+          residenceTypes.map((residence) => (
+            <FormControlLabel
+              key={residence._id}
+              control={
+                <Checkbox
+                  value={residence._id}
+                  checked={formData.residenceTypes.includes(residence._id)}
+                  onChange={handleCheckboxChange}
+                />
+              }
+              label={residence.name}
+            />
+          ))
+        ) : (
+          <Typography>No residence types available</Typography>
+        )}
+      </FormGroup>
+
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Typography sx={{ mb: 2, color: "error.main", fontWeight: "bold" }}>
           {error}
-        </Alert>
+        </Typography>
       )}
 
-      {initialLoading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <>
-          <TextField
-            label="Name"
-            fullWidth
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            sx={{ mb: 3 }}
-          />
-
-          <TextField
-            label="Description"
-            multiline
-            rows={3}
-            fullWidth
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            sx={{ mb: 3 }}
-          />
-
-          <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
-            <Button
-              variant="outlined"
-              component="label"
-              startIcon={<UploadFileIcon />}
-              sx={{
-                color: "#05344c",
-                borderColor: "#05344c",
-                "&:hover": { backgroundColor: "#f0f4f8" },
-              }}
-            >
-              Upload Thumbnail
-              <input type="file" hidden onChange={handleThumbnailChange} />
-            </Button>
-            <Typography variant="body2" sx={{ color: "#666" }}>
-              {selectedFileName}
-            </Typography>
-          </Box>
-
-          {thumbnail && (
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2">Preview:</Typography>
-              <img
-                src={thumbnail}
-                alt="Thumbnail Preview"
-                style={{ width: 200, borderRadius: 8 }}
-              />
-            </Box>
-          )}
-
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <ReusableButton type="submit" disabled={loading}>
-              {loading ? (
-                <CircularProgress size={24} color="inherit" />
-              ) : (
-                "Submit"
-              )}
-            </ReusableButton>
-            <CancelButton href="/admin/home-catalog/residence-types">
-              Cancel
-            </CancelButton>
-          </Box>
-        </>
-      )}
+      <Box sx={{ display: "flex", gap: 2 }}>
+        <ReusableButton onClick={handleSubmit} disabled={loading}>
+          {loading ? "Submitting..." : "Submit"}
+        </ReusableButton>
+        <CancelButton href="/admin/home-catalog/room-types">
+          Cancel
+        </CancelButton>
+      </Box>
     </Box>
   );
 };
 
-export default AddOrEditResidenceType;
+export default AddRoomType;

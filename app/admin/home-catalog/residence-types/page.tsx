@@ -1,6 +1,6 @@
 "use client";
-import ReusableButton from "@/app/components/Button";
-import React, { useState, useEffect } from "react";
+
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -16,12 +16,14 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
-import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
+import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useRouter } from "next/navigation";
-import { Visibility, Edit, Delete } from "@mui/icons-material";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { Edit, Delete } from "@mui/icons-material";
+
+import ReusableButton from "@/app/components/Button";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
+import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface ResidenceType {
   id: string;
@@ -53,8 +55,8 @@ const ResidenceTypePage = () => {
   const { token } = getTokenAndRole();
 
   const fetchResidenceTypes = async () => {
-    const { page, pageSize } = paginationModel;
     setLoading(true);
+    const { page, pageSize } = paginationModel;
 
     try {
       const queryParams = new URLSearchParams({
@@ -64,7 +66,7 @@ const ResidenceTypePage = () => {
       });
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/residence-types?${queryParams.toString()}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/residence-types?${queryParams}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -74,12 +76,10 @@ const ResidenceTypePage = () => {
       );
 
       if (!response.ok) {
-        setError(`Failed to fetch residence types: ${response.status}`);
-        return;
+        throw new Error(`Failed to fetch residence types: ${response.status}`);
       }
 
       const result = await response.json();
-
       const typesWithId = (result.residenceTypes || []).map(
         (item: any, index: number) => ({
           ...item,
@@ -90,9 +90,9 @@ const ResidenceTypePage = () => {
 
       setResidenceTypes(typesWithId);
       setRowCount(result.totalCount || 0);
-    } catch (error) {
+    } catch (err) {
       setError(
-        `Error: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Error: ${err instanceof Error ? err.message : "Unknown error"}`
       );
     } finally {
       setLoading(false);
@@ -131,13 +131,10 @@ const ResidenceTypePage = () => {
         throw new Error("Failed to delete residence type");
       }
 
-      setDeleteDialogOpen(false);
-      setSelectedDeleteId(null);
-      fetchResidenceTypes(); // Refresh list
-    } catch (error) {
-      setError(
-        error instanceof Error ? error.message : "Failed to delete item"
-      );
+      fetchResidenceTypes();
+      handleDeleteCancel();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete item");
     }
   };
 
@@ -151,7 +148,7 @@ const ResidenceTypePage = () => {
       headerName: "Action",
       flex: 1,
       renderCell: (params) => (
-        <div>
+        <Box>
           <IconButton
             color="primary"
             size="small"
@@ -171,7 +168,7 @@ const ResidenceTypePage = () => {
           >
             <Delete fontSize="small" />
           </IconButton>
-        </div>
+        </Box>
       ),
     },
   ];
@@ -240,7 +237,6 @@ const ResidenceTypePage = () => {
         </Box>
       )}
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
         <DialogTitle>Delete</DialogTitle>
         <DialogContent>

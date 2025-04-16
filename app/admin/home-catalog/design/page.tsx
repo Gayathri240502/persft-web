@@ -1,13 +1,21 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Box, Typography, TextField, useMediaQuery, IconButton, CircularProgress } from "@mui/material";
+import {
+  Box,
+  Typography,
+  TextField,
+  useMediaQuery,
+  IconButton,
+  CircularProgress,
+} from "@mui/material";
 import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import ReusableButton from "@/app/components/Button";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 interface RoomDesign {
   _id: string;
@@ -100,7 +108,7 @@ const DesignType = () => {
 
   // Column Definitions
   const columns: GridColDef[] = [
-    { field: "sn", headerName: "SN", flex: 1 },
+    { field: "sn", headerName: "SN", width: 70 },
     { field: "name", headerName: "Name", flex: 1 },
     { field: "description", headerName: "Description", flex: 1 },
     { field: "thumbnail", headerName: "Thumbnail", flex: 1 },
@@ -127,9 +135,6 @@ const DesignType = () => {
       flex: 1,
       renderCell: (params) => (
         <Box>
-          <IconButton color="info" size="small">
-            <Visibility fontSize="small" />
-          </IconButton>
           <IconButton color="primary" size="small">
             <Edit fontSize="small" />
           </IconButton>
@@ -191,7 +196,7 @@ const DesignType = () => {
       ) : (
         // Data Grid
         <Box sx={{ height: 400, width: "99%", overflowX: "auto" }}>
-          <DataGrid
+          <StyledDataGrid
             columns={columns}
             rows={designs}
             rowCount={rowCount}
@@ -202,17 +207,6 @@ const DesignType = () => {
             pageSizeOptions={[5, 10, 25]}
             autoHeight
             disableColumnMenu={isSmallScreen}
-            sx={{
-              "& .MuiDataGrid-columnHeaders": {
-                fontSize: isSmallScreen ? "0.8rem" : "1rem",
-              },
-              "& .MuiDataGrid-row:nth-of-type(even)": {
-                backgroundColor: "#f9f9f9",
-              },
-              "& .MuiDataGrid-row:nth-of-type(odd)": {
-                backgroundColor: "#ffffff",
-              },
-            }}
           />
         </Box>
       )}

@@ -9,13 +9,19 @@ import {
   useMediaQuery,
   IconButton,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
-import { Visibility, Edit, Delete } from "@mui/icons-material";
+import { Edit, Delete } from "@mui/icons-material";
 import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import ReusableButton from "@/app/components/Button";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 interface Category {
   _id?: string;
@@ -44,6 +50,11 @@ const Category = () => {
   });
 
   const { token } = getTokenAndRole();
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null
+  );
 
   const fetchCategory = async () => {
     setLoading(true);
@@ -100,33 +111,78 @@ const Category = () => {
               typeof sub === "object" ? JSON.stringify(sub) : sub
             )
           : typeof val === "object"
-          ? JSON.stringify(val)
-          : val
+            ? JSON.stringify(val)
+            : val
       )
       .join(" ")
       .toLowerCase()
       .includes(search.toLowerCase())
   );
 
+  const handleDeleteConfirm = async () => {
+    if (selectedCategoryId) {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/categories/${selectedCategoryId}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to delete category: ${response.statusText}`);
+        }
+
+        // After deletion, fetch the updated category list
+        fetchCategory();
+        setDeleteDialogOpen(false); // Close dialog
+        setSelectedCategoryId(null); // Clear selected category
+      } catch (error) {
+        setError("Failed to delete category");
+      }
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setSelectedCategoryId(null); // Clear selected category
+  };
+
   const columns: GridColDef[] = [
-    { field: "sn", headerName: "SN", width: 80 },
-    { field: "name", headerName: "Name", width: 180 },
-    { field: "description", headerName: "Description", width: 250 },
-    { field: "thumbnail", headerName: "Thumbnail", width: 200 },
-    { field: "archive", headerName: "Archived", width: 120, type: "boolean" },
+    { field: "sn", headerName: "SN", width: 70 },
+    { field: "name", headerName: "Name", flex: 1 },
+    { field: "description", headerName: "Description", flex: 1 },
+    { field: "thumbnail", headerName: "Thumbnail", flex: 1 },
+    { field: "archive", headerName: "Archived", flex: 1, type: "boolean" },
     {
       field: "action",
       headerName: "Action",
       width: 150,
-      renderCell: () => (
+      renderCell: (params) => (
         <Box>
-          <IconButton color="info" size="small">
-            <Visibility fontSize="small" />
-          </IconButton>
-          <IconButton color="primary" size="small">
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() =>
+              router.push(
+                `/admin/product-catalog/category/edit/${params.row.id}`
+              )
+            }
+          >
             <Edit fontSize="small" />
           </IconButton>
-          <IconButton color="error" size="small">
+          <IconButton
+            color="error"
+            size="small"
+            onClick={() => {
+              setSelectedCategoryId(params.row.id); // Set category to delete
+              setDeleteDialogOpen(true); // Open delete dialog
+            }}
+          >
             <Delete fontSize="small" />
           </IconButton>
         </Box>
@@ -168,23 +224,6 @@ const Category = () => {
         </ReusableButton>
       </Box>
 
-      {/* Export Buttons */}
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: isSmallScreen ? "column" : "row",
-          gap: 1,
-          mb: 2,
-          alignItems: "center",
-        }}
-      >
-        {["Show Rows", "Copy", "CSV", "Excel", "PDF", "Print"].map((label) => (
-          <Button key={label} variant="outlined" size="small">
-            {label}
-          </Button>
-        ))}
-      </Box>
-
       {/* Loading or Error */}
       {loading && (
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
@@ -201,7 +240,7 @@ const Category = () => {
 
       {/* DataGrid */}
       <Box sx={{ height: 400, width: "100%", overflowX: "auto" }}>
-        <DataGrid
+        <StyledDataGrid
           rows={filteredCategory}
           columns={columns}
           rowCount={rowCount}
@@ -213,19 +252,25 @@ const Category = () => {
           pageSizeOptions={[5, 10, 25]}
           autoHeight
           disableColumnMenu={isSmallScreen}
-          sx={{
-            "& .MuiDataGrid-columnHeaders": {
-              fontSize: isSmallScreen ? "0.8rem" : "1rem",
-            },
-            "& .MuiDataGrid-row:nth-of-type(even)": {
-              backgroundColor: "#f9f9f9",
-            },
-            "& .MuiDataGrid-row:nth-of-type(odd)": {
-              backgroundColor: "#ffffff",
-            },
-          }}
         />
       </Box>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+        <DialogTitle>Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this category? This action cannot be
+            undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

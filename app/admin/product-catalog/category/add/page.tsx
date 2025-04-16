@@ -5,27 +5,21 @@ import {
   Box,
   Typography,
   TextField,
-  FormControlLabel,
-  Checkbox,
-  Grid,
   Alert,
   CircularProgress,
+  Button,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 const AddCategory = () => {
-  // State for form fields, room types, and loading/error states
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [thumbnail, setThumbnail] = useState("");
-  const [roomMapping, setRoomTypes] = useState({
-    group1: false,
-    group2: false,
-    group3: false,
-  });
+  const [thumbnail, setThumbnail] = useState(""); // base64 string
+  const [selectedFileName, setSelectedFileName] = useState("No file selected");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -33,23 +27,15 @@ const AddCategory = () => {
   const router = useRouter();
   const { token } = getTokenAndRole();
 
-  const handleRoomTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRoomTypes({
-      ...roomMapping,
-      [event.target.name]: event.target.checked,
-    });
-  };
-
-  // Validate form fields
   const validateForm = () => {
     if (!name || !description || !thumbnail) {
       setError("Name, description, and thumbnail are required.");
       return false;
     }
+    setError(null);
     return true;
   };
 
-  // Handle form submission
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
@@ -57,32 +43,26 @@ const AddCategory = () => {
     setError(null);
     setSuccess(null);
 
-    const categoryData = {
-      name,
-      description,
-      thumbnail,
-      roomMapping: {
-        group1: roomMapping.group1,
-        group2: roomMapping.group2,
-        group3: roomMapping.group3,
-      },
-    };
+    // Ensure the correct API URL
+    const fullUrl = `${process.env.NEXT_PUBLIC_API_URL}/categories`; // Correct the endpoint here
+
+    const categoryData = { name, description, thumbnail };
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/categories`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(categoryData),
-        }
-      );
+      const response = await fetch(fullUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(categoryData),
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to create category");
+        const errorText = await response.text();
+        throw new Error(
+          `Failed to create category. Status: ${response.status} - ${errorText}`
+        );
       }
 
       const result = await response.json();
@@ -92,31 +72,44 @@ const AddCategory = () => {
       setError(
         error instanceof Error
           ? error.message
-          : "An error occurred while creating the category."
+          : "An unknown error occurred while creating the category."
       );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCancel = () => {
-    // Reset form fields or redirect to another page
-    setName("");
-    setDescription("");
-    setThumbnail("");
-    setRoomTypes({
-      group1: false,
-      group2: false,
-      group3: false,
-    });
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSelectedFileName(file.name); // Set the file name
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (reader.result) {
+        setThumbnail(reader.result.toString()); // base64 string
+      }
+    };
+    reader.readAsDataURL(file); // Converts file to base64 string
   };
 
   return (
     <Box sx={{ p: 3 }}>
-      {/* Heading */}
       <Typography variant="h5" sx={{ mb: 2 }}>
         Add New Category
       </Typography>
+
+      {/* Error/Success Alerts */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      {success && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          {success}
+        </Alert>
+      )}
 
       {/* Name Field */}
       <TextField
@@ -138,68 +131,34 @@ const AddCategory = () => {
         onChange={(e) => setDescription(e.target.value)}
       />
 
-      <TextField
-        label="Thumbnail"
-        fullWidth
-        sx={{ mb: 3 }}
-        value={thumbnail}
-        onChange={(e) => setThumbnail(e.target.value)}
-      />
-
-      {/* Room Mapping */}
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={4}>
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            Room Mapping
+      {/* Thumbnail Upload */}
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Button
+            variant="outlined"
+            component="label"
+            startIcon={<UploadFileIcon />}
+            sx={{
+              color: "#05344c",
+              borderColor: "#05344c",
+              "&:hover": { backgroundColor: "#f0f4f8" },
+            }}
+          >
+            Upload Thumbnail
+            <input
+              type="file"
+              hidden
+              accept="image/*"
+              onChange={handleFileChange}
+            />
+          </Button>
+          <Typography variant="body2" sx={{ color: "#666" }}>
+            {selectedFileName}
           </Typography>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={roomMapping.group1}
-                  onChange={handleRoomTypeChange}
-                  name="group1"
-                />
-              }
-              label="Group 1"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={roomMapping.group2}
-                  onChange={handleRoomTypeChange}
-                  name="group2"
-                />
-              }
-              label="Group 2"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={roomMapping.group3}
-                  onChange={handleRoomTypeChange}
-                  name="group3"
-                />
-              }
-              label="Group 3"
-            />
-          </Box>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
-      {/* Error and Success Alerts */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-      {success && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          {success}
-        </Alert>
-      )}
-
-      {/* Submit and Cancel Buttons */}
+      {/* Action Buttons */}
       <Box sx={{ display: "flex", gap: 2 }}>
         <ReusableButton onClick={handleSubmit} disabled={loading}>
           {loading ? <CircularProgress size={24} /> : "Submit"}

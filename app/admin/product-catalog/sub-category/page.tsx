@@ -12,15 +12,12 @@ import {
   CircularProgress,
   Alert,
 } from "@mui/material";
-import {
-  DataGrid,
-  GridColDef,
-  GridPaginationModel,
-} from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
-import { Visibility, Edit, Delete } from "@mui/icons-material";
+import { Edit, Delete } from "@mui/icons-material";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 // Interfaces
 interface Category {
@@ -173,9 +170,6 @@ const SubCategory = () => {
       flex: 0.5,
       renderCell: (params) => (
         <Box>
-          <IconButton color="info" size="small">
-            <Visibility fontSize="small" />
-          </IconButton>
           <IconButton color="primary" size="small">
             <Edit fontSize="small" />
           </IconButton>
@@ -264,7 +258,7 @@ const SubCategory = () => {
       )}
 
       <Box sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGrid
+        <StyledDataGrid
           columns={columns}
           rows={rows}
           paginationModel={paginationModel}
@@ -274,17 +268,6 @@ const SubCategory = () => {
           paginationMode="server"
           autoHeight
           disableColumnMenu={isSmallScreen}
-          sx={{
-            "& .MuiDataGrid-columnHeaders": {
-              fontSize: isSmallScreen ? "0.8rem" : "1rem",
-            },
-            "& .MuiDataGrid-row:nth-of-type(even)": {
-              backgroundColor: "#f9f9f9",
-            },
-            "& .MuiDataGrid-row:nth-of-type(odd)": {
-              backgroundColor: "#ffffff",
-            },
-          }}
         />
       </Box>
     </Box>

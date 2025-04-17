@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -11,49 +11,220 @@ import {
   InputLabel,
   Select,
   MenuItem,
- 
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
+import { useRouter } from "next/navigation";
+import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 const AddMerchant = () => {
+  const router = useRouter();
+  const { token } = getTokenAndRole();
+
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    username: "",
+    email: "",
+    phone: "",
+    password: "",
+    businessName: "",
+    address: "",
+    category: "",
+    subCategory: "",
+  });
+
+  const [categories, setCategories] = useState<any[]>([]);
+  const [subCategories, setSubCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [subCategoriesLoading, setSubCategoriesLoading] = useState(true);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name as string]: value,
+      ...(name === "category" && { subCategory: "" }), // Reset subCategory if category changes
+    }));
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      console.log("Fetched categories:", data);
+      setCategories(data.categories || data || []);
+    } catch (err) {
+      console.error("Error fetching categories", err);
+    }
+  };
+
+  const fetchSubCategories = async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/sub-categories`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const data = await res.json();
+      console.log("Fetched sub-categories:", data);
+      setSubCategories(data.subCategories || data || []);
+    } catch (err) {
+      console.error("Error fetching sub-categories", err);
+    } finally {
+      setSubCategoriesLoading(false); // Set loading to false once data is fetched
+    }
+  };
+
+  useEffect(() => {
+    console.log("Fetching categories and sub-categories...");
+    fetchCategories();
+    fetchSubCategories();
+  }, []);
+
+  const handleSubmit = async () => {
+    const requiredFields = [
+      "firstName",
+      "lastName",
+      "username",
+      "email",
+      "phone",
+      "password",
+      "businessName",
+      "address",
+      "category",
+      "subCategory",
+    ];
+
+    const missing = requiredFields.filter(
+      (field) => !formData[field as keyof typeof formData]
+    );
+
+    if (missing.length > 0) {
+      setError("Please fill out all required fields.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/merchants`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create merchant.");
+      }
+
+      router.push("/admin/vendors/merchants");
+    } catch (err: any) {
+      setError(err.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredSubCategories = subCategories.filter(
+    (sub) =>
+      sub.category === formData.category || sub.categoryId === formData.category
+  );
+
+  console.log("Filtered Sub-Categories:", filteredSubCategories);
+
   return (
     <Box sx={{ p: 4 }}>
-      {/* Heading */}
       <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
         Add Merchant Details
       </Typography>
 
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
       <Grid container spacing={3}>
-        {/* Each field will now take full width on all screen sizes */}
-        <Grid item xs={12}>
-          <TextField label="Merchant Name" fullWidth />
-        </Grid>
-
-        <Grid item xs={12}>
-          <TextField label="Email" fullWidth />
-        </Grid>
-
-        <Grid item xs={12}>
-          <TextField label="Phone" fullWidth />
-        </Grid>
-
-        <Grid item xs={12}>
-          <TextField label="Business Name" fullWidth />
-        </Grid>
-
-        <Grid item xs={12}>
-          <TextField label="Address" fullWidth />
-        </Grid>
+        {[
+          { label: "First Name", name: "firstName" },
+          { label: "Last Name", name: "lastName" },
+          { label: "Username", name: "username" },
+          { label: "Email", name: "email" },
+          { label: "Phone", name: "phone" },
+          { label: "Password", name: "password", type: "password" },
+          { label: "Business Name", name: "businessName" },
+          { label: "Address", name: "address" },
+        ].map(({ label, name, type = "text" }) => (
+          <Grid item xs={12} key={name}>
+            <TextField
+              label={label}
+              name={name}
+              type={type}
+              fullWidth
+              value={formData[name as keyof typeof formData]}
+              onChange={handleChange}
+            />
+          </Grid>
+        ))}
 
         <Grid item xs={12}>
           <FormControl fullWidth>
             <InputLabel>Category</InputLabel>
-            <Select label="Category">
-              <MenuItem value="Furniture">Furniture</MenuItem>
-              <MenuItem value="Appliances">Appliances</MenuItem>
-              <MenuItem value="Lighting">Lighting</MenuItem>
-              <MenuItem value="Home Decor">Home Decor</MenuItem>
+            <Select
+              name="category"
+              value={formData.category}
+              label="Category"
+              onChange={handleChange}
+            >
+              {categories.map((cat) => (
+                <MenuItem key={cat._id} value={cat._id}>
+                  {cat.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12}>
+          <FormControl fullWidth>
+            <InputLabel>Sub-Category</InputLabel>
+            <Select
+              name="subCategory"
+              value={formData.subCategory}
+              label="Sub-Category"
+              onChange={handleChange}
+              disabled={!formData.category || subCategoriesLoading}
+            >
+              {subCategoriesLoading ? (
+                <MenuItem disabled>
+                  <CircularProgress size={20} />
+                </MenuItem>
+              ) : filteredSubCategories.length === 0 ? (
+                <MenuItem disabled>No sub-categories available</MenuItem>
+              ) : (
+                filteredSubCategories.map((sub) => (
+                  <MenuItem key={sub._id} value={sub._id}>
+                    {sub.name}
+                  </MenuItem>
+                ))
+              )}
             </Select>
           </FormControl>
         </Grid>
@@ -61,9 +232,10 @@ const AddMerchant = () => {
 
       <Divider sx={{ my: 4 }} />
 
-      {/* Buttons */}
       <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton>Submit</ReusableButton>
+        <ReusableButton onClick={handleSubmit} disabled={loading}>
+          {loading ? <CircularProgress size={20} /> : "Submit"}
+        </ReusableButton>
         <CancelButton href="/admin/vendors/merchants">Cancel</CancelButton>
       </Box>
     </Box>

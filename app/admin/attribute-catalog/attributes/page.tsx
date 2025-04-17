@@ -8,19 +8,33 @@ import {
   IconButton,
   CircularProgress,
   Alert,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from "@mui/material";
 import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
-import { Visibility, Edit, Delete } from "@mui/icons-material";
+import { Edit, Delete } from "@mui/icons-material";
 import ReusableButton from "@/app/components/Button";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 interface Attribute {
   _id: string;
   name: string;
   description: string;
-  type: 'text' | 'number' | 'boolean' | 'date' | 'color' | 'textarea' | 'email' | 'url';
+  type:
+    | "text"
+    | "number"
+    | "boolean"
+    | "date"
+    | "color"
+    | "textarea"
+    | "email"
+    | "url";
   archive: boolean;
 }
 
@@ -38,6 +52,11 @@ const Attributes = () => {
   const [attributes, setAttributes] = useState<Attribute[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedAttributeId, setSelectedAttributeId] = useState<string | null>(
+    null
+  );
 
   const { token } = getTokenAndRole();
 
@@ -70,11 +89,13 @@ const Attributes = () => {
 
       const result = await response.json();
 
-      const dataWithSN = (result.attributes || []).map((item: any, index: number) => ({
-        ...item,
-        id: item._id,
-        sn: page * pageSize + index + 1,
-      }));
+      const dataWithSN = (result.attributes || []).map(
+        (item: any, index: number) => ({
+          ...item,
+          id: item._id,
+          sn: page * pageSize + index + 1,
+        })
+      );
 
       setAttributes(dataWithSN);
       setRowCount(result.totalCount || dataWithSN.length);
@@ -90,6 +111,41 @@ const Attributes = () => {
     fetchAttributes();
   }, [paginationModel, search]);
 
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setSelectedAttributeId(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedAttributeId) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/attributes/${selectedAttributeId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete attribute.");
+      }
+
+      setDeleteDialogOpen(false);
+      setSelectedAttributeId(null);
+      fetchAttributes(); // refresh data
+    } catch (err: any) {
+      setError(err.message || "Error deleting attribute.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", flex: 0.4 },
     { field: "name", headerName: "Name", flex: 1 },
@@ -100,15 +156,27 @@ const Attributes = () => {
       field: "action",
       headerName: "Action",
       flex: 0.8,
-      renderCell: () => (
+      renderCell: (params) => (
         <Box display="flex" gap={1}>
-          <IconButton color="info" size="small">
-            <Visibility fontSize="small" />
-          </IconButton>
-          <IconButton color="primary" size="small">
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() =>
+              router.push(
+                `/admin/attribute-catalog/attributes/edit/${params.row._id}`
+              )
+            }
+          >
             <Edit fontSize="small" />
           </IconButton>
-          <IconButton color="error" size="small">
+          <IconButton
+            color="error"
+            size="small"
+            onClick={() => {
+              setSelectedAttributeId(params.row._id);
+              setDeleteDialogOpen(true);
+            }}
+          >
             <Delete fontSize="small" />
           </IconButton>
         </Box>
@@ -140,7 +208,9 @@ const Attributes = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <ReusableButton onClick={() => router.push("/admin/attribute-catalog/attributes/add")}>
+        <ReusableButton
+          onClick={() => router.push("/admin/attribute-catalog/attributes/add")}
+        >
           ADD
         </ReusableButton>
       </Box>
@@ -165,7 +235,7 @@ const Attributes = () => {
             <CircularProgress />
           </Box>
         )}
-        <DataGrid
+        <StyledDataGrid
           columns={columns}
           rows={attributes}
           rowCount={rowCount}
@@ -176,23 +246,30 @@ const Attributes = () => {
           autoHeight
           disableColumnMenu={isSmallScreen}
           loading={loading}
-          sx={{
-            "& .MuiDataGrid-columnHeaders": {
-              fontSize: isSmallScreen ? "0.8rem" : "1rem",
-              backgroundColor: "#f1f1f1",
-            },
-            "& .MuiDataGrid-row:nth-of-type(even)": {
-              backgroundColor: "#f9f9f9",
-            },
-            "& .MuiDataGrid-row:nth-of-type(odd)": {
-              backgroundColor: "#ffffff",
-            },
-            "& .MuiDataGrid-cell": {
-              fontSize: isSmallScreen ? "0.75rem" : "0.875rem",
-            },
-          }}
         />
       </Box>
+
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+        <DialogTitle>Delete Attribute</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this attribute? This action cannot
+            be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <ReusableButton variant="outlined" onClick={handleDeleteCancel}>
+            Cancel
+          </ReusableButton>
+          <ReusableButton
+            color="error"
+            onClick={handleDeleteConfirm}
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={20} /> : "Delete"}
+          </ReusableButton>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

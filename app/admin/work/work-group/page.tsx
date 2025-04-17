@@ -8,13 +8,20 @@ import {
   useMediaQuery,
   IconButton,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Button,
 } from "@mui/material";
 import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
-import { Visibility, Edit, Delete } from "@mui/icons-material";
+import { Edit, Delete } from "@mui/icons-material";
 import ReusableButton from "@/app/components/Button";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 interface WorkGroup {
   _id: string;
@@ -41,6 +48,10 @@ const WorkGroups = () => {
   const [workGroups, setWorkGroups] = useState<WorkGroup[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [workGroupToDelete, setWorkGroupToDelete] = useState<WorkGroup | null>(
+    null
+  );
   const { token } = getTokenAndRole();
 
   const fetchWorkGroups = async () => {
@@ -112,19 +123,73 @@ const WorkGroups = () => {
       flex: 1,
       renderCell: (params) => (
         <Box>
-          <IconButton color="info" size="small">
-            <Visibility fontSize="small" />
-          </IconButton>
-          <IconButton color="primary" size="small">
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() =>
+              router.push(
+                `/admin/home-catalog/work-groups/edit?id=${params.row.id}`
+              )
+            }
+          >
             <Edit fontSize="small" />
           </IconButton>
-          <IconButton color="error" size="small">
+
+          <IconButton
+            color="error"
+            size="small"
+            onClick={() => handleOpenDeleteDialog(params.row)} // Open delete confirmation dialog
+          >
             <Delete fontSize="small" />
           </IconButton>
         </Box>
       ),
     },
   ];
+
+  const handleOpenDeleteDialog = (workGroup: WorkGroup) => {
+    setWorkGroupToDelete(workGroup);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setWorkGroupToDelete(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!workGroupToDelete) return;
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/work-groups/${workGroupToDelete.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to delete work group. Status: ${response.status}`
+        );
+      }
+
+      fetchWorkGroups(); // Refetch work groups after deletion
+      handleDeleteCancel(); // Close the dialog
+    } catch (err: any) {
+      console.error("Error deleting work group:", err);
+      setError(err.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
@@ -151,7 +216,9 @@ const WorkGroups = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <ReusableButton onClick={() => router.push("/admin/work/work-group/add")}>
+        <ReusableButton
+          onClick={() => router.push("/admin/work/work-group/add")}
+        >
           ADD
         </ReusableButton>
       </Box>
@@ -167,7 +234,7 @@ const WorkGroups = () => {
         </Typography>
       ) : (
         <Box sx={{ height: 500, width: "100%" }}>
-          <DataGrid
+          <StyledDataGrid
             rows={workGroups}
             columns={columns}
             pagination
@@ -178,20 +245,26 @@ const WorkGroups = () => {
             pageSizeOptions={[5, 10, 25]}
             autoHeight
             disableColumnMenu={isSmallScreen}
-            sx={{
-              "& .MuiDataGrid-columnHeaders": {
-                fontSize: isSmallScreen ? "0.8rem" : "1rem",
-              },
-              "& .MuiDataGrid-row:nth-of-type(even)": {
-                backgroundColor: "#f9f9f9",
-              },
-              "& .MuiDataGrid-row:nth-of-type(odd)": {
-                backgroundColor: "#ffffff",
-              },
-            }}
           />
         </Box>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+        <DialogTitle>Delete Work Group</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this work group? This action cannot
+            be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

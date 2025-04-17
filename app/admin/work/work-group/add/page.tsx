@@ -1,11 +1,79 @@
 "use client";
 
-import React from "react";
-import { Box, Typography,  TextField } from "@mui/material";
+import React, { useState } from "react";
+import {
+  Box,
+  Typography,
+  TextField,
+  Alert,
+  CircularProgress,
+} from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
+import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useRouter } from "next/navigation";
 
 const WorkGroup = () => {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const router = useRouter();
+  const { token } = getTokenAndRole(); // Get JWT token
+
+  // Form validation
+  const validateForm = () => {
+    if (!name || !description) {
+      setError("Name and description are required.");
+      return false;
+    }
+    setError(null);
+    return true;
+  };
+
+  // Handle form submission
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    const fullUrl = `${process.env.NEXT_PUBLIC_API_URL}/work-groups`;
+
+    const workGroupData = { name, description };
+
+    try {
+      const response = await fetch(fullUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`, // Token for authorization
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(workGroupData),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Failed to create work group. Status: ${response.status} - ${errorText}`
+        );
+      }
+
+      const result = await response.json();
+      setSuccess("Work group successfully created!");
+      router.push("/admin/work/work-group"); // Redirect to the work group list page
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "An unknown error occurred."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       {/* Heading */}
@@ -14,7 +82,13 @@ const WorkGroup = () => {
       </Typography>
 
       {/* Name Field */}
-      <TextField label="Name" fullWidth sx={{ mb: 3 }} />
+      <TextField
+        label="Name"
+        fullWidth
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        sx={{ mb: 3 }}
+      />
 
       {/* Description Field */}
       <TextField
@@ -22,14 +96,20 @@ const WorkGroup = () => {
         multiline
         rows={3}
         fullWidth
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
         sx={{ mb: 3 }}
       />
 
-      
+      {/* Error and Success Messages */}
+      {error && <Alert severity="error">{error}</Alert>}
+      {success && <Alert severity="success">{success}</Alert>}
 
       {/* Submit and Cancel Buttons */}
       <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton>Submit</ReusableButton>
+        <ReusableButton onClick={handleSubmit} disabled={loading}>
+          {loading ? <CircularProgress size={24} /> : "Submit"}
+        </ReusableButton>
         <CancelButton href="/admin/work/work-group">Cancel</CancelButton>
       </Box>
     </Box>

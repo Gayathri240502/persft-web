@@ -12,9 +12,10 @@ import {
 import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
-import { Edit, Delete, Visibility } from "@mui/icons-material";
+import { Edit, Delete } from "@mui/icons-material";
 import ReusableButton from "@/app/components/Button";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 interface Merchant {
   _id: string;
@@ -130,9 +131,6 @@ const Merchant = () => {
       flex: 0.8,
       renderCell: (params) => (
         <Box display="flex" gap={1}>
-          <IconButton color="info" size="small">
-            <Visibility fontSize="small" />
-          </IconButton>
           <IconButton color="primary" size="small">
             <Edit fontSize="small" />
           </IconButton>
@@ -168,7 +166,9 @@ const Merchant = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <ReusableButton onClick={() => router.push("/admin/vendors/merchants/add")}>
+        <ReusableButton
+          onClick={() => router.push("/admin/vendors/merchants/add")}
+        >
           ADD
         </ReusableButton>
       </Box>
@@ -193,7 +193,7 @@ const Merchant = () => {
             <CircularProgress />
           </Box>
         )}
-        <DataGrid
+        <StyledDataGrid
           columns={columns}
           rows={rows}
           rowCount={rowCount}
@@ -204,21 +204,6 @@ const Merchant = () => {
           autoHeight
           disableColumnMenu={isSmallScreen}
           loading={loading}
-          sx={{
-            "& .MuiDataGrid-columnHeaders": {
-              fontSize: isSmallScreen ? "0.8rem" : "1rem",
-              backgroundColor: "#f1f1f1",
-            },
-            "& .MuiDataGrid-row:nth-of-type(even)": {
-              backgroundColor: "#f9f9f9",
-            },
-            "& .MuiDataGrid-row:nth-of-type(odd)": {
-              backgroundColor: "#ffffff",
-            },
-            "& .MuiDataGrid-cell": {
-              fontSize: isSmallScreen ? "0.75rem" : "0.875rem",
-            },
-          }}
         />
       </Box>
     </Box>

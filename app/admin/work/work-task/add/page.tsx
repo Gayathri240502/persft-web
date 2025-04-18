@@ -10,8 +10,13 @@ import {
 } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
+import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useRouter } from "next/navigation";
 
 const WorkTaskForm = () => {
+  const { token } = getTokenAndRole();
+  const Router = useRouter();
+
   const [workGroups, setWorkGroups] = useState<any[]>([]);
   const [loadingWorkGroups, setLoadingWorkGroups] = useState(true);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
@@ -24,34 +29,48 @@ const WorkTaskForm = () => {
     poDays: "",
   });
 
-  // Fetch work groups on mount
   useEffect(() => {
     const fetchWorkGroups = async () => {
       setLoadingWorkGroups(true);
       try {
-        const res = await fetch("/api/v1/work-groups");
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/work-tasks/work-groups-selection`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
         const result = await res.json();
-
-        console.log("Fetched Work Groups:", result);
-
-        // Adjust based on your API response format
-        setWorkGroups(result.data || result);
+        console.log("API Response:", result); // Debug
+        const groups = result.data || result;
+        console.log("Parsed workGroups:", groups); // Debug
+        setWorkGroups(Array.isArray(groups) ? groups : []);
       } catch (error) {
         console.error("Error fetching work groups", error);
+        setWorkGroups([]);
       } finally {
         setLoadingWorkGroups(false);
       }
     };
 
     fetchWorkGroups();
-  }, []);
+  }, [token]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    console.log(`${name} updated to: ${value}`); // Debug
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async () => {
+    if (!formData.workGroup) {
+      alert("Please select a valid work group.");
+      return;
+    }
+
     setLoadingSubmit(true);
     try {
       const payload = {
@@ -61,25 +80,23 @@ const WorkTaskForm = () => {
         poDays: Number(formData.poDays),
       };
 
-      const res = await fetch("/api/v1/work-tasks", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/work-tasks`, {
         method: "POST",
         headers: {
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
-          // Authorization: `Bearer ${token}`, // Uncomment if auth is needed
         },
         body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.message || "Something went wrong");
+        const errorDetails = await res.text();
+        console.error("Error creating work task:", errorDetails);
+        alert("Failed to create work task");
+        return;
+      } else {
+        Router.push("/admin/work/work-task");
       }
-
-      alert("Work task created successfully!");
-      // Optionally reset form or redirect
-    } catch (error) {
-      console.error("Error creating work task:", error);
-      alert("Failed to create work task");
     } finally {
       setLoadingSubmit(false);
     }
@@ -117,21 +134,24 @@ const WorkTaskForm = () => {
         name="workGroup"
         fullWidth
         sx={{ mb: 3 }}
-        value={formData.workGroup}
+        value={formData.workGroup || ""}
         onChange={handleChange}
-        disabled={loadingWorkGroups}
+        disabled={loadingWorkGroups || workGroups.length === 0}
       >
-        {loadingWorkGroups ? (
-          <MenuItem disabled>Loading...</MenuItem>
-        ) : workGroups.length > 0 ? (
-          workGroups.map((group: any) => (
-            <MenuItem key={group._id} value={group._id}>
-              {group.name}
+        <MenuItem value="" disabled>
+          {loadingWorkGroups
+            ? "Loading..."
+            : workGroups.length === 0
+              ? "No Work Groups Available"
+              : "Select Work Group"}
+        </MenuItem>
+        {workGroups
+          .filter((group) => group._id || group.id)
+          .map((group) => (
+            <MenuItem key={group._id || group.id} value={group._id || group.id}>
+              {group.name || "Unnamed Group"}
             </MenuItem>
-          ))
-        ) : (
-          <MenuItem disabled>No work groups found</MenuItem>
-        )}
+          ))}
       </TextField>
 
       <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>

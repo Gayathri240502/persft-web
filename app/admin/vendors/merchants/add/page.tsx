@@ -40,7 +40,7 @@ const AddMerchant = () => {
   const [subCategories, setSubCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [subCategoriesLoading, setSubCategoriesLoading] = useState(true);
+  const [subCategoriesLoading, setSubCategoriesLoading] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>
@@ -66,17 +66,20 @@ const AddMerchant = () => {
     }
   };
 
-  const fetchSubCategories = async () => {
+  const fetchSubCategories = async (categoryId: string) => {
+    if (!categoryId) return;
+
+    setSubCategoriesLoading(true); // Set loading to true before fetching sub-categories
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/sub-categories`,
+        `${process.env.NEXT_PUBLIC_API_URL}/sub-categories/categories-selection`, // Corrected endpoint for sub-categories
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
       const data = await res.json();
       console.log("Fetched sub-categories:", data);
-      setSubCategories(data.subCategories || data || []);
+      setSubCategories(data.categories || data || []); // Assuming the response contains 'categories' field for sub-categories
     } catch (err) {
       console.error("Error fetching sub-categories", err);
     } finally {
@@ -85,10 +88,15 @@ const AddMerchant = () => {
   };
 
   useEffect(() => {
-    console.log("Fetching categories and sub-categories...");
+    console.log("Fetching categories...");
     fetchCategories();
-    fetchSubCategories();
   }, []);
+
+  useEffect(() => {
+    if (formData.category) {
+      fetchSubCategories(formData.category);
+    }
+  }, [formData.category]); // Fetch sub-categories when category changes
 
   const handleSubmit = async () => {
     const requiredFields = [
@@ -141,13 +149,6 @@ const AddMerchant = () => {
       setLoading(false);
     }
   };
-
-  const filteredSubCategories = subCategories.filter(
-    (sub) =>
-      sub.category === formData.category || sub.categoryId === formData.category
-  );
-
-  console.log("Filtered Sub-Categories:", filteredSubCategories);
 
   return (
     <Box sx={{ p: 4 }}>
@@ -216,10 +217,10 @@ const AddMerchant = () => {
                 <MenuItem disabled>
                   <CircularProgress size={20} />
                 </MenuItem>
-              ) : filteredSubCategories.length === 0 ? (
+              ) : subCategories.length === 0 ? (
                 <MenuItem disabled>No sub-categories available</MenuItem>
               ) : (
-                filteredSubCategories.map((sub) => (
+                subCategories.map((sub) => (
                   <MenuItem key={sub._id} value={sub._id}>
                     {sub.name}
                   </MenuItem>

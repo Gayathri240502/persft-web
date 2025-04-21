@@ -1,204 +1,208 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import {
   Box,
-  Grid,
+  CircularProgress,
   Typography,
+  Paper,
+  Grid,
+  Alert,
   TextField,
   Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Switch,
+  Checkbox,
   FormControlLabel,
 } from "@mui/material";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
-export default function UpdateUser() {
-  const router = useRouter();
-  const { id } = useParams();
-  const [formData, setFormData] = useState({
-    username: "",
+interface User {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  enabled: boolean;
+}
+
+const UserEditPage: React.FC = () => {
+  const [user, setUser] = useState<User>({
+    _id: "",
     firstName: "",
     lastName: "",
     email: "",
-    phoneNumber: "",
-    role: "",
+    phone: "",
     enabled: false,
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const { id } = useParams();
+  const router = useRouter();
+  const { token } = getTokenAndRole();
 
   useEffect(() => {
-    async function fetchUser() {
-      if (!id) return;
+    if (!id) return;
+
+    const fetchUser = async () => {
       try {
-        const { token } = getTokenAndRole();
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/users/${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
             },
           }
         );
-
-        if (!response.ok) throw new Error("Failed to fetch user");
-
-        const user = await response.json();
-        setFormData({
-          username: user.username || "",
-          firstName: user.firstName || "",
-          lastName: user.lastName || "",
-          email: user.email || "",
-          phoneNumber: user.phoneNumber || "",
-          role: user.role || "",
-          enabled: user.enabled || false,
-        });
-      } catch (error) {
-        console.error("Error fetching user:", error);
+        if (!response.ok) {
+          throw new Error("Failed to fetch user data");
+        }
+        const data: User = await response.json();
+        setUser(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
-    }
+    };
 
     fetchUser();
-  }, [id]);
+  }, [id, token]);
 
-  function handleChange(event: any) {
-    setFormData({ ...formData, [event.target.name]: event.target.value });
-  }
+  const handleSave = async () => {
+    if (!user) return;
 
-  function handleSwitchChange(event: any) {
-    setFormData({ ...formData, enabled: event.target.checked });
-  }
-
-  async function handleSubmit(event: any) {
-    event.preventDefault();
     try {
-      const { token } = getTokenAndRole();
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/users/${id}`,
         {
           method: "PUT",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(user),
         }
       );
-
-      if (!response.ok) throw new Error("Failed to update user");
-
-      router.push("/users"); // Redirect back to users list
-    } catch (error) {
-      console.error("Error updating user:", error);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update user");
+      }
+      setSuccess("User updated successfully!");
+      setTimeout(() => router.push(`/admin/users`), 1000);
+    } catch (err: any) {
+      setError(err.message);
     }
+  };
+
+  if (loading) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
+        <Alert severity="error">Error: {error}</Alert>
+      </Box>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
+        <Alert severity="warning">No user found</Alert>
+      </Box>
+    );
   }
 
   return (
-    <Box
-      component="form"
-      onSubmit={handleSubmit}
-      sx={{ p: 3, maxWidth: 600, mx: "auto" }}
-    >
-      <Typography variant="h5" sx={{ mb: 4 }}>
-        Edit User
-      </Typography>
-
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <TextField
-            fullWidth
-            label="Username"
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-            required
-          />
+    <Box p={4}>
+      <Button
+        onClick={() => router.push(`/admin/users`)}
+        sx={{ marginBottom: 2 }}
+      >
+        Back to User Details
+      </Button>
+      <Paper elevation={3} sx={{ padding: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          Edit User
+        </Typography>
+        {success && <Alert severity="success">{success}</Alert>}
+        <Grid container spacing={2} sx={{ marginTop: 2 }}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="First Name"
+              value={user.firstName}
+              onChange={(e) => setUser({ ...user, firstName: e.target.value })}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Last Name"
+              value={user.lastName}
+              onChange={(e) => setUser({ ...user, lastName: e.target.value })}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Email"
+              value={user.email}
+              onChange={(e) => setUser({ ...user, email: e.target.value })}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Phone"
+              value={user.phone}
+              onChange={(e) => setUser({ ...user, phone: e.target.value })}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={user.enabled}
+                  onChange={(e) =>
+                    setUser({ ...user, enabled: e.target.checked })
+                  }
+                />
+              }
+              label="Enabled"
+            />
+          </Grid>
         </Grid>
-        <Grid item xs={12} md={6}>
-          <TextField
-            fullWidth
-            label="First Name"
-            name="firstName"
-            value={formData.firstName}
-            onChange={handleChange}
-            required
-          />
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <TextField
-            fullWidth
-            label="Last Name"
-            name="lastName"
-            value={formData.lastName}
-            onChange={handleChange}
-            required
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            fullWidth
-            label="Email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            fullWidth
-            label="Phone Number"
-            name="phoneNumber"
-            value={formData.phoneNumber}
-            onChange={handleChange}
-            required
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <FormControl fullWidth>
-            <InputLabel>Role</InputLabel>
-            <Select
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              required
-            >
-              <MenuItem value="admin">Admin</MenuItem>
-              <MenuItem value="vendor">Vendor</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid item xs={12}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={formData.enabled}
-                onChange={handleSwitchChange}
-              />
-            }
-            label="Enabled"
-          />
-        </Grid>
-        <Grid
-          item
-          xs={12}
-          sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}
-        >
-          <Button variant="contained" color="primary" type="submit">
-            Save
+        <Box display="flex" justifyContent="flex-end" sx={{ marginTop: 4 }}>
+          <Button variant="contained" color="primary" onClick={handleSave}>
+            Save Changes
           </Button>
-          <Button
-            variant="outlined"
-            color="inherit"
-            onClick={() => router.push("/users")}
-          >
-            Cancel
-          </Button>
-        </Grid>
-      </Grid>
+        </Box>
+      </Paper>
     </Box>
   );
-}
+};
+
+export default UserEditPage;

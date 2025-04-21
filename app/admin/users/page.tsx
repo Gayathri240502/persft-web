@@ -11,7 +11,7 @@ import {
   IconButton,
 } from "@mui/material";
 import { GridColDef } from "@mui/x-data-grid";
-import { Edit, Delete } from "@mui/icons-material";
+import { Edit, Delete, Visibility } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
@@ -95,9 +95,22 @@ const Users = () => {
       field: "options",
       headerName: "Actions",
       flex: 1,
-      renderCell: () => (
+      renderCell: (params) => (
         <div>
-          <IconButton color="primary" size="small">
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() => router.push(`/admin/users/${params.row.keycloakId}`)}
+          >
+            <Visibility fontSize="small" />
+          </IconButton>
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() =>
+              router.push(`/admin/users/${params.row.keycloakId}/edit`)
+            }
+          >
             <Edit fontSize="small" />
           </IconButton>
           <IconButton color="error" size="small">

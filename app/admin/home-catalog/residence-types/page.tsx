@@ -19,7 +19,7 @@ import {
 import { useTheme } from "@mui/material/styles";
 import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useRouter } from "next/navigation";
-import { Edit, Delete } from "@mui/icons-material";
+import { Edit, Delete, Visibility } from "@mui/icons-material";
 
 import ReusableButton from "@/app/components/Button";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
@@ -149,6 +149,9 @@ const ResidenceTypePage = () => {
       flex: 1,
       renderCell: (params) => (
         <Box>
+          <IconButton>
+            <Visibility fontSize="small" color="primary" />
+          </IconButton>
           <IconButton
             color="primary"
             size="small"

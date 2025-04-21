@@ -83,11 +83,13 @@ const WorkGroups = () => {
       const result = await response.json();
 
       if (Array.isArray(result.workGroups)) {
-        const formatted = result.workGroups.map((item, index) => ({
-          ...item,
-          id: item._id,
-          sn: page * pageSize + index + 1,
-        }));
+        const formatted = result.workGroups.map(
+          (item: WorkGroup, index: number) => ({
+            ...item,
+            id: item._id,
+            sn: page * pageSize + index + 1,
+          })
+        );
 
         setWorkGroups(formatted);
         setRowCount(result.totalDocs || formatted.length);
@@ -138,7 +140,7 @@ const WorkGroups = () => {
           <IconButton
             color="error"
             size="small"
-            onClick={() => handleOpenDeleteDialog(params.row)} // Open delete confirmation dialog
+            onClick={() => handleOpenDeleteDialog(params.row)}
           >
             <Delete fontSize="small" />
           </IconButton>
@@ -181,8 +183,8 @@ const WorkGroups = () => {
         );
       }
 
-      fetchWorkGroups(); // Refetch work groups after deletion
-      handleDeleteCancel(); // Close the dialog
+      fetchWorkGroups();
+      handleDeleteCancel();
     } catch (err: any) {
       console.error("Error deleting work group:", err);
       setError(err.message || "Something went wrong.");

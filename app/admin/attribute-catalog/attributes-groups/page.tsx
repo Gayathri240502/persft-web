@@ -15,7 +15,7 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
-import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import { GridColDef, GridPaginationModel} from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Edit, Delete } from "@mui/icons-material";
@@ -150,10 +150,10 @@ const AttributeGroups = () => {
       field: "attributes",
       headerName: "Attributes",
       flex: 1,
-      valueGetter: (params) => {
-        const attrs = params.row?.attributes;
-        return Array.isArray(attrs) && attrs.length > 0
-          ? attrs.map((a: any) => a._id).join(", ")
+      valueGetter: (params: { row: AttributeGroup }) => {
+        const { attributes } = params.row || {};  // Add fallback to empty object
+        return Array.isArray(attributes) && attributes.length > 0
+          ? attributes.map((a) => a._id).join(", ")
           : "N/A";
       },
     },
@@ -255,7 +255,6 @@ const AttributeGroups = () => {
         />
       </Box>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
         <DialogTitle>Delete</DialogTitle>
         <DialogContent>

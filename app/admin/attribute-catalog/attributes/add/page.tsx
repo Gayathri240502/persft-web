@@ -136,7 +136,9 @@ const AddAttribute = () => {
           <ReusableButton type="submit" disabled={loading}>
             {loading ? <CircularProgress size={20} /> : "Submit"}
           </ReusableButton>
-          <CancelButton href="/admin/attribute-catalog/attributes" />
+          <CancelButton href="/admin/attribute-catalog/attributes"> 
+          Cancel
+          </CancelButton>
         </Box>
       </form>
     </Box>

@@ -18,9 +18,9 @@ import {
 } from "@mui/material";
 import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
-import ReusableButton from "@/app/components/Button";
-import { useRouter } from "next/navigation";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
+import { useRouter } from "next/navigation";
+import ReusableButton from "@/app/components/Button";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 // Interfaces
@@ -43,6 +43,7 @@ const ThemesPage = () => {
   const router = useRouter();
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+
   const [search, setSearch] = useState("");
   const [themes, setThemes] = useState<ThemeType[]>([]);
   const [rowCount, setRowCount] = useState(0);
@@ -62,28 +63,28 @@ const ThemesPage = () => {
   const fetchThemes = async () => {
     setLoading(true);
     setError(null);
+
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/themes`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/themes`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to fetch themes: ${response.status}`);
       }
 
       const result = await response.json();
+
       if (Array.isArray(result.themes)) {
-        const themesWithExtras = result.themes.map((item, index) => ({
+        const themesWithExtras = result.themes.map((item: ThemeType, index: number) => ({
           ...item,
           id: item._id,
           sn: paginationModel.page * paginationModel.pageSize + index + 1,
         }));
+
         setThemes(themesWithExtras);
         setRowCount(result.total || result.themes.length);
       } else {
@@ -93,7 +94,6 @@ const ThemesPage = () => {
     } catch (error) {
       console.error("Error fetching themes:", error);
       setError(error instanceof Error ? error.message : "Unknown error");
-      setRowCount(0);
     } finally {
       setLoading(false);
     }
@@ -127,7 +127,7 @@ const ThemesPage = () => {
         throw new Error(`Failed to delete theme: ${response.status}`);
       }
 
-      fetchThemes(); // Refresh themes after deletion
+      fetchThemes(); // Refresh data
     } catch (err) {
       console.error("Delete error:", err);
       setError("Failed to delete theme.");
@@ -144,8 +144,8 @@ const ThemesPage = () => {
               typeof sub === "object" ? JSON.stringify(sub) : sub
             )
           : typeof val === "object"
-            ? JSON.stringify(val)
-            : val
+          ? JSON.stringify(val)
+          : val
       )
       .join(" ")
       .toLowerCase()
@@ -160,13 +160,10 @@ const ThemesPage = () => {
       field: "roomTypes",
       headerName: "Room Types",
       flex: 1,
-      valueGetter: (params) => {
-        const roomTypes: RoomTypesReference[] = params.row?.roomTypes;
-        if (Array.isArray(roomTypes) && roomTypes.length > 0) {
-          return roomTypes.map((r) => r.name || "Unknown").join(", ");
-        }
-        return "N/A";
-      },
+      valueGetter: (params: { row: ThemeType }) =>
+        params.row?.roomTypes && params.row.roomTypes.length > 0
+          ? params.row.roomTypes.map((r) => r.name || "Unknown").join(", ")
+          : "N/A",
     },
     { field: "archive", headerName: "Archived", flex: 1, type: "boolean" },
     {
@@ -220,9 +217,7 @@ const ThemesPage = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <ReusableButton onClick={() => router.push("themes/add")}>
-          ADD
-        </ReusableButton>
+        <ReusableButton onClick={() => router.push("themes/add")}>ADD</ReusableButton>
       </Box>
 
       {loading && (
@@ -263,13 +258,11 @@ const ThemesPage = () => {
         />
       </Box>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
         <DialogTitle>Delete Theme</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to archive this theme? This action cannot be
-            undone.
+            Are you sure you want to archive this theme? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

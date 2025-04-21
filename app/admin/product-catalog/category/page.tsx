@@ -79,7 +79,7 @@ const Category = () => {
       console.log("Fetched categories:", result);
 
       if (Array.isArray(result.categories)) {
-        const categoryWithExtras = result.categories.map((item, index) => ({
+        const categoryWithExtras = result.categories.map((item:any, index:any) => ({
           ...item,
           id: item._id,
           sn: paginationModel.page * paginationModel.pageSize + index + 1,

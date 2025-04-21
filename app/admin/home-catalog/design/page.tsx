@@ -9,7 +9,7 @@ import {
   IconButton,
   CircularProgress,
 } from "@mui/material";
-import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import { GridColDef, GridPaginationModel, GridRenderCellParams } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import ReusableButton from "@/app/components/Button";
@@ -17,6 +17,7 @@ import { Visibility, Edit, Delete } from "@mui/icons-material";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
+// Types for RoomDesign and SelectionReference
 interface RoomDesign {
   _id: string;
   name: string;
@@ -81,7 +82,7 @@ const DesignType = () => {
       console.log("Fetched design types:", result);
 
       if (Array.isArray(result.designs)) {
-        const typesWithId = result.designs.map((item, index) => ({
+        const typesWithId = result.designs.map((item: any, index: any) => ({
           ...item,
           selections: Array.isArray(item.selections) ? item.selections : [],
           id: item._id,
@@ -116,8 +117,8 @@ const DesignType = () => {
       field: "selections",
       headerName: "Selections",
       flex: 1,
-      valueGetter: (params) => {
-        const selections: SelectionReference[] = params.row?.selections;
+      valueGetter: (params: GridRenderCellParams) => {
+        const selections: SelectionReference[] = params.row?.selections ?? [];
         return Array.isArray(selections) && selections.length > 0
           ? `${selections.length} item(s)`
           : "N/A";
@@ -135,6 +136,9 @@ const DesignType = () => {
       flex: 1,
       renderCell: (params) => (
         <Box>
+          <IconButton color="error" size="small">
+            <Visibility fontSize="small" />
+          </IconButton>
           <IconButton color="primary" size="small">
             <Edit fontSize="small" />
           </IconButton>

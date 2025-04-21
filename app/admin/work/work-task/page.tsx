@@ -8,7 +8,14 @@ import {
   useMediaQuery,
   IconButton,
 } from '@mui/material';
-import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+import {
+  DataGrid,
+  GridColDef,
+  GridPaginationModel,
+  GridValueGetter, // Use GridValueGetter directly
+  GridRenderCellParams,
+  GridCellParams
+} from '@mui/x-data-grid';
 import { useTheme } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
 import { Visibility, Edit, Delete } from '@mui/icons-material';
@@ -98,7 +105,7 @@ const WorkTasksPage = () => {
     fetchWorkTasks();
   }, [paginationModel, search]);
 
-  const columns: GridColDef[] = [
+  const columns: GridColDef<WorkTask>[] = [
     { field: 'sn', headerName: 'SN', flex: 0.5 },
     { field: 'name', headerName: 'Name', flex: 1 },
     { field: 'description', headerName: 'Description', flex: 1.5 },
@@ -106,13 +113,12 @@ const WorkTasksPage = () => {
       field: 'workGroup',
       headerName: 'Work Group',
       flex: 1,
-      valueGetter: (params) => {
-        // Ensure that workGroup is present and is an object
-        const workGroup = params.row?.workGroup;
-    
-        // If workGroup exists and has a name property, return the name, otherwise return 'N/A'
-        return workGroup && workGroup.name ? workGroup.name : 'N/A';
-      },
+            valueGetter: (params: GridCellParams) => {
+              const workTypes: WorkGroup[] = params.row?.workTaskTypes;
+              return Array.isArray(workTypes) && workTypes.length > 0
+                ? workTypes.map((r) => r.name || "Unknown").join(", ")
+                : "N/A";
+            },
     },
     { field: 'targetDays', headerName: 'Target Days', flex: 0.8 },
     { field: 'bufferDays', headerName: 'Buffer Days', flex: 0.8 },
@@ -127,7 +133,7 @@ const WorkTasksPage = () => {
       field: 'actions',
       headerName: 'Actions',
       flex: 1,
-      renderCell: (params) => (
+      renderCell: (params: GridRenderCellParams<WorkTask>) => (
         <Box>
           <IconButton color="info" size="small">
             <Visibility fontSize="small" />
@@ -149,7 +155,6 @@ const WorkTasksPage = () => {
         Work Tasks
       </Typography>
 
-      {/* Search and Add Button */}
       <Box
         sx={{
           display: 'flex',
@@ -173,14 +178,12 @@ const WorkTasksPage = () => {
         </ReusableButton>
       </Box>
 
-      {/* Error Message */}
       {error && (
         <Typography color="error" sx={{ mb: 2 }}>
           {error}
         </Typography>
       )}
 
-      {/* DataGrid */}
       <Box sx={{ height: 500, width: '100%', overflowX: 'auto' }}>
         <DataGrid
           columns={columns}

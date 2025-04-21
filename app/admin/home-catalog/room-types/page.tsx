@@ -16,7 +16,7 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
-import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridPaginationModel, GridCellParams } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import ReusableButton from "@/app/components/Button";
 import { useRouter } from "next/navigation";
@@ -89,7 +89,7 @@ const RoomTypes = () => {
       const result = await response.json();
 
       if (Array.isArray(result.roomTypes)) {
-        const typesWithId = result.roomTypes.map((item, index) => ({
+        const typesWithId = result.roomTypes.map((item: any, index: any) => ({
           ...item,
           residenceTypes: Array.isArray(item.residenceTypes)
             ? item.residenceTypes
@@ -164,7 +164,7 @@ const RoomTypes = () => {
       field: "residenceTypes",
       headerName: "Residence Types",
       flex: 1,
-      valueGetter: (params) => {
+      valueGetter: (params: GridCellParams) => {
         const resTypes: ResidenceTypeReference[] = params.row?.residenceTypes;
         return Array.isArray(resTypes) && resTypes.length > 0
           ? resTypes.map((r) => r.name || "Unknown").join(", ")
@@ -176,7 +176,7 @@ const RoomTypes = () => {
       field: "action",
       headerName: "Action",
       flex: 1,
-      renderCell: (params) => (
+      renderCell: (params: GridCellParams) => (
         <Box>
           <IconButton color="info" size="small">
             <Visibility fontSize="small" />

@@ -13,6 +13,7 @@ import {
   Select,
   MenuItem,
   Button,
+  SelectChangeEvent,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import ReusableButton from "@/app/components/Button";
@@ -47,7 +48,6 @@ const AddSubCategory = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Mock fetch for categories and attribute groups (replace with real APIs)
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -86,8 +86,8 @@ const AddSubCategory = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCategoryChange = (e: React.ChangeEvent<{ value: unknown }>) => {
-    setFormData((prev) => ({ ...prev, category: e.target.value as string }));
+  const handleCategoryChange = (e: SelectChangeEvent<string>) => {
+    setFormData((prev) => ({ ...prev, category: e.target.value }));
   };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,7 +161,6 @@ const AddSubCategory = () => {
         Add New Sub Category
       </Typography>
 
-      {/* Category Dropdown */}
       <FormControl fullWidth sx={{ mb: 3 }}>
         <InputLabel id="category-select-label">Category</InputLabel>
         <Select

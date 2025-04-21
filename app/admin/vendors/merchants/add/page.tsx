@@ -13,6 +13,7 @@ import {
   MenuItem,
   CircularProgress,
   Alert,
+  SelectChangeEvent,
 } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
@@ -42,14 +43,22 @@ const AddMerchant = () => {
   const [error, setError] = useState("");
   const [subCategoriesLoading, setSubCategoriesLoading] = useState(false);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name as string]: value,
-      ...(name === "category" && { subCategory: "" }), // Reset subCategory if category changes
+      [name]: value,
+    }));
+  };
+
+  const handleSelectChange = (e: SelectChangeEvent<string>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+      ...(name === "category" && { subCategory: "" }),
     }));
   };
 
@@ -59,7 +68,6 @@ const AddMerchant = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      console.log("Fetched categories:", data);
       setCategories(data.categories || data || []);
     } catch (err) {
       console.error("Error fetching categories", err);
@@ -69,26 +77,24 @@ const AddMerchant = () => {
   const fetchSubCategories = async (categoryId: string) => {
     if (!categoryId) return;
 
-    setSubCategoriesLoading(true); // Set loading to true before fetching sub-categories
+    setSubCategoriesLoading(true);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/sub-categories/categories-selection`, // Corrected endpoint for sub-categories
+        `${process.env.NEXT_PUBLIC_API_URL}/sub-categories/categories-selection`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
       const data = await res.json();
-      console.log("Fetched sub-categories:", data);
-      setSubCategories(data.categories || data || []); // Assuming the response contains 'categories' field for sub-categories
+      setSubCategories(data.categories || data || []);
     } catch (err) {
       console.error("Error fetching sub-categories", err);
     } finally {
-      setSubCategoriesLoading(false); // Set loading to false once data is fetched
+      setSubCategoriesLoading(false);
     }
   };
 
   useEffect(() => {
-    console.log("Fetching categories...");
     fetchCategories();
   }, []);
 
@@ -96,25 +102,11 @@ const AddMerchant = () => {
     if (formData.category) {
       fetchSubCategories(formData.category);
     }
-  }, [formData.category]); // Fetch sub-categories when category changes
+  }, [formData.category]);
 
   const handleSubmit = async () => {
-    const requiredFields = [
-      "firstName",
-      "lastName",
-      "username",
-      "email",
-      "phone",
-      "password",
-      "businessName",
-      "address",
-      "category",
-      "subCategory",
-    ];
-
-    const missing = requiredFields.filter(
-      (field) => !formData[field as keyof typeof formData]
-    );
+    const requiredFields = Object.keys(formData);
+    const missing = requiredFields.filter((field) => !formData[field as keyof typeof formData]);
 
     if (missing.length > 0) {
       setError("Please fill out all required fields.");
@@ -180,7 +172,7 @@ const AddMerchant = () => {
               type={type}
               fullWidth
               value={formData[name as keyof typeof formData]}
-              onChange={handleChange}
+              onChange={handleInputChange}
             />
           </Grid>
         ))}
@@ -192,7 +184,7 @@ const AddMerchant = () => {
               name="category"
               value={formData.category}
               label="Category"
-              onChange={handleChange}
+              onChange={handleSelectChange}
             >
               {categories.map((cat) => (
                 <MenuItem key={cat._id} value={cat._id}>
@@ -210,7 +202,7 @@ const AddMerchant = () => {
               name="subCategory"
               value={formData.subCategory}
               label="Sub-Category"
-              onChange={handleChange}
+              onChange={handleSelectChange}
               disabled={!formData.category || subCategoriesLoading}
             >
               {subCategoriesLoading ? (

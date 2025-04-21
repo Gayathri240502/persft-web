@@ -12,7 +12,7 @@ import {
   CircularProgress,
   Alert,
 } from "@mui/material";
-import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import {  GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Edit, Delete } from "@mui/icons-material";
@@ -145,17 +145,17 @@ const SubCategory = () => {
       field: "category",
       headerName: "Category",
       flex: 1,
-      valueGetter: (params) =>
+      valueGetter: (params: { row: SubCategory }) =>
         params.row?.category?.name ? params.row.category.name : "N/A",
     },
     {
       field: "attributeGroups",
       headerName: "Attribute Groups",
       flex: 1,
-      valueGetter: (params) => {
+      valueGetter: (params: { row: SubCategory }) => {
         const groups = params.row?.attributeGroups;
         if (!Array.isArray(groups)) return "N/A";
-        return groups.map((g: any) => g?.name || "Unnamed").join(", ");
+        return groups.map((g) => g?.name || "Unnamed").join(", ");
       },
     },
     {

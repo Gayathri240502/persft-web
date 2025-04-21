@@ -14,15 +14,27 @@ import {
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { useRouter } from "next/navigation";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession"; // Import the helper function
+import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 const roles = ["Admin", "User"]; // Add roles as needed
 
+// Define the type of your form state
+interface FormDataType {
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+  phone: string;
+  password: string;
+  enabled: boolean;
+  role: string[];
+}
+
 const AddUser = () => {
   const router = useRouter();
-  const { token } = getTokenAndRole(); // Get token from the session helper
+  const { token } = getTokenAndRole();
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormDataType>({
     firstName: "",
     lastName: "",
     username: "",
@@ -32,6 +44,7 @@ const AddUser = () => {
     enabled: true,
     role: [],
   });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -45,15 +58,16 @@ const AddUser = () => {
     }));
   };
 
-  const handleRoleChange = (e: React.ChangeEvent<{ value: unknown }>) => {
+  const handleRoleChange = (
+    e: React.ChangeEvent<{ name?: string; value: unknown }>
+  ) => {
     setFormData((prev) => ({
       ...prev,
-      role: e.target.value as string[], // Assuming multiple roles can be selected
+      role: e.target.value as string[],
     }));
   };
 
   const handleSubmit = async () => {
-    // Validate form data
     const requiredFields = [
       "firstName",
       "lastName",
@@ -64,7 +78,7 @@ const AddUser = () => {
       "role",
     ];
     const missing = requiredFields.filter(
-      (field) => !formData[field as keyof typeof formData]
+      (field) => !formData[field as keyof FormDataType]
     );
 
     if (missing.length > 0) {
@@ -74,24 +88,15 @@ const AddUser = () => {
 
     try {
       setLoading(true);
-      setError(""); // Reset error state
+      setError("");
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Use the token here
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          username: formData.username,
-          email: formData.email,
-          phone: formData.phone,
-          enabled: formData.enabled,
-          role: formData.role,
-          password: formData.password,
-        }),
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
@@ -99,7 +104,7 @@ const AddUser = () => {
         throw new Error(errorData.message || "Failed to create user.");
       }
 
-      router.push("/admin/users"); // Redirect to users list page
+      router.push("/admin/users");
     } catch (err: any) {
       setError(err.message || "Something went wrong.");
     } finally {
@@ -109,7 +114,6 @@ const AddUser = () => {
 
   return (
     <Box sx={{ p: 4 }}>
-      {/* Heading */}
       <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
         Add New User
       </Typography>
@@ -121,7 +125,6 @@ const AddUser = () => {
       )}
 
       <Grid container spacing={3}>
-        {/* First Name & Last Name */}
         <Grid item xs={12} sm={6}>
           <TextField
             label="First Name"
@@ -141,7 +144,6 @@ const AddUser = () => {
           />
         </Grid>
 
-        {/* Username */}
         <Grid item xs={12}>
           <TextField
             label="Username"
@@ -152,7 +154,6 @@ const AddUser = () => {
           />
         </Grid>
 
-        {/* Email */}
         <Grid item xs={12} sm={6}>
           <TextField
             label="Email"
@@ -164,7 +165,6 @@ const AddUser = () => {
           />
         </Grid>
 
-        {/* Phone Number */}
         <Grid item xs={12} sm={6}>
           <TextField
             label="Phone Number"
@@ -175,7 +175,6 @@ const AddUser = () => {
           />
         </Grid>
 
-        {/* Role Dropdown */}
         <Grid item xs={12}>
           <TextField
             select
@@ -183,9 +182,7 @@ const AddUser = () => {
             fullWidth
             value={formData.role}
             onChange={handleRoleChange}
-            SelectProps={{
-              multiple: true, // Allow multiple roles to be selected
-            }}
+            SelectProps={{ multiple: true }}
           >
             {roles.map((role, index) => (
               <MenuItem key={index} value={role}>
@@ -195,7 +192,6 @@ const AddUser = () => {
           </TextField>
         </Grid>
 
-        {/* Password */}
         <Grid item xs={12}>
           <TextField
             label="Password"
@@ -208,10 +204,8 @@ const AddUser = () => {
         </Grid>
       </Grid>
 
-      {/* Divider */}
       <Divider sx={{ my: 4 }} />
 
-      {/* Buttons */}
       <Box sx={{ display: "flex", gap: 2 }}>
         <ReusableButton onClick={handleSubmit} disabled={loading}>
           {loading ? <CircularProgress size={20} /> : "Add User"}

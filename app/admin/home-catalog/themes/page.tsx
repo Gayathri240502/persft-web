@@ -172,7 +172,12 @@ const ThemesPage = () => {
       flex: 1,
       renderCell: (params) => (
         <Box>
-          <IconButton color="info" size="small">
+          <IconButton color="info" size="small"
+           onClick={() =>
+            router.push(
+              `/admin/home-catalog/themes/${params.row.id}`
+            )
+          }>
             <Visibility fontSize="small" />
           </IconButton>
           <IconButton color="primary" size="small">

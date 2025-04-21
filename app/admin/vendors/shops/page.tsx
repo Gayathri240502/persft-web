@@ -115,9 +115,14 @@ const Shop = () => {
       field: "action",
       headerName: "Action",
       flex: 0.8,
-      renderCell: () => (
+      renderCell: (params) => (
         <Box display="flex" gap={1}>
-          <IconButton color="info" size="small">
+          <IconButton color="info" size="small"
+          onClick={() =>
+            router.push(
+              `/admin/vendors/shops/${params.row.id}`
+            )
+          }>
             <Visibility fontSize="small" />
           </IconButton>
           <IconButton color="primary" size="small">

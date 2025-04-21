@@ -15,7 +15,7 @@ import {
 import {  GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
-import { Edit, Delete } from "@mui/icons-material";
+import { Edit, Delete, Visibility } from "@mui/icons-material";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
@@ -170,6 +170,14 @@ const SubCategory = () => {
       flex: 0.5,
       renderCell: (params) => (
         <Box>
+          <IconButton color="primary" size="small"
+          onClick={() =>
+            router.push(
+              `/admin/product-catalog/sub-category/${params.row.id}`
+            )
+          }>
+            <Visibility/>
+          </IconButton>
           <IconButton color="primary" size="small">
             <Edit fontSize="small" />
           </IconButton>

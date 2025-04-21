@@ -71,7 +71,7 @@ const EditWorkGroup = () => {
         <ReusableButton type="submit" disabled={loading}>
           {loading ? <CircularProgress size={24} color="inherit" /> : "Update"}
         </ReusableButton>
-        <CancelButton href="/admin/home-catalog/work-groups">
+        <CancelButton href="/admin/work/work-group">
           Cancel
         </CancelButton>
       </Box>

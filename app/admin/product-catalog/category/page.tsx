@@ -15,7 +15,7 @@ import {
   DialogContentText,
   DialogActions,
 } from "@mui/material";
-import { Edit, Delete } from "@mui/icons-material";
+import { Edit, Delete, Visibility } from "@mui/icons-material";
 import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
@@ -164,6 +164,15 @@ const Category = () => {
       width: 150,
       renderCell: (params) => (
         <Box>
+
+          <IconButton color="primary" size="small"
+          onClick={() =>
+            router.push(
+              `/admin/product-catalog/category/${params.row.id}`
+            )
+          }>
+            <Visibility/>
+          </IconButton>
           <IconButton
             color="primary"
             size="small"

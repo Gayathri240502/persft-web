@@ -149,7 +149,13 @@ const ResidenceTypePage = () => {
       flex: 1,
       renderCell: (params) => (
         <Box>
-          <IconButton>
+          <IconButton
+          onClick={() =>
+            router.push(
+              `/admin/home-catalog/residence-types/${params.row.id}`
+            )
+          }
+          >
             <Visibility fontSize="small" color="primary" />
           </IconButton>
           <IconButton

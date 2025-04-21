@@ -135,7 +135,12 @@ const WorkTasksPage = () => {
       flex: 1,
       renderCell: (params: GridRenderCellParams<WorkTask>) => (
         <Box>
-          <IconButton color="info" size="small">
+          <IconButton color="info" size="small"
+           onClick={() =>
+            router.push(
+              `/admin/work/work-task/${params.row.id}`
+            )
+          }>
             <Visibility fontSize="small" />
           </IconButton>
           <IconButton color="primary" size="small">

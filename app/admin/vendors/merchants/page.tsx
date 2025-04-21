@@ -12,7 +12,7 @@ import {
 import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
-import { Edit, Delete } from "@mui/icons-material";
+import { Edit, Delete, Visibility } from "@mui/icons-material";
 import ReusableButton from "@/app/components/Button";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
@@ -131,6 +131,14 @@ const Merchant = () => {
       flex: 0.8,
       renderCell: (params) => (
         <Box display="flex" gap={1}>
+          <IconButton color="primary" size="small"
+          onClick={() =>
+            router.push(
+              `/admin/vendors/merchants/${params.row.id}`
+            )
+          }>
+            <Visibility/>
+          </IconButton>
           <IconButton color="primary" size="small">
             <Edit fontSize="small" />
           </IconButton>

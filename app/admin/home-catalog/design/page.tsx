@@ -136,7 +136,12 @@ const DesignType = () => {
       flex: 1,
       renderCell: (params) => (
         <Box>
-          <IconButton color="error" size="small">
+          <IconButton color="primary" size="small"
+           onClick={() =>
+            router.push(
+              `/admin/home-catalog/design/${params.row.id}`
+            )
+          }>
             <Visibility fontSize="small" />
           </IconButton>
           <IconButton color="primary" size="small">

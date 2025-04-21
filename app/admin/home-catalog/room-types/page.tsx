@@ -178,7 +178,12 @@ const RoomTypes = () => {
       flex: 1,
       renderCell: (params: GridCellParams) => (
         <Box>
-          <IconButton color="info" size="small">
+          <IconButton color="info" size="small"
+          onClick={() =>
+            router.push(
+              `/admin/home-catalog/room-types/${params.row.id}`
+            )
+          }>
             <Visibility fontSize="small" />
           </IconButton>
           <IconButton

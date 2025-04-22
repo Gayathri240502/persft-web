@@ -31,29 +31,34 @@ const LoginForm = () => {
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const data = {
-      username,
-      password,
-    };
+
     try {
       setLoading(true);
       setError(null);
 
       const result = await signIn("credentials", {
-        username: data.username,
-        password: data.password,
+        username,
+        password,
         redirect: false,
       });
 
+      console.log("SignIn Result:", result);
+
       if (result?.ok) {
         const session = await getSession();
+        console.log("Session after sign-in:", session);
+
         if (session?.accessToken && session?.roles) {
           sessionStorage.setItem("token", session.accessToken);
           sessionStorage.setItem("role", session.roles);
-          router.push(`admin/dashboard`);
+
+          console.log("✅ Redirecting to dashboard...");
+          router.push("/admin/dashboard"); // <-- your desired route
+        } else {
+          console.error("⚠️ Session incomplete. Cannot redirect.");
         }
       } else {
-        throw new Error("Login failed");
+        throw new Error("Invalid credentials or login failed");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");

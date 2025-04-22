@@ -1,10 +1,7 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
-import LoginForm from "../containers/login/LoginForm";
-
-export const metadata = {
-  title: "Login",
-};
+import LoginForm from "../containers/LoginForm/LoginForm";
 
 const Login = () => {
   return (

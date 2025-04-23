@@ -216,7 +216,7 @@ const Users = () => {
           <StyledDataGrid
             columns={columns}
             rows={filteredData}
-            pageSizeOptions={[5, 10, 25]}
+            pageSizeOptions={[5, 10, 25, 100]}
             loading={loading}
           />
         )}

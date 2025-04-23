@@ -1,5 +1,3 @@
-// app/components/StyledDataGrid.tsx
-
 "use client";
 import React from "react";
 import { DataGrid, DataGridProps } from "@mui/x-data-grid";
@@ -9,7 +7,11 @@ const StyledDataGrid: React.FC<DataGridProps> = (props) => {
   return (
     <Box
       sx={{
-        overflowX: "scroll",
+        width: "100%", // Full width container
+        height: "100%", // Fixed height
+        position: "relative", // Fixed positioning
+        overflowX: "auto", // Allows horizontal scrolling
+        overflowY: "hidden", // Prevents unnecessary page scrolling
         "&::-webkit-scrollbar": {
           height: "8px",
         },
@@ -22,7 +24,7 @@ const StyledDataGrid: React.FC<DataGridProps> = (props) => {
       <DataGrid
         hideFooterSelectedRowCount
         sx={{
-          minWidth: "600px", // Ensures horizontal scroll if on small screen
+          minWidth: "1000px", // Adjusted for content width
           "& .MuiDataGrid-columnHeaders": {
             fontSize: "1.1rem",
             fontWeight: "bold",
@@ -33,6 +35,9 @@ const StyledDataGrid: React.FC<DataGridProps> = (props) => {
           },
           "& .MuiDataGrid-row:nth-of-type(odd)": {
             backgroundColor: "#ffffff",
+          },
+          "& .MuiDataGrid-root": {
+            overflow: "auto", // Ensures internal scrolling within grid
           },
           ...props.sx,
         }}

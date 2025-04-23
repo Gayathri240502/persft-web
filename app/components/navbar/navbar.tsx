@@ -92,11 +92,6 @@ export default function Navbar() {
           >
             <Menu.Items className="absolute right-0 mt-2 w-56 origin-top-right bg-white divide-y divide-gray-100 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
               <div className="px-4 py-3">
-                <Link href="edit-profile">
-                  <p className="text-sm font-medium">Edit Profile</p>
-                </Link>
-              </div>
-              <div className="px-4 py-3">
                 <p className="text-sm font-medium">{userDetails.name}</p>
                 <p className="text-xs text-gray-500 mt-1">
                   {userDetails.email}

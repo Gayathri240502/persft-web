@@ -5,6 +5,8 @@ import Providers from "./Provider";
 import Sidebar from "./components/Sidebar/Sidebar";
 import { getSession } from "./auth";
 import Navbar from "./components/navbar/navbar";
+import LocalizationProviderWrapper from "../app/components/providers/LocalizationProviderWrapper";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -44,7 +46,11 @@ export default async function RootLayout({
             <div className="flex flex-col flex-1">
               <Navbar />
 
-              <main className="flex-1 p-4 overflow-auto">{children}</main>
+              <main className="flex-1 p-4 overflow-auto">
+                <LocalizationProviderWrapper>
+                  {children}
+                </LocalizationProviderWrapper>
+              </main>
             </div>
           </div>
         </Providers>

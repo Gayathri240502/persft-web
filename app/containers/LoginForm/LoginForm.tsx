@@ -2,19 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { signIn, getSession } from "next-auth/react";
-
-type LoginFormData = {
-  username: string;
-  password: string;
-};
-
-declare module "next-auth" {
-  interface Session {
-    accessToken?: string;
-    roles?: string;
-  }
-}
+import Spinner from "../../components/spinner/Spinner";
 
 const LoginForm = () => {
   const [username, setUsername] = useState<string>("");
@@ -22,117 +10,154 @@ const LoginForm = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [isMounted, setIsMounted] = useState(false);
-
   const router = useRouter();
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
+  if (!isMounted) {
+    return null;
+  }
+
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     try {
       setLoading(true);
       setError(null);
 
-      const result = await signIn("credentials", {
-        username,
-        password,
-        redirect: false,
-      });
-
-      console.log("SignIn Result:", result);
-
-      if (result?.ok) {
-        const session = await getSession();
-        console.log("Session after sign-in:", session);
-
-        if (session?.accessToken && session?.roles) {
-          sessionStorage.setItem("token", session.accessToken);
-          sessionStorage.setItem("role", session.roles);
-
-          console.log("✅ Redirecting to dashboard...");
-          router.push("/admin/dashboard"); // <-- your desired route
-        } else {
-          console.error("⚠️ Session incomplete. Cannot redirect.");
+      console.log("Attempting login...");
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username,
+            password,
+          }),
         }
-      } else {
-        throw new Error("Invalid credentials or login failed");
+      );
+
+      let data;
+      try {
+        const text = await response.text();
+        data = text ? JSON.parse(text) : {};
+      } catch (parseError) {
+        console.error("Error parsing response:", parseError);
+        throw new Error("Invalid response from server");
       }
+
+      console.log("Login response status:", response.status);
+      console.log("Login response:", data);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Invalid username or password");
+        } else if (response.status === 404) {
+          throw new Error("User not found");
+        } else if (data.message) {
+          throw new Error(data.message);
+        } else {
+          throw new Error("An error occurred during login. Please try again.");
+        }
+      }
+
+      // Store the token
+      document.cookie = `token=${data.access_token}; path=/`;
+      localStorage.setItem("token", data.access_token);
+
+      // Extract and store role from JWT
+      const base64Url = data.access_token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      );
+      const decodedToken = JSON.parse(jsonPayload);
+      localStorage.setItem("role", decodedToken.realm_access.roles[0]);
+
+      console.log("Login successful, redirecting to dashboard...");
+
+      // Force a hard navigation to dashboard
+      window.location.href = "/admin/dashboard";
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      console.error("Login error:", err);
+      setError(
+        err instanceof Error ? err.message : "Invalid username or password"
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  if (!isMounted) {
-    return null;
-  }
-
   return (
     <div className="mx-auto p-2 max-w-md">
-      <h1 className="text-2xl font-bold text-[#161e54] text-center mb-2">
+      <h1 className="text-2xl font-bold text-[#161e54] text-center mb-6">
         Login
       </h1>
 
-      <form onSubmit={onSubmit} className="grid gap-6">
+      <form onSubmit={onSubmit} className="space-y-6">
         <div>
-          <label htmlFor="username" className="block font-medium">
-            Username <span className="text-red-500">*</span>
+          <label
+            htmlFor="username"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Username
           </label>
           <input
-            type="text"
             id="username"
+            type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            placeholder="Enter your username"
-            className="w-full mt-2 p-2 border border-gray-300 rounded focus:border-[#ff8e4b] focus:outline-none"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            required
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="block font-medium">
-            Password <span className="text-red-500">*</span>
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Password
           </label>
           <input
-            type="password"
             id="password"
+            type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
-            className="w-full mt-2 p-2 border border-gray-300 rounded focus:border-[#ff8e4b] focus:outline-none"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            required
           />
         </div>
 
         {error && (
-          <div
-            id="error-message"
-            className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4"
-          >
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded">
             {error}
           </div>
         )}
 
-        <div className="flex justify-center">
-          <button
-            type="submit"
-            className={`w-full text-white py-3 rounded-md flex items-center justify-center ${
-              loading ? "bg-gray-300 cursor-not-allowed" : "bg-[#05344c]"
-            }`}
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-5 h-5 mr-2"></span>
-                Please Wait
-              </>
-            ) : (
-              "Login"
-            )}
-          </button>
-        </div>
+        <button
+          type="submit"
+          className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium  
+    ${loading ? "bg-[#09B6E9] cursor-not-allowed" : "bg-[#309416] hover:bg-[#09B6E9]"} 
+    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#309416]`}
+          disabled={loading}
+        >
+          {loading ? (
+            <div className="flex items-center">
+              <span className="animate-spin border-2  border-t-transparent rounded-full w-5 h-5 mr-2"></span>
+              Logging in...
+            </div>
+          ) : (
+            "Login"
+          )}
+        </button>
       </form>
     </div>
   );

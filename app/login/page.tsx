@@ -8,7 +8,7 @@ const Login = () => {
     <div className="w-full h-full flex items-center justify-center">
       <div className="w-full max-w-[540px] mx-auto px-4">
         {/* Logo Section */}
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center mb-8 w-auto h-auto">
           <Link href="/admin/dashboard">
             <Image
               src="/logo.png"

@@ -16,12 +16,19 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
-import { DataGrid, GridColDef, GridPaginationModel, GridCellParams } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  GridColDef,
+  GridPaginationModel,
+  GridCellParams,
+} from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import ReusableButton from "@/app/components/Button";
 import { useRouter } from "next/navigation";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { Sree_Krushnadevaraya } from "next/font/google";
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 // Interfaces
 interface ResidenceTypeReference {
@@ -178,12 +185,13 @@ const RoomTypes = () => {
       flex: 1,
       renderCell: (params: GridCellParams) => (
         <Box>
-          <IconButton color="info" size="small"
-          onClick={() =>
-            router.push(
-              `/admin/home-catalog/room-types/${params.row.id}`
-            )
-          }>
+          <IconButton
+            color="info"
+            size="small"
+            onClick={() =>
+              router.push(`/admin/home-catalog/room-types/${params.row.id}`)
+            }
+          >
             <Visibility fontSize="small" />
           </IconButton>
           <IconButton
@@ -254,30 +262,21 @@ const RoomTypes = () => {
           <CircularProgress />
         </Box>
       ) : (
-        <Box sx={{ height: 400, width: "100%", overflowX: "auto" }}>
-          <DataGrid
-            rows={roomTypes}
-            columns={columns}
-            rowCount={rowCount}
-            pagination
-            paginationMode="server"
-            paginationModel={paginationModel}
-            onPaginationModelChange={setPaginationModel}
-            pageSizeOptions={[5, 10, 25]}
-            autoHeight
-            disableColumnMenu={isSmallScreen}
-            sx={{
-              "& .MuiDataGrid-columnHeaders": {
-                fontSize: isSmallScreen ? "0.8rem" : "1rem",
-              },
-              "& .MuiDataGrid-row:nth-of-type(even)": {
-                backgroundColor: "#f9f9f9",
-              },
-              "& .MuiDataGrid-row:nth-of-type(odd)": {
-                backgroundColor: "#ffffff",
-              },
-            }}
-          />
+        <Box sx={{ width: "100%", overflowX: "auto" }}>
+          <Box sx={{ minWidth: "1200px" }}>
+            <StyledDataGrid
+              rows={roomTypes}
+              columns={columns}
+              rowCount={rowCount}
+              pagination
+              paginationMode="server"
+              paginationModel={paginationModel}
+              onPaginationModelChange={setPaginationModel}
+              pageSizeOptions={[5, 10, 25]}
+              autoHeight
+              disableColumnMenu={isSmallScreen}
+            />
+          </Box>
         </Box>
       )}
 

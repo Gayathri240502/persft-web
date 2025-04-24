@@ -141,8 +141,19 @@ const ResidenceTypePage = () => {
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", width: 70 },
     { field: "name", headerName: "Name", flex: 1 },
-    { field: "description", headerName: "Description", flex: 1 },
-    { field: "thumbnail", headerName: "Thumbnail", flex: 1 },
+    { field: "description", headerName: "Description", flex: 2 },
+    {
+      field: "thumbnail",
+      headerName: "Thumbnail",
+      flex: 1,
+      renderCell: (params) => (
+        <img
+          src={params.row.thumbnail}
+          alt="Thumbnail"
+          style={{ width: 40, height: 40 }}
+        />
+      ),
+    },
     {
       field: "action",
       headerName: "Action",
@@ -150,11 +161,11 @@ const ResidenceTypePage = () => {
       renderCell: (params) => (
         <Box>
           <IconButton
-          onClick={() =>
-            router.push(
-              `/admin/home-catalog/residence-types/${params.row.id}`
-            )
-          }
+            onClick={() =>
+              router.push(
+                `/admin/home-catalog/residence-types/${params.row.id}`
+              )
+            }
           >
             <Visibility fontSize="small" color="primary" />
           </IconButton>
@@ -191,9 +202,8 @@ const ResidenceTypePage = () => {
       <Box
         sx={{
           display: "flex",
-          flexDirection: isSmallScreen ? "column" : "row",
           justifyContent: "space-between",
-          alignItems: "center",
+
           mb: 2,
           gap: isSmallScreen ? 2 : 1,
         }}
@@ -227,22 +237,24 @@ const ResidenceTypePage = () => {
           <CircularProgress />
         </Box>
       ) : (
-        <Box sx={{ height: 500, width: "100%", overflowX: "auto" }}>
-          <StyledDataGrid
-            rows={residenceTypes}
-            columns={columns}
-            rowCount={rowCount}
-            loading={loading}
-            pagination
-            paginationMode="server"
-            paginationModel={paginationModel}
-            onPaginationModelChange={(model: GridPaginationModel) =>
-              setPaginationModel(model)
-            }
-            pageSizeOptions={[5, 10, 25]}
-            autoHeight
-            disableColumnMenu={isSmallScreen}
-          />
+        <Box sx={{ width: "100%", overflowX: "auto" }}>
+          <Box sx={{ minWidth: "1200px" }}>
+            <StyledDataGrid
+              rows={residenceTypes}
+              columns={columns}
+              rowCount={rowCount}
+              loading={loading}
+              pagination
+              paginationMode="server"
+              paginationModel={paginationModel}
+              onPaginationModelChange={(model: GridPaginationModel) =>
+                setPaginationModel(model)
+              }
+              pageSizeOptions={[5, 10, 25]}
+              disableColumnMenu={isSmallScreen}
+              autoHeight={false}
+            />
+          </Box>
         </Box>
       )}
 

@@ -20,14 +20,14 @@ import {
 import { Edit, Delete, ArrowBack } from "@mui/icons-material";
 
 interface ResidenceType {
-    _id: string;
-    name: string;
-    description: string;
-    archive: boolean;
-    createdAt: string;
-    updatedAt: string;
-    __v: number;
-  }
+  _id: string;
+  name: string;
+  description: string;
+  archive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
 
 const ResidenceTypesPage: React.FC = () => {
   const [residence, setResidence] = useState<ResidenceType | null>(null);
@@ -151,7 +151,9 @@ const ResidenceTypesPage: React.FC = () => {
           <Box>
             <IconButton
               color="primary"
-              onClick={() => router.push(`/admin/home-catalog/residence-types/edit`)}
+              onClick={() =>
+                router.push(`/admin/home-catalog/residence-types/edit?id=${id}`)
+              }
             >
               <Edit />
             </IconButton>

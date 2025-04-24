@@ -43,7 +43,7 @@ export default async function RootLayout({
           <div className="flex min-h-screen w-screen">
             <Sidebar />
 
-            <div className="flex flex-col flex-1">
+            <div className="flex flex-col flex-1 overflow-hidden">
               <Navbar />
 
               <main className="flex-1 p-4 overflow-auto">

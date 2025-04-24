@@ -8,10 +8,9 @@ import {
   TextField,
   useMediaQuery,
 } from "@mui/material";
-import { DataGrid, GridColDef, } from "@mui/x-data-grid";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
-
 
 // Column Definitions
 const columns: GridColDef[] = [
@@ -77,10 +76,11 @@ const Products = () => {
       <Box
         sx={{
           display: "flex",
-          flexDirection: isSmallScreen ? "column" : "row",
+
           gap: 1,
           mb: 2,
-          alignItems: "center",
+          overflowX: "auto",
+          flexWrap: "wrap",
         }}
       >
         <Button variant="outlined" size="small">
@@ -116,7 +116,6 @@ const Products = () => {
               fontSize: isSmallScreen ? "0.8rem" : "1rem",
             },
           }}
-         
         />
       </Box>
     </Box>

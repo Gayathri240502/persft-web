@@ -147,7 +147,12 @@ const WorkTasksPage = () => {
           >
             <Visibility fontSize="small" />
           </IconButton>
-          <IconButton color="primary" size="small">
+          <IconButton color="primary" size="small"
+          onClick={() =>
+            router.push(
+              `/admin/work/work-task/edit?id=${params.row.id}`
+            )
+          }>
             <Edit fontSize="small" />
           </IconButton>
           <IconButton color="error" size="small">

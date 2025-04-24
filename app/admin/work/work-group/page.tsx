@@ -139,7 +139,7 @@ const WorkGroups = () => {
             size="small"
             onClick={() =>
               router.push(
-                `/admin/home-catalog/work-groups/edit?id=${params.row.id}`
+                `/admin/work/work-group/edit?id=${params.row.id}`
               )
             }
           >

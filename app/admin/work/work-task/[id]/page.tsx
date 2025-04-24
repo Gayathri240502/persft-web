@@ -127,7 +127,7 @@ const WorkTaskDetails: React.FC = () => {
           <Box>
             <IconButton
               color="primary"
-              onClick={() => router.push(`/admin/work/work-task/edit`)}
+              onClick={() => router.push(`/admin/work/work-task/edit?id=${id}`)}
             >
               <Edit />
             </IconButton>

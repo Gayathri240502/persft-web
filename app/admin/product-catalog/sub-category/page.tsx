@@ -11,6 +11,11 @@ import {
   IconButton,
   CircularProgress,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import {  GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
@@ -58,6 +63,11 @@ const SubCategory = () => {
   const [error, setError] = useState<string | null>(null);
 
   const { token } = getTokenAndRole();
+
+   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+      null
+    );
 
   const fetchSubCategories = async () => {
     setLoading(true);
@@ -118,6 +128,39 @@ const SubCategory = () => {
   useEffect(() => {
     fetchSubCategories();
   }, [paginationModel, search]);
+
+  const handleDeleteConfirm = async () => {
+    if (selectedCategoryId) {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/sub-categories/${selectedCategoryId}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to delete category: ${response.statusText}`);
+        }
+
+        // After deletion, fetch the updated category list
+        fetchSubCategories();
+        setDeleteDialogOpen(false); // Close dialog
+        setSelectedCategoryId(null); // Clear selected category
+      } catch (error) {
+        setError("Failed to delete category");
+      }
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setSelectedCategoryId(null); // Clear selected category
+  };
 
   // Columns
   const columns: GridColDef[] = [
@@ -186,7 +229,11 @@ const SubCategory = () => {
           }>
             <Edit fontSize="small" />
           </IconButton>
-          <IconButton color="error" size="small">
+          <IconButton color="error" size="small"
+          onClick={() => {
+            setSelectedCategoryId(params.row.id); // Set category to delete
+            setDeleteDialogOpen(true); // Open delete dialog
+          }}>
             <Delete fontSize="small" />
           </IconButton>
         </Box>
@@ -283,6 +330,21 @@ const SubCategory = () => {
           disableColumnMenu={isSmallScreen}
         />
       </Box>
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+              <DialogTitle>Delete</DialogTitle>
+              <DialogContent>
+                <DialogContentText>
+                  Are you sure you want to delete this category? This action cannot be
+                  undone.
+                </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleDeleteCancel}>Cancel</Button>
+                <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+                  Delete
+                </Button>
+              </DialogActions>
+            </Dialog>
     </Box>
   );
 };

@@ -8,6 +8,12 @@ import {
   useMediaQuery,
   IconButton,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
 } from "@mui/material";
 import { GridColDef, GridPaginationModel, GridRenderCellParams } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
@@ -49,6 +55,9 @@ const DesignType = () => {
   const [loading, setLoading] = useState(false); // State for loading indicator
   const [error, setError] = useState<string | null>(null); // State for error handling
   const { token } = getTokenAndRole();
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
 
   // Fetch Room Types
   const fetchDesigns = async () => {
@@ -107,6 +116,41 @@ const DesignType = () => {
     fetchDesigns();
   }, [paginationModel, search]);
 
+  const handleDeleteClick = (id: string) => {
+    setSelectedDeleteId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setSelectedDeleteId(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedDeleteId) return;
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/designs/${selectedDeleteId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete Designs");
+      }
+
+      fetchDesigns();
+      handleDeleteCancel();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete item");
+    }
+  };
+
   // Column Definitions
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", width: 70 },
@@ -147,7 +191,8 @@ const DesignType = () => {
           <IconButton color="primary" size="small">
             <Edit fontSize="small" />
           </IconButton>
-          <IconButton color="error" size="small">
+          <IconButton color="error" size="small"
+           onClick={() => handleDeleteClick(params.row.id)}>
             <Delete fontSize="small" />
           </IconButton>
         </Box>
@@ -219,6 +264,22 @@ const DesignType = () => {
           />
         </Box>
       )}
+
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+              <DialogTitle>Delete</DialogTitle>
+              <DialogContent>
+                <DialogContentText>
+                  Are you sure you want to delete this Designs? This action
+                  cannot be undone.
+                </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleDeleteCancel}>Cancel</Button>
+                <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+                  Delete
+                </Button>
+              </DialogActions>
+            </Dialog>
     </Box>
   );
 };

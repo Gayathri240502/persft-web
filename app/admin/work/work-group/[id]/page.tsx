@@ -120,7 +120,7 @@ const WorkGroupDetails: React.FC = () => {
           <Box>
             <IconButton
               color="primary"
-              onClick={() => router.push(`/admin/work/work-group/edit`)}
+              onClick={() => router.push(`/admin/work/work-group/edit?id=${id}`)}
             >
               <Edit />
             </IconButton>

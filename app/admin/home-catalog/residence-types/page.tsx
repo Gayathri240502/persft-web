@@ -17,7 +17,7 @@ import {
   Button,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import {  GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useRouter } from "next/navigation";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
 

@@ -8,7 +8,7 @@ import {
   TextField,
   useMediaQuery,
 } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { GridColDef } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";

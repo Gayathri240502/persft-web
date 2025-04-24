@@ -272,7 +272,7 @@ const ThemesPage = () => {
           pagination
           paginationMode="server"
           paginationModel={paginationModel}
-          onPaginationModelChange={(model) => setPaginationModel(model)}
+          onPaginationModelChange={(model: GridPaginationModel) => setPaginationModel(model)}
           pageSizeOptions={[5, 10, 25]}
           autoHeight
           disableColumnMenu={isSmallScreen}

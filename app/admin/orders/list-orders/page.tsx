@@ -8,9 +8,10 @@ import {
   TextField,
   useMediaQuery,
 } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import {  GridColDef } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import CancelButton from "@/app/components/CancelButton";
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 // Column Definitions for Orders
 const columns: GridColDef[] = [

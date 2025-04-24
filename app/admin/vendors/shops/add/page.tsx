@@ -62,162 +62,104 @@ const AddShop = () => {
   const [countries, setCountries] = useState<Country[]>([]);
   const [states, setStates] = useState<State[]>([]);
   const [cities, setCities] = useState<City[]>([]);
-  
+
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [loadingSubCategories, setLoadingSubCategories] = useState(false);
   const [loadingCountries, setLoadingCountries] = useState(false);
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
-  
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  
+
   const { token } = getTokenAndRole();
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      setLoadingCategories(true);
+    const fetchData = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        setLoadingCategories(true);
+        const res1 = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch categories");
-        }
-
-        const data = await res.json();
-        setCategories(data.categories || data || []);
+        const data1 = await res1.json();
+        setCategories(data1.categories || data1 || []);
       } catch (err: any) {
-        console.error("Error fetching categories:", err);
         setError(err.message || "Failed to fetch categories.");
       } finally {
         setLoadingCategories(false);
       }
-    };
 
-    const fetchSubCategories = async () => {
-      setLoadingSubCategories(true);
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sub-categories`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        setLoadingSubCategories(true);
+        const res2 = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sub-categories`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch subcategories");
-        }
-
-        const data = await res.json();
-        setSubCategories(data.subCategories || data || []);
+        const data2 = await res2.json();
+        setSubCategories(data2.subCategories || data2 || []);
       } catch (err: any) {
-        console.error("Error fetching subcategories:", err);
         setError(err.message || "Failed to fetch subcategories.");
       } finally {
         setLoadingSubCategories(false);
       }
-    };
 
-    const fetchCountries = async () => {
-      setLoadingCountries(true);
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/countries`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        setLoadingCountries(true);
+        const res3 = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/countries`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch countries");
-        }
-
-        const data = await res.json();
-        setCountries(data.countries || data || []);
+        const data3 = await res3.json();
+        setCountries(data3.countries || data3 || []);
       } catch (err: any) {
-        console.error("Error fetching countries:", err);
         setError(err.message || "Failed to fetch countries.");
       } finally {
         setLoadingCountries(false);
       }
     };
 
-    const fetchStates = async (countryId: string) => {
-      if (!countryId) return;
-      
-      setLoadingStates(true);
+    fetchData();
+  }, [token]);
+
+  useEffect(() => {
+    const fetchStates = async () => {
+      if (!form.country) return;
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/states?countryId=${countryId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        setLoadingStates(true);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/states?countryId=${form.country}`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch states");
-        }
-
         const data = await res.json();
         setStates(data.states || data || []);
       } catch (err: any) {
-        console.error("Error fetching states:", err);
         setError(err.message || "Failed to fetch states.");
       } finally {
         setLoadingStates(false);
       }
     };
 
-    const fetchCities = async (stateId: string) => {
-      if (!stateId) return;
-      
-      setLoadingCities(true);
+    fetchStates();
+  }, [form.country, token]);
+
+  useEffect(() => {
+    const fetchCities = async () => {
+      if (!form.state) return;
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cities?stateId=${stateId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        setLoadingCities(true);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cities?stateId=${form.state}`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch cities");
-        }
-
         const data = await res.json();
         setCities(data.cities || data || []);
       } catch (err: any) {
-        console.error("Error fetching cities:", err);
         setError(err.message || "Failed to fetch cities.");
       } finally {
         setLoadingCities(false);
       }
     };
 
-    fetchCategories();
-    fetchSubCategories();
-    fetchCountries();
-  }, [token]);
+    fetchCities();
+  }, [form.state, token]);
 
-  useEffect(() => {
-    if (form.country) {
-      fetchStates(form.country);
-    } else {
-      setStates([]);
-      setForm((prev) => ({ ...prev, state: "", city: "" }));
-    }
-  }, [form.country]);
-
-  useEffect(() => {
-    if (form.state) {
-      fetchCities(form.state);
-    } else {
-      setCities([]);
-      setForm((prev) => ({ ...prev, city: "" }));
-    }
-  }, [form.state]);
-
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -236,7 +178,7 @@ const AddShop = () => {
 
       if (!res.ok) {
         const errorText = await res.text();
-        throw new Error(`Failed to add shop: ${errorText}`);
+        throw new Error(errorText || "Failed to add shop");
       }
 
       await res.json();
@@ -257,10 +199,42 @@ const AddShop = () => {
         subCategory: "",
       });
     } catch (err: any) {
-      console.error("Submission error:", err);
       setError(err.message || "Something went wrong while adding the shop.");
     }
   };
+
+  const renderSelect = (
+    label: string,
+    value: string,
+    field: keyof typeof form,
+    options: { _id: string; name: string }[],
+    loading: boolean,
+    disabled = false
+  ) => (
+    <FormControl fullWidth>
+      <InputLabel>{label}</InputLabel>
+      <Select
+        value={value}
+        onChange={(e: SelectChangeEvent) => handleChange(field, e.target.value)}
+        label={label}
+        disabled={disabled}
+      >
+        {loading ? (
+          <MenuItem disabled>
+            <CircularProgress size={20} />
+          </MenuItem>
+        ) : options.length > 0 ? (
+          options.map((opt) => (
+            <MenuItem key={opt._id} value={opt._id}>
+              {opt.name}
+            </MenuItem>
+          ))
+        ) : (
+          <MenuItem disabled>No {label.toLowerCase()}s found</MenuItem>
+        )}
+      </Select>
+    </FormControl>
+  );
 
   return (
     <Box sx={{ p: 4 }}>
@@ -272,102 +246,40 @@ const AddShop = () => {
       {success && <Alert severity="success">{success}</Alert>}
 
       <Grid container spacing={2}>
-        {[{ label: "First Name", key: "firstName" },
-          { label: "Last Name", key: "lastName" },
-          { label: "Username", key: "username" },
-          { label: "Email", key: "email" },
-          { label: "Phone", key: "phone" },
-          { label: "Password", key: "password" },
-          { label: "Owner Name", key: "ownerName" },
-          { label: "Address", key: "address" },
-          { label: "Category", key: "category" },
-          { label: "SubCategory", key: "subCategory" },
-        ].map(({ label, key }) => (
+        {[
+          ["First Name", "firstName"],
+          ["Last Name", "lastName"],
+          ["Username", "username"],
+          ["Email", "email"],
+          ["Phone", "phone"],
+          ["Password", "password"],
+          ["Owner Name", "ownerName"],
+          ["Address", "address"],
+        ].map(([label, key]) => (
           <Grid item xs={12} sm={6} key={key}>
             <TextField
               fullWidth
               label={label}
               value={form[key as keyof typeof form]}
-              onChange={(e) => handleChange(key, e.target.value)}
+              onChange={(e) => handleChange(key as keyof typeof form, e.target.value)}
             />
           </Grid>
         ))}
 
         <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
-            <InputLabel>Country</InputLabel>
-            <Select
-              value={form.country}
-              onChange={(e: SelectChangeEvent) => handleChange("country", e.target.value)}
-              label="Country"
-            >
-              {loadingCountries ? (
-                <MenuItem disabled>
-                  <CircularProgress size={20} />
-                </MenuItem>
-              ) : countries.length > 0 ? (
-                countries.map((country) => (
-                  <MenuItem key={country._id} value={country._id}>
-                    {country.name}
-                  </MenuItem>
-                ))
-              ) : (
-                <MenuItem disabled>No countries found</MenuItem>
-              )}
-            </Select>
-          </FormControl>
+          {renderSelect("Category", form.category, "category", categories, loadingCategories)}
         </Grid>
-
         <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
-            <InputLabel>State</InputLabel>
-            <Select
-              value={form.state}
-              onChange={(e: SelectChangeEvent) => handleChange("state", e.target.value)}
-              label="State"
-              disabled={!form.country}
-            >
-              {loadingStates ? (
-                <MenuItem disabled>
-                  <CircularProgress size={20} />
-                </MenuItem>
-              ) : states.length > 0 ? (
-                states.map((state) => (
-                  <MenuItem key={state._id} value={state._id}>
-                    {state.name}
-                  </MenuItem>
-                ))
-              ) : (
-                <MenuItem disabled>No states found</MenuItem>
-              )}
-            </Select>
-          </FormControl>
+          {renderSelect("SubCategory", form.subCategory, "subCategory", subCategories, loadingSubCategories)}
         </Grid>
-
         <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
-            <InputLabel>City</InputLabel>
-            <Select
-              value={form.city}
-              onChange={(e: SelectChangeEvent) => handleChange("city", e.target.value)}
-              label="City"
-              disabled={!form.state}
-            >
-              {loadingCities ? (
-                <MenuItem disabled>
-                  <CircularProgress size={20} />
-                </MenuItem>
-              ) : cities.length > 0 ? (
-                cities.map((city) => (
-                  <MenuItem key={city._id} value={city._id}>
-                    {city.name}
-                  </MenuItem>
-                ))
-              ) : (
-                <MenuItem disabled>No cities found</MenuItem>
-              )}
-            </Select>
-          </FormControl>
+          {renderSelect("Country", form.country, "country", countries, loadingCountries)}
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          {renderSelect("State", form.state, "state", states, loadingStates, !form.country)}
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          {renderSelect("City", form.city, "city", cities, loadingCities, !form.state)}
         </Grid>
       </Grid>
 

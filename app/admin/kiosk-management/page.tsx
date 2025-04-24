@@ -15,7 +15,7 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
-import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import {  GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import ReusableButton from "@/app/components/Button";
 import { useRouter } from "next/navigation";
@@ -102,10 +102,10 @@ const KioskManagement = () => {
     fetchKiosks();
   }, [paginationModel, search]);
 
-  const handleDeleteClick = (id: string) => {
-    setSelectedDeleteId(id);
-    setDeleteDialogOpen(true);
-  };
+  // const handleDeleteClick = (id: string) => {
+  //   setSelectedDeleteId(id);
+  //   setDeleteDialogOpen(true);
+  // };
 
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
@@ -208,7 +208,7 @@ const KioskManagement = () => {
             pagination
             paginationMode="server"
             paginationModel={paginationModel}
-            onPaginationModelChange={(model) => setPaginationModel(model)}
+            onPaginationModelChange={(model: GridPaginationModel) => setPaginationModel(model)}
             pageSizeOptions={[5, 10, 25]}
             autoHeight
             disableColumnMenu={isSmallScreen}

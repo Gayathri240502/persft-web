@@ -14,6 +14,7 @@ import {
   CircularProgress,
   Alert,
 } from "@mui/material";
+import { SelectChangeEvent } from "@mui/material/Select";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -37,8 +38,8 @@ const EditMerchant = () => {
     subCategory: "",
   });
 
-  const [categories, setCategories] = useState([]);
-  const [subCategories, setSubCategories] = useState([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [subCategories, setSubCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState("");
@@ -69,7 +70,7 @@ const EditMerchant = () => {
           category: data.category || "",
           subCategory: data.subCategory || "",
         });
-      } catch (err) {
+      } catch {
         setError("Unable to load merchant data.");
       } finally {
         setInitialLoading(false);
@@ -83,7 +84,7 @@ const EditMerchant = () => {
         });
         const data = await res.json();
         setCategories(data.categories || []);
-      } catch (err) {
+      } catch {
         console.error("Failed to fetch categories.");
       }
     };
@@ -97,14 +98,14 @@ const EditMerchant = () => {
       if (!formData.category) return;
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/sub-categories/categories-selection?category=${formData.category}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/sub-categories/${formData.category}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
         const data = await res.json();
         setSubCategories(data.categories || []);
-      } catch (err) {
+      } catch {
         console.error("Failed to fetch sub-categories.");
       }
     };
@@ -112,7 +113,17 @@ const EditMerchant = () => {
     fetchSubCategories();
   }, [formData.category, token]);
 
-  const handleChange = (e) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSelectChange = (e: SelectChangeEvent<string>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -122,7 +133,6 @@ const EditMerchant = () => {
 
   const handleSubmit = async () => {
     if (!merchantId) return;
-
     try {
       setLoading(true);
       const res = await fetch(
@@ -138,7 +148,7 @@ const EditMerchant = () => {
       );
       if (!res.ok) throw new Error("Update failed.");
       router.push("/admin/vendors/merchants");
-    } catch (err) {
+    } catch {
       setError("Failed to update merchant.");
     } finally {
       setLoading(false);
@@ -180,8 +190,8 @@ const EditMerchant = () => {
               fullWidth
               label={label}
               name={name}
-              value={formData[name]}
-              onChange={handleChange}
+              value={formData[name as keyof typeof formData]}
+              onChange={handleInputChange}
             />
           </Grid>
         ))}
@@ -192,7 +202,7 @@ const EditMerchant = () => {
             <Select
               name="category"
               value={formData.category}
-              onChange={handleChange}
+              onChange={handleSelectChange}
               label="Category"
             >
               {categories.map((cat) => (
@@ -210,7 +220,7 @@ const EditMerchant = () => {
             <Select
               name="subCategory"
               value={formData.subCategory}
-              onChange={handleChange}
+              onChange={handleSelectChange}
               label="Sub Category"
               disabled={!formData.category}
             >

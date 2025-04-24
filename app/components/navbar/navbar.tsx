@@ -89,7 +89,7 @@ export default function Navbar() {
               {getInitials(userDetails.name)}
             </div>
             <div className="text-sm font-semibold">{userDetails.name}</div>
-            <ExpandMoreIcon className="ml-2" size={18} />
+            <ExpandMoreIcon className="ml-2" fontSize="small" />
           </IconButton>
 
           <Menu

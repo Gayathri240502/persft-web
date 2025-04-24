@@ -156,7 +156,18 @@ const Category = () => {
     { field: "sn", headerName: "SN", width: 70 },
     { field: "name", headerName: "Name", flex: 1 },
     { field: "description", headerName: "Description", flex: 1 },
-    { field: "thumbnail", headerName: "Thumbnail", flex: 1 },
+    {
+      field: "thumbnail",
+      headerName: "Thumbnail",
+      flex: 1,
+      renderCell: (params) => (
+        <img
+          src={params.row.thumbnail}
+          alt="Thumbnail"
+          style={{ width: 40, height: 40 }}
+        />
+      ),
+    },
     { field: "archive", headerName: "Archived", flex: 1, type: "boolean" },
     {
       field: "action",
@@ -178,7 +189,7 @@ const Category = () => {
             size="small"
             onClick={() =>
               router.push(
-                `/admin/product-catalog/category/edit/${params.row.id}`
+                `/admin/product-catalog/category/edit?id=${params.row.id}`
               )
             }
           >

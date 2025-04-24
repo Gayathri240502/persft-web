@@ -157,6 +157,18 @@ const ThemesPage = () => {
     { field: "name", headerName: "Theme Name", flex: 1 },
     { field: "description", headerName: "Description", flex: 1 },
     {
+      field: "thumbnail",
+      headerName: "Thumbnail",
+      flex: 1,
+      renderCell: (params) => (
+        <img
+          src={params.row.thumbnail}
+          alt="Thumbnail"
+          style={{ width: 40, height: 40 }}
+        />
+      ),
+    },
+    {
       field: "roomTypes",
       headerName: "Room Types",
       flex: 1,
@@ -180,7 +192,12 @@ const ThemesPage = () => {
           }>
             <Visibility fontSize="small" />
           </IconButton>
-          <IconButton color="primary" size="small">
+          <IconButton color="primary" size="small"
+          onClick={() =>
+            router.push(
+              `/admin/home-catalog/themes/edit?id=${params.row.id}`
+            )
+          }>
             <Edit fontSize="small" />
           </IconButton>
           <IconButton

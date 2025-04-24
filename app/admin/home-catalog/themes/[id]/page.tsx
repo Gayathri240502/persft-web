@@ -32,6 +32,7 @@ interface Theme {
   archive: boolean;
   createdAt: string;
   updatedAt: string;
+  thumbnail: string;
   __v: number;
 }
 
@@ -138,7 +139,7 @@ const ThemeDetailsPage: React.FC = () => {
           <Box>
             <IconButton
               color="primary"
-              onClick={() => router.push(`/admin/home-catalog/themes/edit`)}
+              onClick={() => router.push(`/admin/home-catalog/themes/edit?id=${id}`)}
             >
               <Edit />
             </IconButton>
@@ -178,6 +179,21 @@ const ThemeDetailsPage: React.FC = () => {
             )}
           </Grid>
         </Grid>
+        <Box mt={4}>
+                          <Typography variant="h6" gutterBottom>
+                            Thumbnail
+                          </Typography>
+                          {theme.thumbnail ? (
+                            <Box
+                              component="img"
+                              src={theme.thumbnail}
+                              alt="Thumbnail"
+                              sx={{ maxWidth: 100 }}
+                            />
+                          ) : (
+                            <Typography>No thumbnail available</Typography>
+                          )}
+                        </Box>
       </Paper>
 
       {/* Delete Confirmation Dialog */}

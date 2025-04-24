@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -8,60 +8,258 @@ import {
   TextField,
   FormControlLabel,
   Checkbox,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 const EditRoomType = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { token } = getTokenAndRole();
+  const id = useMemo(() => searchParams.get("id"), [searchParams]);
+
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [thumbnail, setThumbnail] = useState<string>("");
+  const [selectedFileName, setSelectedFileName] = useState("No file selected");
+  const [residenceTypes, setResidenceTypes] = useState<any[]>([]);
+  const [selectedResidences, setSelectedResidences] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) {
+      setInitialLoading(false);
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        const roomResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/room-types/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!roomResponse.ok) throw new Error("Failed to fetch room type.");
+        const roomData = await roomResponse.json();
+        const room = roomData.data || roomData;
+
+        setName(room.name || "");
+        setDescription(room.description || "");
+        setThumbnail(room.thumbnail || "");
+        setSelectedFileName("Existing Thumbnail");
+        setSelectedResidences(room.residences || []);
+
+        // Fetch residence types
+        const resResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/residence-types`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const residenceData = await resResponse.json();
+        console.log("Fetched Residence Data", residenceData);
+
+        let resTypes = [];
+
+        if (Array.isArray(residenceData)) {
+          resTypes = residenceData;
+        } else if (Array.isArray(residenceData?.data)) {
+          resTypes = residenceData.data;
+        } else if (Array.isArray(residenceData?.residenceTypes)) {
+          resTypes = residenceData.residenceTypes;
+        } else {
+          console.warn("Unexpected residence data structure:", residenceData);
+        }
+
+        setResidenceTypes(resTypes);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Something went wrong.");
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [id, token]);
+
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFileName(file.name);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setThumbnail(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const toggleResidenceSelection = (resId: string) => {
+    setSelectedResidences((prev) =>
+      prev.includes(resId)
+        ? prev.filter((id) => id !== resId)
+        : [...prev, resId]
+    );
+  };
+
+  const validateForm = () => {
+    if (!name) return setError("Name is required"), false;
+    if (!description) return setError("Description is required"), false;
+    if (!thumbnail) return setError("Thumbnail is required"), false;
+    if (selectedResidences.length === 0)
+      return setError("Select at least one residence type"), false;
+    setError(null);
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    setLoading(true);
+    try {
+      const body = JSON.stringify({
+        name,
+        description,
+        thumbnail,
+        residences: selectedResidences,
+      });
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/room-types/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body,
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to update room type.");
+      router.push("/admin/home-catalog/room-types");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unexpected error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <Box sx={{ p: 3 }}>
-      {/* Heading */}
+    <Box sx={{ p: 3 }} component="form" onSubmit={handleSubmit}>
       <Typography variant="h5" sx={{ mb: 2 }}>
-        Edit New Room Types
+        Edit Room Type
       </Typography>
 
-      {/* Name Field */}
-      <TextField label="Name" fullWidth sx={{ mb: 3 }} />
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
-      {/* Description Field */}
-      <TextField label="Description" multiline rows={3} fullWidth sx={{ mb: 3 }} />
+      {initialLoading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <>
+          <TextField
+            label="Name"
+            fullWidth
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            sx={{ mb: 3 }}
+          />
 
-      {/* Thumbnail Upload Section (Different Format) */}
-      <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
-        <Button
-          variant="outlined"
-          component="label"
-          startIcon={<UploadFileIcon />}
-          sx={{ color: "#05344c", borderColor: "#05344c", "&:hover": { backgroundColor: "#f0f4f8" } }}
-        >
-          Upload Thumbnail
-          <input type="file" hidden />
-        </Button>
-        <Typography variant="body2" sx={{ color: "#666" }}>
-          No file selected
-        </Typography>
-      </Box>
+          <TextField
+            label="Description"
+            multiline
+            rows={3}
+            fullWidth
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            sx={{ mb: 3 }}
+          />
 
-      {/* Residence Mapping */}
-      <Typography variant="h6" sx={{ mb: 1 }}>
-        Residence Mapping
-      </Typography>
-      <Box sx={{ mb: 3, display: "flex", flexDirection: "column", gap: 1 }}>
-        <FormControlLabel control={<Checkbox />} label="1 BHK" />
-        <FormControlLabel control={<Checkbox />} label="2 BHK" />
-        <FormControlLabel control={<Checkbox />} label="3 BHK" />
-      </Box>
+          <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<UploadFileIcon />}
+              sx={{
+                color: "#05344c",
+                borderColor: "#05344c",
+                "&:hover": { backgroundColor: "#f0f4f8" },
+              }}
+            >
+              Upload Thumbnail
+              <input type="file" hidden onChange={handleThumbnailChange} />
+            </Button>
+            <Typography variant="body2" sx={{ color: "#666" }}>
+              {selectedFileName}
+            </Typography>
+          </Box>
 
-      {/* Submit and Cancel Buttons */}
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton>
-          Submit
-        </ReusableButton>
-        <CancelButton href="/admin/home-catalog/room-types">
-          Cancel
-        </CancelButton>
-      </Box>
+          {thumbnail && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2">Preview:</Typography>
+              <img
+                src={thumbnail}
+                alt="Thumbnail Preview"
+                style={{ width: 200, borderRadius: 8 }}
+              />
+            </Box>
+          )}
+
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            Residence Mapping
+          </Typography>
+
+          <Box sx={{ mb: 3, display: "flex", flexDirection: "column", gap: 1 }}>
+            {residenceTypes.map((res) => (
+              <FormControlLabel
+                key={res._id}
+                control={
+                  <Checkbox
+                    checked={selectedResidences.includes(res._id)}
+                    onChange={() => toggleResidenceSelection(res._id)}
+                  />
+                }
+                label={res.name}
+              />
+            ))}
+          </Box>
+
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <ReusableButton type="submit" disabled={loading}>
+              {loading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                "Update"
+              )}
+            </ReusableButton>
+            <CancelButton href="/admin/home-catalog/room-types">
+              Cancel
+            </CancelButton>
+          </Box>
+        </>
+      )}
     </Box>
   );
 };

@@ -139,7 +139,12 @@ const Merchant = () => {
           }>
             <Visibility/>
           </IconButton>
-          <IconButton color="primary" size="small">
+          <IconButton color="primary" size="small"
+          onClick={() =>
+            router.push(
+              `/admin/vendors/merchants/edit?id=${params.row.id}`
+            )
+          }>
             <Edit fontSize="small" />
           </IconButton>
           <IconButton color="error" size="small">

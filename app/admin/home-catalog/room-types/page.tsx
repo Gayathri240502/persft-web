@@ -168,6 +168,18 @@ const RoomTypes = () => {
     { field: "name", headerName: "Room Name", flex: 1 },
     { field: "description", headerName: "Description", flex: 1 },
     {
+      field: "thumbnail",
+      headerName: "Thumbnail",
+      flex: 1,
+      renderCell: (params) => (
+        <img
+          src={params.row.thumbnail}
+          alt="Thumbnail"
+          style={{ width: 40, height: 40 }}
+        />
+      ),
+    },
+    {
       field: "residenceTypes",
       headerName: "Residence Types",
       flex: 1,
@@ -199,7 +211,7 @@ const RoomTypes = () => {
             size="small"
             onClick={() =>
               router.push(
-                `/admin/home-catalog/room-types/add?id=${params.row.id}`
+                `/admin/home-catalog/room-types/edit?id=${params.row.id}`
               )
             }
           >

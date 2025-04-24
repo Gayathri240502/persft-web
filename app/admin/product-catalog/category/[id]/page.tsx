@@ -133,7 +133,7 @@ const CategoryDetailsPage: React.FC = () => {
           <Box>
             <IconButton
               color="primary"
-              onClick={() => router.push(`/admin/product-catalog/category/edit`)}
+              onClick={() => router.push(`/admin/product-catalog/category/edit?id=${id}`)}
             >
               <Edit />
             </IconButton>
@@ -167,7 +167,7 @@ const CategoryDetailsPage: React.FC = () => {
               component="img"
               src={category.thumbnail}
               alt="Thumbnail"
-              sx={{ maxWidth: 400 }}
+              sx={{ maxWidth: 100 }}
             />
           ) : (
             <Typography>No thumbnail available</Typography>

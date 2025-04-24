@@ -138,7 +138,7 @@ const AttributeGroupDetailsPage: React.FC = () => {
             <IconButton
               color="primary"
               onClick={() =>
-                router.push(`/admin/attribute-catalog/attributes-groups/edit`)
+                router.push(`/admin/attribute-catalog/attributes-groups/edit?id=${id}`)
               }
             >
               <Edit />

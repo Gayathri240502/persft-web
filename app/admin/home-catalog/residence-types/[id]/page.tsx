@@ -26,6 +26,7 @@ interface ResidenceType {
   archive: boolean;
   createdAt: string;
   updatedAt: string;
+  thumbnail: string;
   __v: number;
 }
 
@@ -196,6 +197,21 @@ const ResidenceTypesPage: React.FC = () => {
             </Typography>
           </Grid>
         </Grid>
+        <Box mt={4}>
+                  <Typography variant="h6" gutterBottom>
+                    Thumbnail
+                  </Typography>
+                  {residence.thumbnail ? (
+                    <Box
+                      component="img"
+                      src={residence.thumbnail}
+                      alt="Thumbnail"
+                      sx={{ maxWidth: 100 }}
+                    />
+                  ) : (
+                    <Typography>No thumbnail available</Typography>
+                  )}
+                </Box>
       </Paper>
 
       <Dialog

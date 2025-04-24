@@ -141,7 +141,7 @@ const SubCategoryDetailsPage: React.FC = () => {
           <Box>
             <IconButton
               color="primary"
-              onClick={() => router.push(`/admin/product-catalog/sub-category/edit`)}
+              onClick={() => router.push(`/admin/product-catalog/sub-category/edit?id=${id}`)}
             >
               <Edit />
             </IconButton>
@@ -179,7 +179,7 @@ const SubCategoryDetailsPage: React.FC = () => {
               component="img"
               src={subCategory.thumbnail}
               alt="Thumbnail"
-              sx={{ maxWidth: 400 }}
+              sx={{ maxWidth: 100 }}
             />
           ) : (
             <Typography>No thumbnail available</Typography>

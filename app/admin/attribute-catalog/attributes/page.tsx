@@ -173,7 +173,7 @@ const Attributes = () => {
             size="small"
             onClick={() =>
               router.push(
-                `/admin/attribute-catalog/attributes/edit/${params.row._id}`
+                `/admin/attribute-catalog/attributes/edit?id=${params.row.id}`
               )
             }
           >

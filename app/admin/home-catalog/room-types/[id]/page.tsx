@@ -31,6 +31,7 @@ interface RoomType {
   archive: boolean;
   createdAt: string;
   updatedAt: string;
+  thumbnail: string;
   __v: number;
   residenceTypes: ResidenceType[];
 }
@@ -140,7 +141,7 @@ const RoomTypeDetailsPage: React.FC = () => {
             </Typography>
           </Box>
           <Box>
-            <IconButton color="primary" onClick={() => router.push(`/admin/home-catalog/room-types/edit`)}>
+            <IconButton color="primary" onClick={() => router.push(`/admin/home-catalog/room-types/edit?id=${id}`)}>
               <Edit />
             </IconButton>
             <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
@@ -182,6 +183,21 @@ const RoomTypeDetailsPage: React.FC = () => {
             )}
           </Grid>
         </Grid>
+        <Box mt={4}>
+                  <Typography variant="h6" gutterBottom>
+                    Thumbnail
+                  </Typography>
+                  {room.thumbnail ? (
+                    <Box
+                      component="img"
+                      src={room.thumbnail}
+                      alt="Thumbnail"
+                      sx={{ maxWidth: 100 }}
+                    />
+                  ) : (
+                    <Typography>No thumbnail available</Typography>
+                  )}
+                </Box>
       </Paper>
 
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>

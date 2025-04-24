@@ -197,6 +197,21 @@ const DesignDetailsPage: React.FC = () => {
             )}
           </Grid>
         </Grid>
+        <Box mt={4}>
+                          <Typography variant="h6" gutterBottom>
+                            Thumbnail
+                          </Typography>
+                          {design.thumbnail ? (
+                            <Box
+                              component="img"
+                              src={design.thumbnail}
+                              alt="Thumbnail"
+                              sx={{ maxWidth: 100 }}
+                            />
+                          ) : (
+                            <Typography>No thumbnail available</Typography>
+                          )}
+                        </Box>
       </Paper>
 
       {/* Delete Confirmation Dialog */}

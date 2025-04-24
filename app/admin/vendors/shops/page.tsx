@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
 import ReusableButton from "@/app/components/Button";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 interface Shop {
   _id: string;
@@ -198,7 +199,7 @@ const Shop = () => {
             {error}
           </Typography>
         ) : (
-          <DataGrid
+          <StyledDataGrid
             columns={columns}
             rows={rows}
             paginationModel={paginationModel}
@@ -208,23 +209,7 @@ const Shop = () => {
             pageSizeOptions={[5, 10, 25]}
             autoHeight
             disableColumnMenu={isSmallScreen}
-            sx={{
-              borderRadius: 2,
-              boxShadow: 1,
-              "& .MuiDataGrid-columnHeaders": {
-                fontSize: isSmallScreen ? "0.8rem" : "1rem",
-                backgroundColor: "#f0f0f0",
-              },
-              "& .MuiDataGrid-row:nth-of-type(even)": {
-                backgroundColor: "#f9f9f9",
-              },
-              "& .MuiDataGrid-row:nth-of-type(odd)": {
-                backgroundColor: "#ffffff",
-              },
-              "& .MuiDataGrid-cell": {
-                fontSize: isSmallScreen ? "0.75rem" : "0.9rem",
-              },
-            }}
+           
           />
         )}
       </Box>

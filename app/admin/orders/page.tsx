@@ -11,7 +11,8 @@ import {
   Menu,
   MenuItem,
 } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { GridColDef } from "@mui/x-data-grid";
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 import { useTheme } from "@mui/material/styles";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import ReusableButton from "@/app/components/Button";
@@ -97,12 +98,18 @@ const Orders = () => {
               </Link>
             </MenuItem> */}
             <MenuItem onClick={handleFilterClose}>
-              <Link href="/admin/orders/list-orders" style={{ textDecoration: "none", color: "inherit" }}>
+              <Link
+                href="/admin/orders/list-orders"
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
                 List Orders
               </Link>
             </MenuItem>
             <MenuItem onClick={handleFilterClose}>
-              <Link href="/admin/orders/canceled-orders" style={{ textDecoration: "none", color: "inherit" }}>
+              <Link
+                href="/admin/orders/canceled-orders"
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
                 Canceled Orders
               </Link>
             </MenuItem>
@@ -112,13 +119,19 @@ const Orders = () => {
           <ReusableButton>Export Orders</ReusableButton>
           <Button
             variant="contained"
-            sx={{ backgroundColor: "#05344c", "&:hover": { backgroundColor: "#042a3b" } }}
+            sx={{
+              backgroundColor: "#05344c",
+              "&:hover": { backgroundColor: "#042a3b" },
+            }}
           >
             Print
           </Button>
           <Button
             variant="contained"
-            sx={{ backgroundColor: "#05344c", "&:hover": { backgroundColor: "#042a3b" } }}
+            sx={{
+              backgroundColor: "#05344c",
+              "&:hover": { backgroundColor: "#042a3b" },
+            }}
           >
             PDF
           </Button>
@@ -126,17 +139,12 @@ const Orders = () => {
       </Box>
 
       <Box sx={{ height: 400, width: "99%", overflowX: "auto" }}>
-        <DataGrid
+        <StyledDataGrid
           columns={columns}
           rows={rows}
           pageSizeOptions={[5, 10, 25]}
           autoHeight
           disableColumnMenu={isSmallScreen}
-          sx={{
-            "& .MuiDataGrid-columnHeaders": {
-              fontSize: isSmallScreen ? "0.8rem" : "1rem",
-            },
-          }}
         />
       </Box>
     </Box>

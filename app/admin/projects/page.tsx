@@ -14,6 +14,7 @@ import { useTheme } from "@mui/material/styles";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import ReusableButton from "@/app/components/Button";
 import { useRouter } from "next/navigation";
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 // Column Definitions for Orders
 const columns: GridColDef[] = [
@@ -30,13 +31,13 @@ const columns: GridColDef[] = [
 // Sample Order Data (Empty Rows for UI)
 const rows = Array.from({ length: 5 }, (_, index) => ({
   sno: index + 1,
-  id:"-",
-  order:"-",
+  id: "-",
+  order: "-",
   customer: "-",
   view: "-",
   uniqid: "-",
   created: "-",
- status : "-",
+  status: "-",
   option: "-",
 }));
 
@@ -78,29 +79,39 @@ const Projects = () => {
             <FilterListIcon />
           </IconButton>
           {/* Export Orders Button */}
-          <ReusableButton onClick={() => {
-            router.push("/admin/projects/create")
-          }}
+          <ReusableButton
+            onClick={() => {
+              router.push("/admin/projects/create");
+            }}
           >
             Create Project
           </ReusableButton>
           <Button
             variant="contained"
-            sx={{ backgroundColor: "#05344c", "&:hover": { backgroundColor: "#042a3b" } }}
+            sx={{
+              backgroundColor: "#05344c",
+              "&:hover": { backgroundColor: "#042a3b" },
+            }}
           >
             Export Orders
           </Button>
           {/* Print Button */}
           <Button
             variant="contained"
-            sx={{ backgroundColor: "#05344c", "&:hover": { backgroundColor: "#042a3b" } }}
+            sx={{
+              backgroundColor: "#05344c",
+              "&:hover": { backgroundColor: "#042a3b" },
+            }}
           >
             Import Project
           </Button>
           {/* PDF Button */}
           <Button
             variant="contained"
-            sx={{ backgroundColor: "#05344c", "&:hover": { backgroundColor: "#042a3b" } }}
+            sx={{
+              backgroundColor: "#05344c",
+              "&:hover": { backgroundColor: "#042a3b" },
+            }}
           >
             Export Project
           </Button>
@@ -109,13 +120,12 @@ const Projects = () => {
 
       {/* Data Grid for Orders */}
       <Box sx={{ height: 400, width: "99%", overflowX: "auto" }}>
-        <DataGrid
+        <StyledDataGrid
           columns={columns}
           rows={rows}
           pageSizeOptions={[5, 10, 25]}
           autoHeight
           disableColumnMenu={isSmallScreen} // Hide menu on small screens
-          sx={{ "& .MuiDataGrid-columnHeaders": { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }}
         />
       </Box>
     </Box>

@@ -1,14 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Box,
-  Typography,
-  TextField,
-  useMediaQuery,
-} from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { Box, Typography, TextField, useMediaQuery } from "@mui/material";
+import { GridColDef } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 // Column Definitions
 const columns: GridColDef[] = [
@@ -25,14 +21,14 @@ const columns: GridColDef[] = [
 const rows = Array.from({ length: 5 }, (_, index) => ({
   id: index + 1,
   name: "-",
-  date:"-",
+  date: "-",
   project: "-",
   amount: "-",
-  status:"-",
-  kiosk:"-",
+  status: "-",
+  kiosk: "-",
 }));
 
-const PaymentOrders= () => {
+const PaymentOrders = () => {
   const [search, setSearch] = useState("");
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
@@ -67,13 +63,12 @@ const PaymentOrders= () => {
 
       {/* Data Grid */}
       <Box sx={{ height: 400, width: "99%", overflowX: "auto" }}>
-        <DataGrid
+        <StyledDataGrid
           columns={columns}
           rows={rows}
           pageSizeOptions={[5, 10, 25]}
           autoHeight
           disableColumnMenu={isSmallScreen} // Hide menu on small screens
-          sx={{ "& .MuiDataGrid-columnHeaders": { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }}
         />
       </Box>
     </Box>

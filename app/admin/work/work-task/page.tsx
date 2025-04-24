@@ -1,26 +1,27 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
   TextField,
   useMediaQuery,
   IconButton,
-} from '@mui/material';
+} from "@mui/material";
 import {
   DataGrid,
   GridColDef,
   GridPaginationModel,
   GridValueGetter, // Use GridValueGetter directly
   GridRenderCellParams,
-  GridCellParams
-} from '@mui/x-data-grid';
-import { useTheme } from '@mui/material/styles';
-import { useRouter } from 'next/navigation';
-import { Visibility, Edit, Delete } from '@mui/icons-material';
-import ReusableButton from '@/app/components/Button';
-import { getTokenAndRole } from '@/app/containers/utils/session/CheckSession';
+  GridCellParams,
+} from "@mui/x-data-grid";
+import { useTheme } from "@mui/material/styles";
+import { useRouter } from "next/navigation";
+import { Visibility, Edit, Delete } from "@mui/icons-material";
+import ReusableButton from "@/app/components/Button";
+import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 interface WorkGroup {
   _id: string;
@@ -42,11 +43,11 @@ interface WorkTask {
 
 const WorkTasksPage = () => {
   const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const router = useRouter();
   const { token } = getTokenAndRole();
 
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
     pageSize: 10,
@@ -54,11 +55,11 @@ const WorkTasksPage = () => {
   const [rowCount, setRowCount] = useState(0);
   const [tasks, setTasks] = useState<WorkTask[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const fetchWorkTasks = async () => {
     setLoading(true);
-    setError('');
+    setError("");
     const { page, pageSize } = paginationModel;
 
     try {
@@ -73,7 +74,7 @@ const WorkTasksPage = () => {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
@@ -83,18 +84,20 @@ const WorkTasksPage = () => {
       }
 
       const result = await response.json();
-      const formatted = result.workTasks.map((task: WorkTask, index: number) => ({
-        ...task,
-        id: task._id,
-        sn: page * pageSize + index + 1,
-        workGroup: task.workGroup ? task.workGroup : { name: 'N/A' },
-      }));
+      const formatted = result.workTasks.map(
+        (task: WorkTask, index: number) => ({
+          ...task,
+          id: task._id,
+          sn: page * pageSize + index + 1,
+          workGroup: task.workGroup ? task.workGroup : { name: "N/A" },
+        })
+      );
 
       setTasks(formatted);
       setRowCount(result.totalDocs || formatted.length);
     } catch (err: any) {
-      console.error('Fetch error:', err);
-      setError('Failed to fetch work tasks');
+      console.error("Fetch error:", err);
+      setError("Failed to fetch work tasks");
       setTasks([]);
     } finally {
       setLoading(false);
@@ -106,41 +109,42 @@ const WorkTasksPage = () => {
   }, [paginationModel, search]);
 
   const columns: GridColDef<WorkTask>[] = [
-    { field: 'sn', headerName: 'SN', flex: 0.5 },
-    { field: 'name', headerName: 'Name', flex: 1 },
-    { field: 'description', headerName: 'Description', flex: 1.5 },
+    { field: "sn", headerName: "SN", flex: 0.5 },
+    { field: "name", headerName: "Name", flex: 1 },
+    { field: "description", headerName: "Description", flex: 1.5 },
     {
-      field: 'workGroup',
-      headerName: 'Work Group',
+      field: "workGroup",
+      headerName: "Work Group",
       flex: 1,
-            valueGetter: (params: GridCellParams) => {
-              const workTypes: WorkGroup[] = params.row?.workTaskTypes;
-              return Array.isArray(workTypes) && workTypes.length > 0
-                ? workTypes.map((r) => r.name || "Unknown").join(", ")
-                : "N/A";
-            },
+      valueGetter: (params: GridCellParams) => {
+        const workTypes: WorkGroup[] = params.row?.workTaskTypes;
+        return Array.isArray(workTypes) && workTypes.length > 0
+          ? workTypes.map((r) => r.name || "Unknown").join(", ")
+          : "N/A";
+      },
     },
-    { field: 'targetDays', headerName: 'Target Days', flex: 0.8 },
-    { field: 'bufferDays', headerName: 'Buffer Days', flex: 0.8 },
-    { field: 'poDays', headerName: 'PO Days', flex: 0.8 },
+    { field: "targetDays", headerName: "Target Days", flex: 0.8 },
+    { field: "bufferDays", headerName: "Buffer Days", flex: 0.8 },
+    { field: "poDays", headerName: "PO Days", flex: 0.8 },
     {
-      field: 'archive',
-      headerName: 'Archived',
+      field: "archive",
+      headerName: "Archived",
       flex: 0.7,
-      type: 'boolean',
+      type: "boolean",
     },
     {
-      field: 'actions',
-      headerName: 'Actions',
+      field: "actions",
+      headerName: "Actions",
       flex: 1,
       renderCell: (params: GridRenderCellParams<WorkTask>) => (
         <Box>
-          <IconButton color="info" size="small"
-           onClick={() =>
-            router.push(
-              `/admin/work/work-task/${params.row.id}`
-            )
-          }>
+          <IconButton
+            color="info"
+            size="small"
+            onClick={() =>
+              router.push(`/admin/work/work-task/${params.row.id}`)
+            }
+          >
             <Visibility fontSize="small" />
           </IconButton>
           <IconButton color="primary" size="small">
@@ -156,16 +160,16 @@ const WorkTasksPage = () => {
 
   return (
     <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-      <Typography variant={isSmallScreen ? 'h6' : 'h5'} sx={{ mb: 2 }}>
+      <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
         Work Tasks
       </Typography>
 
       <Box
         sx={{
-          display: 'flex',
-          flexDirection: isSmallScreen ? 'column' : 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          display: "flex",
+          flexDirection: isSmallScreen ? "column" : "row",
+          justifyContent: "space-between",
+          alignItems: "center",
           gap: 2,
           mb: 2,
         }}
@@ -178,7 +182,9 @@ const WorkTasksPage = () => {
           onChange={(e) => setSearch(e.target.value)}
           fullWidth={isSmallScreen}
         />
-        <ReusableButton onClick={() => router.push('/admin/work/work-task/add')}>
+        <ReusableButton
+          onClick={() => router.push("/admin/work/work-task/add")}
+        >
           ADD
         </ReusableButton>
       </Box>
@@ -189,8 +195,8 @@ const WorkTasksPage = () => {
         </Typography>
       )}
 
-      <Box sx={{ height: 500, width: '100%', overflowX: 'auto' }}>
-        <DataGrid
+      <Box sx={{ height: 500, width: "100%", overflowX: "auto" }}>
+        <StyledDataGrid
           columns={columns}
           rows={tasks}
           rowCount={rowCount}
@@ -202,17 +208,6 @@ const WorkTasksPage = () => {
           loading={loading}
           autoHeight
           disableColumnMenu={isSmallScreen}
-          sx={{
-            '& .MuiDataGrid-columnHeaders': {
-              fontSize: isSmallScreen ? '0.8rem' : '1rem',
-            },
-            '& .MuiDataGrid-row:nth-of-type(even)': {
-              backgroundColor: '#f9f9f9',
-            },
-            '& .MuiDataGrid-row:nth-of-type(odd)': {
-              backgroundColor: '#ffffff',
-            },
-          }}
         />
       </Box>
     </Box>

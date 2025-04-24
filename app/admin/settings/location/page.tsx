@@ -11,6 +11,7 @@ import {
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 // Column Definitions
 const columns: GridColDef[] = [
@@ -70,7 +71,8 @@ const LocationSettings = () => {
           ADD
         </ReusableButton>
       </Box>
-      <Box sx={{
+      <Box
+        sx={{
           display: "flex",
           flexDirection: isSmallScreen ? "column" : "row",
           alignItems: "right",
@@ -94,17 +96,12 @@ const LocationSettings = () => {
 
       {/* Data Grid */}
       <Box sx={{ height: 400, width: "99%", overflowX: "auto" }}>
-        <DataGrid
+        <StyledDataGrid
           columns={columns}
           rows={rows}
           pageSizeOptions={[5, 10, 25]}
           autoHeight
           disableColumnMenu={isSmallScreen} // Hide menu on small screens
-          sx={{
-            "& .MuiDataGrid-columnHeaders": {
-              fontSize: isSmallScreen ? "0.8rem" : "1rem",
-            },
-          }}
         />
       </Box>
     </Box>

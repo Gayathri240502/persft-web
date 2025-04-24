@@ -16,7 +16,7 @@ import {
   DialogActions,
 } from "@mui/material";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
-import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import ReusableButton from "@/app/components/Button";
@@ -79,11 +79,13 @@ const Category = () => {
       console.log("Fetched categories:", result);
 
       if (Array.isArray(result.categories)) {
-        const categoryWithExtras = result.categories.map((item:any, index:any) => ({
-          ...item,
-          id: item._id,
-          sn: paginationModel.page * paginationModel.pageSize + index + 1,
-        }));
+        const categoryWithExtras = result.categories.map(
+          (item: any, index: any) => ({
+            ...item,
+            id: item._id,
+            sn: paginationModel.page * paginationModel.pageSize + index + 1,
+          })
+        );
         setCategory(categoryWithExtras);
         setRowCount(result.total || result.categories.length);
       } else {
@@ -175,14 +177,14 @@ const Category = () => {
       width: 150,
       renderCell: (params) => (
         <Box>
-
-          <IconButton color="primary" size="small"
-          onClick={() =>
-            router.push(
-              `/admin/product-catalog/category/${params.row.id}`
-            )
-          }>
-            <Visibility/>
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() =>
+              router.push(`/admin/product-catalog/category/${params.row.id}`)
+            }
+          >
+            <Visibility />
           </IconButton>
           <IconButton
             color="primary"

@@ -8,7 +8,8 @@ import {
   TextField,
   useMediaQuery,
 } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { GridColDef } from "@mui/x-data-grid";
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 import { useTheme } from "@mui/material/styles";
 import CancelButton from "@/app/components/CancelButton";
 
@@ -27,7 +28,7 @@ const columns: GridColDef[] = [
 // Sample Order Data (Empty Rows for UI)
 const rows = Array.from({ length: 5 }, (_, index) => ({
   id: index + 1,
-  order:"-",
+  order: "-",
   customer: "-",
   product: "-",
   qantity: "-",
@@ -45,7 +46,7 @@ const CancelOrders = () => {
     <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
       {/* Heading */}
       <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-       Cancel Orders
+        Cancel Orders
       </Typography>
 
       {/* Search Bar & Buttons Above Table */}
@@ -69,27 +70,34 @@ const CancelOrders = () => {
         />
         <Box sx={{ display: "flex", gap: 1 }}>
           {/* Filter Button */}
-          <CancelButton href="/admin/orders">
-            Back
-          </CancelButton>
+          <CancelButton href="/admin/orders">Back</CancelButton>
           {/* Export Orders Button */}
           <Button
             variant="contained"
-            sx={{ backgroundColor: "#05344c", "&:hover": { backgroundColor: "#042a3b" } }}
+            sx={{
+              backgroundColor: "#05344c",
+              "&:hover": { backgroundColor: "#042a3b" },
+            }}
           >
             Export Orders
           </Button>
           {/* Print Button */}
           <Button
             variant="contained"
-            sx={{ backgroundColor: "#05344c", "&:hover": { backgroundColor: "#042a3b" } }}
+            sx={{
+              backgroundColor: "#05344c",
+              "&:hover": { backgroundColor: "#042a3b" },
+            }}
           >
             Print
           </Button>
           {/* PDF Button */}
           <Button
             variant="contained"
-            sx={{ backgroundColor: "#05344c", "&:hover": { backgroundColor: "#042a3b" } }}
+            sx={{
+              backgroundColor: "#05344c",
+              "&:hover": { backgroundColor: "#042a3b" },
+            }}
           >
             PDF
           </Button>
@@ -98,13 +106,17 @@ const CancelOrders = () => {
 
       {/* Data Grid for Orders */}
       <Box sx={{ height: 400, width: "99%", overflowX: "auto" }}>
-        <DataGrid
+        <StyledDataGrid
           columns={columns}
           rows={rows}
           pageSizeOptions={[5, 10, 25]}
           autoHeight
           disableColumnMenu={isSmallScreen} // Hide menu on small screens
-          sx={{ "& .MuiDataGrid-columnHeaders": { fontSize: isSmallScreen ? "0.8rem" : "1rem" } }}
+          sx={{
+            "& .MuiDataGrid-columnHeaders": {
+              fontSize: isSmallScreen ? "0.8rem" : "1rem",
+            },
+          }}
         />
       </Box>
     </Box>

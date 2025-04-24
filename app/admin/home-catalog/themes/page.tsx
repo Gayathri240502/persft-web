@@ -16,12 +16,13 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
-import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import ReusableButton from "@/app/components/Button";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 // Interfaces
 interface RoomTypesReference {
@@ -65,12 +66,15 @@ const ThemesPage = () => {
     setError(null);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/themes`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/themes`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to fetch themes: ${response.status}`);
@@ -79,11 +83,13 @@ const ThemesPage = () => {
       const result = await response.json();
 
       if (Array.isArray(result.themes)) {
-        const themesWithExtras = result.themes.map((item: ThemeType, index: number) => ({
-          ...item,
-          id: item._id,
-          sn: paginationModel.page * paginationModel.pageSize + index + 1,
-        }));
+        const themesWithExtras = result.themes.map(
+          (item: ThemeType, index: number) => ({
+            ...item,
+            id: item._id,
+            sn: paginationModel.page * paginationModel.pageSize + index + 1,
+          })
+        );
 
         setThemes(themesWithExtras);
         setRowCount(result.total || result.themes.length);
@@ -144,8 +150,8 @@ const ThemesPage = () => {
               typeof sub === "object" ? JSON.stringify(sub) : sub
             )
           : typeof val === "object"
-          ? JSON.stringify(val)
-          : val
+            ? JSON.stringify(val)
+            : val
       )
       .join(" ")
       .toLowerCase()
@@ -184,20 +190,22 @@ const ThemesPage = () => {
       flex: 1,
       renderCell: (params) => (
         <Box>
-          <IconButton color="info" size="small"
-           onClick={() =>
-            router.push(
-              `/admin/home-catalog/themes/${params.row.id}`
-            )
-          }>
+          <IconButton
+            color="info"
+            size="small"
+            onClick={() =>
+              router.push(`/admin/home-catalog/themes/${params.row.id}`)
+            }
+          >
             <Visibility fontSize="small" />
           </IconButton>
-          <IconButton color="primary" size="small"
-          onClick={() =>
-            router.push(
-              `/admin/home-catalog/themes/edit?id=${params.row.id}`
-            )
-          }>
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() =>
+              router.push(`/admin/home-catalog/themes/edit?id=${params.row.id}`)
+            }
+          >
             <Edit fontSize="small" />
           </IconButton>
           <IconButton
@@ -239,7 +247,9 @@ const ThemesPage = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <ReusableButton onClick={() => router.push("themes/add")}>ADD</ReusableButton>
+        <ReusableButton onClick={() => router.push("themes/add")}>
+          ADD
+        </ReusableButton>
       </Box>
 
       {loading && (
@@ -255,7 +265,7 @@ const ThemesPage = () => {
       )}
 
       <Box sx={{ height: 400, width: "100%", overflowX: "auto" }}>
-        <DataGrid
+        <StyledDataGrid
           rows={filteredThemes}
           columns={columns}
           rowCount={rowCount}
@@ -266,17 +276,6 @@ const ThemesPage = () => {
           pageSizeOptions={[5, 10, 25]}
           autoHeight
           disableColumnMenu={isSmallScreen}
-          sx={{
-            "& .MuiDataGrid-columnHeaders": {
-              fontSize: isSmallScreen ? "0.8rem" : "1rem",
-            },
-            "& .MuiDataGrid-row:nth-of-type(even)": {
-              backgroundColor: "#f9f9f9",
-            },
-            "& .MuiDataGrid-row:nth-of-type(odd)": {
-              backgroundColor: "#ffffff",
-            },
-          }}
         />
       </Box>
 
@@ -284,7 +283,8 @@ const ThemesPage = () => {
         <DialogTitle>Delete Theme</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to archive this theme? This action cannot be undone.
+            Are you sure you want to archive this theme? This action cannot be
+            undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

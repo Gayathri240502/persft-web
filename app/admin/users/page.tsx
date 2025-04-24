@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { GridColDef } from "@mui/x-data-grid";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
+import { Chip } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
@@ -57,37 +58,12 @@ const Users = () => {
       headerName: "Status",
       flex: 1,
       renderCell: (params) => (
-        <Switch
-          checked={params.row.enabled}
-          onChange={async () => {
-            try {
-              const updatedStatus = !params.row.enabled;
-              console.log("Updated status:", updatedStatus);
-              console.log("User ID:", params.row.keycloakId);
-              const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/users/${
-                  params.row.keycloakId
-                }`,
-                {
-                  method: "PUT",
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({ enabled: updatedStatus }),
-                }
-              );
-
-              if (res.ok) {
-                fetchUsers(); // refresh the list
-              } else {
-                console.error("Failed to update status");
-              }
-            } catch (error) {
-              console.error("Error updating status:", error);
-            }
-          }}
-          color="primary"
+        <Chip
+          sx={{ width: "70px" }}
+          label={params.value ? "Active" : "Inactive"}
+          color={params.value ? "success" : "error"}
+          variant="filled"
+          size="medium"
         />
       ),
     },
@@ -172,15 +148,17 @@ const Users = () => {
 
   return (
     <Box>
-      <Typography sx={{ mb: 2 }}>Users</Typography>
+      <Typography variant="h4" sx={{ mb: 2 }}>
+        Users
+      </Typography>
 
       <Box
         sx={{
-          display: "fixed",
+          display: "flex",
 
           justifyContent: "space-between",
-          alignItems: "center",
-          mb: 2,
+
+          m: 2,
           gap: isSmallScreen ? 2 : 1,
         }}
       >

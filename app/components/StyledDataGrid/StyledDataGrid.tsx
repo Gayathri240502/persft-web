@@ -3,10 +3,10 @@ import React from "react";
 import { DataGrid, DataGridProps } from "@mui/x-data-grid";
 import { Box } from "@mui/material";
 
-const StyledDataGrid: React.FC<DataGridProps> = (props) => {
+const StyledDataGrid: React.FC<StyledDataGridProps> = (props) => {
   return (
     <Box sx={{ overflowX: "auto" }}>
-      <Box sx={{ minWidth: "1000px", height: 500 }}>
+      <Box sx={{ minWidth: "1000px" }}>
         <DataGrid
           hideFooterSelectedRowCount
           sx={{

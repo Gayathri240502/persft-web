@@ -2,19 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import {
-  Menu,
-  MenuItem,
-  IconButton,
-  Box,
-  Drawer,
-  List,
-  ListItem,
-  ListItemText,
-  Divider,
-} from "@mui/material";
+import { Menu, MenuItem, IconButton } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import MenuIcon from "@mui/icons-material/Menu";
 
 import {
   getTokenAndRole,
@@ -29,7 +18,7 @@ export default function Navbar() {
     role: "",
   });
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [openSidebar, setOpenSidebar] = useState(false);
+
   const pathname = usePathname();
 
   const updateUserDetails = () => {
@@ -85,7 +74,7 @@ export default function Navbar() {
   return (
     <>
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-4 py-3 mx-2 shadow-md overflow-hidden">
+      <nav className="flex items-center justify-between px-4 py-3 mx-2 shadow-md overflow-hidden sticky top-0">
         <div className="text-xl font-bold flex items-center space-x-2">
           <span className="text-blue-500">PerSft</span>
         </div>

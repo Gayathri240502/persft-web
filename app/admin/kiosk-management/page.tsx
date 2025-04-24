@@ -15,15 +15,12 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
-import {
-  DataGrid,
-  GridColDef,
-  GridPaginationModel,
-} from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import ReusableButton from "@/app/components/Button";
 import { useRouter } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 interface Project {
   _id: string;
@@ -203,7 +200,7 @@ const KioskManagement = () => {
         </Box>
       ) : (
         <Box sx={{ height: 500, width: "100%", overflowX: "auto" }}>
-          <DataGrid
+          <StyledDataGrid
             rows={kiosks}
             columns={columns}
             rowCount={rowCount}

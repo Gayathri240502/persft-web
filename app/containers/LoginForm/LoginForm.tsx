@@ -144,9 +144,9 @@ const LoginForm = () => {
 
         <button
           type="submit"
-          className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium  
-    ${loading ? "bg-[#09B6E9] cursor-not-allowed" : "bg-[#309416] hover:bg-[#09B6E9]"} 
-    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#309416]`}
+          className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium  text-white
+    ${loading ? "bg-[#1e5f7a] text-black cursor-not-allowed" : "bg-[#05344c]"} 
+    focus:outline-none focus:ring-2 focus:ring-offset-2`}
           disabled={loading}
         >
           {loading ? (

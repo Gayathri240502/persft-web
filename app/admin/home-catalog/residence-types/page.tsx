@@ -17,7 +17,11 @@ import {
   Button,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import {  GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import {
+  GridColDef,
+  GridPaginationModel,
+  GridRenderCellParams,
+} from "@mui/x-data-grid";
 import { useRouter } from "next/navigation";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
 
@@ -146,13 +150,24 @@ const ResidenceTypePage = () => {
       field: "thumbnail",
       headerName: "Thumbnail",
       flex: 1,
-      renderCell: (params) => (
-        <img
-          src={params.row.thumbnail}
-          alt="Thumbnail"
-          style={{ width: 40, height: 40 }}
-        />
-      ),
+      renderCell: (params: GridRenderCellParams) => {
+        const imageUrl = params.value;
+
+        return imageUrl ? (
+          <img
+            src={imageUrl}
+            alt="Thumbnail"
+            style={{
+              width: "30px",
+              height: "30px",
+            }}
+          />
+        ) : (
+          <span style={{ fontStyle: "italic", color: "#999" }}>
+            No Thumbnail
+          </span>
+        );
+      },
     },
     {
       field: "action",

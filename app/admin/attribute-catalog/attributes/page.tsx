@@ -151,7 +151,7 @@ const Attributes = () => {
     { field: "name", headerName: "Name", flex: 1 },
     { field: "description", headerName: "Description", flex: 1 },
     { field: "type", headerName: "Type", flex: 0.7 },
-    { field: "archive", headerName: "Archived", type: "boolean", flex: 0.5 },
+    
     {
       field: "action",
       headerName: "Action",

@@ -113,12 +113,7 @@ const WorkGroups = () => {
     { field: "sn", headerName: "SN", flex: 0.5 },
     { field: "name", headerName: "Name", flex: 1 },
     { field: "description", headerName: "Description", flex: 2 },
-    {
-      field: "archive",
-      headerName: "Archive",
-      flex: 0.5,
-      type: "boolean",
-    },
+    
     {
       field: "action",
       headerName: "Actions",

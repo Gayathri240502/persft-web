@@ -119,12 +119,7 @@ const Merchant = () => {
       flex: 0.5,
       type: "boolean",
     },
-    {
-      field: "archive",
-      headerName: "Archived",
-      flex: 0.5,
-      type: "boolean",
-    },
+    
     {
       field: "action",
       headerName: "Action",

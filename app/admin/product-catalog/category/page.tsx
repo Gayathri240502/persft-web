@@ -170,7 +170,7 @@ const Category = () => {
         />
       ),
     },
-    { field: "archive", headerName: "Archived", flex: 1, type: "boolean" },
+    
     {
       field: "action",
       headerName: "Action",

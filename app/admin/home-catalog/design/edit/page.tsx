@@ -12,7 +12,6 @@ import {
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import ReusableButton from "@/app/components/Button";
-import { Cancel } from "@mui/icons-material";
 import CancelButton from "@/app/components/CancelButton";
 
 const EditDesignType = () => {

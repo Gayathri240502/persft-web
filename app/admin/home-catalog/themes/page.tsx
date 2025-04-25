@@ -183,7 +183,7 @@ const ThemesPage = () => {
           ? params.row.roomTypes.map((r) => r.name || "Unknown").join(", ")
           : "N/A",
     },
-    { field: "archive", headerName: "Archived", flex: 1, type: "boolean" },
+   
     {
       field: "action",
       headerName: "Action",

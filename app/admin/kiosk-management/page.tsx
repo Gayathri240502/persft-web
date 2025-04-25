@@ -5,38 +5,39 @@ import {
   Box,
   Typography,
   TextField,
-  useMediaQuery,
-  Alert,
   CircularProgress,
+  Alert,
+  IconButton,
   Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
   DialogActions,
+  DialogContent,
+  DialogTitle,
   Button,
 } from "@mui/material";
-import {  GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
-import ReusableButton from "@/app/components/Button";
 import { useRouter } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
-import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
+import { Edit, Delete, Visibility } from "@mui/icons-material";
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid"; // Ensure this is correctly imported
+import ReusableButton from "@/app/components/Button";
 
-interface Project {
+interface Kiosk {
   _id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   description: string;
-  country: string;
-  state: string;
-  city: string;
   address: string;
+  countryName: string;
+  stateName: string;
+  cityName: string;
   projects: string[];
+  projectNames: string[];
 }
 
 const KioskManagement = () => {
   const router = useRouter();
   const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -46,9 +47,9 @@ const KioskManagement = () => {
     pageSize: 10,
   });
   const [rowCount, setRowCount] = useState(0);
-  const [kiosks, setKiosks] = useState<Project[]>([]);
+  const [kiosks, setKiosks] = useState<Kiosk[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
+  const [selectedKiosk, setSelectedKiosk] = useState<Kiosk | null>(null);
 
   const { token } = getTokenAndRole();
 
@@ -79,16 +80,16 @@ const KioskManagement = () => {
 
       const result = await response.json();
 
-      const kioskWithIds = (result.data || []).map(
+      const kioskWithIds = (result.kiosks || []).map(
         (item: any, index: number) => ({
           ...item,
-          id: item._id,
-          sn: page * pageSize + index + 1,
+          id: item._id,  // Make sure this is the correct identifier
+          sn: page * pageSize + index + 1,  // Serial number to display
         })
       );
 
       setKiosks(kioskWithIds);
-      setRowCount(result.totalCount || 0);
+      setRowCount(result.total || 0);  // Set total count for pagination
     } catch (err) {
       setError(
         `Error: ${err instanceof Error ? err.message : "Unknown error"}`
@@ -98,55 +99,51 @@ const KioskManagement = () => {
     }
   };
 
+  const handleDeleteKiosk = async () => {
+    if (selectedKiosk) {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/kiosks/${selectedKiosk._id}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to delete kiosk: ${response.status}`);
+        }
+
+        // After successful deletion, refetch kiosks
+        fetchKiosks();
+        setDeleteDialogOpen(false); // Close the dialog
+        setSelectedKiosk(null); // Clear the selected kiosk
+      } catch (err) {
+        setError(
+          `Error: ${err instanceof Error ? err.message : "Unknown error"}`
+        );
+      }
+    }
+  };
+
   useEffect(() => {
     fetchKiosks();
   }, [paginationModel, search]);
 
-  // const handleDeleteClick = (id: string) => {
-  //   setSelectedDeleteId(id);
-  //   setDeleteDialogOpen(true);
-  // };
-
-  const handleDeleteCancel = () => {
-    setDeleteDialogOpen(false);
-    setSelectedDeleteId(null);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!selectedDeleteId) return;
-
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/kiosks/${selectedDeleteId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to delete kiosk");
-      }
-
-      fetchKiosks();
-      handleDeleteCancel();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete item");
-    }
-  };
-
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", flex: 0.3, sortable: false },
-    { field: "name", headerName: "Project Name", flex: 1 },
+    { field: "firstName", headerName: "First Name", flex: 1 },
+    { field: "lastName", headerName: "Last Name", flex: 1 },
     { field: "description", headerName: "Description", flex: 1 },
-    { field: "country", headerName: "Country", flex: 1 },
-    { field: "state", headerName: "State", flex: 1 },
-    { field: "city", headerName: "City", flex: 1 },
     { field: "address", headerName: "Address", flex: 1 },
+    { field: "countryName", headerName: "Country", flex: 1 },
+    { field: "stateName", headerName: "State", flex: 1 },
+    { field: "cityName", headerName: "City", flex: 1 },
     {
-      field: "projects",
+      field: "projectNames",
       headerName: "Related Projects",
       flex: 1.5,
       renderCell: (params) => (
@@ -157,36 +154,63 @@ const KioskManagement = () => {
         </Typography>
       ),
     },
+    {
+      field: "action",
+      headerName: "Actions",
+      flex: 1,
+      renderCell: (params) => (
+        <Box>
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() => router.push(`/admin/kiosk-management/${params.row.id}`)}
+          >
+            <Visibility />
+          </IconButton>
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() =>
+              router.push(`/admin/kiosk-management/edit?id=${params.row.id}`)
+            }
+          >
+            <Edit fontSize="small" />
+          </IconButton>
+          <IconButton
+            color="error"
+            size="small"
+            onClick={() => {
+              setSelectedKiosk(params.row);
+              setDeleteDialogOpen(true);
+            }}
+          >
+            <Delete fontSize="small" />
+          </IconButton>
+        </Box>
+      ),
+    },
   ];
 
   return (
-    <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-      <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
+    <Box sx={{ p: theme.spacing(3) }}>
+      <Typography variant="h5" sx={{ mb: 2 }}>
         Kiosk Management
       </Typography>
 
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: isSmallScreen ? "column" : "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 2,
-          gap: isSmallScreen ? 2 : 1,
-        }}
-      >
-        <TextField
-          label="Search"
-          variant="outlined"
-          size="small"
-          fullWidth={isSmallScreen}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <ReusableButton onClick={() => router.push("kiosk-management/add")}>
-          ADD
-        </ReusableButton>
-      </Box>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+  <TextField
+    label="Search"
+    variant="outlined"
+    size="small"
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    sx={{ width: "300px" }} // control the width as needed
+  />
+
+  <ReusableButton onClick={() => router.push("/admin/kiosk-management/add")}>
+    ADD
+  </ReusableButton>
+</Box>
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
@@ -201,32 +225,41 @@ const KioskManagement = () => {
       ) : (
         <Box sx={{ height: 500, width: "100%", overflowX: "auto" }}>
           <StyledDataGrid
-            rows={kiosks}
-            columns={columns}
-            rowCount={rowCount}
+            rows={kiosks}  // The data you fetched from the API
+            columns={columns}  // Columns for the grid
+            rowCount={rowCount}  // Total number of rows
             loading={loading}
             pagination
             paginationMode="server"
             paginationModel={paginationModel}
-            onPaginationModelChange={(model: GridPaginationModel) => setPaginationModel(model)}
+            onPaginationModelChange={(model: GridPaginationModel) =>
+              setPaginationModel(model)
+            }
             pageSizeOptions={[5, 10, 25]}
             autoHeight
-            disableColumnMenu={isSmallScreen}
           />
         </Box>
       )}
 
-      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-        <DialogTitle>Delete</DialogTitle>
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Confirm Deletion</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this kiosk? This action cannot be
-            undone.
-          </DialogContentText>
+          <Typography>
+            Are you sure you want to delete this kiosk?
+          </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleDeleteCancel}>Cancel</Button>
-          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+          <Button onClick={() => setDeleteDialogOpen(false)} color="primary">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteKiosk}
+            color="error"
+          >
             Delete
           </Button>
         </DialogActions>

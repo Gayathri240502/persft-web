@@ -201,12 +201,7 @@ const SubCategory = () => {
         return groups.map((g) => g?.name || "Unnamed").join(", ");
       },
     },
-    {
-      field: "archive",
-      headerName: "Archived",
-      flex: 0.5,
-      type: "boolean",
-    },
+    
     {
       field: "action",
       headerName: "Action",

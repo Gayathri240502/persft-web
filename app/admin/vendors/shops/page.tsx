@@ -111,7 +111,7 @@ const Shop = () => {
     { field: "phone", headerName: "Phone", flex: 1 },
     { field: "ownerName", headerName: "Owner Name", flex: 1 },
     { field: "enabled", headerName: "Enabled", type: "boolean", flex: 0.5 },
-    { field: "archive", headerName: "Archived", type: "boolean", flex: 0.5 },
+    
     {
       field: "action",
       headerName: "Action",

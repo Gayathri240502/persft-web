@@ -194,12 +194,20 @@ const DesignType = () => {
             color="primary"
             size="small"
             onClick={() =>
-              router.push(`/admin/home-catalog/design/${params.row.id}`)
+              router.push(`/admin/home-catalog/design/id?id=${params.row._id}`)
             }
           >
             <Visibility fontSize="small" />
           </IconButton>
-          <IconButton color="primary" size="small">
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() =>
+              router.push(
+                `/admin/home-catalog/design/edit?id=${params.row._id}`
+              )
+            }
+          >
             <Edit fontSize="small" />
           </IconButton>
           <IconButton
@@ -222,6 +230,7 @@ const DesignType = () => {
       </Typography>
 
       {/* Search Bar & Add Button Above Table */}
+
       <Box
         sx={{
           display: "flex",

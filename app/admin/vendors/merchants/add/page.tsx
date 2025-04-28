@@ -43,9 +43,7 @@ const AddMerchant = () => {
   const [error, setError] = useState("");
   const [subCategoriesLoading, setSubCategoriesLoading] = useState(false);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -58,17 +56,23 @@ const AddMerchant = () => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-      ...(name === "category" && { subCategory: "" }),
+      ...(name === "category" && { subCategory: "" }), // Reset sub-category when category changes
     }));
+
+    // Fetch sub-categories only if a category is selected
+    if (name === "category" && value) {
+      fetchSubCategories(value);
+    }
   };
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/merchants/dropdown/categories`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      setCategories(data.categories || data || []);
+      console.log("Categories Response:", data);
+      setCategories(data.categories || []);
     } catch (err) {
       console.error("Error fetching categories", err);
     }
@@ -80,13 +84,14 @@ const AddMerchant = () => {
     setSubCategoriesLoading(true);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/sub-categories/categories-selection`,
+        `${process.env.NEXT_PUBLIC_API_URL}/sub-categories?categoryId=${categoryId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
       const data = await res.json();
-      setSubCategories(data.categories || data || []);
+      console.log("Subcategories Response:", data);
+      setSubCategories(data.subCategories || []);
     } catch (err) {
       console.error("Error fetching sub-categories", err);
     } finally {
@@ -104,39 +109,28 @@ const AddMerchant = () => {
     }
   }, [formData.category]);
 
-  const handleSubmit = async () => {
-    const requiredFields = Object.keys(formData);
-    const missing = requiredFields.filter((field) => !formData[field as keyof typeof formData]);
-
-    if (missing.length > 0) {
-      setError("Please fill out all required fields.");
-      return;
-    }
-
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
     try {
-      setLoading(true);
-      setError("");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/merchants`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/merchants`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create merchant.");
+      const data = await res.json();
+      if (res.ok) {
+        router.push("/merchants");
+      } else {
+        setError(data.message || "Something went wrong");
       }
-
-      router.push("/admin/vendors/merchants");
-    } catch (err: any) {
-      setError(err.message || "Something went wrong.");
+    } catch (err) {
+      console.error("Error submitting form", err);
+      setError("Failed to submit the form. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -154,83 +148,148 @@ const AddMerchant = () => {
         </Alert>
       )}
 
-      <Grid container spacing={3}>
-        {[
-          { label: "First Name", name: "firstName" },
-          { label: "Last Name", name: "lastName" },
-          { label: "Username", name: "username" },
-          { label: "Email", name: "email" },
-          { label: "Phone", name: "phone" },
-          { label: "Password", name: "password", type: "password" },
-          { label: "Business Name", name: "businessName" },
-          { label: "Address", name: "address" },
-        ].map(({ label, name, type = "text" }) => (
-          <Grid item xs={12} key={name}>
+      <form onSubmit={handleSubmit}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
             <TextField
-              label={label}
-              name={name}
-              type={type}
-              fullWidth
-              value={formData[name as keyof typeof formData]}
+              label="First Name"
+              name="firstName"
+              value={formData.firstName}
               onChange={handleInputChange}
+              fullWidth
             />
           </Grid>
-        ))}
 
-        <Grid item xs={12}>
-          <FormControl fullWidth>
-            <InputLabel>Category</InputLabel>
-            <Select
-              name="category"
-              value={formData.category}
-              label="Category"
-              onChange={handleSelectChange}
-            >
-              {categories.map((cat) => (
-                <MenuItem key={cat._id} value={cat._id}>
-                  {cat.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Last Name"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleInputChange}
+              fullWidth
+            />
+          </Grid>
 
-        <Grid item xs={12}>
-          <FormControl fullWidth>
-            <InputLabel>Sub-Category</InputLabel>
-            <Select
-              name="subCategory"
-              value={formData.subCategory}
-              label="Sub-Category"
-              onChange={handleSelectChange}
-              disabled={!formData.category || subCategoriesLoading}
-            >
-              {subCategoriesLoading ? (
-                <MenuItem disabled>
-                  <CircularProgress size={20} />
-                </MenuItem>
-              ) : subCategories.length === 0 ? (
-                <MenuItem disabled>No sub-categories available</MenuItem>
-              ) : (
-                subCategories.map((sub) => (
-                  <MenuItem key={sub._id} value={sub._id}>
-                    {sub.name}
+          <Grid item xs={12}>
+            <TextField
+              label="Username"
+              name="username"
+              value={formData.username}
+              onChange={handleInputChange}
+              fullWidth
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              label="Email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              fullWidth
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              label="Phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleInputChange}
+              fullWidth
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              label="Password"
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              fullWidth
+              type="password"
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              label="Business Name"
+              name="businessName"
+              value={formData.businessName}
+              onChange={handleInputChange}
+              fullWidth
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              label="Address"
+              name="address"
+              value={formData.address}
+              onChange={handleInputChange}
+              fullWidth
+            />
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <InputLabel>Category</InputLabel>
+              <Select
+                value={formData.category}
+                onChange={handleSelectChange}
+                name="category"
+                label="Category"
+              >
+                {categories.length > 0 ? (
+                  categories.map((category) => (
+                    <MenuItem key={category._id} value={category._id}>
+                      {category.name}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled>No categories available</MenuItem>
+                )}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <InputLabel>SubCategory</InputLabel>
+              <Select
+                value={formData.subCategory}
+                onChange={handleSelectChange}
+                name="subCategory"
+                label="SubCategory"
+                disabled={!formData.category}
+              >
+                {subCategoriesLoading ? (
+                  <MenuItem disabled>
+                    <CircularProgress size={24} />
                   </MenuItem>
-                ))
-              )}
-            </Select>
-          </FormControl>
+                ) : subCategories.length > 0 ? (
+                  subCategories.map((subCategory) => (
+                    <MenuItem key={subCategory._id} value={subCategory._id}>
+                      {subCategory.name}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled>No subcategories available</MenuItem>
+                )}
+              </Select>
+            </FormControl>
+          </Grid>
         </Grid>
-      </Grid>
 
-      <Divider sx={{ my: 4 }} />
+        <Divider sx={{ my: 4 }} />
 
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton onClick={handleSubmit} disabled={loading}>
-          {loading ? <CircularProgress size={20} /> : "Submit"}
-        </ReusableButton>
-        <CancelButton href="/admin/vendors/merchants">Cancel</CancelButton>
-      </Box>
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <ReusableButton type="submit" loading={loading}>
+            Submit
+          </ReusableButton>
+          <CancelButton href="/admin/vendors/merchants">Cancel</CancelButton>
+        </Box>
+      </form>
     </Box>
   );
 };

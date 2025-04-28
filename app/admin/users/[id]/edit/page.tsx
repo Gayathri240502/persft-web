@@ -31,6 +31,7 @@ const UserEditPage: React.FC = () => {
     lastName: "",
     email: "",
     phone: "",
+    
     enabled: false,
   });
   const [loading, setLoading] = useState(true);

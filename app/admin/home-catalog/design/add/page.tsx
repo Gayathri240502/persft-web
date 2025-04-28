@@ -142,7 +142,7 @@ const AddDesignType = () => {
   };
 
   // Convert file to base64
-  const fileToBase64 = (file: File): Promise<string> => {
+  const fileToBase64 = (file: File): Promise<{fullUrl: string; base64: string }> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);

@@ -12,6 +12,7 @@ import {
   FormControlLabel,
   Checkbox,
   CircularProgress,
+  SelectChangeEvent,
 } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
@@ -97,7 +98,9 @@ const AddKiosk = () => {
     fetchProjects();
   }, [token]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: any }>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | { name?: string; value: any }> | SelectChangeEvent<string>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,

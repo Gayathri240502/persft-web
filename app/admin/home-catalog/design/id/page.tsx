@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams,  } from "next/navigation";
 import {
   Box,
   Typography,
@@ -39,6 +39,8 @@ const DesignTypeDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+    const { id } = useParams();
 
   useEffect(() => {
     const fetchDesignDetails = async () => {

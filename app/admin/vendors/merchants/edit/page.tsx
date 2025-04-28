@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Typography,
@@ -14,16 +14,17 @@ import {
   CircularProgress,
   Alert,
 } from "@mui/material";
+import { useRouter, useSearchParams } from "next/navigation";
 import { SelectChangeEvent } from "@mui/material/Select";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
-import { useRouter, useSearchParams } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 const EditMerchant = () => {
   const router = useRouter();
   const params = useSearchParams();
   const merchantId = params.get("id");
+
   const { token } = getTokenAndRole();
 
   const [formData, setFormData] = useState({
@@ -32,6 +33,8 @@ const EditMerchant = () => {
     username: "",
     email: "",
     phone: "",
+    password: "Merchant@123",
+    enabled: true,
     businessName: "",
     address: "",
     category: "",
@@ -43,13 +46,17 @@ const EditMerchant = () => {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState("");
+  const searchParams = useSearchParams();
 
+  const keycloakId = useMemo(() => searchParams.get("keycloakId"), [searchParams]);
+
+  // Fetch Merchant Details
   useEffect(() => {
     const fetchMerchant = async () => {
       if (!merchantId) return;
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/merchants/${merchantId}`,
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/merchants/${keycloakId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -57,20 +64,23 @@ const EditMerchant = () => {
             },
           }
         );
-        if (!res.ok) throw new Error("Failed to fetch merchant data.");
-        const data = await res.json();
+        if (!response.ok) throw new Error("Failed to fetch merchant data.");
+        const merchant = await response.json();
         setFormData({
-          firstName: data.firstName || "",
-          lastName: data.lastName || "",
-          username: data.username || "",
-          email: data.email || "",
-          phone: data.phone || "",
-          businessName: data.businessName || "",
-          address: data.address || "",
-          category: data.category || "",
-          subCategory: data.subCategory || "",
+          firstName: merchant.firstName || "",
+          lastName: merchant.lastName || "",
+          username: merchant.username || "",
+          email: merchant.email || "",
+          phone: merchant.phone || "",
+          password: "Merchant@123",
+          enabled: merchant.enabled ?? true,
+          businessName: merchant.businessName || "",
+          address: merchant.address || "",
+          category: merchant.category || "",
+          subCategory: merchant.subCategory || "",
         });
-      } catch {
+      } catch (err) {
+        console.error(err);
         setError("Unable to load merchant data.");
       } finally {
         setInitialLoading(false);
@@ -79,13 +89,17 @@ const EditMerchant = () => {
 
     const fetchCategories = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/categories`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (!response.ok) throw new Error("Failed to fetch categories.");
+        const data = await response.json();
         setCategories(data.categories || []);
-      } catch {
-        console.error("Failed to fetch categories.");
+      } catch (err) {
+        console.error("Failed to fetch categories.", err);
       }
     };
 
@@ -93,52 +107,50 @@ const EditMerchant = () => {
     fetchCategories();
   }, [merchantId, token]);
 
+  // Fetch SubCategories When Category Changes
   useEffect(() => {
     const fetchSubCategories = async () => {
       if (!formData.category) return;
       try {
-        const res = await fetch(
+        const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/sub-categories/${formData.category}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        const data = await res.json();
+        if (!response.ok) throw new Error("Failed to fetch sub-categories.");
+        const data = await response.json();
         setSubCategories(data.categories || []);
-      } catch {
-        console.error("Failed to fetch sub-categories.");
+      } catch (err) {
+        console.error("Failed to fetch sub-categories.", err);
       }
     };
 
     fetchSubCategories();
   }, [formData.category, token]);
 
+  // Handle Form Input
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSelectChange = (e: SelectChangeEvent<string>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Handle Form Submit
   const handleSubmit = async () => {
     if (!merchantId) return;
     try {
       setLoading(true);
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/merchants/${merchantId}`,
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/merchants/${keycloakId}`,
         {
-          method: "PATCH",
+          method: "PUT",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -146,9 +158,10 @@ const EditMerchant = () => {
           body: JSON.stringify(formData),
         }
       );
-      if (!res.ok) throw new Error("Update failed.");
+      if (!response.ok) throw new Error("Failed to update merchant.");
       router.push("/admin/vendors/merchants");
-    } catch {
+    } catch (err) {
+      console.error(err);
       setError("Failed to update merchant.");
     } finally {
       setLoading(false);
@@ -177,14 +190,15 @@ const EditMerchant = () => {
 
       <Grid container spacing={3}>
         {[
-          ["firstName", "First Name"],
-          ["lastName", "Last Name"],
-          ["username", "Username"],
-          ["email", "Email"],
-          ["phone", "Phone"],
-          ["businessName", "Business Name"],
-          ["address", "Address"],
-        ].map(([name, label]) => (
+          { name: "firstName", label: "First Name" },
+          { name: "lastName", label: "Last Name" },
+          { name: "username", label: "Username" },
+          { name: "email", label: "Email" },
+          { name: "phone", label: "Phone" },
+          { name: "businessName", label: "Business Name" },
+          { name: "address", label: "Address" },
+          { name: "password", label: "Password" },
+        ].map(({ name, label }) => (
           <Grid item xs={12} md={6} key={name}>
             <TextField
               fullWidth

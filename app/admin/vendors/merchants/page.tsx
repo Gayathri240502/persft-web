@@ -8,8 +8,14 @@ import {
   IconButton,
   CircularProgress,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
 } from "@mui/material";
-import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import {  GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
@@ -50,6 +56,10 @@ const Merchant = () => {
     page: 0,
     pageSize: 10,
   });
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
+
   const [rowCount, setRowCount] = useState(0);
   const [rows, setRows] = useState<Merchant[]>([]);
   const [loading, setLoading] = useState(false);
@@ -104,6 +114,41 @@ const Merchant = () => {
     fetchMerchants();
   }, [paginationModel, search]);
 
+  const handleDeleteClick = (id: string) => {
+    setSelectedDeleteId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setSelectedDeleteId(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedDeleteId) return;
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/merchants/${selectedDeleteId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete residence type");
+      }
+
+      fetchMerchants();
+      handleDeleteCancel();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete item");
+    }
+  };
+
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", flex: 0.4 },
     { field: "firstName", headerName: "First Name", flex: 0.8 },
@@ -142,7 +187,8 @@ const Merchant = () => {
           }>
             <Edit fontSize="small" />
           </IconButton>
-          <IconButton color="error" size="small">
+          <IconButton color="error" size="small"
+          onClick={() => handleDeleteClick(params.row.id)}>
             <Delete fontSize="small" />
           </IconButton>
         </Box>
@@ -214,6 +260,21 @@ const Merchant = () => {
           loading={loading}
         />
       </Box>
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+              <DialogTitle>Delete</DialogTitle>
+              <DialogContent>
+                <DialogContentText>
+                  Are you sure you want to delete this residence type? This action
+                  cannot be undone.
+                </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleDeleteCancel}>Cancel</Button>
+                <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+                  Delete
+                </Button>
+              </DialogActions>
+            </Dialog>
     </Box>
   );
 };

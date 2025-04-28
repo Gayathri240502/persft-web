@@ -133,7 +133,7 @@ const ProjectDetailsPage: React.FC = () => {
           <Box>
             <IconButton
               color="primary"
-              onClick={() => router.push(`/admin/home-catalog/projects/edit?id=${id}`)}
+              onClick={() => router.push(`/admin/projects/edit?id=${id}`)}
             >
               <Edit />
             </IconButton>

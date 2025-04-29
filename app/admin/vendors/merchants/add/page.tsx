@@ -67,9 +67,12 @@ const AddMerchant = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/merchants/dropdown/categories`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/merchants/dropdown/categories`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       const data = await res.json();
       console.log("Categories Response:", data);
       setCategories(data.categories || []);
@@ -84,7 +87,7 @@ const AddMerchant = () => {
     setSubCategoriesLoading(true);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/sub-categories?categoryId=${categoryId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/merchants/dropdown/subcategories/${categoryId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -113,7 +116,7 @@ const AddMerchant = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/merchants`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/merchants`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -124,7 +127,7 @@ const AddMerchant = () => {
 
       const data = await res.json();
       if (res.ok) {
-        router.push("/merchants");
+        router.push("/admin/merchants");
       } else {
         setError(data.message || "Something went wrong");
       }

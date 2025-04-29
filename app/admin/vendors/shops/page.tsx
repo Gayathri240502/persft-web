@@ -14,8 +14,9 @@ import {
   DialogContentText,
   DialogActions,
   Button,
+  Chip,
 } from "@mui/material";
-import {  GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
@@ -145,9 +146,6 @@ const Shop = () => {
     }
   };
 
-
-  
-
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", flex: 0.3 },
     { field: "firstName", headerName: "First Name", flex: 0.8 },
@@ -156,32 +154,48 @@ const Shop = () => {
     { field: "email", headerName: "Email", flex: 1.2 },
     { field: "phone", headerName: "Phone", flex: 1 },
     { field: "ownerName", headerName: "Owner Name", flex: 1 },
-    { field: "enabled", headerName: "Enabled", type: "boolean", flex: 0.5 },
-    
+    {
+      field: "enabled",
+      headerName: "Status",
+      flex: 0.6,
+      renderCell: (params) => (
+        <Chip
+          sx={{ width: "70px" }}
+          label={params.value ? "Active" : "Inactive"}
+          color={params.value ? "success" : "error"}
+          size="medium"
+          variant="filled"
+        />
+      ),
+    },
+
     {
       field: "action",
       headerName: "Action",
       flex: 0.8,
       renderCell: (params) => (
         <Box display="flex" gap={1}>
-          <IconButton color="info" size="small"
-          onClick={() =>
-            router.push(
-              `/admin/vendors/shops/${params.row.id}`
-            )
-          }>
+          <IconButton
+            color="info"
+            size="small"
+            onClick={() => router.push(`/admin/vendors/shops/${params.row.id}`)}
+          >
             <Visibility fontSize="small" />
           </IconButton>
-          <IconButton color="primary" size="small"
-          onClick={() =>
-            router.push(
-              `/admin/vendors/shops/edit?id=${params.row.id}`
-            )
-          }>
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() =>
+              router.push(`/admin/vendors/shops/edit?id=${params.row.id}`)
+            }
+          >
             <Edit fontSize="small" />
           </IconButton>
-          <IconButton color="error" size="small"
-          onClick={() => handleDeleteClick(params.row.id)}>
+          <IconButton
+            color="error"
+            size="small"
+            onClick={() => handleDeleteClick(params.row.id)}
+          >
             <Delete fontSize="small" />
           </IconButton>
         </Box>
@@ -261,25 +275,24 @@ const Shop = () => {
             pageSizeOptions={[5, 10, 25]}
             autoHeight
             disableColumnMenu={isSmallScreen}
-           
           />
         )}
       </Box>
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-                    <DialogTitle>Delete</DialogTitle>
-                    <DialogContent>
-                      <DialogContentText>
-                        Are you sure you want to delete this residence type? This action
-                        cannot be undone.
-                      </DialogContentText>
-                    </DialogContent>
-                    <DialogActions>
-                      <Button onClick={handleDeleteCancel}>Cancel</Button>
-                      <Button onClick={handleDeleteConfirm} color="error" autoFocus>
-                        Delete
-                      </Button>
-                    </DialogActions>
-                  </Dialog>
+        <DialogTitle>Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this residence type? This action
+            cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

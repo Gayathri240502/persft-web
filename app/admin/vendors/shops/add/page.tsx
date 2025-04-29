@@ -78,9 +78,12 @@ const AddShop = () => {
     const fetchData = async () => {
       try {
         setLoadingCategories(true);
-        const res1 = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res1 = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/categories`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         const data1 = await res1.json();
         setCategories(data1.categories || data1 || []);
       } catch (err: any) {
@@ -91,9 +94,12 @@ const AddShop = () => {
 
       try {
         setLoadingSubCategories(true);
-        const res2 = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sub-categories`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res2 = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/sub-categories`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         const data2 = await res2.json();
         setSubCategories(data2.subCategories || data2 || []);
       } catch (err: any) {
@@ -104,9 +110,12 @@ const AddShop = () => {
 
       try {
         setLoadingCountries(true);
-        const res3 = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/countries`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res3 = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/shops/dropdown/countries`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         const data3 = await res3.json();
         setCountries(data3.countries || data3 || []);
       } catch (err: any) {
@@ -124,9 +133,12 @@ const AddShop = () => {
       if (!form.country) return;
       try {
         setLoadingStates(true);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/states?countryId=${form.country}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/states?countryId=${form.country}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         const data = await res.json();
         setStates(data.states || data || []);
       } catch (err: any) {
@@ -144,9 +156,12 @@ const AddShop = () => {
       if (!form.state) return;
       try {
         setLoadingCities(true);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cities?stateId=${form.state}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/cities?stateId=${form.state}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         const data = await res.json();
         setCities(data.cities || data || []);
       } catch (err: any) {
@@ -261,25 +276,59 @@ const AddShop = () => {
               fullWidth
               label={label}
               value={form[key as keyof typeof form]}
-              onChange={(e) => handleChange(key as keyof typeof form, e.target.value)}
+              onChange={(e) =>
+                handleChange(key as keyof typeof form, e.target.value)
+              }
             />
           </Grid>
         ))}
 
         <Grid item xs={12} sm={6}>
-          {renderSelect("Category", form.category, "category", categories, loadingCategories)}
+          {renderSelect(
+            "Category",
+            form.category,
+            "category",
+            categories,
+            loadingCategories
+          )}
         </Grid>
         <Grid item xs={12} sm={6}>
-          {renderSelect("SubCategory", form.subCategory, "subCategory", subCategories, loadingSubCategories)}
+          {renderSelect(
+            "SubCategory",
+            form.subCategory,
+            "subCategory",
+            subCategories,
+            loadingSubCategories
+          )}
         </Grid>
         <Grid item xs={12} sm={6}>
-          {renderSelect("Country", form.country, "country", countries, loadingCountries)}
+          {renderSelect(
+            "Country",
+            form.country,
+            "country",
+            countries,
+            loadingCountries
+          )}
         </Grid>
         <Grid item xs={12} sm={6}>
-          {renderSelect("State", form.state, "state", states, loadingStates, !form.country)}
+          {renderSelect(
+            "State",
+            form.state,
+            "state",
+            states,
+            loadingStates,
+            !form.country
+          )}
         </Grid>
         <Grid item xs={12} sm={6}>
-          {renderSelect("City", form.city, "city", cities, loadingCities, !form.state)}
+          {renderSelect(
+            "City",
+            form.city,
+            "city",
+            cities,
+            loadingCities,
+            !form.state
+          )}
         </Grid>
       </Grid>
 

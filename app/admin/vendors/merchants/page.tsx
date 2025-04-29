@@ -14,8 +14,9 @@ import {
   DialogContentText,
   DialogActions,
   Button,
+  Chip,
 } from "@mui/material";
-import {  GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
@@ -58,7 +59,7 @@ const Merchant = () => {
   });
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
+  const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
 
   const [rowCount, setRowCount] = useState(0);
   const [rows, setRows] = useState<Merchant[]>([]);
@@ -154,41 +155,56 @@ const Merchant = () => {
     { field: "firstName", headerName: "First Name", flex: 0.8 },
     { field: "lastName", headerName: "Last Name", flex: 0.8 },
     { field: "username", headerName: "Username", flex: 1 },
-    { field: "email", headerName: "Email", flex: 1.2 },
+    { field: "email", headerName: "Email", flex: 1 },
     { field: "phone", headerName: "Phone", flex: 1 },
     { field: "businessName", headerName: "Business Name", flex: 1 },
-    { field: "address", headerName: "Address", flex: 1.5 },
+
     {
       field: "enabled",
-      headerName: "Enabled",
-      flex: 0.5,
-      type: "boolean",
+      headerName: "Status",
+      flex: 0.6,
+      renderCell: (params) => (
+        <Chip
+          sx={{ width: "70px" }}
+          label={params.value ? "Active" : "Inactive"}
+          color={params.value ? "success" : "error"}
+          size="medium"
+          variant="filled"
+        />
+      ),
     },
-    
+
     {
       field: "action",
       headerName: "Action",
       flex: 0.8,
       renderCell: (params) => (
         <Box display="flex" gap={1}>
-          <IconButton color="primary" size="small"
-          onClick={() =>
-            router.push(
-              `/admin/vendors/merchants/${params.row.id}`
-            )
-          }>
-            <Visibility/>
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() =>
+              router.push(`/admin/vendors/merchants/${params.row.keycloakId}`)
+            }
+          >
+            <Visibility />
           </IconButton>
-          <IconButton color="primary" size="small"
-          onClick={() =>
-            router.push(
-              `/admin/vendors/merchants/edit?id=${params.row.id}`
-            )
-          }>
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() =>
+              router.push(
+                `/admin/vendors/merchants/edit?id=${params.row.keycloakId}`
+              )
+            }
+          >
             <Edit fontSize="small" />
           </IconButton>
-          <IconButton color="error" size="small"
-          onClick={() => handleDeleteClick(params.row.id)}>
+          <IconButton
+            color="error"
+            size="small"
+            onClick={() => handleDeleteClick(params.row.keycloakId)}
+          >
             <Delete fontSize="small" />
           </IconButton>
         </Box>
@@ -205,11 +221,8 @@ const Merchant = () => {
       <Box
         sx={{
           display: "flex",
-          flexDirection: isSmallScreen ? "column" : "row",
           justifyContent: "space-between",
-          alignItems: "center",
           mb: 2,
-          gap: isSmallScreen ? 2 : 1,
         }}
       >
         <TextField
@@ -233,7 +246,7 @@ const Merchant = () => {
         </Alert>
       )}
 
-      <Box sx={{ height: 500, width: "100%", position: "relative" }}>
+      <Box>
         {loading && (
           <Box
             sx={{
@@ -261,20 +274,20 @@ const Merchant = () => {
         />
       </Box>
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-              <DialogTitle>Delete</DialogTitle>
-              <DialogContent>
-                <DialogContentText>
-                  Are you sure you want to delete this residence type? This action
-                  cannot be undone.
-                </DialogContentText>
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={handleDeleteCancel}>Cancel</Button>
-                <Button onClick={handleDeleteConfirm} color="error" autoFocus>
-                  Delete
-                </Button>
-              </DialogActions>
-            </Dialog>
+        <DialogTitle>Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this residence type? This action
+            cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

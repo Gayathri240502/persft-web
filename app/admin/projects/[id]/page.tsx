@@ -116,7 +116,7 @@ const ProjectDetailsPage: React.FC = () => {
     <Box p={4}>
       <Button
         startIcon={<ArrowBack />}
-        onClick={() => router.push("/admin/home-catalog/projects")}
+        onClick={() => router.push("/admin/projects")}
         sx={{ marginBottom: 2 }}
       >
         Back to Projects

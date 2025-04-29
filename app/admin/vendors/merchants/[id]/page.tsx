@@ -1,24 +1,24 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import {
   Box,
-  Typography,
   CircularProgress,
+  Typography,
+  Grid,
   Alert,
-  Paper,
   IconButton,
   Button,
   Dialog,
-  DialogTitle,
+  DialogActions,
   DialogContent,
   DialogContentText,
-  DialogActions,
+  DialogTitle,
 } from "@mui/material";
-import { useParams, useRouter } from "next/navigation";
-import { ArrowBack, Edit, Delete } from "@mui/icons-material";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { Edit, Delete, ArrowBack } from "@mui/icons-material";
 
-interface Merchant {
+interface Merchants {
   _id: string;
   firstName: string;
   lastName: string;
@@ -26,30 +26,30 @@ interface Merchant {
   email: string;
   phone: string;
   enabled: boolean;
-  archive: boolean;
-  businessName: string;
-  address: string;
   role: string[];
-  categoryName: string;
-  subCategoryName: string;
+  archive: boolean;
   createdAt: string;
   updatedAt: string;
+  businessName: string;
+  address: string;
+  categoryName: string;
+  subCategoryName: string;
 }
 
 const MerchantDetailsPage: React.FC = () => {
-  const { id } = useParams();
-  const router = useRouter();
-  const { token } = getTokenAndRole();
-
-  const [merchant, setMerchant] = useState<Merchant | null>(null);
+  const [merchants, setMerchants] = useState<Merchants | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
+  const { id } = useParams();
+  const router = useRouter();
+  const { token } = getTokenAndRole();
+
   useEffect(() => {
     if (!id) return;
 
-    const fetchMerchant = async () => {
+    const fetchMerchants = async () => {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/merchants/${id}`, {
           headers: {
@@ -57,11 +57,9 @@ const MerchantDetailsPage: React.FC = () => {
             "Content-Type": "application/json",
           },
         });
-
-        if (!res.ok) throw new Error("Failed to fetch merchant");
-
-        const data = await res.json();
-        setMerchant(data);
+        if (!res.ok) throw new Error("Failed to fetch merchant data");
+        const data: Merchants = await res.json();
+        setMerchants(data);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -69,21 +67,22 @@ const MerchantDetailsPage: React.FC = () => {
       }
     };
 
-    fetchMerchant();
+    fetchMerchants();
   }, [id, token]);
 
   const handleDelete = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/merchants/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!res.ok) throw new Error("Failed to delete merchant");
-
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/merchants/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!response.ok) throw new Error("Failed to delete merchant");
       setDeleteDialogOpen(false);
       router.push("/admin/vendors/merchants");
     } catch (err: any) {
@@ -107,57 +106,67 @@ const MerchantDetailsPage: React.FC = () => {
     );
   }
 
-  if (!merchant) {
+  if (!merchants) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
-        <Alert severity="warning">Merchant not found</Alert>
+        <Alert severity="warning">No merchant found</Alert>
       </Box>
     );
   }
 
   return (
     <Box p={4}>
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => router.push("/admin/vendors/merchants")}
-        sx={{ mb: 2 }}
-      >
+      <Button startIcon={<ArrowBack />} onClick={() => router.push("/admin/vendors/merchants")} sx={{ mb: 3 }}>
         Back to Merchants
       </Button>
 
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box>
-            <Typography variant="h4">{merchant.firstName} {merchant.lastName}</Typography>
-            <Typography color="text.secondary">
-              {merchant.archive ? "Archived" : "Active"} — {merchant.enabled ? "Enabled" : "Disabled"}
-            </Typography>
-          </Box>
-          <Box>
-            <IconButton color="primary" onClick={() => router.push(`/admin/vendors/merchants/edit`)}>
-              <Edit />
-            </IconButton>
-            <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
-              <Delete />
-            </IconButton>
-          </Box>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Box>
+          <Typography variant="h4">{merchants.username}</Typography>
+          <Typography variant="subtitle1" color="textSecondary">
+            {merchants.archive ? "Inactive" : "Active"}
+          </Typography>
         </Box>
-
-        <Box mt={3}>
-          <Typography><strong>Username:</strong> {merchant.username}</Typography>
-          <Typography><strong>Email:</strong> {merchant.email}</Typography>
-          <Typography><strong>Phone:</strong> {merchant.phone}</Typography>
-          <Typography><strong>Business Name:</strong> {merchant.businessName}</Typography>
-          <Typography><strong>Address:</strong> {merchant.address}</Typography>
-          <Typography><strong>Category:</strong> {merchant.categoryName}</Typography>
-          <Typography><strong>Subcategory:</strong> {merchant.subCategoryName}</Typography>
-          <Typography><strong>Role:</strong> {merchant.role.join(", ")}</Typography>
-          <Typography><strong>Created At:</strong> {new Date(merchant.createdAt).toLocaleString()}</Typography>
-          <Typography><strong>Updated At:</strong> {new Date(merchant.updatedAt).toLocaleString()}</Typography>
+        <Box>
+          <IconButton color="primary" onClick={() => router.push(`/admin/vendors/merchants/edit?id=${id}`)}>
+            <Edit />
+          </IconButton>
+          <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
+            <Delete />
+          </IconButton>
         </Box>
-      </Paper>
+      </Box>
 
-      {/* Delete Confirmation Dialog */}
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={6}>
+          <Typography><strong>ID:</strong> {merchants._id}</Typography>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <Typography><strong>First Name:</strong> {merchants.firstName}</Typography>
+          <Typography><strong>Last Name:</strong> {merchants.lastName}</Typography>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <Typography><strong>Email:</strong> {merchants.email}</Typography>
+          <Typography><strong>Phone:</strong> {merchants.phone}</Typography>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <Typography><strong>Business Name:</strong> {merchants.businessName}</Typography>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <Typography><strong>Address:</strong> {merchants.address}</Typography>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <Typography><strong>Category:</strong> {merchants.categoryName}</Typography>
+          <Typography><strong>Subcategory:</strong> {merchants.subCategoryName}</Typography>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <Typography><strong>Created At:</strong> {new Date(merchants.createdAt).toLocaleString()}</Typography>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <Typography><strong>Updated At:</strong> {new Date(merchants.updatedAt).toLocaleString()}</Typography>
+        </Grid>
+      </Grid>
+
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>

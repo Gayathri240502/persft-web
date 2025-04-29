@@ -4,120 +4,122 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
+  Grid,
   TextField,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  FormControlLabel,
   Checkbox,
+  FormControlLabel,
   CircularProgress,
-  SelectChangeEvent,
+  FormGroup,
 } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { useRouter } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
+interface ProjectMapping {
+  _id: string;
+  name: string;
+}
+
+interface Country {
+  _id: string;
+  name: string;
+}
+interface State {
+  _id: string;
+  name: string;
+}
+interface City {
+  _id: string;
+  name: string;
+}
+
 const AddKiosk = () => {
   const router = useRouter();
   const { token } = getTokenAndRole();
 
-  const [formData, setFormData] = useState({
-    kioskUser: "",
-    name: "",
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    username: "",
+    email: "",
+    phone: "",
+    password: "",
     description: "",
-    countryId: "",
-    stateId: "",
-    cityId: "",
+    country: "",
+    state: "",
+    city: "",
+    address: "",
     projects: [] as string[],
   });
 
-  const [countries, setCountries] = useState([]);
-  const [states, setStates] = useState([]);
-  const [cities, setCities] = useState([]);
-  const [projects, setProjects] = useState([]);
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [states, setStates] = useState<State[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+  const [projects, setProjects] = useState<ProjectMapping[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [loadingCountries, setLoadingCountries] = useState(false);
 
-  // Fetch countries on mount
   useEffect(() => {
-    const fetchCountries = async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/countries`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      setCountries(data);
-    };
-    fetchCountries();
-  }, [token]);
+    fetchData(`${process.env.NEXT_PUBLIC_API_URL}/kiosks/countries`, setCountries);
+  }, []);
 
-  // Fetch states when countryId changes
   useEffect(() => {
-    if (!formData.countryId) return;
-    const fetchStates = async () => {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/states/${formData.countryId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      const data = await res.json();
-      setStates(data);
-    };
-    fetchStates();
-  }, [formData.countryId, token]);
+    if (!form.country) return;
+    fetchData(`${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/states/${form.country}`, setStates);
+  }, [form.country]);
 
-  // Fetch cities when stateId changes
   useEffect(() => {
-    if (!formData.stateId) return;
-    const fetchCities = async () => {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/cities/${formData.stateId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      const data = await res.json();
-      setCities(data);
-    };
-    fetchCities();
-  }, [formData.stateId, token]);
+    if (!form.state) return;
+    fetchData(`${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/cities/${form.state}`, setCities);
+  }, [form.state]);
 
-  // Fetch projects on mount
   useEffect(() => {
     const fetchProjects = async () => {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/kiosks/dropdown/projects`,
-        {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/projects`, {
           headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      const data = await res.json();
-      setProjects(data);
+        });
+        const data = await res.json();
+        if (Array.isArray(data.projects)) setProjects(data.projects);
+      } catch (err) {
+        console.error("Error fetching projects:", err);
+      } finally {
+        setLoadingProjects(false);
+      }
     };
     fetchProjects();
   }, [token]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | { name?: string; value: any }> | SelectChangeEvent<string>
-  ) => {
+  const fetchData = async (url: string, setState: any) => {
+    try {
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setState(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(`Error fetching ${url}:`, err);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: any }>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name as string]: value,
-    }));
+    setForm((prev) => ({ ...prev, [name as string]: value }));
   };
 
   const handleCheckboxChange = (projectId: string) => {
-    setFormData((prev) => {
-      const exists = prev.projects.includes(projectId);
-      return {
-        ...prev,
-        projects: exists
-          ? prev.projects.filter((id) => id !== projectId)
-          : [...prev.projects, projectId],
-      };
-    });
+    setForm((prev) => ({
+      ...prev,
+      projects: prev.projects.includes(projectId)
+        ? prev.projects.filter((id) => id !== projectId)
+        : [...prev.projects, projectId],
+    }));
   };
 
   const handleSubmit = async () => {
@@ -129,9 +131,7 @@ const AddKiosk = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...formData,
-        }),
+        body: JSON.stringify(form),
       });
 
       if (!res.ok) throw new Error("Failed to create kiosk");
@@ -144,108 +144,89 @@ const AddKiosk = () => {
     }
   };
 
+  const renderTextField = (label: string, name: keyof typeof form) => (
+    <TextField
+      label={label}
+      name={name}
+      value={form[name]}
+      onChange={handleChange}
+      fullWidth
+      sx={{ mb: 2 }}
+    />
+  );
+
+  const renderSelect = (
+    label: string,
+    value: string,
+    name: keyof typeof form,
+    options: any[],
+    loading: boolean = false,
+    disabled: boolean = false
+  ) => (
+    <FormControl fullWidth sx={{ mb: 2 }} disabled={disabled}>
+      <InputLabel>{label}</InputLabel>
+      <Select name={name} value={value} label={label} onChange={handleChange}>
+        {loading ? (
+          <MenuItem disabled>Loading...</MenuItem>
+        ) : (
+          options.map((opt) => (
+            <MenuItem key={opt._id} value={opt._id}>
+              {opt.name}
+            </MenuItem>
+          ))
+        )}
+      </Select>
+    </FormControl>
+  );
+
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Add New Kiosk Management
+      <Typography variant="h5" sx={{ mb: 3 }}>
+        Add New Kiosk
       </Typography>
-
-      <TextField
-        label="Kiosk User"
-        fullWidth
-        name="kioskUser"
-        value={formData.kioskUser}
-        onChange={handleChange}
-        sx={{ mb: 3 }}
-      />
-
-      <TextField
-        label="Project Name"
-        fullWidth
-        name="name"
-        value={formData.name}
-        onChange={handleChange}
-        sx={{ mb: 3 }}
-      />
-
-      <TextField
-        label="Description"
-        fullWidth
-        multiline
-        rows={3}
-        name="description"
-        value={formData.description}
-        onChange={handleChange}
-        sx={{ mb: 3 }}
-      />
-
-      <FormControl fullWidth sx={{ mb: 3 }}>
-        <InputLabel>Country</InputLabel>
-        <Select
-          value={formData.countryId}
-          label="Country"
-          name="countryId"
-          onChange={handleChange}
-        >
-          {countries.map((country: any) => (
-            <MenuItem key={country._id} value={country._id}>
-              {country.name}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-
-      <FormControl fullWidth sx={{ mb: 3 }}>
-        <InputLabel>State</InputLabel>
-        <Select
-          value={formData.stateId}
-          label="State"
-          name="stateId"
-          onChange={handleChange}
-        >
-          {states.map((state: any) => (
-            <MenuItem key={state._id} value={state._id}>
-              {state.name}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-
-      <FormControl fullWidth sx={{ mb: 3 }}>
-        <InputLabel>City</InputLabel>
-        <Select
-          value={formData.cityId}
-          label="City"
-          name="cityId"
-          onChange={handleChange}
-        >
-          {cities.map((city: any) => (
-            <MenuItem key={city._id} value={city._id}>
-              {city.name}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-
-      <Typography variant="h6" sx={{ mb: 1 }}>
-        Project Mapping
-      </Typography>
-      <Box sx={{ mb: 3, display: "flex", flexDirection: "column", gap: 1 }}>
-        {projects.map((project: any) => (
-          <FormControlLabel
-            key={project._id}
-            control={
-              <Checkbox
-                checked={formData.projects.includes(project._id)}
-                onChange={() => handleCheckboxChange(project._id)}
-              />
-            }
-            label={project.name}
-          />
-        ))}
-      </Box>
-
-      <Box sx={{ display: "flex", gap: 2 }}>
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={6}>{renderTextField("First Name", "firstName")}</Grid>
+        <Grid item xs={12} sm={6}>{renderTextField("Last Name", "lastName")}</Grid>
+        <Grid item xs={12} sm={6}>{renderTextField("Username", "username")}</Grid>
+        <Grid item xs={12} sm={6}>{renderTextField("Email", "email")}</Grid>
+        <Grid item xs={12} sm={6}>{renderTextField("Phone", "phone")}</Grid>
+        <Grid item xs={12} sm={6}>{renderTextField("Password", "password")}</Grid>
+        <Grid item xs={12}>{renderTextField("Description", "description")}</Grid>
+        <Grid item xs={12}>{renderTextField("Address", "address")}</Grid>
+        <Grid item xs={12} sm={6}>{renderSelect(
+            "Country",
+            form.country,
+            "country",
+            countries,
+            loadingCountries
+          )}</Grid>
+        <Grid item xs={12} sm={6}>{renderSelect("State", form.state, "state", states, false, !form.country)}</Grid>
+        <Grid item xs={12} sm={6}>{renderSelect("City", form.city, "city", cities, false, !form.state)}</Grid>
+        <Grid item xs={12}>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            Residence Mapping
+          </Typography>
+          <FormGroup>
+            {loadingProjects ? (
+              <Typography>Loading projects...</Typography>
+            ) : (
+              projects.map((proj) => (
+                <FormControlLabel
+                  key={proj._id}
+                  control={
+                    <Checkbox
+                      checked={form.projects.includes(proj._id)}
+                      onChange={() => handleCheckboxChange(proj._id)}
+                    />
+                  }
+                  label={proj.name}
+                />
+              ))
+            )}
+          </FormGroup>
+        </Grid>
+      </Grid>
+      <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
         <ReusableButton onClick={handleSubmit} disabled={loading}>
           {loading ? <CircularProgress size={20} /> : "Submit"}
         </ReusableButton>

@@ -164,24 +164,13 @@ const DesignType = () => {
       field: "thumbnail",
       headerName: "Thumbnail",
       flex: 1,
-      renderCell: (params: GridRenderCellParams) => {
-        const imageUrl = params.value;
-
-        return imageUrl ? (
-          <img
-            src={imageUrl}
-            alt="Thumbnail"
-            style={{
-              width: "50px",
-              height: "50px",
-              objectFit: "cover",
-              borderRadius: "4px",
-            }}
-          />
-        ) : (
-          <span style={{ fontStyle: "italic", color: "#999" }}>No Image</span>
-        );
-      },
+      renderCell: (params) => (
+        <img
+          src={`data:image/jpeg;base64,${params.row.thumbnail}`}
+          alt="Thumbnail"
+          style={{ width: 40, height: 40 }}
+        />
+      ),
     },
 
     {

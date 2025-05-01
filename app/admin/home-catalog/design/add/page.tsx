@@ -16,9 +16,11 @@ import {
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
+import { useRouter } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 const AddDesignType = () => {
+  const Router = useRouter();
   const { token } = getTokenAndRole();
 
   const [residences, setResidences] = useState([]);
@@ -142,7 +144,9 @@ const AddDesignType = () => {
   };
 
   // Convert file to base64
-  const fileToBase64 = (file: File): Promise<{fullUrl: string; base64: string }> => {
+  const fileToBase64 = (
+    file: File
+  ): Promise<{ fullUrl: string; base64: string }> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
@@ -297,6 +301,7 @@ const AddDesignType = () => {
       });
 
       alert("Design type added successfully!");
+      Router.push("/admin/home-catalog/design");
     } catch (err: any) {
       setApiError(err.message || "Unexpected error occurred");
     }

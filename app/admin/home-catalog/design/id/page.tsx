@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams, useRouter, useSearchParams,  } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   Box,
   Typography,
@@ -30,17 +30,18 @@ const DesignTypeDetails = () => {
     description: string;
     coohomUrl: string;
     thumbnailUrl: string;
-    combinations: { residenceType: string; roomType: string; theme: string }[];
+    combinations: {
+      residenceType: { name: string };
+      roomType: { name: string };
+      theme: { name: string };
+    }[];
   } | null>(null);
 
-  const [residenceName, setResidenceName] = useState("");
-  const [roomName, setRoomName] = useState("");
-  const [themeName, setThemeName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-    const { id } = useParams();
+  const { id } = useParams();
 
   useEffect(() => {
     const fetchDesignDetails = async () => {
@@ -57,43 +58,26 @@ const DesignTypeDetails = () => {
           "Content-Type": "application/json",
         };
 
-        const designRes = await fetch(
+        const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/designs/${designId}`,
           { headers }
         );
 
-        if (!designRes.ok) {
-          const errorData = await designRes.json();
-          throw new Error(
-            errorData.message ||
-              `Failed to fetch design details (status ${designRes.status})`
-          );
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || "Failed to fetch design");
         }
 
-        const designData = await designRes.json();
-        setDesignDetails(designData);
+        const designData = await res.json();
 
-        if (designData.combinations && designData.combinations.length > 0) {
-          const combination = designData.combinations[0];
-          const [residenceData, roomData, themeData] = await Promise.all([
-            fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/residence-types/${combination.residenceType}`,
-              { headers }
-            ).then((res) => res.json()),
-            fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/room-types/${combination.roomType}`,
-              { headers }
-            ).then((res) => res.json()),
-            fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/themes/${combination.theme}`,
-              { headers }
-            ).then((res) => res.json()),
-          ]);
-
-          setResidenceName(residenceData?.residenceType?.name || "N/A");
-          setRoomName(roomData?.roomType?.name || "N/A");
-          setThemeName(themeData?.theme?.name || "N/A");
-        }
+        setDesignDetails({
+          _id: designData._id,
+          name: designData.name,
+          description: designData.description,
+          coohomUrl: designData.coohomUrl,
+          thumbnailUrl: designData.thumbnail, // base64 string
+          combinations: designData.combinations || [],
+        });
       } catch (err: any) {
         setError(err.message || "Failed to fetch design details.");
       } finally {
@@ -122,7 +106,7 @@ const DesignTypeDetails = () => {
         throw new Error("Failed to delete the design.");
       }
 
-      router.push("/admin/home-catalog/designs");
+      router.push("/admin/home-catalog/design");
     } catch (err) {
       console.error(err);
       alert("Error deleting the design. Please try again.");
@@ -131,7 +115,12 @@ const DesignTypeDetails = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <CircularProgress />
       </Box>
     );
@@ -139,7 +128,12 @@ const DesignTypeDetails = () => {
 
   if (error) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="error">{error}</Alert>
       </Box>
     );
@@ -147,26 +141,42 @@ const DesignTypeDetails = () => {
 
   if (!designDetails) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="warning">Design details not found.</Alert>
       </Box>
     );
   }
 
+  const combination = designDetails.combinations[0];
+
   return (
     <Box p={4}>
-      {/* Top Section with Back, Edit, Delete */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      {/* Header */}
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
         <Button
           startIcon={<ArrowBack />}
-          onClick={() => router.push("/admin/home-catalog/designs")}
+          onClick={() => router.push("/admin/home-catalog/design")}
         >
           Back to Designs
         </Button>
 
         <Box>
           <IconButton
-            onClick={() => router.push(`/admin/home-catalog/design/edit?id=${id}`)}
+            onClick={() =>
+              router.push(
+                `/admin/home-catalog/design/edit?id=${designDetails._id}`
+              )
+            }
             sx={{ marginRight: 1 }}
           >
             <Edit color="primary" />
@@ -177,7 +187,7 @@ const DesignTypeDetails = () => {
         </Box>
       </Box>
 
-      {/* Design Details */}
+      {/* Content */}
       <Paper elevation={3} sx={{ padding: 4 }}>
         <Typography variant="h4" gutterBottom>
           {designDetails.name}
@@ -192,7 +202,14 @@ const DesignTypeDetails = () => {
 
           <Grid item xs={12} sm={6}>
             <Typography variant="body1">
-              <strong>Coohom URL:</strong> {designDetails.coohomUrl}
+              <strong>Coohom URL:</strong>{" "}
+              <a
+                href={designDetails.coohomUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {designDetails.coohomUrl}
+              </a>
             </Typography>
           </Grid>
 
@@ -204,19 +221,20 @@ const DesignTypeDetails = () => {
 
           <Grid item xs={12} sm={4}>
             <Typography variant="body1">
-              <strong>Residence Type:</strong> {residenceName}
+              <strong>Residence Type:</strong>{" "}
+              {combination?.residenceType?.name || "N/A"}
             </Typography>
           </Grid>
 
           <Grid item xs={12} sm={4}>
             <Typography variant="body1">
-              <strong>Room Type:</strong> {roomName}
+              <strong>Room Type:</strong> {combination?.roomType?.name || "N/A"}
             </Typography>
           </Grid>
 
           <Grid item xs={12} sm={4}>
             <Typography variant="body1">
-              <strong>Theme:</strong> {themeName}
+              <strong>Theme:</strong> {combination?.theme?.name || "N/A"}
             </Typography>
           </Grid>
         </Grid>
@@ -226,11 +244,10 @@ const DesignTypeDetails = () => {
             Thumbnail
           </Typography>
           {designDetails.thumbnailUrl ? (
-            <Box
-              component="img"
-              src={designDetails.thumbnailUrl}
+            <img
+              src={`data:image/jpeg;base64,${designDetails.thumbnailUrl}`}
               alt="Thumbnail"
-              sx={{ maxWidth: 150, borderRadius: 2 }}
+              style={{ width: "50%", maxHeight: 200 }}
             />
           ) : (
             <Typography>No thumbnail available</Typography>
@@ -238,10 +255,15 @@ const DesignTypeDetails = () => {
         </Box>
       </Paper>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      {/* Delete Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
         <DialogTitle>Confirm Deletion</DialogTitle>
-        <DialogContent>Are you sure you want to delete this design?</DialogContent>
+        <DialogContent>
+          Are you sure you want to delete this design?
+        </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
           <Button color="error" onClick={handleDeleteDesign}>

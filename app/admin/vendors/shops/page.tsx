@@ -15,14 +15,25 @@ import {
   DialogActions,
   Button,
   Chip,
+  InputAdornment,
 } from "@mui/material";
-import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import {
+  GridColDef,
+  GridPaginationModel,
+  GridToolbarColumnsButton,
+  GridToolbarContainer,
+  GridToolbarDensitySelector,
+  GridToolbarExport,
+  GridToolbarFilterButton,
+  GridToolbarQuickFilter,
+} from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
 import ReusableButton from "@/app/components/Button";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
+import { SearchIcon } from "lucide-react";
 
 interface Shop {
   _id: string;
@@ -178,7 +189,9 @@ const Shop = () => {
           <IconButton
             color="info"
             size="small"
-            onClick={() => router.push(`/admin/vendors/shops/${params.row.keycloakId}`)}
+            onClick={() =>
+              router.push(`/admin/vendors/shops/${params.row.keycloakId}`)
+            }
           >
             <Visibility fontSize="small" />
           </IconButton>
@@ -186,7 +199,9 @@ const Shop = () => {
             color="primary"
             size="small"
             onClick={() =>
-              router.push(`/admin/vendors/shops/edit?id=${params.row.keycloakId}`)
+              router.push(
+                `/admin/vendors/shops/edit?id=${params.row.keycloakId}`
+              )
             }
           >
             <Edit fontSize="small" />
@@ -208,29 +223,6 @@ const Shop = () => {
       <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
         Shop
       </Typography>
-
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: isSmallScreen ? "column" : "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 2,
-          gap: isSmallScreen ? 2 : 1,
-        }}
-      >
-        <TextField
-          label="Search"
-          variant="outlined"
-          size="small"
-          fullWidth={isSmallScreen}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <ReusableButton onClick={() => router.push("/admin/vendors/shops/add")}>
-          ADD
-        </ReusableButton>
-      </Box>
 
       <Box
         sx={{

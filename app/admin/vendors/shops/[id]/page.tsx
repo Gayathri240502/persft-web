@@ -27,7 +27,7 @@ interface Shop {
   phone: string;
   enabled: boolean;
   archive: boolean;
-  role: string[];
+  role: string[] | null;
   keycloakId: string;
   ownerName: string;
   address: string;
@@ -158,7 +158,7 @@ const ShopDetailsPage: React.FC = () => {
           <Typography><strong>City:</strong> {shop.cityName ?? "Not set"}</Typography>
           <Typography><strong>Category:</strong> {shop.categoryName ?? "Not set"}</Typography>
           <Typography><strong>Subcategory:</strong> {shop.subCategoryName ?? "Not set"}</Typography>
-          <Typography><strong>Role:</strong> {shop.role.join(", ")}</Typography>
+          <Typography><strong>Role:</strong> {Array.isArray(shop.role) ? shop.role.join(", ") : "Not set"}</Typography>
           <Typography><strong>Created At:</strong> {new Date(shop.createdAt).toLocaleString()}</Typography>
           <Typography><strong>Updated At:</strong> {new Date(shop.updatedAt).toLocaleString()}</Typography>
         </Box>

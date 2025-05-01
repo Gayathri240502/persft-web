@@ -178,7 +178,7 @@ const Shop = () => {
           <IconButton
             color="info"
             size="small"
-            onClick={() => router.push(`/admin/vendors/shops/${params.row.id}`)}
+            onClick={() => router.push(`/admin/vendors/shops/${params.row.keycloakId}`)}
           >
             <Visibility fontSize="small" />
           </IconButton>
@@ -186,7 +186,7 @@ const Shop = () => {
             color="primary"
             size="small"
             onClick={() =>
-              router.push(`/admin/vendors/shops/edit?id=${params.row.id}`)
+              router.push(`/admin/vendors/shops/edit?id=${params.row.keycloakId}`)
             }
           >
             <Edit fontSize="small" />

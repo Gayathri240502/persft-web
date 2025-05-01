@@ -50,6 +50,7 @@ const AddDesignType = () => {
 
   const [apiError, setApiError] = useState("");
   const [success, setSuccess] = useState(false);
+ 
 
   // URL validation regex
   const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;

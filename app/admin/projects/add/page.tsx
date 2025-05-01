@@ -5,102 +5,108 @@ import {
   Box,
   Typography,
   Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  TextField,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
   Grid,
   FormHelperText,
-  TextField,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
+interface OptionType {
+  _id: string;
+  name: string;
+}
+
+interface FormData {
+  name: string;
+  description: string;
+  thumbnail: File | null;
+  thumbnailBase64: string;
+  thumbnailPreview: string;
+  residenceTypes: string[];
+  roomTypes: string[];
+  themes: string[];
+  designs: string[];
+}
+
 const CreateProject = () => {
   const { token } = getTokenAndRole();
 
-  const [residences, setResidences] = useState<any[]>([]);
-  const [rooms, setRooms] = useState<any[]>([]);
-  const [themes, setThemes] = useState<any[]>([]);
-  const [designs, setDesigns] = useState<any[]>([]);
+  const [residenceList, setResidenceList] = useState<OptionType[]>([]);
+  const [roomList, setRoomList] = useState<OptionType[]>([]);
+  const [themeList, setThemeList] = useState<OptionType[]>([]);
+  const [designList, setDesignList] = useState<OptionType[]>([]);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: "",
     description: "",
-    thumbnail: null as File | null,
+    thumbnail: null,
     thumbnailBase64: "",
     thumbnailPreview: "",
-    residenceType: "",
-    roomType: "",
-    theme: "",
-    designs: "",
+    residenceTypes: [],
+    roomTypes: [],
+    themes: [],
+    designs: [],
   });
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState<string | null>(null);
-  const [errors, setErrors] = useState<any>({});
-
-  const fetchData = async () => {
-    try {
-      const headers = {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      };
-
-      const [residencesRes, roomsRes, themesRes, designRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/residence-types`, { headers }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/room-types`, { headers }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/themes`, { headers }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/designs`, { headers }),
-      ]);
-
-      if (!residencesRes.ok || !roomsRes.ok || !themesRes.ok || !designRes.ok) {
-        throw new Error("Failed to fetch dropdown data");
-      }
-
-      const [residencesData, roomsData, themesData, designsData] = await Promise.all([
-        residencesRes.json(),
-        roomsRes.json(),
-        themesRes.json(),
-        designRes.json(),
-      ]);
-
-      setResidences(residencesData.residenceTypes);
-      setRooms(roomsData.roomTypes);
-      setThemes(themesData.themes);
-      setDesigns(designsData.designs);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    const fetchOptions = async () => {
+      try {
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        };
+
+        const [residences, rooms, themes, designs] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/residence-types`, { headers }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/room-types`, { headers }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/themes`, { headers }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/designs`, { headers }),
+        ]);
+
+        if (![residences, rooms, themes, designs].every((res) => res.ok)) {
+          throw new Error("One or more fetches failed");
+        }
+
+        const [resData, roomData, themeData, designData] = await Promise.all([
+          residences.json(),
+          rooms.json(),
+          themes.json(),
+          designs.json(),
+        ]);
+
+        setResidenceList(resData.residenceTypes);
+        setRoomList(roomData.roomTypes);
+        setThemeList(themeData.themes);
+        setDesignList(designData.designs);
+      } catch (err) {
+        console.error("Fetch error:", err);
+      }
+    };
+
+    fetchOptions();
+  }, [token]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
-
-  const handleSelectChange = (field: string, value: string) => {
-    setFormData((prevData) => ({
-      ...prevData,
-      [field]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files ? e.target.files[0] : null;
+    const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData((prevData) => ({
-          ...prevData,
+        setFormData((prev) => ({
+          ...prev,
           thumbnail: file,
           thumbnailBase64: reader.result as string,
           thumbnailPreview: reader.result as string,
@@ -110,268 +116,179 @@ const CreateProject = () => {
     }
   };
 
+  const handleCheckboxChange = (
+    listKey: keyof FormData,
+    value: string,
+    checked: boolean
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [listKey]: checked
+        ? [...(prev[listKey] as string[]), value]
+        : (prev[listKey] as string[]).filter((id) => id !== value),
+    }));
+  };
+
   const handleRemoveImage = () => {
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       thumbnail: null,
       thumbnailBase64: "",
       thumbnailPreview: "",
-    });
+    }));
   };
 
-  const validateForm = () => {
-    const newErrors: any = {};
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
     if (!formData.name) newErrors.name = "Name is required";
-    if (!formData.residenceType) newErrors.residenceType = "Residence Type is required";
-    if (!formData.roomType) newErrors.roomType = "Room Type is required";
-    if (!formData.theme) newErrors.theme = "Theme is required";
+    if (!formData.residenceTypes.length) newErrors.residenceTypes = "Select at least one residence";
+    if (!formData.roomTypes.length) newErrors.roomTypes = "Select at least one room";
+    if (!formData.themes.length) newErrors.themes = "Select at least one theme";
+    if (!formData.designs.length) newErrors.designs = "Select at least one design";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
+    if (!validate()) {
       setApiError("Please fix the validation errors");
       return;
     }
 
     try {
-      const projectPayload = {
+      const payload = {
         name: formData.name,
         description: formData.description,
         thumbnail: formData.thumbnailBase64,
         selections: [
           {
-            residenceType: formData.residenceType,
-            roomType: formData.roomType,
-            theme: formData.theme,
+            residenceType: formData.residenceTypes,
+            roomType: formData.roomTypes,
+            theme: formData.themes,
             design: formData.designs,
           },
         ],
       };
 
-      console.log("Project Payload:", projectPayload);
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/projects`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/projects`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(projectPayload),
+        body: JSON.stringify(payload),
       });
 
-      const responseBody = await res.json();
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || "Failed to create project");
 
-      if (!res.ok) {
-        console.error("API error response:", responseBody);
-        throw new Error(responseBody.message || "Failed to create project");
-      }
-
-      // Reset form after successful submission
+      alert("Project created successfully!");
       setFormData({
         name: "",
         description: "",
         thumbnail: null,
         thumbnailBase64: "",
         thumbnailPreview: "",
-        residenceType: "",
-        roomType: "",
-        theme: "",
-        designs: "",
+        residenceTypes: [],
+        roomTypes: [],
+        themes: [],
+        designs: [],
       });
-
-      alert("Project added successfully!");
     } catch (error) {
-      console.error("Submission error:", error);
-      setApiError("An error occurred while creating the project");
+      console.error("Submit error:", error);
+      setApiError("Something went wrong while submitting the form.");
     }
   };
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Add Design Type
+      <Typography variant="h5" sx={{ mb: 3 }}>
+        Create Project
       </Typography>
 
       <TextField
         label="Name"
         name="name"
-        fullWidth
-        sx={{ mb: 3 }}
         value={formData.name}
         onChange={handleInputChange}
+        fullWidth
+        required
         error={!!errors.name}
         helperText={errors.name}
-        required
+        sx={{ mb: 3 }}
       />
 
       <TextField
         label="Description"
         name="description"
-        multiline
-        rows={3}
-        fullWidth
-        sx={{ mb: 3 }}
         value={formData.description}
         onChange={handleInputChange}
+        fullWidth
+        multiline
+        rows={3}
+        sx={{ mb: 3 }}
       />
 
       <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-          <Button
-            variant="outlined"
-            component="label"
-            startIcon={<UploadFileIcon />}
-            sx={{
-              color: "#05344c",
-              borderColor: errors.thumbnail ? "error.main" : "#05344c",
-              "&:hover": { backgroundColor: "#f0f4f8" },
-            }}
-          >
-            Upload Thumbnail
-            <input
-              type="file"
-              hidden
-              onChange={handleFileChange}
-              accept=".jpg,.jpeg,.png"
-            />
-          </Button>
-          <Typography variant="body2" sx={{ color: "#666" }}>
-            {formData.thumbnail?.name || "No file selected"}
-          </Typography>
-
-          {formData.thumbnailPreview && (
-            <Button
-              variant="text"
-              color="error"
-              onClick={handleRemoveImage}
-              size="small"
-            >
+        <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
+          Upload Thumbnail
+          <input type="file" hidden accept=".jpg,.jpeg,.png" onChange={handleFileChange} />
+        </Button>
+        {formData.thumbnailPreview && (
+          <>
+            <Button color="error" onClick={handleRemoveImage}>
               Remove
             </Button>
-          )}
-        </Box>
-
-        {/* Image Preview */}
-        {formData.thumbnailPreview && (
-          <Box sx={{ mt: 2, mb: 2 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Image Preview:
-            </Typography>
-            <Box
-              sx={{
-                width: 150,
-                height: 150,
-                border: "1px solid #ddd",
-                borderRadius: 1,
-                overflow: "hidden",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+            <Box sx={{ mt: 2 }}>
               <img
                 src={formData.thumbnailPreview}
-                alt="Thumbnail preview"
-                style={{
-                  maxWidth: "100%",
-                  maxHeight: "100%",
-                  objectFit: "contain",
-                }}
+                alt="Thumbnail Preview"
+                style={{ maxWidth: 150, maxHeight: 150 }}
               />
             </Box>
-          </Box>
+          </>
         )}
       </Box>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
-          <FormControl fullWidth error={!!errors.residenceType}>
-            <InputLabel required>Residence Type</InputLabel>
-            <Select
-              value={formData.residenceType}
-              onChange={(e) =>
-                handleSelectChange("residenceType", e.target.value as string)
-              }
-              label="Residence Type *"
-            >
-              {residences.map((res) => (
-                <MenuItem key={res._id} value={res._id}>
-                  {res.name}
-                </MenuItem>
+        {[
+          { title: "Residence Mapping", data: residenceList, key: "residenceTypes" },
+          { title: "Room Mapping", data: roomList, key: "roomTypes" },
+          { title: "Theme Mapping", data: themeList, key: "themes" },
+          { title: "Design Mapping", data: designList, key: "designs" },
+        ].map(({ title, data, key }) => (
+          <Grid item xs={12} md={6} lg={3} key={key}>
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>{title}</Typography>
+            <FormGroup>
+              {data.map((item) => (
+                <FormControlLabel
+                  key={item._id}
+                  control={
+                    <Checkbox
+                      checked={
+                        Array.isArray(formData[key as keyof FormData]) &&
+                        (formData[key as keyof FormData] as string[]).includes(item._id)
+                      }
+                      onChange={(e) =>
+                        handleCheckboxChange(
+                          key as keyof FormData,
+                          item._id,
+                          e.target.checked
+                        )
+                      }
+                    />
+                  }
+                  label={item.name}
+                />
               ))}
-            </Select>
-            {errors.residenceType && (
-              <FormHelperText>{errors.residenceType}</FormHelperText>
-            )}
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <FormControl fullWidth error={!!errors.roomType}>
-            <InputLabel required>Room Type</InputLabel>
-            <Select
-              value={formData.roomType}
-              onChange={(e) =>
-                handleSelectChange("roomType", e.target.value as string)
-              }
-              label="Room Type *"
-            >
-              {rooms.map((room) => (
-                <MenuItem key={room._id} value={room._id}>
-                  {room.name}
-                </MenuItem>
-              ))}
-            </Select>
-            {errors.roomType && (
-              <FormHelperText>{errors.roomType}</FormHelperText>
-            )}
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <FormControl fullWidth error={!!errors.theme}>
-            <InputLabel required>Theme</InputLabel>
-            <Select
-              value={formData.theme}
-              onChange={(e) =>
-                handleSelectChange("theme", e.target.value as string)
-              }
-              label="Theme *"
-            >
-              {themes.map((theme) => (
-                <MenuItem key={theme._id} value={theme._id}>
-                  {theme.name}
-                </MenuItem>
-              ))}
-            </Select>
-            {errors.theme && <FormHelperText>{errors.theme}</FormHelperText>}
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <FormControl fullWidth>
-            <InputLabel>Design</InputLabel>
-            <Select
-              value={formData.designs}
-              onChange={(e) =>
-                handleSelectChange("designs", e.target.value as string)
-              }
-              label="Design"
-            >
-              {designs.map((design) => (
-                <MenuItem key={design._id} value={design._id}>
-                  {design.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
+            </FormGroup>
+            {errors[key] && <FormHelperText error>{errors[key]}</FormHelperText>}
+          </Grid>
+        ))}
       </Grid>
 
       {apiError && (
-        <Typography variant="body2" color="error" sx={{ mt: 2 }}>
+        <Typography color="error" sx={{ mt: 2 }}>
           {apiError}
         </Typography>
       )}
@@ -380,9 +297,7 @@ const CreateProject = () => {
         <ReusableButton onClick={handleSubmit} disabled={!token}>
           Submit
         </ReusableButton>
-        <CancelButton  href="/admin/projects">
-          Cancel
-        </CancelButton>
+        <CancelButton href="/admin/projects">Cancel</CancelButton>
       </Box>
     </Box>
   );

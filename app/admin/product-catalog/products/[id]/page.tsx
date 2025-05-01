@@ -19,18 +19,12 @@ import {
 } from "@mui/material";
 import { Edit, Delete, ArrowBack } from "@mui/icons-material";
 
-interface Project {
-  _id: string;
-  name: string;
-  description: string;
-  archive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  thumbnail?: string;
-}
+// import {
+//   Product,
+// } from "@/app/admin/products/types"; // optional if you're moving interfaces
 
-const ProjectDetailsPage: React.FC = () => {
-  const [project, setProject] = useState<Project | null>(null);
+const ProductDetailsPage: React.FC = () => {
+  const [product, setProduct] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -42,10 +36,10 @@ const ProjectDetailsPage: React.FC = () => {
   useEffect(() => {
     if (!id) return;
 
-    const fetchProject = async () => {
+    const fetchProduct = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/projects/${id}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/products/${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -53,10 +47,10 @@ const ProjectDetailsPage: React.FC = () => {
             },
           }
         );
-        if (!response.ok) throw new Error("Failed to fetch project details");
+        if (!response.ok) throw new Error("Failed to fetch product details");
 
-        const data: Project = await response.json();
-        setProject(data);
+        const data: any = await response.json();
+        setProduct(data);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -64,13 +58,13 @@ const ProjectDetailsPage: React.FC = () => {
       }
     };
 
-    fetchProject();
+    fetchProduct();
   }, [id, token]);
 
   const handleDelete = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/products/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -79,10 +73,10 @@ const ProjectDetailsPage: React.FC = () => {
           },
         }
       );
-      if (!response.ok) throw new Error("Failed to delete project");
+      if (!response.ok) throw new Error("Failed to delete product");
 
       setDeleteDialogOpen(false);
-      router.push("/admin/home-catalog/projects");
+      router.push("/admin/products");
     } catch (err: any) {
       setError(err.message);
     }
@@ -104,10 +98,10 @@ const ProjectDetailsPage: React.FC = () => {
     );
   }
 
-  if (!project) {
+  if (!product) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
-        <Alert severity="warning">No project found</Alert>
+        <Alert severity="warning">No product found</Alert>
       </Box>
     );
   }
@@ -116,24 +110,24 @@ const ProjectDetailsPage: React.FC = () => {
     <Box p={4}>
       <Button
         startIcon={<ArrowBack />}
-        onClick={() => router.push("/admin/projects")}
+        onClick={() => router.push("/admin/product-catalog/products")}
         sx={{ marginBottom: 2 }}
       >
-        Back to Projects
+        Back to Products
       </Button>
 
       <Paper elevation={3} sx={{ padding: 4 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box>
-            <Typography variant="h4" gutterBottom>{project.name}</Typography>
+            <Typography variant="h4" gutterBottom>{product.name}</Typography>
             <Typography variant="subtitle1" color="textSecondary">
-              {project.archive ? "Inactive" : "Active"}
+              {product.archive ? "Inactive" : "Active"}
             </Typography>
           </Box>
           <Box>
             <IconButton
               color="primary"
-              onClick={() => router.push(`/admin/projects/edit?id=${id}`)}
+              onClick={() => router.push(`/admin/products/edit?id=${id}`)}
             >
               <Edit />
             </IconButton>
@@ -144,37 +138,33 @@ const ProjectDetailsPage: React.FC = () => {
         </Box>
 
         <Grid container spacing={2} sx={{ marginTop: 2 }}>
-          <Grid item xs={12} sm={6}>
-            <Typography><strong>ID:</strong> {project._id}</Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography><strong>Name:</strong> {project.name}</Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography><strong>Description:</strong> {project.description}</Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography><strong>Archived:</strong> {project.archive ? "Yes" : "No"}</Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography><strong>Created At:</strong> {new Date(project.createdAt).toLocaleString()}</Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography><strong>Updated At:</strong> {new Date(project.updatedAt).toLocaleString()}</Typography>
-          </Grid>
+          <Grid item xs={12} sm={6}><Typography><strong>ID:</strong> {product._id}</Typography></Grid>
+          <Grid item xs={12} sm={6}><Typography><strong>SKU:</strong> {product.sku}</Typography></Grid>
+          <Grid item xs={12} sm={6}><Typography><strong>Brand:</strong> {product.brand}</Typography></Grid>
+          <Grid item xs={12} sm={6}><Typography><strong>Model:</strong> {product.modelName}</Typography></Grid>
+          <Grid item xs={12} sm={6}><Typography><strong>Price:</strong> ₹{product.price}</Typography></Grid>
+          <Grid item xs={12} sm={6}><Typography><strong>COOHOM ID:</strong> {product.coohomId}</Typography></Grid>
+          <Grid item xs={12}><Typography><strong>Description:</strong> {product.description}</Typography></Grid>
+          <Grid item xs={12} sm={6}><Typography><strong>Category:</strong> {product.category?.name}</Typography></Grid>
+          <Grid item xs={12} sm={6}><Typography><strong>SubCategory:</strong> {product.subCategory?.name}</Typography></Grid>
+          <Grid item xs={12} sm={6}><Typography><strong>Work Group:</strong> {product.workGroup?.name}</Typography></Grid>
+          <Grid item xs={12} sm={6}><Typography><strong>Work Task:</strong> {product.workTask?.name}</Typography></Grid>
+          <Grid item xs={12} sm={6}><Typography><strong>Created At:</strong> {new Date(product.createdAt).toLocaleString()}</Typography></Grid>
+          <Grid item xs={12} sm={6}><Typography><strong>Updated At:</strong> {new Date(product.updatedAt).toLocaleString()}</Typography></Grid>
         </Grid>
 
         <Box mt={4}>
-          <Typography variant="h6" gutterBottom>Thumbnail</Typography>
-          {project.thumbnail ? (
-            <Box
-              component="img"
-              src={project.thumbnail}
-              alt="Thumbnail"
-              sx={{ maxWidth: 100 }}
-            />
+          <Typography variant="h6" gutterBottom>Attributes</Typography>
+          {product.attributeValues.length > 0 ? (
+            <Grid container spacing={2}>
+              {product.attributeValues.map((attr:any, index:any) => (
+                <Grid item xs={12} sm={6} key={index}>
+                  <Typography><strong>{attr.attribute.name}:</strong> {attr.value}</Typography>
+                </Grid>
+              ))}
+            </Grid>
           ) : (
-            <Typography>No thumbnail available</Typography>
+            <Typography>No attributes available</Typography>
           )}
         </Box>
       </Paper>
@@ -183,7 +173,7 @@ const ProjectDetailsPage: React.FC = () => {
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this project? This action cannot be undone.
+            Are you sure you want to delete this product? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -195,4 +185,4 @@ const ProjectDetailsPage: React.FC = () => {
   );
 };
 
-export default ProjectDetailsPage;
+export default ProductDetailsPage;

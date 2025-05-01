@@ -17,7 +17,6 @@ import {
   Button,
 } from "@mui/material";
 import {
-  DataGrid,
   GridColDef,
   GridPaginationModel,
   GridCellParams,

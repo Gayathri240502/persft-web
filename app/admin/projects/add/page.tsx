@@ -6,12 +6,11 @@ import {
   Typography,
   Button,
   TextField,
-  FormControl,
-  FormHelperText,
-  Grid,
   FormGroup,
   FormControlLabel,
   Checkbox,
+  Grid,
+  FormHelperText,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import ReusableButton from "@/app/components/Button";
@@ -118,15 +117,15 @@ const CreateProject = () => {
   };
 
   const handleCheckboxChange = (
-    listKey: "residenceTypes" | "roomTypes" | "themes" | "designs",
+    listKey: keyof FormData,
     value: string,
     checked: boolean
   ) => {
     setFormData((prev) => ({
       ...prev,
       [listKey]: checked
-        ? [...prev[listKey], value]
-        : prev[listKey].filter((id) => id !== value),
+        ? [...(prev[listKey] as string[]), value]
+        : (prev[listKey] as string[]).filter((id) => id !== value),
     }));
   };
 
@@ -231,11 +230,7 @@ const CreateProject = () => {
       />
 
       <Box sx={{ mb: 3 }}>
-        <Button
-          variant="outlined"
-          component="label"
-          startIcon={<UploadFileIcon />}
-        >
+        <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
           Upload Thumbnail
           <input type="file" hidden accept=".jpg,.jpeg,.png" onChange={handleFileChange} />
         </Button>
@@ -270,10 +265,13 @@ const CreateProject = () => {
                   key={item._id}
                   control={
                     <Checkbox
-                      checked={formData[key as keyof FormData].includes(item._id)}
+                      checked={
+                        Array.isArray(formData[key as keyof FormData]) &&
+                        (formData[key as keyof FormData] as string[]).includes(item._id)
+                      }
                       onChange={(e) =>
                         handleCheckboxChange(
-                          key as "residenceTypes" | "roomTypes" | "themes" | "designs",
+                          key as keyof FormData,
                           item._id,
                           e.target.checked
                         )
@@ -284,9 +282,7 @@ const CreateProject = () => {
                 />
               ))}
             </FormGroup>
-            {errors[key] && (
-              <FormHelperText error>{errors[key]}</FormHelperText>
-            )}
+            {errors[key] && <FormHelperText error>{errors[key]}</FormHelperText>}
           </Grid>
         ))}
       </Grid>
@@ -297,13 +293,11 @@ const CreateProject = () => {
         </Typography>
       )}
 
-<Box sx={{ display: "flex", gap: 2, mt: 4 }}>
+      <Box sx={{ display: "flex", gap: 2, mt: 4 }}>
         <ReusableButton onClick={handleSubmit} disabled={!token}>
           Submit
         </ReusableButton>
-        <CancelButton  href="/admin/projects">
-          Cancel
-        </CancelButton>
+        <CancelButton href="/admin/projects">Cancel</CancelButton>
       </Box>
     </Box>
   );

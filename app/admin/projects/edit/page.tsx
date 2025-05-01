@@ -121,7 +121,7 @@ const CreateProject = () => {
   };
 
   const handleCheckboxChange = (
-    listKey: "residenceTypes" | "roomTypes" | "themes" | "designs",
+    listKey: keyof Pick<FormData, "residenceTypes" | "roomTypes" | "themes" | "designs">,
     value: string,
     checked: boolean
   ) => {
@@ -264,37 +264,37 @@ const CreateProject = () => {
       </Box>
 
       <Grid container spacing={3}>
-        {[ 
+        {[
           { title: "Residence Mapping", data: residenceList, key: "residenceTypes" },
           { title: "Room Mapping", data: roomList, key: "roomTypes" },
           { title: "Theme Mapping", data: themeList, key: "themes" },
           { title: "Design Mapping", data: designList, key: "designs" },
         ].map(({ title, data, key }) => (
           <Grid item xs={12} md={6} lg={3} key={key}>
-            <Typography variant="subtitle1" sx={{ mb: 1 }}>{title}</Typography>
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+              {title}
+            </Typography>
             <FormGroup>
               {data.map((item) => (
                 <FormControlLabel
                   key={item._id}
                   control={
                     <Checkbox
-                      checked={formData[key as keyof FormData].includes(item._id)}
-                      onChange={(e) =>
-                        handleCheckboxChange(
-                          key as "residenceTypes" | "roomTypes" | "themes" | "designs",
-                          item._id,
-                          e.target.checked
-                        )
-                      }
-                    />
+  checked={(formData[key as keyof FormData] as string[]).includes(item._id)}
+  onChange={(e) =>
+    handleCheckboxChange(
+      key as "residenceTypes" | "roomTypes" | "themes" | "designs",
+      item._id,
+      e.target.checked
+    )
+  }
+/>
                   }
                   label={item.name}
                 />
               ))}
             </FormGroup>
-            {errors[key] && (
-              <FormHelperText error>{errors[key]}</FormHelperText>
-            )}
+            {errors[key] && <FormHelperText error>{errors[key]}</FormHelperText>}
           </Grid>
         ))}
       </Grid>
@@ -309,9 +309,7 @@ const CreateProject = () => {
         <ReusableButton onClick={handleSubmit} disabled={!token}>
           Submit
         </ReusableButton>
-        <CancelButton href="/admin/projects">
-          Cancel
-        </CancelButton>
+        <CancelButton href="/admin/projects">Cancel</CancelButton>
       </Box>
     </Box>
   );

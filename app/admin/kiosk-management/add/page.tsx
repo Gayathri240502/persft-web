@@ -19,6 +19,7 @@ import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { useRouter } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { SelectChangeEvent } from "@mui/material";
 
 interface ProjectMapping {
   _id: string;
@@ -29,10 +30,12 @@ interface Country {
   _id: string;
   name: string;
 }
+
 interface State {
   _id: string;
   name: string;
 }
+
 interface City {
   _id: string;
   name: string;
@@ -96,7 +99,7 @@ const AddKiosk = () => {
     fetchProjects();
   }, [token]);
 
-  const fetchData = async (url: string, setState: any) => {
+  const fetchData = async (url: string, setState: React.Dispatch<React.SetStateAction<any[]>>) => {
     try {
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -108,9 +111,9 @@ const AddKiosk = () => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: any }>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<string>) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name as string]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleCheckboxChange = (projectId: string) => {

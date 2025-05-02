@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import {
   Box,
@@ -18,7 +18,7 @@ import {
 } from "@mui/material";
 import { Edit, Delete, ArrowBack } from "@mui/icons-material";
 
-interface Merchants {
+interface Merchant {
   _id: string;
   firstName: string;
   lastName: string;
@@ -37,19 +37,22 @@ interface Merchants {
 }
 
 const MerchantDetailsPage: React.FC = () => {
-  const [merchants, setMerchants] = useState<Merchants | null>(null);
+  const [merchant, setMerchant] = useState<Merchant | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const { id } = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id"); // Use query param ?id=
+
   const { token } = getTokenAndRole();
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !token) return;
 
-    const fetchMerchants = async () => {
+    const fetchMerchant = async () => {
+      setLoading(true);
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/merchants/${id}`, {
           headers: {
@@ -57,32 +60,36 @@ const MerchantDetailsPage: React.FC = () => {
             "Content-Type": "application/json",
           },
         });
-        if (!res.ok) throw new Error("Failed to fetch merchant data");
-        const data: Merchants = await res.json();
-        setMerchants(data);
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch merchant: ${res.statusText}`);
+        }
+
+        const data: Merchant = await res.json();
+        setMerchant(data);
       } catch (err: any) {
+        console.error("Fetch error:", err);
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchMerchants();
+    fetchMerchant();
   }, [id, token]);
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/merchants/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (!response.ok) throw new Error("Failed to delete merchant");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/merchants/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) throw new Error("Failed to delete merchant");
+
       setDeleteDialogOpen(false);
       router.push("/admin/vendors/merchants");
     } catch (err: any) {
@@ -101,12 +108,12 @@ const MerchantDetailsPage: React.FC = () => {
   if (error) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
-        <Alert severity="error">Error: {error}</Alert>
+        <Alert severity="error">{error}</Alert>
       </Box>
     );
   }
 
-  if (!merchants) {
+  if (!merchant) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
         <Alert severity="warning">No merchant found</Alert>
@@ -116,19 +123,26 @@ const MerchantDetailsPage: React.FC = () => {
 
   return (
     <Box p={4}>
-      <Button startIcon={<ArrowBack />} onClick={() => router.push("/admin/vendors/merchants")} sx={{ mb: 3 }}>
+      <Button
+        startIcon={<ArrowBack />}
+        onClick={() => router.push("/admin/vendors/merchants")}
+        sx={{ mb: 3 }}
+      >
         Back to Merchants
       </Button>
 
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Box>
-          <Typography variant="h4">{merchants.username}</Typography>
+          <Typography variant="h4">{merchant.username}</Typography>
           <Typography variant="subtitle1" color="textSecondary">
-            {merchants.archive ? "Inactive" : "Active"}
+            {merchant.archive ? "Inactive" : "Active"}
           </Typography>
         </Box>
         <Box>
-          <IconButton color="primary" onClick={() => router.push(`/admin/vendors/merchants/edit?id=${id}`)}>
+          <IconButton
+            color="primary"
+            onClick={() => router.push(`/admin/vendors/merchants/edit?id=${id}`)}
+          >
             <Edit />
           </IconButton>
           <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
@@ -139,31 +153,22 @@ const MerchantDetailsPage: React.FC = () => {
 
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
-          <Typography><strong>ID:</strong> {merchants._id}</Typography>
+          <Typography><strong>ID:</strong> {merchant._id}</Typography>
+          <Typography><strong>Email:</strong> {merchant.email}</Typography>
+          <Typography><strong>Phone:</strong> {merchant.phone}</Typography>
         </Grid>
         <Grid item xs={12} sm={6}>
-          <Typography><strong>First Name:</strong> {merchants.firstName}</Typography>
-          <Typography><strong>Last Name:</strong> {merchants.lastName}</Typography>
+          <Typography><strong>Name:</strong> {merchant.firstName} {merchant.lastName}</Typography>
+          <Typography><strong>Business:</strong> {merchant.businessName}</Typography>
         </Grid>
         <Grid item xs={12} sm={6}>
-          <Typography><strong>Email:</strong> {merchants.email}</Typography>
-          <Typography><strong>Phone:</strong> {merchants.phone}</Typography>
+          <Typography><strong>Address:</strong> {merchant.address}</Typography>
+          <Typography><strong>Category:</strong> {merchant.categoryName}</Typography>
+          <Typography><strong>SubCategory:</strong> {merchant.subCategoryName}</Typography>
         </Grid>
         <Grid item xs={12} sm={6}>
-          <Typography><strong>Business Name:</strong> {merchants.businessName}</Typography>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <Typography><strong>Address:</strong> {merchants.address}</Typography>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <Typography><strong>Category:</strong> {merchants.categoryName}</Typography>
-          <Typography><strong>Subcategory:</strong> {merchants.subCategoryName}</Typography>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <Typography><strong>Created At:</strong> {new Date(merchants.createdAt).toLocaleString()}</Typography>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <Typography><strong>Updated At:</strong> {new Date(merchants.updatedAt).toLocaleString()}</Typography>
+          <Typography><strong>Created At:</strong> {new Date(merchant.createdAt).toLocaleString()}</Typography>
+          <Typography><strong>Updated At:</strong> {new Date(merchant.updatedAt).toLocaleString()}</Typography>
         </Grid>
       </Grid>
 

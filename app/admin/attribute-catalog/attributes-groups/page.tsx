@@ -15,7 +15,7 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
-import { GridColDef, GridPaginationModel} from "@mui/x-data-grid";
+import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
@@ -151,34 +151,39 @@ const AttributeGroups = () => {
       headerName: "Attributes",
       flex: 1,
       valueGetter: (params: { row: AttributeGroup }) => {
-        const { attributes } = params.row || {};  // Add fallback to empty object
+        const { attributes } = params.row || {}; // Add fallback to empty object
         return Array.isArray(attributes) && attributes.length > 0
           ? attributes.map((a) => a._id).join(", ")
           : "N/A";
       },
     },
-    
+
     {
       field: "action",
       headerName: "Action",
       flex: 1,
       renderCell: (params) => (
         <Box>
-
-          <IconButton color="primary" size="small"
-           onClick={() =>
-            router.push(
-              `/admin/attribute-catalog/attributes-groups/${params.row.id}`
-            )
-          }>
-            <Visibility/>
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() =>
+              router.push(
+                `/admin/attribute-catalog/attributes-groups/${params.row.id}`
+              )
+            }
+          >
+            <Visibility />
           </IconButton>
-          <IconButton color="primary" size="small"
-           onClick={() =>
-            router.push(
-              `/admin/attribute-catalog/attributes-groups/edit?id=${params.row.id}`
-            )
-          }>
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() =>
+              router.push(
+                `/admin/attribute-catalog/attributes-groups/edit?id=${params.row.id}`
+              )
+            }
+          >
             <Edit fontSize="small" />
           </IconButton>
           <IconButton
@@ -257,7 +262,7 @@ const AttributeGroups = () => {
           paginationMode="server"
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25]}
+          pageSizeOptions={[5, 10, 25, 100]}
           autoHeight
           disableColumnMenu={isSmallScreen}
           loading={loading}

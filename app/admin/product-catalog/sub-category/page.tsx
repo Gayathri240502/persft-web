@@ -17,7 +17,7 @@ import {
   DialogContentText,
   DialogActions,
 } from "@mui/material";
-import {  GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
@@ -64,10 +64,10 @@ const SubCategory = () => {
 
   const { token } = getTokenAndRole();
 
-   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
-      null
-    );
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null
+  );
 
   const fetchSubCategories = async () => {
     setLoading(true);
@@ -201,34 +201,43 @@ const SubCategory = () => {
         return groups.map((g) => g?.name || "Unnamed").join(", ");
       },
     },
-    
+
     {
       field: "action",
       headerName: "Action",
       flex: 0.5,
       renderCell: (params) => (
         <Box>
-          <IconButton color="primary" size="small"
-          onClick={() =>
-            router.push(
-              `/admin/product-catalog/sub-category/${params.row.id}`
-            )
-          }>
-            <Visibility/>
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() =>
+              router.push(
+                `/admin/product-catalog/sub-category/${params.row.id}`
+              )
+            }
+          >
+            <Visibility />
           </IconButton>
-          <IconButton color="primary" size="small"
-          onClick={() =>
-            router.push(
-              `/admin/product-catalog/sub-category/edit?id=${params.row.id}`
-            )
-          }>
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() =>
+              router.push(
+                `/admin/product-catalog/sub-category/edit?id=${params.row.id}`
+              )
+            }
+          >
             <Edit fontSize="small" />
           </IconButton>
-          <IconButton color="error" size="small"
-          onClick={() => {
-            setSelectedCategoryId(params.row.id); // Set category to delete
-            setDeleteDialogOpen(true); // Open delete dialog
-          }}>
+          <IconButton
+            color="error"
+            size="small"
+            onClick={() => {
+              setSelectedCategoryId(params.row.id); // Set category to delete
+              setDeleteDialogOpen(true); // Open delete dialog
+            }}
+          >
             <Delete fontSize="small" />
           </IconButton>
         </Box>
@@ -269,35 +278,6 @@ const SubCategory = () => {
         </ReusableButton>
       </Box>
 
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: isSmallScreen ? "column" : "row",
-          gap: 1,
-          mb: 2,
-          alignItems: "center",
-        }}
-      >
-        <Button variant="outlined" size="small">
-          Show Rows
-        </Button>
-        <Button variant="outlined" size="small">
-          Copy
-        </Button>
-        <Button variant="outlined" size="small">
-          CSV
-        </Button>
-        <Button variant="outlined" size="small">
-          Excel
-        </Button>
-        <Button variant="outlined" size="small">
-          PDF
-        </Button>
-        <Button variant="outlined" size="small">
-          Print
-        </Button>
-      </Box>
-
       {/* Show Loading Spinner */}
       {loading && (
         <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
@@ -312,13 +292,13 @@ const SubCategory = () => {
         </Alert>
       )}
 
-      <Box sx={{ width: "100%", overflowX: "auto" }}>
+      <Box sx={{ width: "100%" }}>
         <StyledDataGrid
           columns={columns}
           rows={rows}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25]}
+          pageSizeOptions={[5, 10, 25, 100]}
           rowCount={rowCount}
           paginationMode="server"
           autoHeight
@@ -326,20 +306,20 @@ const SubCategory = () => {
         />
       </Box>
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-              <DialogTitle>Delete</DialogTitle>
-              <DialogContent>
-                <DialogContentText>
-                  Are you sure you want to delete this category? This action cannot be
-                  undone.
-                </DialogContentText>
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={handleDeleteCancel}>Cancel</Button>
-                <Button onClick={handleDeleteConfirm} color="error" autoFocus>
-                  Delete
-                </Button>
-              </DialogActions>
-            </Dialog>
+        <DialogTitle>Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this category? This action cannot be
+            undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

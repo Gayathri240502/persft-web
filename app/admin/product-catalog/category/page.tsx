@@ -170,7 +170,7 @@ const Category = () => {
         />
       ),
     },
-    
+
     {
       field: "action",
       headerName: "Action",
@@ -261,7 +261,7 @@ const Category = () => {
       )}
 
       {/* DataGrid */}
-      <Box sx={{ height: 400, width: "100%", overflowX: "auto" }}>
+      <Box sx={{ width: "100%" }}>
         <StyledDataGrid
           rows={filteredCategory}
           columns={columns}
@@ -271,7 +271,7 @@ const Category = () => {
           paginationMode="server"
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25]}
+          pageSizeOptions={[5, 10, 25, 100]}
           autoHeight
           disableColumnMenu={isSmallScreen}
         />

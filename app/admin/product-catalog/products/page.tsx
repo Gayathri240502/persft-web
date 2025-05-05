@@ -13,7 +13,11 @@ import { useRouter } from "next/navigation";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 import ReusableButton from "@/app/components/Button";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
-import { GridColDef, GridCellParams, GridPaginationModel } from "@mui/x-data-grid";
+import {
+  GridColDef,
+  GridCellParams,
+  GridPaginationModel,
+} from "@mui/x-data-grid";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 // Interfaces
@@ -40,12 +44,30 @@ export interface Product {
   sn?: number;
   id?: string;
 }
-interface Category { _id: string; name: string; }
-interface SubCategory { _id: string; name: string; }
-interface WorkGroup { _id: string; name: string; }
-interface WorkTask { _id: string; name: string; }
-interface AttributeValue { attribute: Attribute; value: string; }
-interface Attribute { _id: string; name: string; }
+interface Category {
+  _id: string;
+  name: string;
+}
+interface SubCategory {
+  _id: string;
+  name: string;
+}
+interface WorkGroup {
+  _id: string;
+  name: string;
+}
+interface WorkTask {
+  _id: string;
+  name: string;
+}
+interface AttributeValue {
+  attribute: Attribute;
+  value: string;
+}
+interface Attribute {
+  _id: string;
+  name: string;
+}
 
 const Products = () => {
   const router = useRouter();
@@ -64,7 +86,7 @@ const Products = () => {
   const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
- const { token } = getTokenAndRole();
+  const { token } = getTokenAndRole();
 
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", width: 70 },
@@ -119,7 +141,9 @@ const Products = () => {
             color="primary"
             size="small"
             onClick={() =>
-              router.push(`/admin/product-catalog/products/edit?id=${params.row._id}`)
+              router.push(
+                `/admin/product-catalog/products/edit?id=${params.row._id}`
+              )
             }
           >
             <Edit fontSize="small" />
@@ -247,7 +271,7 @@ const Products = () => {
           rowCount={rowCount}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25]}
+          pageSizeOptions={[5, 10, 25, 100]}
           paginationMode="server"
         />
       </Box>

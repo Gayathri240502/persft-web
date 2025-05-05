@@ -113,29 +113,27 @@ const WorkGroups = () => {
     { field: "sn", headerName: "SN", flex: 0.5 },
     { field: "name", headerName: "Name", flex: 1 },
     { field: "description", headerName: "Description", flex: 2 },
-    
+
     {
       field: "action",
       headerName: "Actions",
       flex: 1,
       renderCell: (params) => (
         <Box>
-
-          <IconButton color="primary" size="small"
-          onClick={() =>
-            router.push(
-              `/admin/work/work-group/${params.row.id}`
-            )
-          }>
-            <Visibility/>
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() =>
+              router.push(`/admin/work/work-group/${params.row.id}`)
+            }
+          >
+            <Visibility />
           </IconButton>
           <IconButton
             color="primary"
             size="small"
             onClick={() =>
-              router.push(
-                `/admin/work/work-group/edit?id=${params.row.id}`
-              )
+              router.push(`/admin/work/work-group/edit?id=${params.row.id}`)
             }
           >
             <Edit fontSize="small" />
@@ -239,7 +237,7 @@ const WorkGroups = () => {
           {error}
         </Typography>
       ) : (
-        <Box sx={{ height: 500, width: "100%" }}>
+        <Box sx={{ width: "100%" }}>
           <StyledDataGrid
             rows={workGroups}
             columns={columns}
@@ -248,7 +246,7 @@ const WorkGroups = () => {
             paginationMode="server"
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
-            pageSizeOptions={[5, 10, 25]}
+            pageSizeOptions={[5, 10, 25, 100]}
             autoHeight
             disableColumnMenu={isSmallScreen}
           />

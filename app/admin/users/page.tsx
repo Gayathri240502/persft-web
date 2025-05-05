@@ -232,7 +232,7 @@ const UserManagement = () => {
         </Alert>
       )}
 
-      <Box sx={{ height: 500, width: "100%", position: "relative" }}>
+      <Box sx={{ width: "100%" }}>
         {loading && (
           <Box
             sx={{
@@ -253,7 +253,7 @@ const UserManagement = () => {
           paginationMode="server"
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25]}
+          pageSizeOptions={[5, 10, 25, 100]}
           autoHeight
           disableColumnMenu={isSmallScreen}
           loading={loading}

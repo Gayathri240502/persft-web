@@ -26,6 +26,7 @@ const DesignTypeDetails = () => {
   const router = useRouter();
 
   const [designDetails, setDesignDetails] = useState<{
+    _id: string;
     name: string;
     description: string;
     coohomUrl: string;

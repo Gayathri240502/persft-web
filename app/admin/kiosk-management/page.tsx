@@ -77,12 +77,15 @@ const KioskManagement = () => {
           searchTerm: debouncedSearch,
         });
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kiosks?${queryParams}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/kiosks?${queryParams}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         if (!res.ok) {
           throw new Error(`API Error: ${res.status}`);
@@ -90,11 +93,12 @@ const KioskManagement = () => {
 
         const result = await res.json();
 
-        const mappedData = result.kiosks?.map((item: Kiosk, index: number) => ({
-          ...item,
-          id: item._id,
-          sn: page * pageSize + index + 1,
-        })) || [];
+        const mappedData =
+          result.kiosks?.map((item: Kiosk, index: number) => ({
+            ...item,
+            id: item._id,
+            sn: page * pageSize + index + 1,
+          })) || [];
 
         setKiosks(mappedData);
         setRowCount(result.total || 0);
@@ -148,7 +152,9 @@ const KioskManagement = () => {
       headerName: "Related Projects",
       flex: 1.5,
       renderCell: (params) =>
-        params.value?.length > 0 ? params.value.join(", ") : "No Related Projects",
+        params.value?.length > 0
+          ? params.value.join(", ")
+          : "No Related Projects",
     },
     {
       field: "action",
@@ -156,10 +162,22 @@ const KioskManagement = () => {
       flex: 1,
       renderCell: (params) => (
         <Box>
-          <IconButton color="primary" onClick={() => router.push(`/admin/kiosk-management/${params.row.keycloakId}`)}>
+          <IconButton
+            color="primary"
+            onClick={() =>
+              router.push(`/admin/kiosk-management/${params.row.keycloakId}`)
+            }
+          >
             <Visibility />
           </IconButton>
-          <IconButton color="primary" onClick={() => router.push(`/admin/kiosk-management/edit?id=${params.row.keycloakId}`)}>
+          <IconButton
+            color="primary"
+            onClick={() =>
+              router.push(
+                `/admin/kiosk-management/edit?id=${params.row.keycloakId}`
+              )
+            }
+          >
             <Edit />
           </IconButton>
           <IconButton
@@ -178,7 +196,9 @@ const KioskManagement = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h5" mb={2}>Kiosk Management</Typography>
+      <Typography variant="h5" mb={2}>
+        Kiosk Management
+      </Typography>
 
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
         <TextField
@@ -188,12 +208,18 @@ const KioskManagement = () => {
           onChange={(e) => setSearch(e.target.value)}
           sx={{ width: 300 }}
         />
-        <ReusableButton onClick={() => router.push("/admin/kiosk-management/add")}>
+        <ReusableButton
+          onClick={() => router.push("/admin/kiosk-management/add")}
+        >
           ADD
         </ReusableButton>
       </Box>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
@@ -209,19 +235,24 @@ const KioskManagement = () => {
           loading={loading}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25]}
+          pageSizeOptions={[5, 10, 25, 100]}
           autoHeight
         />
       )}
 
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
         <DialogTitle>Confirm Deletion</DialogTitle>
         <DialogContent>
           <Typography>Are you sure you want to delete this kiosk?</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDeleteKiosk} color="error">Delete</Button>
+          <Button onClick={handleDeleteKiosk} color="error">
+            Delete
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

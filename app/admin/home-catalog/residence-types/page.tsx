@@ -252,8 +252,8 @@ const ResidenceTypePage = () => {
           <CircularProgress />
         </Box>
       ) : (
-        <Box sx={{ width: "100%", overflowX: "auto" }}>
-          <Box sx={{ minWidth: "1200px" }}>
+        <Box sx={{ width: "100%" }}>
+          <Box>
             <StyledDataGrid
               rows={residenceTypes}
               columns={columns}
@@ -265,7 +265,7 @@ const ResidenceTypePage = () => {
               onPaginationModelChange={(model: GridPaginationModel) =>
                 setPaginationModel(model)
               }
-              pageSizeOptions={[5, 10, 25]}
+              pageSizeOptions={[5, 10, 25, 100]}
               disableColumnMenu={isSmallScreen}
               autoHeight={false}
             />

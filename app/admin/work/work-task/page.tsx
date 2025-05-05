@@ -126,7 +126,7 @@ const WorkTasksPage = () => {
     { field: "targetDays", headerName: "Target Days", flex: 0.8 },
     { field: "bufferDays", headerName: "Buffer Days", flex: 0.8 },
     { field: "poDays", headerName: "PO Days", flex: 0.8 },
-   
+
     {
       field: "actions",
       headerName: "Actions",
@@ -142,12 +142,13 @@ const WorkTasksPage = () => {
           >
             <Visibility fontSize="small" />
           </IconButton>
-          <IconButton color="primary" size="small"
-          onClick={() =>
-            router.push(
-              `/admin/work/work-task/edit?id=${params.row.id}`
-            )
-          }>
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() =>
+              router.push(`/admin/work/work-task/edit?id=${params.row.id}`)
+            }
+          >
             <Edit fontSize="small" />
           </IconButton>
           <IconButton color="error" size="small">
@@ -195,7 +196,7 @@ const WorkTasksPage = () => {
         </Typography>
       )}
 
-      <Box sx={{ height: 500, width: "100%", overflowX: "auto" }}>
+      <Box sx={{ width: "100%" }}>
         <StyledDataGrid
           columns={columns}
           rows={tasks}
@@ -204,7 +205,7 @@ const WorkTasksPage = () => {
           paginationMode="server"
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25]}
+          pageSizeOptions={[5, 10, 25, 100]}
           loading={loading}
           autoHeight
           disableColumnMenu={isSmallScreen}

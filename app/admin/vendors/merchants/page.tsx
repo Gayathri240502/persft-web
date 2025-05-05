@@ -267,7 +267,7 @@ const Merchant = () => {
           paginationMode="server"
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25]}
+          pageSizeOptions={[5, 10, 25, 100]}
           autoHeight
           disableColumnMenu={isSmallScreen}
           loading={loading}

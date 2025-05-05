@@ -151,22 +151,23 @@ const Attributes = () => {
     { field: "name", headerName: "Name", flex: 1 },
     { field: "description", headerName: "Description", flex: 1 },
     { field: "type", headerName: "Type", flex: 0.7 },
-    
+
     {
       field: "action",
       headerName: "Action",
       flex: 0.8,
       renderCell: (params) => (
         <Box display="flex" gap={1}>
-
-          <IconButton color="primary" size="small"
-          onClick={() =>
-            router.push(
-              `/admin/attribute-catalog/attributes/${params.row.id}`
-            )
-          }>
-
-            <Visibility/>
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() =>
+              router.push(
+                `/admin/attribute-catalog/attributes/${params.row.id}`
+              )
+            }
+          >
+            <Visibility />
           </IconButton>
           <IconButton
             color="primary"
@@ -231,7 +232,7 @@ const Attributes = () => {
         </Alert>
       )}
 
-      <Box sx={{ height: 500, width: "100%", position: "relative" }}>
+      <Box sx={{ width: "100%", position: "relative" }}>
         {loading && (
           <Box
             sx={{
@@ -252,7 +253,7 @@ const Attributes = () => {
           paginationMode="server"
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25]}
+          pageSizeOptions={[5, 10, 25, 100]}
           autoHeight
           disableColumnMenu={isSmallScreen}
           loading={loading}

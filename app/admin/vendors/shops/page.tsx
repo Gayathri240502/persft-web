@@ -224,23 +224,7 @@ const Shop = () => {
         Shop
       </Typography>
 
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: isSmallScreen ? "column" : "row",
-          gap: 1,
-          mb: 2,
-          alignItems: "center",
-        }}
-      >
-        {["Show Rows", "Copy", "CSV", "Excel", "PDF", "Print"].map((label) => (
-          <Button key={label} variant="outlined" size="small">
-            {label}
-          </Button>
-        ))}
-      </Box>
-
-      <Box sx={{ minHeight: 400, width: "99%", overflowX: "auto" }}>
+      <Box sx={{ width: "100%" }}>
         {loading ? (
           <Box
             sx={{
@@ -264,7 +248,7 @@ const Shop = () => {
             onPaginationModelChange={setPaginationModel}
             rowCount={rowCount}
             paginationMode="server"
-            pageSizeOptions={[5, 10, 25]}
+            pageSizeOptions={[5, 10, 25, 100]}
             autoHeight
             disableColumnMenu={isSmallScreen}
           />

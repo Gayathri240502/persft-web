@@ -261,7 +261,7 @@ const DesignType = () => {
         </Box>
       ) : (
         // Data Grid
-        <Box sx={{ height: 400, width: "99%", overflowX: "auto" }}>
+        <Box sx={{ width: "100%" }}>
           <StyledDataGrid
             columns={columns}
             rows={designs}
@@ -270,7 +270,7 @@ const DesignType = () => {
             paginationMode="server"
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
-            pageSizeOptions={[5, 10, 25]}
+            pageSizeOptions={[5, 10, 25, 100]}
             autoHeight
             disableColumnMenu={isSmallScreen}
           />

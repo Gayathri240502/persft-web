@@ -15,7 +15,7 @@ import {
   DialogTitle,
   Button,
 } from "@mui/material";
-import {  GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
@@ -81,11 +81,13 @@ const Projects = () => {
       const result = await response.json();
 
       if (Array.isArray(result.projects)) {
-        const formatted = result.projects.map((item: Project, index: number) => ({
-          ...item,
-          id: item._id,
-          sn: page * pageSize + index + 1,
-        }));
+        const formatted = result.projects.map(
+          (item: Project, index: number) => ({
+            ...item,
+            id: item._id,
+            sn: page * pageSize + index + 1,
+          })
+        );
 
         setProjects(formatted);
         setRowCount(result.totalDocs || formatted.length);
@@ -222,9 +224,7 @@ const Projects = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <ReusableButton
-          onClick={() => router.push("/admin/projects/add")}
-        >
+        <ReusableButton onClick={() => router.push("/admin/projects/add")}>
           ADD
         </ReusableButton>
       </Box>
@@ -239,7 +239,7 @@ const Projects = () => {
           {error}
         </Typography>
       ) : (
-        <Box sx={{ height: 500, width: "100%" }}>
+        <Box sx={{ width: "100%" }}>
           <StyledDataGrid
             rows={projects}
             columns={columns}
@@ -248,7 +248,7 @@ const Projects = () => {
             paginationMode="server"
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
-            pageSizeOptions={[5, 10, 25]}
+            pageSizeOptions={[5, 10, 25, 100]}
             autoHeight
             disableColumnMenu={isSmallScreen}
           />

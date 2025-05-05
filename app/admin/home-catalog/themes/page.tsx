@@ -183,7 +183,7 @@ const ThemesPage = () => {
           ? params.row.roomTypes.map((r) => r.name || "Unknown").join(", ")
           : "N/A",
     },
-   
+
     {
       field: "action",
       headerName: "Action",
@@ -272,8 +272,10 @@ const ThemesPage = () => {
           pagination
           paginationMode="server"
           paginationModel={paginationModel}
-          onPaginationModelChange={(model: GridPaginationModel) => setPaginationModel(model)}
-          pageSizeOptions={[5, 10, 25]}
+          onPaginationModelChange={(model: GridPaginationModel) =>
+            setPaginationModel(model)
+          }
+          pageSizeOptions={[5, 10, 25, 100]}
           autoHeight
           disableColumnMenu={isSmallScreen}
         />

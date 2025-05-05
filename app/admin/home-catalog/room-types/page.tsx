@@ -163,33 +163,59 @@ const RoomTypes = () => {
   };
 
   const columns: GridColDef[] = [
-    { field: "sn", headerName: "SN", flex: 1 },
+    { field: "sn", headerName: "SN", width: 70 },
     { field: "name", headerName: "Room Name", flex: 1 },
     { field: "description", headerName: "Description", flex: 1 },
     {
       field: "thumbnail",
       headerName: "Thumbnail",
       flex: 1,
-      renderCell: (params) => (
-        <img
-          src={params.row.thumbnail}
-          alt="Thumbnail"
-          style={{ width: 40, height: 40 }}
-        />
-      ),
+      renderCell: (params) =>
+        params.row.thumbnail ? (
+          <img
+            src={params.row.thumbnail}
+            alt="Thumbnail"
+            style={{
+              width: 40,
+              height: 40,
+            }}
+          />
+        ) : (
+          <Typography variant="body2" color="textSecondary">
+            No Image
+          </Typography>
+        ),
     },
     {
       field: "residenceTypes",
       headerName: "Residence Types",
-      flex: 1,
-      valueGetter: (params: GridCellParams) => {
-        const resTypes: ResidenceTypeReference[] = params.row?.residenceTypes;
-        return Array.isArray(resTypes) && resTypes.length > 0
-          ? resTypes.map((r) => r.name || "Unknown").join(", ")
-          : "N/A";
+      flex: 2,
+      renderCell: (params: GridCellParams) => {
+        const resTypes: ResidenceTypeReference[] =
+          params.row?.residenceTypes || [];
+
+        if (!resTypes.length) return "N/A";
+
+        return (
+          <Box sx={{ display: "flex", flexWrap: "wrap" }}>
+            {resTypes.map((res) => (
+              <Button
+                key={res._id}
+                variant="text"
+                color="primary"
+                size="small"
+                onClick={() =>
+                  router.push(`/admin/home-catalog/residence-types/${res._id}`)
+                }
+              >
+                {res.name || "Unknown"}
+              </Button>
+            ))}
+          </Box>
+        );
       },
     },
-    
+
     {
       field: "action",
       headerName: "Action",
@@ -273,8 +299,8 @@ const RoomTypes = () => {
           <CircularProgress />
         </Box>
       ) : (
-        <Box sx={{ width: "100%", overflowX: "auto" }}>
-          <Box sx={{ minWidth: "1200px" }}>
+        <Box sx={{ width: "100%" }}>
+          <Box>
             <StyledDataGrid
               rows={roomTypes}
               columns={columns}
@@ -283,7 +309,7 @@ const RoomTypes = () => {
               paginationMode="server"
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
-              pageSizeOptions={[5, 10, 25]}
+              pageSizeOptions={[5, 10, 25, 100]}
               autoHeight
               disableColumnMenu={isSmallScreen}
             />

@@ -16,6 +16,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Chip,
 } from "@mui/material";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
@@ -164,44 +165,83 @@ const SubCategory = () => {
 
   // Columns
   const columns: GridColDef[] = [
-    { field: "sn", headerName: "SN", flex: 0.5 },
+    { field: "sn", headerName: "SN", width: 70 },
     { field: "name", headerName: "Name", flex: 0.8 },
     { field: "description", headerName: "Description", flex: 1 },
     {
       field: "thumbnail",
       headerName: "Thumbnail",
       flex: 1,
-      renderCell: (params) => (
-        <img
-          src={params.value}
-          alt="Thumbnail"
-          style={{
-            width: 50,
-            height: 50,
-            objectFit: "cover",
-            borderRadius: 4,
-          }}
-        />
-      ),
+      renderCell: (params) =>
+        params.row.thumbnail ? (
+          <img
+            src={params.row.thumbnail}
+            alt="Thumbnail"
+            style={{
+              width: 40,
+              height: 40,
+            }}
+          />
+        ) : (
+          <Typography variant="body2" color="textSecondary">
+            No Image
+          </Typography>
+        ),
     },
     {
       field: "category",
       headerName: "Category",
       flex: 1,
-      valueGetter: (params: { row: SubCategory }) =>
-        params.row?.category?.name ? params.row.category.name : "N/A",
+      renderCell: (params) => {
+        const router = useRouter();
+        const handleClick = () => {
+          router.push(`/admin/product-catalog/category/${params.row._id}`);
+        };
+
+        return (
+          <span
+            onClick={handleClick}
+            style={{
+              color: "#1976d2",
+              cursor: "pointer",
+            }}
+          >
+            {params.row?.category?.name || "N/A"}
+          </span>
+        );
+      },
     },
     {
       field: "attributeGroups",
       headerName: "Attribute Groups",
       flex: 1,
-      valueGetter: (params: { row: SubCategory }) => {
+      renderCell: (params) => {
         const groups = params.row?.attributeGroups;
-        if (!Array.isArray(groups)) return "N/A";
-        return groups.map((g) => g?.name || "Unnamed").join(", ");
+        if (!Array.isArray(groups) || groups.length === 0) return "N/A";
+
+        return (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+            {groups.map((group) => (
+              <span
+                key={group._id}
+                style={{
+                  color: "#1976d2",
+                  cursor: "pointer",
+                }}
+                onClick={() =>
+                  router.push(
+                    `/admin/attribute-catalog/attributes-groups/${group._id}`
+                  )
+                }
+              >
+                {group?.name || "Unnamed"}
+              </span>
+            ))}
+          </div>
+        );
       },
     },
-
+    ,
     {
       field: "action",
       headerName: "Action",

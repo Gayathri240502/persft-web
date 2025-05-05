@@ -99,7 +99,12 @@ const RoomTypeDetailsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <CircularProgress />
       </Box>
     );
@@ -107,7 +112,12 @@ const RoomTypeDetailsPage: React.FC = () => {
 
   if (error) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="error">Error: {error}</Alert>
       </Box>
     );
@@ -115,7 +125,12 @@ const RoomTypeDetailsPage: React.FC = () => {
 
   if (!room) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="warning">No room type found</Alert>
       </Box>
     );
@@ -125,10 +140,10 @@ const RoomTypeDetailsPage: React.FC = () => {
     <Box p={4}>
       <Button
         startIcon={<ArrowBack />}
-        onClick={() => router.push("/admin/home-catalog/room-types")}
+        onClick={() => router.back()}
         sx={{ marginBottom: 2 }}
       >
-        Back to Room Types
+        Back
       </Button>
       <Paper elevation={3} sx={{ padding: 4 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -141,7 +156,12 @@ const RoomTypeDetailsPage: React.FC = () => {
             </Typography>
           </Box>
           <Box>
-            <IconButton color="primary" onClick={() => router.push(`/admin/home-catalog/room-types/edit?id=${id}`)}>
+            <IconButton
+              color="primary"
+              onClick={() =>
+                router.push(`/admin/home-catalog/room-types/edit?id=${id}`)
+              }
+            >
               <Edit />
             </IconButton>
             <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
@@ -162,12 +182,14 @@ const RoomTypeDetailsPage: React.FC = () => {
           </Grid>
           <Grid item xs={12} sm={6}>
             <Typography variant="body1">
-              <strong>Created At:</strong> {new Date(room.createdAt).toLocaleString()}
+              <strong>Created At:</strong>{" "}
+              {new Date(room.createdAt).toLocaleString()}
             </Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
             <Typography variant="body1">
-              <strong>Updated At:</strong> {new Date(room.updatedAt).toLocaleString()}
+              <strong>Updated At:</strong>{" "}
+              {new Date(room.updatedAt).toLocaleString()}
             </Typography>
           </Grid>
           <Grid item xs={12}>
@@ -184,27 +206,31 @@ const RoomTypeDetailsPage: React.FC = () => {
           </Grid>
         </Grid>
         <Box mt={4}>
-                  <Typography variant="h6" gutterBottom>
-                    Thumbnail
-                  </Typography>
-                  {room.thumbnail ? (
-                    <Box
-                      component="img"
-                      src={room.thumbnail}
-                      alt="Thumbnail"
-                      sx={{ maxWidth: 100 }}
-                    />
-                  ) : (
-                    <Typography>No thumbnail available</Typography>
-                  )}
-                </Box>
+          <Typography variant="h6" gutterBottom>
+            Thumbnail
+          </Typography>
+          {room.thumbnail ? (
+            <Box
+              component="img"
+              src={room.thumbnail}
+              alt="Thumbnail"
+              sx={{ maxWidth: 100 }}
+            />
+          ) : (
+            <Typography>No thumbnail available</Typography>
+          )}
+        </Box>
       </Paper>
 
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this room type? This action cannot be undone.
+            Are you sure you want to delete this room type? This action cannot
+            be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

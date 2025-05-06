@@ -66,7 +66,9 @@ const KioskDetailsPage: React.FC = () => {
 
         if (!res.ok) {
           const errorData = await res.json();
-          throw new Error(errorData.message || "Failed to fetch kiosk details.");
+          throw new Error(
+            errorData.message || "Failed to fetch kiosk details."
+          );
         }
 
         const data: Kiosk = await res.json();
@@ -108,7 +110,12 @@ const KioskDetailsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <CircularProgress />
       </Box>
     );
@@ -116,7 +123,12 @@ const KioskDetailsPage: React.FC = () => {
 
   if (error) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="error">{error}</Alert>
       </Box>
     );
@@ -124,7 +136,12 @@ const KioskDetailsPage: React.FC = () => {
 
   if (!kiosk) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="warning">Kiosk not found.</Alert>
       </Box>
     );
@@ -134,10 +151,10 @@ const KioskDetailsPage: React.FC = () => {
     <Box p={4}>
       <Button
         startIcon={<ArrowBack />}
-        onClick={() => router.push("/admin/kiosk-management")}
-        sx={{ mb: 2 }}
+        onClick={() => router.back()}
+        sx={{ marginBottom: 2 }}
       >
-        Back to Kiosk Management
+        Back       
       </Button>
 
       <Paper elevation={3} sx={{ p: 4 }}>
@@ -147,7 +164,9 @@ const KioskDetailsPage: React.FC = () => {
               {kiosk.firstName} {kiosk.lastName}
             </Typography>
             <Typography variant="subtitle1" color="textSecondary">
-              {kiosk.projects.length > 0 ? "Assigned Projects" : "No Assigned Projects"}
+              {kiosk.projects.length > 0
+                ? "Assigned Projects"
+                : "No Assigned Projects"}
             </Typography>
           </Box>
           <Box>
@@ -167,42 +186,65 @@ const KioskDetailsPage: React.FC = () => {
 
         <Grid container spacing={2} sx={{ mt: 2 }}>
           <Grid item xs={12} sm={6}>
-            <Typography><strong>ID:</strong> {kiosk._id}</Typography>
+            <Typography>
+              <strong>ID:</strong> {kiosk._id}
+            </Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Typography><strong>Name:</strong> {kiosk.firstName} {kiosk.lastName}</Typography>
+            <Typography>
+              <strong>Name:</strong> {kiosk.firstName} {kiosk.lastName}
+            </Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Typography><strong>Description:</strong> {kiosk.description}</Typography>
+            <Typography>
+              <strong>Description:</strong> {kiosk.description}
+            </Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Typography><strong>Address:</strong> {kiosk.address}</Typography>
+            <Typography>
+              <strong>Address:</strong> {kiosk.address}
+            </Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Typography><strong>Country:</strong> {kiosk.countryName}</Typography>
+            <Typography>
+              <strong>Country:</strong> {kiosk.countryName}
+            </Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Typography><strong>State:</strong> {kiosk.stateName}</Typography>
+            <Typography>
+              <strong>State:</strong> {kiosk.stateName}
+            </Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Typography><strong>City:</strong> {kiosk.cityName}</Typography>
+            <Typography>
+              <strong>City:</strong> {kiosk.cityName}
+            </Typography>
           </Grid>
           <Grid item xs={12}>
-            <Typography><strong>Assigned Projects:</strong> {kiosk.projectNames?.join(", ") || "No Projects Assigned"}</Typography>
+            <Typography>
+              <strong>Assigned Projects:</strong>{" "}
+              {kiosk.projectNames?.join(", ") || "No Projects Assigned"}
+            </Typography>
           </Grid>
         </Grid>
       </Paper>
 
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this kiosk? This action cannot be undone.
+            Are you sure you want to delete this kiosk? This action cannot be
+            undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={handleDelete}>Delete</Button>
+          <Button color="error" onClick={handleDelete}>
+            Delete
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

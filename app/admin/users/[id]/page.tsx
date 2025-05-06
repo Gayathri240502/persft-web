@@ -139,10 +139,10 @@ const UserViewPage: React.FC = () => {
     <Box p={4}>
       <Button
         startIcon={<ArrowBack />}
-        onClick={() => router.push("/admin/users")}
+        onClick={() => router.back()}
         sx={{ marginBottom: 2 }}
       >
-        Back to Users
+        Back
       </Button>
       <Paper elevation={3} sx={{ padding: 4 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">

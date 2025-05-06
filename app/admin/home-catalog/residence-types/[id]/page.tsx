@@ -134,10 +134,10 @@ const ResidenceTypesPage: React.FC = () => {
     <Box p={4}>
       <Button
         startIcon={<ArrowBack />}
-        onClick={() => router.push("/admin/home-catalog/residence-types")}
+        onClick={() => router.back()}
         sx={{ marginBottom: 2 }}
       >
-        Back to Residence Types
+        Back       
       </Button>
       <Paper elevation={3} sx={{ padding: 4 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -198,20 +198,20 @@ const ResidenceTypesPage: React.FC = () => {
           </Grid>
         </Grid>
         <Box mt={4}>
-                  <Typography variant="h6" gutterBottom>
-                    Thumbnail
-                  </Typography>
-                  {residence.thumbnail ? (
-                    <Box
-                      component="img"
-                      src={residence.thumbnail}
-                      alt="Thumbnail"
-                      sx={{ maxWidth: 100 }}
-                    />
-                  ) : (
-                    <Typography>No thumbnail available</Typography>
-                  )}
-                </Box>
+          <Typography variant="h6" gutterBottom>
+            Thumbnail
+          </Typography>
+          {residence.thumbnail ? (
+            <Box
+              component="img"
+              src={residence.thumbnail}
+              alt="Thumbnail"
+              sx={{ maxWidth: 100 }}
+            />
+          ) : (
+            <Typography>No thumbnail available</Typography>
+          )}
+        </Box>
       </Paper>
 
       <Dialog

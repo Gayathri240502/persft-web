@@ -90,7 +90,12 @@ const ProjectDetailsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <CircularProgress />
       </Box>
     );
@@ -98,7 +103,12 @@ const ProjectDetailsPage: React.FC = () => {
 
   if (error) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="error">Error: {error}</Alert>
       </Box>
     );
@@ -106,7 +116,12 @@ const ProjectDetailsPage: React.FC = () => {
 
   if (!project) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="warning">No project found</Alert>
       </Box>
     );
@@ -116,16 +131,18 @@ const ProjectDetailsPage: React.FC = () => {
     <Box p={4}>
       <Button
         startIcon={<ArrowBack />}
-        onClick={() => router.push("/admin/projects")}
+        onClick={() => router.back()}
         sx={{ marginBottom: 2 }}
       >
-        Back to Projects
+        Back
       </Button>
 
       <Paper elevation={3} sx={{ padding: 4 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box>
-            <Typography variant="h4" gutterBottom>{project.name}</Typography>
+            <Typography variant="h4" gutterBottom>
+              {project.name}
+            </Typography>
             <Typography variant="subtitle1" color="textSecondary">
               {project.archive ? "Inactive" : "Active"}
             </Typography>
@@ -145,27 +162,43 @@ const ProjectDetailsPage: React.FC = () => {
 
         <Grid container spacing={2} sx={{ marginTop: 2 }}>
           <Grid item xs={12} sm={6}>
-            <Typography><strong>ID:</strong> {project._id}</Typography>
+            <Typography>
+              <strong>ID:</strong> {project._id}
+            </Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Typography><strong>Name:</strong> {project.name}</Typography>
+            <Typography>
+              <strong>Name:</strong> {project.name}
+            </Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Typography><strong>Description:</strong> {project.description}</Typography>
+            <Typography>
+              <strong>Description:</strong> {project.description}
+            </Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Typography><strong>Archived:</strong> {project.archive ? "Yes" : "No"}</Typography>
+            <Typography>
+              <strong>Archived:</strong> {project.archive ? "Yes" : "No"}
+            </Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Typography><strong>Created At:</strong> {new Date(project.createdAt).toLocaleString()}</Typography>
+            <Typography>
+              <strong>Created At:</strong>{" "}
+              {new Date(project.createdAt).toLocaleString()}
+            </Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Typography><strong>Updated At:</strong> {new Date(project.updatedAt).toLocaleString()}</Typography>
+            <Typography>
+              <strong>Updated At:</strong>{" "}
+              {new Date(project.updatedAt).toLocaleString()}
+            </Typography>
           </Grid>
         </Grid>
 
         <Box mt={4}>
-          <Typography variant="h6" gutterBottom>Thumbnail</Typography>
+          <Typography variant="h6" gutterBottom>
+            Thumbnail
+          </Typography>
           {project.thumbnail ? (
             <Box
               component="img"
@@ -179,16 +212,22 @@ const ProjectDetailsPage: React.FC = () => {
         </Box>
       </Paper>
 
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this project? This action cannot be undone.
+            Are you sure you want to delete this project? This action cannot be
+            undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={handleDelete}>Delete</Button>
+          <Button color="error" onClick={handleDelete}>
+            Delete
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

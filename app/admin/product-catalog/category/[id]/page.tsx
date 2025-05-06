@@ -44,12 +44,15 @@ const CategoryDetailsPage: React.FC = () => {
 
     const fetchCategory = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/categories/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Failed to fetch category data");
@@ -69,13 +72,16 @@ const CategoryDetailsPage: React.FC = () => {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/categories/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to delete category");
@@ -90,7 +96,12 @@ const CategoryDetailsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <CircularProgress />
       </Box>
     );
@@ -98,7 +109,12 @@ const CategoryDetailsPage: React.FC = () => {
 
   if (error) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="error">Error: {error}</Alert>
       </Box>
     );
@@ -106,7 +122,12 @@ const CategoryDetailsPage: React.FC = () => {
 
   if (!category) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="warning">No category data found</Alert>
       </Box>
     );
@@ -116,10 +137,10 @@ const CategoryDetailsPage: React.FC = () => {
     <Box p={4}>
       <Button
         startIcon={<ArrowBack />}
-        onClick={() => router.push("/admin/product-catalog/category")}
-        sx={{ mb: 2 }}
+        onClick={() => router.back()}
+        sx={{ marginBottom: 2 }}
       >
-        Back to Categories
+        Back
       </Button>
 
       <Paper elevation={3} sx={{ p: 4 }}>
@@ -133,7 +154,9 @@ const CategoryDetailsPage: React.FC = () => {
           <Box>
             <IconButton
               color="primary"
-              onClick={() => router.push(`/admin/product-catalog/category/edit?id=${id}`)}
+              onClick={() =>
+                router.push(`/admin/product-catalog/category/edit?id=${id}`)
+              }
             >
               <Edit />
             </IconButton>
@@ -151,10 +174,12 @@ const CategoryDetailsPage: React.FC = () => {
             <strong>Description:</strong> {category.description}
           </Typography>
           <Typography>
-            <strong>Created At:</strong> {new Date(category.createdAt).toLocaleString()}
+            <strong>Created At:</strong>{" "}
+            {new Date(category.createdAt).toLocaleString()}
           </Typography>
           <Typography>
-            <strong>Updated At:</strong> {new Date(category.updatedAt).toLocaleString()}
+            <strong>Updated At:</strong>{" "}
+            {new Date(category.updatedAt).toLocaleString()}
           </Typography>
         </Box>
 
@@ -176,11 +201,15 @@ const CategoryDetailsPage: React.FC = () => {
       </Paper>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this category? This action cannot be undone.
+            Are you sure you want to delete this category? This action cannot be
+            undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

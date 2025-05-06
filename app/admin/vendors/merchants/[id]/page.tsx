@@ -54,12 +54,15 @@ const MerchantDetailsPage: React.FC = () => {
     const fetchMerchant = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/merchants/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/merchants/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         if (!res.ok) {
           throw new Error(`Failed to fetch merchant: ${res.statusText}`);
@@ -80,13 +83,16 @@ const MerchantDetailsPage: React.FC = () => {
 
   const handleDelete = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/merchants/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/merchants/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!res.ok) throw new Error("Failed to delete merchant");
 
@@ -99,7 +105,12 @@ const MerchantDetailsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <CircularProgress />
       </Box>
     );
@@ -107,7 +118,12 @@ const MerchantDetailsPage: React.FC = () => {
 
   if (error) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="error">{error}</Alert>
       </Box>
     );
@@ -115,7 +131,12 @@ const MerchantDetailsPage: React.FC = () => {
 
   if (!merchant) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="warning">No merchant found</Alert>
       </Box>
     );
@@ -125,13 +146,17 @@ const MerchantDetailsPage: React.FC = () => {
     <Box p={4}>
       <Button
         startIcon={<ArrowBack />}
-        onClick={() => router.push("/admin/vendors/merchants")}
-        sx={{ mb: 3 }}
+        onClick={() => router.back()}
+        sx={{ marginBottom: 2 }}
       >
-        Back to Merchants
+        Back
       </Button>
-
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
         <Box>
           <Typography variant="h4">{merchant.username}</Typography>
           <Typography variant="subtitle1" color="textSecondary">
@@ -141,7 +166,9 @@ const MerchantDetailsPage: React.FC = () => {
         <Box>
           <IconButton
             color="primary"
-            onClick={() => router.push(`/admin/vendors/merchants/edit?id=${id}`)}
+            onClick={() =>
+              router.push(`/admin/vendors/merchants/edit?id=${id}`)
+            }
           >
             <Edit />
           </IconButton>
@@ -153,35 +180,63 @@ const MerchantDetailsPage: React.FC = () => {
 
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
-          <Typography><strong>ID:</strong> {merchant._id}</Typography>
-          <Typography><strong>Email:</strong> {merchant.email}</Typography>
-          <Typography><strong>Phone:</strong> {merchant.phone}</Typography>
+          <Typography>
+            <strong>ID:</strong> {merchant._id}
+          </Typography>
+          <Typography>
+            <strong>Email:</strong> {merchant.email}
+          </Typography>
+          <Typography>
+            <strong>Phone:</strong> {merchant.phone}
+          </Typography>
         </Grid>
         <Grid item xs={12} sm={6}>
-          <Typography><strong>Name:</strong> {merchant.firstName} {merchant.lastName}</Typography>
-          <Typography><strong>Business:</strong> {merchant.businessName}</Typography>
+          <Typography>
+            <strong>Name:</strong> {merchant.firstName} {merchant.lastName}
+          </Typography>
+          <Typography>
+            <strong>Business:</strong> {merchant.businessName}
+          </Typography>
         </Grid>
         <Grid item xs={12} sm={6}>
-          <Typography><strong>Address:</strong> {merchant.address}</Typography>
-          <Typography><strong>Category:</strong> {merchant.categoryName}</Typography>
-          <Typography><strong>SubCategory:</strong> {merchant.subCategoryName}</Typography>
+          <Typography>
+            <strong>Address:</strong> {merchant.address}
+          </Typography>
+          <Typography>
+            <strong>Category:</strong> {merchant.categoryName}
+          </Typography>
+          <Typography>
+            <strong>SubCategory:</strong> {merchant.subCategoryName}
+          </Typography>
         </Grid>
         <Grid item xs={12} sm={6}>
-          <Typography><strong>Created At:</strong> {new Date(merchant.createdAt).toLocaleString()}</Typography>
-          <Typography><strong>Updated At:</strong> {new Date(merchant.updatedAt).toLocaleString()}</Typography>
+          <Typography>
+            <strong>Created At:</strong>{" "}
+            {new Date(merchant.createdAt).toLocaleString()}
+          </Typography>
+          <Typography>
+            <strong>Updated At:</strong>{" "}
+            {new Date(merchant.updatedAt).toLocaleString()}
+          </Typography>
         </Grid>
       </Grid>
 
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this merchant? This action cannot be undone.
+            Are you sure you want to delete this merchant? This action cannot be
+            undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={handleDelete}>Delete</Button>
+          <Button color="error" onClick={handleDelete}>
+            Delete
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

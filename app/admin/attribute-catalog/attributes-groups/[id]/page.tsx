@@ -48,12 +48,15 @@ const AttributeGroupDetailsPage: React.FC = () => {
 
     const fetchGroup = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/attribute-groups/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/attribute-groups/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         if (!res.ok) {
           throw new Error("Failed to fetch attribute group");
@@ -73,13 +76,16 @@ const AttributeGroupDetailsPage: React.FC = () => {
 
   const handleDelete = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/attribute-groups/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/attribute-groups/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!res.ok) {
         throw new Error("Failed to delete attribute group");
@@ -94,7 +100,12 @@ const AttributeGroupDetailsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <CircularProgress />
       </Box>
     );
@@ -102,7 +113,12 @@ const AttributeGroupDetailsPage: React.FC = () => {
 
   if (error) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="error">Error: {error}</Alert>
       </Box>
     );
@@ -110,7 +126,12 @@ const AttributeGroupDetailsPage: React.FC = () => {
 
   if (!group) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="warning">No attribute group found</Alert>
       </Box>
     );
@@ -120,10 +141,10 @@ const AttributeGroupDetailsPage: React.FC = () => {
     <Box p={4}>
       <Button
         startIcon={<ArrowBack />}
-        onClick={() => router.push("/admin/attribute-catalog/attributes-groups")}
-        sx={{ mb: 2 }}
+        onClick={() => router.back()}
+        sx={{ marginBottom: 2 }}
       >
-        Back to Attribute Groups
+        Back       
       </Button>
 
       <Paper elevation={3} sx={{ p: 4 }}>
@@ -138,7 +159,9 @@ const AttributeGroupDetailsPage: React.FC = () => {
             <IconButton
               color="primary"
               onClick={() =>
-                router.push(`/admin/attribute-catalog/attributes-groups/edit?id=${id}`)
+                router.push(
+                  `/admin/attribute-catalog/attributes-groups/edit?id=${id}`
+                )
               }
             >
               <Edit />
@@ -150,10 +173,20 @@ const AttributeGroupDetailsPage: React.FC = () => {
         </Box>
 
         <Box mt={3}>
-          <Typography><strong>ID:</strong> {group._id}</Typography>
-          <Typography><strong>Description:</strong> {group.description}</Typography>
-          <Typography><strong>Created At:</strong> {new Date(group.createdAt).toLocaleString()}</Typography>
-          <Typography><strong>Updated At:</strong> {new Date(group.updatedAt).toLocaleString()}</Typography>
+          <Typography>
+            <strong>ID:</strong> {group._id}
+          </Typography>
+          <Typography>
+            <strong>Description:</strong> {group.description}
+          </Typography>
+          <Typography>
+            <strong>Created At:</strong>{" "}
+            {new Date(group.createdAt).toLocaleString()}
+          </Typography>
+          <Typography>
+            <strong>Updated At:</strong>{" "}
+            {new Date(group.updatedAt).toLocaleString()}
+          </Typography>
         </Box>
 
         <Box mt={4}>
@@ -162,7 +195,7 @@ const AttributeGroupDetailsPage: React.FC = () => {
             <Typography>No attributes linked.</Typography>
           ) : (
             <ul>
-              {group.attributes.map(attr => (
+              {group.attributes.map((attr) => (
                 <li key={attr._id}>{attr.name || attr._id}</li>
               ))}
             </ul>
@@ -171,11 +204,15 @@ const AttributeGroupDetailsPage: React.FC = () => {
       </Paper>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this attribute group? This action cannot be undone.
+            Are you sure you want to delete this attribute group? This action
+            cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

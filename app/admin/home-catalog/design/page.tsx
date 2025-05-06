@@ -223,9 +223,7 @@ const DesignType = () => {
       <Box
         sx={{
           display: "flex",
-          flexDirection: isSmallScreen ? "column" : "row",
           justifyContent: "space-between",
-          alignItems: "center",
           mb: 2,
           gap: isSmallScreen ? 2 : 1,
         }}

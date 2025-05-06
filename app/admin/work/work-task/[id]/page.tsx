@@ -49,11 +49,14 @@ const WorkTaskDetails: React.FC = () => {
 
     const fetchWorkTask = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/work-tasks/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/work-tasks/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (!res.ok) throw new Error("Failed to fetch work task");
 
@@ -71,12 +74,15 @@ const WorkTaskDetails: React.FC = () => {
 
   const handleDelete = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/work-tasks/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/work-tasks/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!res.ok) throw new Error("Failed to delete work task");
 
@@ -89,7 +95,12 @@ const WorkTaskDetails: React.FC = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <CircularProgress />
       </Box>
     );
@@ -97,7 +108,12 @@ const WorkTaskDetails: React.FC = () => {
 
   if (error) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="error">{error}</Alert>
       </Box>
     );
@@ -105,7 +121,12 @@ const WorkTaskDetails: React.FC = () => {
 
   if (!workTask) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="warning">Work task not found</Alert>
       </Box>
     );
@@ -115,12 +136,11 @@ const WorkTaskDetails: React.FC = () => {
     <Box p={4}>
       <Button
         startIcon={<ArrowBack />}
-        onClick={() => router.push("/admin/work/work-task")}
-        sx={{ mb: 2 }}
+        onClick={() => router.back()}
+        sx={{ marginBottom: 2 }}
       >
-        Back to Work Tasks
+        Back
       </Button>
-
       <Paper elevation={3} sx={{ p: 4 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h4">{workTask.name}</Typography>
@@ -156,19 +176,25 @@ const WorkTaskDetails: React.FC = () => {
           <strong>Status:</strong> {workTask.archive ? "Archived" : "Active"}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          <strong>Created At:</strong> {new Date(workTask.createdAt).toLocaleString()}
+          <strong>Created At:</strong>{" "}
+          {new Date(workTask.createdAt).toLocaleString()}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          <strong>Updated At:</strong> {new Date(workTask.updatedAt).toLocaleString()}
+          <strong>Updated At:</strong>{" "}
+          {new Date(workTask.updatedAt).toLocaleString()}
         </Typography>
       </Paper>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
         <DialogTitle>Delete Work Task</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this work task? This action cannot be undone.
+            Are you sure you want to delete this work task? This action cannot
+            be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

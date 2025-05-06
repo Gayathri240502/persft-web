@@ -44,12 +44,15 @@ const AttributeDetailsPage: React.FC = () => {
 
     const fetchAttribute = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/attributes/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/attributes/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         if (!res.ok) {
           throw new Error("Failed to fetch attribute");
@@ -69,13 +72,16 @@ const AttributeDetailsPage: React.FC = () => {
 
   const handleDelete = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/attributes/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/attributes/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!res.ok) {
         throw new Error("Failed to delete attribute");
@@ -90,7 +96,12 @@ const AttributeDetailsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <CircularProgress />
       </Box>
     );
@@ -98,7 +109,12 @@ const AttributeDetailsPage: React.FC = () => {
 
   if (error) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="error">Error: {error}</Alert>
       </Box>
     );
@@ -106,7 +122,12 @@ const AttributeDetailsPage: React.FC = () => {
 
   if (!attribute) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="warning">No attribute found</Alert>
       </Box>
     );
@@ -116,10 +137,10 @@ const AttributeDetailsPage: React.FC = () => {
     <Box p={4}>
       <Button
         startIcon={<ArrowBack />}
-        onClick={() => router.push("/admin/attribute-catalog/attributes")}
-        sx={{ mb: 2 }}
+        onClick={() => router.back()}
+        sx={{ marginBottom: 2 }}
       >
-        Back to Attributes
+        Back       
       </Button>
 
       <Paper elevation={3} sx={{ p: 4 }}>
@@ -146,20 +167,36 @@ const AttributeDetailsPage: React.FC = () => {
         </Box>
 
         <Box mt={3}>
-          <Typography><strong>ID:</strong> {attribute._id}</Typography>
-          <Typography><strong>Description:</strong> {attribute.description}</Typography>
-          <Typography><strong>Type:</strong> {attribute.type}</Typography>
-          <Typography><strong>Created At:</strong> {new Date(attribute.createdAt).toLocaleString()}</Typography>
-          <Typography><strong>Updated At:</strong> {new Date(attribute.updatedAt).toLocaleString()}</Typography>
+          <Typography>
+            <strong>ID:</strong> {attribute._id}
+          </Typography>
+          <Typography>
+            <strong>Description:</strong> {attribute.description}
+          </Typography>
+          <Typography>
+            <strong>Type:</strong> {attribute.type}
+          </Typography>
+          <Typography>
+            <strong>Created At:</strong>{" "}
+            {new Date(attribute.createdAt).toLocaleString()}
+          </Typography>
+          <Typography>
+            <strong>Updated At:</strong>{" "}
+            {new Date(attribute.updatedAt).toLocaleString()}
+          </Typography>
         </Box>
       </Paper>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this attribute? This action cannot be undone.
+            Are you sure you want to delete this attribute? This action cannot
+            be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

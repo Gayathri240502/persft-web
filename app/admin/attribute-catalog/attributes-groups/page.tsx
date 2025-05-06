@@ -146,15 +146,42 @@ const AttributeGroups = () => {
     { field: "sn", headerName: "SN", width: 70 },
     { field: "name", headerName: "Name", flex: 1 },
     { field: "description", headerName: "Description", flex: 1 },
+
     {
       field: "attributes",
       headerName: "Attributes",
       flex: 1,
-      valueGetter: (params: { row: AttributeGroup }) => {
-        const { attributes } = params.row || {}; // Add fallback to empty object
-        return Array.isArray(attributes) && attributes.length > 0
-          ? attributes.map((a) => a._id).join(", ")
-          : "N/A";
+      renderCell: (params) => {
+        const router = useRouter();
+        const attributes = params.row?.attributes;
+
+        if (!Array.isArray(attributes) || attributes.length === 0) {
+          return <span>N/A</span>;
+        }
+
+        return (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            {attributes.map((a) => (
+              <Button
+                key={a._id}
+                variant="text"
+                size="small"
+                onClick={() =>
+                  router.push(
+                    `/admin/attribute-catalog/attributes/${a.attributeId}`
+                  )
+                }
+                style={{
+                  textTransform: "none",
+                  padding: "2px 6px",
+                  minWidth: 0,
+                }}
+              >
+                {a?.attributeDetails?.name || "Unknown"}
+              </Button>
+            ))}
+          </div>
+        );
       },
     },
 
@@ -210,9 +237,7 @@ const AttributeGroups = () => {
       <Box
         sx={{
           display: "flex",
-          flexDirection: isSmallScreen ? "column" : "row",
           justifyContent: "space-between",
-          alignItems: "center",
           mb: 2,
           gap: isSmallScreen ? 2 : 1,
         }}

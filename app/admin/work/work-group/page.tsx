@@ -206,8 +206,6 @@ const WorkGroups = () => {
         sx={{
           display: "flex",
           justifyContent: "space-between",
-          flexDirection: isSmallScreen ? "column" : "row",
-          alignItems: "center",
           mb: 2,
           gap: isSmallScreen ? 2 : 1,
         }}

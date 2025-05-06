@@ -159,7 +159,7 @@ const ThemesPage = () => {
   );
 
   const columns: GridColDef[] = [
-    { field: "sn", headerName: "SN", flex: 1 },
+    { field: "sn", headerName: "SN", width: 70 },
     { field: "name", headerName: "Theme Name", flex: 1 },
     { field: "description", headerName: "Description", flex: 1 },
     {
@@ -174,6 +174,7 @@ const ThemesPage = () => {
         />
       ),
     },
+
     {
       field: "roomTypes",
       headerName: "Room Types",
@@ -232,9 +233,7 @@ const ThemesPage = () => {
       <Box
         sx={{
           display: "flex",
-          flexDirection: isSmallScreen ? "column" : "row",
           justifyContent: "space-between",
-          alignItems: "center",
           mb: 2,
           gap: isSmallScreen ? 2 : 1,
         }}

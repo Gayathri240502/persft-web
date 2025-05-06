@@ -157,13 +157,21 @@ const Projects = () => {
       field: "thumbnail",
       headerName: "Thumbnail",
       flex: 1,
-      renderCell: (params) => (
-        <img
-          src={params.row.thumbnail}
-          alt="Thumbnail"
-          style={{ width: 40, height: 40 }}
-        />
-      ),
+      renderCell: (params) =>
+        params.row.thumbnail ? (
+          <img
+            src={params.row.thumbnail}
+            alt="Thumbnail"
+            style={{
+              width: 40,
+              height: 40,
+            }}
+          />
+        ) : (
+          <Typography variant="body2" color="textSecondary">
+            No Image
+          </Typography>
+        ),
     },
     {
       field: "action",
@@ -210,8 +218,6 @@ const Projects = () => {
         sx={{
           display: "flex",
           justifyContent: "space-between",
-          flexDirection: isSmallScreen ? "column" : "row",
-          alignItems: "center",
           mb: 2,
           gap: isSmallScreen ? 2 : 1,
         }}

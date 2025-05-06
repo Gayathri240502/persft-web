@@ -116,13 +116,23 @@ const WorkTasksPage = () => {
       field: "workGroup",
       headerName: "Work Group",
       flex: 1,
-      valueGetter: (params: GridCellParams) => {
-        const workTypes: WorkGroup[] = params.row?.workTaskTypes;
-        return Array.isArray(workTypes) && workTypes.length > 0
-          ? workTypes.map((r) => r.name || "Unknown").join(", ")
-          : "N/A";
+      renderCell: (params: GridRenderCellParams) => {
+        const router = useRouter();
+        const handleClick = () => {
+          router.push(`/admin/work/work-group/${params.row.workGroup?._id}`);
+        };
+
+        return (
+          <span
+            onClick={handleClick}
+            style={{ color: "#2563EB", cursor: "pointer" }} // Tailwind's text-blue-600
+          >
+            {params.row?.workGroup?.name || "N/A"}
+          </span>
+        );
       },
     },
+
     { field: "targetDays", headerName: "Target Days", flex: 0.8 },
     { field: "bufferDays", headerName: "Buffer Days", flex: 0.8 },
     { field: "poDays", headerName: "PO Days", flex: 0.8 },
@@ -168,9 +178,7 @@ const WorkTasksPage = () => {
       <Box
         sx={{
           display: "flex",
-          flexDirection: isSmallScreen ? "column" : "row",
           justifyContent: "space-between",
-          alignItems: "center",
           gap: 2,
           mb: 2,
         }}

@@ -51,12 +51,15 @@ const ThemeDetailsPage: React.FC = () => {
 
     const fetchTheme = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/themes/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/themes/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Failed to fetch theme data");
@@ -76,13 +79,16 @@ const ThemeDetailsPage: React.FC = () => {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/themes/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/themes/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to delete theme");
@@ -97,7 +103,12 @@ const ThemeDetailsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <CircularProgress />
       </Box>
     );
@@ -105,7 +116,12 @@ const ThemeDetailsPage: React.FC = () => {
 
   if (error) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="error">Error: {error}</Alert>
       </Box>
     );
@@ -113,7 +129,12 @@ const ThemeDetailsPage: React.FC = () => {
 
   if (!theme) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="warning">No theme data found</Alert>
       </Box>
     );
@@ -123,10 +144,10 @@ const ThemeDetailsPage: React.FC = () => {
     <Box p={4}>
       <Button
         startIcon={<ArrowBack />}
-        onClick={() => router.push("/admin/home-catalog/themes")}
-        sx={{ mb: 2 }}
+        onClick={() => router.back()}
+        sx={{ marginBottom: 2 }}
       >
-        Back to Themes
+        Back       
       </Button>
       <Paper elevation={3} sx={{ p: 4 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -139,7 +160,9 @@ const ThemeDetailsPage: React.FC = () => {
           <Box>
             <IconButton
               color="primary"
-              onClick={() => router.push(`/admin/home-catalog/themes/edit?id=${id}`)}
+              onClick={() =>
+                router.push(`/admin/home-catalog/themes/edit?id=${id}`)
+              }
             >
               <Edit />
             </IconButton>
@@ -151,19 +174,25 @@ const ThemeDetailsPage: React.FC = () => {
 
         <Grid container spacing={2} sx={{ mt: 2 }}>
           <Grid item xs={12} sm={6}>
-            <Typography><strong>ID:</strong> {theme._id}</Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography><strong>Description:</strong> {theme.description}</Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
             <Typography>
-              <strong>Created At:</strong> {new Date(theme.createdAt).toLocaleString()}
+              <strong>ID:</strong> {theme._id}
             </Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
             <Typography>
-              <strong>Updated At:</strong> {new Date(theme.updatedAt).toLocaleString()}
+              <strong>Description:</strong> {theme.description}
+            </Typography>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Typography>
+              <strong>Created At:</strong>{" "}
+              {new Date(theme.createdAt).toLocaleString()}
+            </Typography>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Typography>
+              <strong>Updated At:</strong>{" "}
+              {new Date(theme.updatedAt).toLocaleString()}
             </Typography>
           </Grid>
           <Grid item xs={12}>
@@ -180,28 +209,32 @@ const ThemeDetailsPage: React.FC = () => {
           </Grid>
         </Grid>
         <Box mt={4}>
-                          <Typography variant="h6" gutterBottom>
-                            Thumbnail
-                          </Typography>
-                          {theme.thumbnail ? (
-                            <Box
-                              component="img"
-                              src={theme.thumbnail}
-                              alt="Thumbnail"
-                              sx={{ maxWidth: 100 }}
-                            />
-                          ) : (
-                            <Typography>No thumbnail available</Typography>
-                          )}
-                        </Box>
+          <Typography variant="h6" gutterBottom>
+            Thumbnail
+          </Typography>
+          {theme.thumbnail ? (
+            <Box
+              component="img"
+              src={theme.thumbnail}
+              alt="Thumbnail"
+              sx={{ maxWidth: 100 }}
+            />
+          ) : (
+            <Typography>No thumbnail available</Typography>
+          )}
+        </Box>
       </Paper>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this theme? This action cannot be undone.
+            Are you sure you want to delete this theme? This action cannot be
+            undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

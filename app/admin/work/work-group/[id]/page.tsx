@@ -42,11 +42,14 @@ const WorkGroupDetails: React.FC = () => {
 
     const fetchWorkGroup = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/work-groups/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/work-groups/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (!res.ok) throw new Error("Failed to fetch work group");
 
@@ -64,12 +67,15 @@ const WorkGroupDetails: React.FC = () => {
 
   const handleDelete = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/work-groups/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/work-groups/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!res.ok) throw new Error("Failed to delete work group");
 
@@ -82,7 +88,12 @@ const WorkGroupDetails: React.FC = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <CircularProgress />
       </Box>
     );
@@ -90,7 +101,12 @@ const WorkGroupDetails: React.FC = () => {
 
   if (error) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="error">{error}</Alert>
       </Box>
     );
@@ -98,7 +114,12 @@ const WorkGroupDetails: React.FC = () => {
 
   if (!workGroup) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="warning">Work group not found</Alert>
       </Box>
     );
@@ -108,10 +129,10 @@ const WorkGroupDetails: React.FC = () => {
     <Box p={4}>
       <Button
         startIcon={<ArrowBack />}
-        onClick={() => router.push("/admin/work/work-group")}
-        sx={{ mb: 2 }}
+        onClick={() => router.back()}
+        sx={{ marginBottom: 2 }}
       >
-        Back to Work Groups
+        Back
       </Button>
 
       <Paper elevation={3} sx={{ p: 4 }}>
@@ -120,7 +141,9 @@ const WorkGroupDetails: React.FC = () => {
           <Box>
             <IconButton
               color="primary"
-              onClick={() => router.push(`/admin/work/work-group/edit?id=${id}`)}
+              onClick={() =>
+                router.push(`/admin/work/work-group/edit?id=${id}`)
+              }
             >
               <Edit />
             </IconButton>
@@ -147,16 +170,22 @@ const WorkGroupDetails: React.FC = () => {
       </Paper>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
         <DialogTitle>Delete Work Group</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this work group? This action is irreversible.
+            Are you sure you want to delete this work group? This action is
+            irreversible.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={handleDelete}>Delete</Button>
+          <Button color="error" onClick={handleDelete}>
+            Delete
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

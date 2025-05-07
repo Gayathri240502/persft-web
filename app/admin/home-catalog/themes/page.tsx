@@ -179,10 +179,38 @@ const ThemesPage = () => {
       field: "roomTypes",
       headerName: "Room Types",
       flex: 1,
-      valueGetter: (params: { row: ThemeType }) =>
-        params.row?.roomTypes && params.row.roomTypes.length > 0
-          ? params.row.roomTypes.map((r) => r.name || "Unknown").join(", ")
-          : "N/A",
+      renderCell: (params) => {
+        const handleClick = (id: string) => {
+          router.push(`/admin/home-catalog/room-types/${id}`);
+        };
+
+        return (
+          <>
+            {params.row.roomTypes?.length > 0 ? (
+              params.row.roomTypes.map(
+                (room: { _id: string; name: string }) => (
+                  <Button
+                    key={room._id}
+                    onClick={() => handleClick(room._id)}
+                    variant="text"
+                    color="primary"
+                    sx={{
+                      textTransform: "none",
+                      padding: 0,
+                      minWidth: "auto",
+                      marginRight: 1,
+                    }}
+                  >
+                    {room.name}
+                  </Button>
+                )
+              )
+            ) : (
+              <span style={{ color: "#888" }}>N/A</span>
+            )}
+          </>
+        );
+      },
     },
 
     {

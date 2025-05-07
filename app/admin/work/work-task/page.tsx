@@ -112,23 +112,33 @@ const WorkTasksPage = () => {
     { field: "sn", headerName: "SN", flex: 0.5 },
     { field: "name", headerName: "Name", flex: 1 },
     { field: "description", headerName: "Description", flex: 1.5 },
+
     {
       field: "workGroup",
       headerName: "Work Group",
       flex: 1,
       renderCell: (params: GridRenderCellParams) => {
-        const router = useRouter();
         const handleClick = () => {
           router.push(`/admin/work/work-group/${params.row.workGroup?._id}`);
         };
 
         return (
-          <span
-            onClick={handleClick}
-            style={{ color: "#2563EB", cursor: "pointer" }} // Tailwind's text-blue-600
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              width: "100%",
+              height: "100%",
+            }}
           >
-            {params.row?.workGroup?.name || "N/A"}
-          </span>
+            <Typography
+              onClick={handleClick}
+              sx={{ color: "primary.main", cursor: "pointer" }}
+              variant="body2"
+            >
+              {params.row?.workGroup?.name || "N/A"}
+            </Typography>
+          </Box>
         );
       },
     },

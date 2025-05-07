@@ -152,7 +152,6 @@ const AttributeGroups = () => {
       headerName: "Attributes",
       flex: 1,
       renderCell: (params) => {
-        const router = useRouter();
         const attributes = params.row?.attributes;
 
         if (!Array.isArray(attributes) || attributes.length === 0) {

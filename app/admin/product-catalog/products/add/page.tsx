@@ -11,11 +11,11 @@ import {
   MenuItem,
   Button,
   Grid,
-  Divider,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { useRouter } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { SelectChangeEvent } from "@mui/material/Select";
 
 interface Category {
   _id: string;
@@ -49,14 +49,14 @@ const AddProduct = () => {
     subCategory: "",
     workGroup: "",
     workTask: "",
-    attributeValues: [],
+    attributeValues: [] as string[],
   });
 
   const [dropdowns, setDropdowns] = useState({
     categories: [] as Category[],
     subCategories: [] as SubCategory[],
     workGroups: [] as WorkGroup[],
-    workTasks: [] as string[], // Assuming work tasks is an array of strings
+    workTasks: [] as string[],
   });
 
   const [loading, setLoading] = useState(false);
@@ -66,28 +66,19 @@ const AddProduct = () => {
     const fetchData = async () => {
       try {
         const [catRes, wgRes] = await Promise.all([
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/categories`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          ),
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/work-groups`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          ),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/categories`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/work-groups`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
 
         if (!catRes.ok || !wgRes.ok) {
-          throw new Error("Failed to load options");
+          throw new Error("Failed to load dropdowns");
         }
 
-        const [catData, wgData] = await Promise.all([
-          catRes.json(),
-          wgRes.json(),
-        ]);
+        const [catData, wgData] = await Promise.all([catRes.json(), wgRes.json()]);
 
         setDropdowns({
           categories: catData.categories || [],
@@ -105,25 +96,29 @@ const AddProduct = () => {
 
   useEffect(() => {
     if (formData.category) {
-      fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/subcategories/${formData.category}`
-      )
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/subcategories/${formData.category}`)
         .then((res) => res.json())
         .then((data) =>
-          setDropdowns((prev) => ({ ...prev, subCategories: data }))
+          setDropdowns((prev) => ({
+            ...prev,
+            subCategories: data.subCategories || [],
+          }))
         )
-        .catch((err) => setError("Failed to fetch subcategories"));
+        .catch(() => setError("Failed to fetch subcategories"));
     }
   }, [formData.category]);
 
   useEffect(() => {
     if (formData.workGroup) {
-      fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/work-tasks/${formData.workGroup}`
-      )
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/work-tasks/${formData.workGroup}`)
         .then((res) => res.json())
-        .then((data) => setDropdowns((prev) => ({ ...prev, workTasks: data })))
-        .catch((err) => setError("Failed to fetch work tasks"));
+        .then((data) =>
+          setDropdowns((prev) => ({
+            ...prev,
+            workTasks: data.workTasks || [],
+          }))
+        )
+        .catch(() => setError("Failed to fetch work tasks"));
     }
   }, [formData.workGroup]);
 
@@ -134,9 +129,7 @@ const AddProduct = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSelectChange = (
-    e: React.ChangeEvent<{ name?: string; value: unknown }>
-  ) => {
+  const handleSelectChange = (e: SelectChangeEvent) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name!]: value }));
   };
@@ -157,7 +150,7 @@ const AddProduct = () => {
       !formData.workGroup ||
       !formData.workTask
     ) {
-      setError("All fields are required.");
+      setError("All required fields must be filled.");
       return false;
     }
     return true;
@@ -174,17 +167,14 @@ const AddProduct = () => {
     }
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/products`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to create product");
@@ -224,7 +214,6 @@ const AddProduct = () => {
             fullWidth
             sx={{ mb: 3 }}
           />
-
           <FormControl fullWidth sx={{ mb: 3 }}>
             <InputLabel>Category</InputLabel>
             <Select
@@ -240,7 +229,6 @@ const AddProduct = () => {
               ))}
             </Select>
           </FormControl>
-
           <FormControl fullWidth sx={{ mb: 3 }}>
             <InputLabel>Sub Category</InputLabel>
             <Select
@@ -256,7 +244,6 @@ const AddProduct = () => {
               ))}
             </Select>
           </FormControl>
-
           <TextField
             label="Price"
             name="price"
@@ -265,7 +252,6 @@ const AddProduct = () => {
             fullWidth
             sx={{ mb: 3 }}
           />
-
           <FormControl fullWidth sx={{ mb: 3 }}>
             <InputLabel>Work Group</InputLabel>
             <Select
@@ -281,7 +267,6 @@ const AddProduct = () => {
               ))}
             </Select>
           </FormControl>
-
           <FormControl fullWidth sx={{ mb: 3 }}>
             <InputLabel>Work Task</InputLabel>
             <Select

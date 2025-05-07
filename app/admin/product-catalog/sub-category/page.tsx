@@ -1,6 +1,5 @@
 "use client";
 
-import ReusableButton from "@/app/components/Button";
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -16,16 +15,15 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
-  Chip,
 } from "@mui/material";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import ReusableButton from "@/app/components/Button";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
+import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
-// Interfaces
 interface Category {
   _id: string;
   name: string;
@@ -36,12 +34,12 @@ interface AttributeGroupReference {
   name: string;
 }
 
-interface SubCategory {
+interface SubCategoryType {
   _id: string;
   name: string;
   description: string;
   thumbnail: string;
-  category?: Category; // optional to avoid runtime crash
+  category?: Category;
   attributeGroups?: AttributeGroupReference[];
   archive: boolean;
   id?: string;
@@ -59,21 +57,19 @@ const SubCategory = () => {
     pageSize: 10,
   });
   const [rowCount, setRowCount] = useState(0);
-  const [rows, setRows] = useState<SubCategory[]>([]);
+  const [rows, setRows] = useState<SubCategoryType[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const { token } = getTokenAndRole();
-
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null
   );
 
+  const { token } = getTokenAndRole();
+
   const fetchSubCategories = async () => {
     setLoading(true);
-    setError(null); // Reset error before making the request
-
+    setError(null);
     const { page, pageSize } = paginationModel;
 
     try {
@@ -98,11 +94,10 @@ const SubCategory = () => {
       }
 
       const result = await response.json();
-      console.log("Fetched sub-categories:", result);
 
       if (Array.isArray(result.subCategories)) {
         const dataWithMeta = result.subCategories.map(
-          (item: SubCategory, index: number) => ({
+          (item: SubCategoryType, index: number) => ({
             ...item,
             id: item._id,
             sn: page * pageSize + index + 1,
@@ -110,7 +105,6 @@ const SubCategory = () => {
             attributeGroups: item.attributeGroups || [],
           })
         );
-
         setRows(dataWithMeta);
         setRowCount(result.totalDocs || dataWithMeta.length);
       } else {
@@ -118,7 +112,6 @@ const SubCategory = () => {
         setRowCount(0);
       }
     } catch (err: any) {
-      console.error("Error fetching sub-categories:", err);
       setError(err.message || "Something went wrong");
       setRows([]);
     } finally {
@@ -148,11 +141,10 @@ const SubCategory = () => {
           throw new Error(`Failed to delete category: ${response.statusText}`);
         }
 
-        // After deletion, fetch the updated category list
         fetchSubCategories();
-        setDeleteDialogOpen(false); // Close dialog
-        setSelectedCategoryId(null); // Clear selected category
-      } catch (error) {
+        setDeleteDialogOpen(false);
+        setSelectedCategoryId(null);
+      } catch {
         setError("Failed to delete category");
       }
     }
@@ -160,10 +152,9 @@ const SubCategory = () => {
 
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
-    setSelectedCategoryId(null); // Clear selected category
+    setSelectedCategoryId(null);
   };
 
-  // Columns
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", width: 70 },
     { field: "name", headerName: "Name", flex: 0.8 },
@@ -177,10 +168,7 @@ const SubCategory = () => {
           <img
             src={params.row.thumbnail}
             alt="Thumbnail"
-            style={{
-              width: 40,
-              height: 40,
-            }}
+            style={{ width: 40, height: 40 }}
           />
         ) : (
           <Typography variant="body2" color="textSecondary">
@@ -192,24 +180,16 @@ const SubCategory = () => {
       field: "category",
       headerName: "Category",
       flex: 1,
-      renderCell: (params) => {
-        const router = useRouter();
-        const handleClick = () => {
-          router.push(`/admin/product-catalog/category/${params.row._id}`);
-        };
-
-        return (
-          <span
-            onClick={handleClick}
-            style={{
-              color: "#1976d2",
-              cursor: "pointer",
-            }}
-          >
-            {params.row?.category?.name || "N/A"}
-          </span>
-        );
-      },
+      renderCell: (params) => (
+        <span
+          onClick={() =>
+            router.push(`/admin/product-catalog/category/${params.row._id}`)
+          }
+          style={{ color: "#1976d2", cursor: "pointer" }}
+        >
+          {params.row?.category?.name || "N/A"}
+        </span>
+      ),
     },
     {
       field: "attributeGroups",
@@ -220,14 +200,11 @@ const SubCategory = () => {
         if (!Array.isArray(groups) || groups.length === 0) return "N/A";
 
         return (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
             {groups.map((group) => (
               <span
                 key={group._id}
-                style={{
-                  color: "#1976d2",
-                  cursor: "pointer",
-                }}
+                style={{ color: "#1976d2", cursor: "pointer" }}
                 onClick={() =>
                   router.push(
                     `/admin/attribute-catalog/attributes-groups/${group._id}`
@@ -237,11 +214,10 @@ const SubCategory = () => {
                 {group?.name || "Unnamed"}
               </span>
             ))}
-          </div>
+          </Box>
         );
       },
     },
-    ,
     {
       field: "action",
       headerName: "Action",
@@ -274,8 +250,8 @@ const SubCategory = () => {
             color="error"
             size="small"
             onClick={() => {
-              setSelectedCategoryId(params.row.id); // Set category to delete
-              setDeleteDialogOpen(true); // Open delete dialog
+              setSelectedCategoryId(params.row.id);
+              setDeleteDialogOpen(true);
             }}
           >
             <Delete fontSize="small" />
@@ -310,22 +286,20 @@ const SubCategory = () => {
           onChange={(e) => setSearch(e.target.value)}
         />
         <ReusableButton
-          onClick={() => {
-            router.push("/admin/product-catalog/sub-category/add");
-          }}
+          onClick={() =>
+            router.push("/admin/product-catalog/sub-category/add")
+          }
         >
           ADD
         </ReusableButton>
       </Box>
 
-      {/* Show Loading Spinner */}
       {loading && (
         <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
           <CircularProgress />
         </Box>
       )}
 
-      {/* Show Error Message */}
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
@@ -345,6 +319,7 @@ const SubCategory = () => {
           disableColumnMenu={isSmallScreen}
         />
       </Box>
+
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
         <DialogTitle>Delete</DialogTitle>
         <DialogContent>

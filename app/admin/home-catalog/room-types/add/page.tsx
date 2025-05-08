@@ -39,6 +39,8 @@ const AddRoomType = () => {
   const [loadingResidenceTypes, setLoadingResidenceTypes] = useState(true);
   const [error, setError] = useState<string | null>(null);
    const [thumbnail, setThumbnail] = useState<string>("");
+    const [selectedFileName, setSelectedFileName] =
+       useState<string>("No file selected");
 
   useEffect(() => {
     const fetchResidenceTypes = async () => {
@@ -109,6 +111,22 @@ const AddRoomType = () => {
       }));
     }
   };
+
+
+  const handleThumbnailChange = async (
+      e: React.ChangeEvent<HTMLInputElement>
+    ) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        setSelectedFileName(file.name);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64String = reader.result as string;
+          setThumbnail(base64String);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
 
   const validateForm = () => {
     if (
@@ -185,26 +203,26 @@ const AddRoomType = () => {
         sx={{ mb: 3 }}
       />
 
-      <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
-        <Button
-          variant="outlined"
-          component="label"
-          startIcon={<UploadFileIcon />}
-          sx={{
-            color: "#05344c",
-            borderColor: "#05344c",
-            "&:hover": { backgroundColor: "#f0f4f8" },
-          }}
-        >
-          Upload Thumbnail
-          <input type="file" hidden onChange={handleFileChange} />
-        </Button>
-        <Typography variant="body2" sx={{ color: "#666" }}>
-          {formData.thumbnail || "No file selected"}
-        </Typography>
-      </Box>
+<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+    <Button
+      variant="outlined"
+      component="label"
+      startIcon={<UploadFileIcon />}
+      sx={{
+        color: "#05344c",
+        borderColor: "#05344c",
+        "&:hover": { backgroundColor: "#f0f4f8" },
+      }}
+    >
+      Upload Thumbnail
+      <input type="file" hidden onChange={handleThumbnailChange} />
+    </Button>
+    <Typography variant="body2" sx={{ color: "#666" }}>
+      {selectedFileName}
+    </Typography>
+  </Box>
       <Typography variant="caption" sx={{ color: "#999" }}>
-          Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+        Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
         </Typography>
         {thumbnail && (
                     <Box sx={{ mb: 3 }}>

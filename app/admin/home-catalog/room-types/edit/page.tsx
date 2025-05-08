@@ -117,6 +117,8 @@ const EditRoomType = () => {
     );
   };
 
+  
+
   const validateForm = () => {
     if (!name) return setError("Name is required"), false;
     if (!description) return setError("Description is required"), false;
@@ -229,8 +231,6 @@ const EditRoomType = () => {
               />
             </Box>
           )}
-
-         
 
           <Typography variant="h6" sx={{ mb: 1 }}>
             Residence Mapping

@@ -233,7 +233,9 @@ const CreateProject = () => {
         <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
           Upload Thumbnail
           <input type="file" hidden accept=".jpg,.jpeg,.png" onChange={handleFileChange} />
+          
         </Button>
+        
         {formData.thumbnailPreview && (
           <>
             <Button color="error" onClick={handleRemoveImage}>
@@ -246,9 +248,14 @@ const CreateProject = () => {
                 style={{ maxWidth: 150, maxHeight: 150 }}
               />
             </Box>
+            
           </>
         )}
+        
       </Box>
+      <Typography variant="caption" sx={{ color: "#999" }}>
+                        Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+                        </Typography>
 
       <Grid container spacing={3}>
         {[

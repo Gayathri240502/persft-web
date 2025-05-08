@@ -202,6 +202,9 @@ const AddRoomType = () => {
           {formData.thumbnail || "No file selected"}
         </Typography>
       </Box>
+      <Typography variant="caption" sx={{ color: "#999" }}>
+          Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+        </Typography>
 
       <Typography variant="h6" sx={{ mb: 1 }}>
         Residence Mapping

@@ -156,7 +156,11 @@ const AddCategory = () => {
             {selectedFileName}
           </Typography>
         </Box>
+         <Typography variant="caption" sx={{ color: "#999" }}>
+                  Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+                  </Typography>
       </Box>
+       
 
       {/* Action Buttons */}
       <Box sx={{ display: "flex", gap: 2 }}>

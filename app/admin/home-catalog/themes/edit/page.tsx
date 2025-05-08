@@ -201,6 +201,9 @@ const EditThemeType = () => {
               {selectedFileName}
             </Typography>
           </Box>
+          <Typography variant="caption" sx={{ color: "#999" }}>
+                    Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+                    </Typography>
 
           {thumbnail && (
             <Box sx={{ mb: 3 }}>
@@ -212,6 +215,8 @@ const EditThemeType = () => {
               />
             </Box>
           )}
+
+          
 
           <Typography variant="h6" sx={{ mb: 1 }}>
             Room Mapping

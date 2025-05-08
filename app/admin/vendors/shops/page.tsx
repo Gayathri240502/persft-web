@@ -16,6 +16,7 @@ import {
   Button,
   Chip,
   InputAdornment,
+  Alert
 } from "@mui/material";
 import {
   GridColDef,
@@ -223,6 +224,34 @@ const Shop = () => {
       <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
         Shop
       </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          mb: 2,
+        }}
+      >
+        <TextField
+          label="Search"
+          variant="outlined"
+          size="small"
+          fullWidth={isSmallScreen}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <ReusableButton
+          onClick={() => router.push("/admin/vendors/shops/add")}
+        >
+          ADD
+        </ReusableButton>
+      </Box>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
 
       <Box sx={{ width: "100%" }}>
         {loading ? (

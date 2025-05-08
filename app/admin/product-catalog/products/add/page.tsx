@@ -16,6 +16,8 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { useRouter } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { SelectChangeEvent } from "@mui/material/Select";
+import ReusableButton from "@/app/components/Button";
+import CancelButton from "@/app/components/CancelButton";
 
 interface Category {
   _id: string;
@@ -325,18 +327,21 @@ const AddProduct = () => {
           {formData.thumbnail || "No file selected"}
         </Typography>
       </Box>
+      <Typography variant="caption" sx={{ color: "#999" }}>
+                        Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+                        </Typography>
 
       {error && (
         <Typography sx={{ color: "error.main", mb: 2 }}>{error}</Typography>
       )}
 
       <Box sx={{ display: "flex", gap: 2 }}>
-        <Button variant="contained" onClick={handleSubmit} disabled={loading}>
+        <ReusableButton variant="contained" onClick={handleSubmit} disabled={loading}>
           {loading ? "Submitting..." : "Submit"}
-        </Button>
-        <Button href="/admin/product-catalog/products" variant="outlined">
+        </ReusableButton>
+        <CancelButton href="/admin/product-catalog/products" variant="outlined">
           Cancel
-        </Button>
+        </CancelButton>
       </Box>
     </Box>
   );

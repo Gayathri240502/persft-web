@@ -262,6 +262,9 @@ const CreateProject = () => {
           </>
         )}
       </Box>
+      <Typography variant="caption" sx={{ color: "#999" }}>
+                              Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+                              </Typography>
 
       <Grid container spacing={3}>
         {[

@@ -128,33 +128,42 @@ const AddResidenceType = () => {
         sx={{ mb: 3 }}
       />
 
-      <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
-        <Button
-          variant="outlined"
-          component="label"
-          startIcon={<UploadFileIcon />}
-          sx={{
-            color: "#05344c",
-            borderColor: "#05344c",
-            "&:hover": { backgroundColor: "#f0f4f8" },
-          }}
-        >
-          Upload Thumbnail
-          <input type="file" hidden onChange={handleThumbnailChange} />
-        </Button>
-        <Typography variant="body2" sx={{ color: "#666" }}>
-          {selectedFileName}
-        </Typography>
-      </Box>
+<Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+  {/* Upload Section */}
+  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+    <Button
+      variant="outlined"
+      component="label"
+      startIcon={<UploadFileIcon />}
+      sx={{
+        color: "#05344c",
+        borderColor: "#05344c",
+        "&:hover": { backgroundColor: "#f0f4f8" },
+      }}
+    >
+      Upload Thumbnail
+      <input type="file" hidden onChange={handleThumbnailChange} />
+    </Button>
+    <Typography variant="body2" sx={{ color: "#666" }}>
+      {selectedFileName}
+    </Typography>
+  </Box>
 
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton type="submit" disabled={loading}>
-          {loading ? <CircularProgress size={24} /> : "Submit"}
-        </ReusableButton>
-        <CancelButton href="/admin/home-catalog/residence-types">
-          Cancel
-        </CancelButton>
-      </Box>
+  {/* Help Text */}
+  <Typography variant="caption" sx={{ color: "#999" }}>
+  Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+  </Typography>
+
+  {/* Buttons */}
+  <Box sx={{ display: "flex", gap: 2 }}>
+    <ReusableButton type="submit" disabled={loading}>
+      {loading ? <CircularProgress size={24} /> : "Submit"}
+    </ReusableButton>
+    <CancelButton href="/admin/home-catalog/residence-types">
+      Cancel
+    </CancelButton>
+  </Box>
+</Box>
     </Box>
   );
 };

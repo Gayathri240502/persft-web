@@ -14,8 +14,10 @@ import {
   MenuItem,
   CircularProgress,
   Alert,
+  Button
 } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import CancelButton from "@/app/components/CancelButton";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
@@ -36,6 +38,7 @@ const EditSubCategory = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState("No file selected");
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -86,6 +89,18 @@ const EditSubCategory = () => {
       prev.includes(roomId) ? prev.filter((id) => id !== roomId) : [...prev, roomId]
     );
   };
+
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        setSelectedFileName(file.name);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setThumbnail(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,13 +203,39 @@ const EditSubCategory = () => {
         sx={{ mb: 3 }}
       />
 
-      <TextField
-        label="Thumbnail"
-        fullWidth
-        value={thumbnail}
-        onChange={(e) => setThumbnail(e.target.value)}
-        sx={{ mb: 3 }}
-      />
+<Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<UploadFileIcon />}
+              sx={{
+                color: "#05344c",
+                borderColor: "#05344c",
+                "&:hover": { backgroundColor: "#f0f4f8" },
+              }}
+            >
+              Upload Thumbnail
+              <input type="file" hidden onChange={handleThumbnailChange} />
+            </Button>
+            <Typography variant="body2" sx={{ color: "#666" }}>
+              {selectedFileName}
+            </Typography>
+          </Box>
+
+           <Typography variant="caption" sx={{ color: "#999" }}>
+                    Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+                    </Typography>
+
+          {thumbnail && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2">Preview:</Typography>
+              <img
+                src={thumbnail}
+                alt="Thumbnail Preview"
+                style={{ width: 200, borderRadius: 8 }}
+              />
+            </Box>
+          )}
 
       <Grid container spacing={2}>
         <Grid item xs={12} md={4}>

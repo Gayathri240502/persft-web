@@ -179,6 +179,10 @@ const EditCategory = () => {
             </Typography>
           </Box>
 
+           <Typography variant="caption" sx={{ color: "#999" }}>
+                    Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+                    </Typography>
+
           {thumbnail && (
             <Box sx={{ mb: 3 }}>
               <Typography variant="subtitle2">Preview:</Typography>

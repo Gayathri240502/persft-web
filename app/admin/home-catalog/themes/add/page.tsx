@@ -36,6 +36,7 @@ const AddTheme = () => {
   const [loading, setLoading] = useState(false);
   const [loadingRoomTypes, setLoadingRoomTypes] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [thumbnail, setThumbnail] = useState<string>("");
 
   useEffect(() => {
     const fetchRoomTypes = async () => {
@@ -197,7 +198,17 @@ const AddTheme = () => {
       <Typography variant="caption" sx={{ color: "#999" }}>
                 Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
                 </Typography>
-                
+                {thumbnail && (
+                            <Box sx={{ mb: 3 }}>
+                              <Typography variant="subtitle2">Preview:</Typography>
+                              <img
+                                src={thumbnail}
+                                alt="Thumbnail Preview"
+                                style={{ width: 200, borderRadius: 8 }}
+                              />
+                            </Box>
+                          )}
+
 
       <Typography variant="h6" sx={{ mb: 1 }}>
         Map Room Types

@@ -125,7 +125,7 @@ const SideLinks: SideLink[] = [
         pathname: "admin/work/work-task",
         
       },
-      { title: "Work Ordering", pathname: "admin/work/work-ordering",  },
+      { title: "Work", pathname: "admin/work/work",  },
     ],
   },
   

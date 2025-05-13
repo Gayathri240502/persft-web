@@ -22,8 +22,7 @@ import {
   GridPaginationModel,
   GridRenderCellParams,
 } from "@mui/x-data-grid";
-import { useRouter } from "next/navigation";
-import { Visibility, Edit } from "@mui/icons-material";
+import { Edit } from "@mui/icons-material";
 
 import ReusableButton from "@/app/components/Button";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
@@ -37,7 +36,6 @@ interface PaymentInfo {
 }
 
 const PaymentInfoPage: React.FC = () => {
-  const router = useRouter();
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const { token } = getTokenAndRole();
@@ -58,6 +56,7 @@ const PaymentInfoPage: React.FC = () => {
 
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
+    id: "",
     designAmount: 1000,
     partialAmount: 50,
   });
@@ -116,25 +115,64 @@ const PaymentInfoPage: React.FC = () => {
   }, [search, paginationModel, allRows]);
 
   const handleSubmit = async () => {
+    const method = formData.id ? "PATCH" : "POST"; // If ID exists, PATCH; otherwise, POST
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/pay-info`;
+
+    const requestBody = {
+      designAmount: formData.designAmount,
+      partialAmount: formData.partialAmount,
+    };
+
+    if (method === "PATCH") {
+      if (!formData.id) {
+        setError("ID is required for updating.");
+        return;
+      }
+      requestBody.id = formData.id; // For editing, include the ID
+    }
+
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pay-info`, {
-        method: "POST",
+      const res = await fetch(url, {
+        method,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(requestBody),
       });
 
-      if (!res.ok) throw new Error(`Failed to create: ${res.status}`);
+      if (!res.ok) {
+        const errorDetails = await res.json(); // Try to get the error details from the server response
+        setError(
+          `Failed to ${method}: ${errorDetails.message || "Unknown error"}`
+        );
+        throw new Error(
+          `Failed to ${method}: ${errorDetails.message || "Unknown error"}`
+        );
+      }
 
-      setSuccessMsg("Payment info added successfully");
-      setAddDialogOpen(false);
-      setFormData({ designAmount: 1000, partialAmount: 50 });
-      fetchPaymentInfos();
+      setSuccessMsg(
+        `Payment info ${method === "POST" ? "added" : "updated"} successfully`
+      );
+      setAddDialogOpen(false); // Close dialog after submission
+      fetchPaymentInfos(); // Refetch the payment info list
     } catch (err) {
       setError(err instanceof Error ? err.message : "Submission failed");
     }
+  };
+
+  const handleEditClick = (params: GridRenderCellParams) => {
+    setFormData({
+      id: params.row.id, // Set the ID when editing
+      designAmount: params.row.designAmount,
+      partialAmount: params.row.partialAmount,
+    });
+    setAddDialogOpen(true); // Open the dialog
+  };
+
+  const handleAddClick = () => {
+    setFormData({ id: "", designAmount: 1000, partialAmount: 50 }); // Set default values for new entry
+    setAddDialogOpen(true); // Open the dialog
   };
 
   const columns: GridColDef[] = [
@@ -162,15 +200,7 @@ const PaymentInfoPage: React.FC = () => {
       renderCell: (params: GridRenderCellParams) => (
         <Box>
           <IconButton
-            onClick={() => router.push(`/admin/pay-info/${params.row.id}`)}
-            size="small"
-          >
-            <Visibility fontSize="small" color="primary" />
-          </IconButton>
-          <IconButton
-            onClick={() =>
-              router.push(`/admin/pay-info/edit?id=${params.row.id}`)
-            }
+            onClick={() => handleEditClick(params)}
             size="small"
             color="primary"
           >
@@ -207,9 +237,7 @@ const PaymentInfoPage: React.FC = () => {
             setPaginationModel({ ...paginationModel, page: 0 });
           }}
         />
-        <ReusableButton onClick={() => setAddDialogOpen(true)}>
-          ADD
-        </ReusableButton>
+        <ReusableButton onClick={handleAddClick}>ADD</ReusableButton>
       </Box>
 
       {error && (
@@ -238,14 +266,15 @@ const PaymentInfoPage: React.FC = () => {
         />
       )}
 
-      {/* Add Dialog */}
       <Dialog
         open={addDialogOpen}
         onClose={() => setAddDialogOpen(false)}
         fullWidth
         maxWidth="sm"
       >
-        <DialogTitle>Add Payment Info</DialogTitle>
+        <DialogTitle>
+          {formData.id ? "Edit Payment Info" : "Add Payment Info"}
+        </DialogTitle>
         <DialogContent
           sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 2 }}
         >
@@ -277,12 +306,11 @@ const PaymentInfoPage: React.FC = () => {
         <DialogActions>
           <Button onClick={() => setAddDialogOpen(false)}>Cancel</Button>
           <Button variant="contained" onClick={handleSubmit}>
-            Submit
+            {formData.id ? "Update" : "Add"}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar for success message */}
       <Snackbar
         open={!!successMsg}
         autoHideDuration={3000}

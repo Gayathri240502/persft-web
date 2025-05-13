@@ -498,6 +498,14 @@ const AddDesignType = () => {
             {errors.theme && <FormHelperText>{errors.theme}</FormHelperText>}
           </FormControl>
         </Grid>
+        {/* Button aligned to the right side below the dropdowns */}
+  <Grid item xs={12}>
+    <Box display="flex" justifyContent="flex-end">
+      <Button variant="contained" color="primary" >
+        Add More
+      </Button>
+    </Box>
+  </Grid>
       </Grid>
 
       {apiError && (

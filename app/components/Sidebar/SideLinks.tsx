@@ -105,6 +105,11 @@ const SideLinks: SideLink[] = [
     icon: <PaymentsIcon/>,
   },
   {
+    title: "Payment Info",
+    pathname: "admin/payment-info",
+    icon: <PaymentsIcon/>,
+  },
+  {
     title: "Kiosk Management",
     pathname: "admin/kiosk-management",
     icon: <PointOfSaleIcon/>,

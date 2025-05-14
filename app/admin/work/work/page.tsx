@@ -18,7 +18,6 @@ import {
 import {
   GridColDef,
   GridPaginationModel,
-  GridCellParams,
 } from "@mui/x-data-grid";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
@@ -30,14 +29,9 @@ import ReusableButton from "@/app/components/Button";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 // Interfaces
-interface Project {
-  _id: string;
-  name: string;
-  description: string;
-  archive: boolean;
-  workGroups: WorkGroupEntry[];
-  id?: string;
-  sn?: number;
+interface WorkTaskEntry {
+  workTask: string;
+  order: number;
 }
 
 interface WorkGroupEntry {
@@ -46,9 +40,13 @@ interface WorkGroupEntry {
   workTasks: WorkTaskEntry[];
 }
 
-interface WorkTaskEntry {
-  workTask: string;
-  order: number;
+interface WorkProject {
+  id: string;
+  name: string;
+  description: string;
+  archive: boolean;
+  workGroups: WorkGroupEntry[];
+  sn?: number;
 }
 
 const Projects = () => {
@@ -64,13 +62,13 @@ const Projects = () => {
     pageSize: 10,
   });
   const [rowCount, setRowCount] = useState(0);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [work, setWork] = useState<WorkProject[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
 
   const { token } = getTokenAndRole();
 
-  const fetchProjects = async () => {
+  const fetchWork = async () => {
     const { page, pageSize } = paginationModel;
     setLoading(true);
     setError(null);
@@ -103,7 +101,7 @@ const Projects = () => {
         sn: page * pageSize + index + 1,
       }));
 
-      setProjects(formatted);
+      setWork(formatted);
       setRowCount(result.totalDocs || formatted.length);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Unknown error");
@@ -113,7 +111,7 @@ const Projects = () => {
   };
 
   useEffect(() => {
-    fetchProjects();
+    fetchWork();
   }, [paginationModel, search]);
 
   const handleDeleteClick = (id: string) => {
@@ -137,7 +135,7 @@ const Projects = () => {
 
       setDeleteDialogOpen(false);
       setSelectedDeleteId(null);
-      fetchProjects();
+      fetchWork();
     } catch (error) {
       setError(error instanceof Error ? error.message : "Delete failed");
     }
@@ -150,40 +148,54 @@ const Projects = () => {
 
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", width: 70 },
-    { field: "name", headerName: "Project Name", flex: 1 },
-    { field: "description", headerName: "Description", flex: 2 },
+    {
+      field: "name",
+      headerName: "Project Name",
+      flex: 1,
+      renderCell: (params) => <Typography>{params.row.name}</Typography>,
+    },
+    {
+      field: "description",
+      headerName: "Description",
+      flex: 2,
+      renderCell: (params) => (
+        <Typography>{params.row.description}</Typography>
+      ),
+    },
     {
       field: "workGroups",
       headerName: "Work Groups & Tasks",
       flex: 3,
-      renderCell: (params: GridCellParams) => {
+      renderCell: (params) => {
         const workGroups: WorkGroupEntry[] = params.row.workGroups || [];
-
-        if (workGroups.length === 0) return "None";
 
         return (
           <Box>
-            {workGroups.map((wg, i) => (
-              <Box key={i} sx={{ mb: 1 }}>
-                <Typography variant="body2" fontWeight="bold">
-                  Group ID: {wg.workGroup} (Order: {wg.order})
-                </Typography>
-                {wg.workTasks.map((task, idx) => (
-                  <Typography key={idx} variant="body2" sx={{ pl: 1 }}>
-                    ↳ Task ID: {task.workTask} (Order: {task.order})
+            {workGroups.length === 0 ? (
+              <Typography>None</Typography>
+            ) : (
+              workGroups.map((wg, i) => (
+                <Box key={i} sx={{ mb: 1 }}>
+                  <Typography fontWeight="bold" variant="body2">
+                    Group ID: {wg.workGroup} (Order: {wg.order})
                   </Typography>
-                ))}
-              </Box>
-            ))}
+                  {wg.workTasks.map((task, idx) => (
+                    <Typography key={idx} variant="body2" sx={{ pl: 1 }}>
+                      ↳ Task ID: {task.workTask} (Order: {task.order})
+                    </Typography>
+                  ))}
+                </Box>
+              ))
+            )}
           </Box>
         );
       },
     },
     {
       field: "action",
-      headerName: "Action",
+      headerName: "Actions",
       flex: 1,
-      renderCell: (params: GridCellParams) => (
+      renderCell: (params) => (
         <Box>
           <IconButton
             color="info"
@@ -245,7 +257,7 @@ const Projects = () => {
         </Box>
       ) : (
         <StyledDataGrid
-          rows={projects}
+          rows={work}
           columns={columns}
           rowCount={rowCount}
           pagination

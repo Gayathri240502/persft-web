@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -29,7 +29,6 @@ import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 import ReusableButton from "@/app/components/Button";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
-// Interfaces
 interface Project {
   _id: string;
   name: string;
@@ -70,7 +69,8 @@ const Projects = () => {
 
   const { token } = getTokenAndRole();
 
-  const fetchProjects = async () => {
+  // Fetch projects function wrapped in useCallback to debounce effect correctly
+  const fetchProjects = useCallback(async () => {
     const { page, pageSize } = paginationModel;
     setLoading(true);
     setError(null);
@@ -79,11 +79,13 @@ const Projects = () => {
       const queryParams = new URLSearchParams({
         page: String(page + 1),
         limit: String(pageSize),
-        searchTerm: search,
       });
+      if (search.trim() !== "") {
+        queryParams.append("searchTerm", search.trim());
+      }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/works?${queryParams}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/works?${queryParams.toString()}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -107,14 +109,21 @@ const Projects = () => {
       setRowCount(result.totalDocs || formatted.length);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Unknown error");
+      setProjects([]);
+      setRowCount(0);
     } finally {
       setLoading(false);
     }
-  };
+  }, [paginationModel, search, token]);
 
+  // Debounce the fetchProjects on search & pagination changes
   useEffect(() => {
-    fetchProjects();
-  }, [paginationModel, search]);
+    const debounceTimer = setTimeout(() => {
+      fetchProjects();
+    }, 500);
+
+    return () => clearTimeout(debounceTimer);
+  }, [fetchProjects]);
 
   const handleDeleteClick = (id: string) => {
     setSelectedDeleteId(id);
@@ -140,6 +149,7 @@ const Projects = () => {
       fetchProjects();
     } catch (error) {
       setError(error instanceof Error ? error.message : "Delete failed");
+      // Keep dialog open so user can retry or cancel
     }
   };
 
@@ -168,11 +178,17 @@ const Projects = () => {
                 <Typography variant="body2" fontWeight="bold">
                   Group ID: {wg.workGroup} (Order: {wg.order})
                 </Typography>
-                {wg.workTasks.map((task, idx) => (
-                  <Typography key={idx} variant="body2" sx={{ pl: 1 }}>
-                    ↳ Task ID: {task.workTask} (Order: {task.order})
+                {wg.workTasks.length === 0 ? (
+                  <Typography variant="body2" sx={{ pl: 1 }}>
+                    No tasks
                   </Typography>
-                ))}
+                ) : (
+                  wg.workTasks.map((task, idx) => (
+                    <Typography key={idx} variant="body2" sx={{ pl: 1 }}>
+                      ↳ Task ID: {task.workTask} (Order: {task.order})
+                    </Typography>
+                  ))
+                )}
               </Box>
             ))}
           </Box>
@@ -225,7 +241,7 @@ const Projects = () => {
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
-            setPaginationModel({ ...paginationModel, page: 0 });
+            setPaginationModel((prev) => ({ ...prev, page: 0 }));
           }}
         />
         <ReusableButton onClick={() => router.push("/admin/work/work/add")}>
@@ -252,7 +268,7 @@ const Projects = () => {
           paginationMode="server"
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25, 100]}
+          pageSizeOptions={isSmallScreen ? [5, 10] : [5, 10, 25, 100]}
           autoHeight
           disableColumnMenu={isSmallScreen}
         />

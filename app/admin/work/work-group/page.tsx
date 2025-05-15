@@ -124,7 +124,7 @@ const WorkGroups = () => {
             color="primary"
             size="small"
             onClick={() =>
-              router.push(`/admin/work/work-group/${params.row.id}`)
+              router.push(`/admin/work/work-group/${params.row._id}`)
             }
           >
             <Visibility />
@@ -133,7 +133,7 @@ const WorkGroups = () => {
             color="primary"
             size="small"
             onClick={() =>
-              router.push(`/admin/work/work-group/edit?id=${params.row.id}`)
+              router.push(`/admin/work/work-group/edit?id=${params.row._id}`)
             }
           >
             <Edit fontSize="small" />

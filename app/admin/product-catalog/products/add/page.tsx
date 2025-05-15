@@ -24,12 +24,17 @@ interface Category {
   name: string;
 }
 
+interface SubCategory {
+  _id: string;
+  name: string;
+}
+
 interface WorkGroup {
   _id: string;
   name: string;
 }
 
-interface SubCategory {
+interface WorkTask {
   _id: string;
   name: string;
 }
@@ -58,47 +63,57 @@ const AddProduct = () => {
     categories: [] as Category[],
     subCategories: [] as SubCategory[],
     workGroups: [] as WorkGroup[],
-    workTasks: [] as string[],
+    workTasks: [] as WorkTask[],
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch categories and work groups
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDropdowns = async () => {
       try {
         const [catRes, wgRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/categories`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/work-groups`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
+          fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/categories`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          ),
+          fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/work-groups`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          ),
         ]);
 
-        if (!catRes.ok || !wgRes.ok) {
-          throw new Error("Failed to load dropdowns");
-        }
+        const catData = await catRes.json();
+        const wgData = await wgRes.json();
 
-        const [catData, wgData] = await Promise.all([catRes.json(), wgRes.json()]);
-
-        setDropdowns({
+        setDropdowns((prev) => ({
+          ...prev,
           categories: catData.categories || [],
           workGroups: wgData.workGroups || [],
-          subCategories: [],
-          workTasks: [],
-        });
-      } catch (err) {
-        setError("Error fetching dropdowns");
+        }));
+      } catch (error) {
+        console.error(error);
+        setError("Failed to fetch categories or work groups");
       }
     };
 
-    fetchData();
+    if (token) fetchDropdowns();
   }, [token]);
 
+  // Fetch subcategories when category changes
   useEffect(() => {
     if (formData.category) {
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/subcategories/${formData.category}`)
+      fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/subcategories/${formData.category}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
         .then((res) => res.json())
         .then((data) =>
           setDropdowns((prev) => ({
@@ -108,11 +123,17 @@ const AddProduct = () => {
         )
         .catch(() => setError("Failed to fetch subcategories"));
     }
-  }, [formData.category]);
+  }, [formData.category, token]);
 
+  // Fetch work tasks when work group changes
   useEffect(() => {
     if (formData.workGroup) {
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/work-tasks/${formData.workGroup}`)
+      fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/work-tasks/${formData.workGroup}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
         .then((res) => res.json())
         .then((data) =>
           setDropdowns((prev) => ({
@@ -122,7 +143,7 @@ const AddProduct = () => {
         )
         .catch(() => setError("Failed to fetch work tasks"));
     }
-  }, [formData.workGroup]);
+  }, [formData.workGroup, token]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -133,7 +154,7 @@ const AddProduct = () => {
 
   const handleSelectChange = (e: SelectChangeEvent) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name!]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -169,14 +190,17 @@ const AddProduct = () => {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/products`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to create product");
@@ -231,6 +255,7 @@ const AddProduct = () => {
               ))}
             </Select>
           </FormControl>
+
           <FormControl fullWidth sx={{ mb: 3 }}>
             <InputLabel>Sub Category</InputLabel>
             <Select
@@ -278,8 +303,8 @@ const AddProduct = () => {
               onChange={handleSelectChange}
             >
               {dropdowns.workTasks.map((task) => (
-                <MenuItem key={task} value={task}>
-                  {task}
+                <MenuItem key={task._id} value={task._id}>
+                  {task.name}
                 </MenuItem>
               ))}
             </Select>
@@ -328,15 +353,19 @@ const AddProduct = () => {
         </Typography>
       </Box>
       <Typography variant="caption" sx={{ color: "#999" }}>
-                        Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
-                        </Typography>
+        Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+      </Typography>
 
       {error && (
         <Typography sx={{ color: "error.main", mb: 2 }}>{error}</Typography>
       )}
 
       <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton variant="contained" onClick={handleSubmit} disabled={loading}>
+        <ReusableButton
+          variant="contained"
+          onClick={handleSubmit}
+          disabled={loading}
+        >
           {loading ? "Submitting..." : "Submit"}
         </ReusableButton>
         <CancelButton href="/admin/product-catalog/products" variant="outlined">

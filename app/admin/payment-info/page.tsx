@@ -118,7 +118,11 @@ const PaymentInfoPage: React.FC = () => {
     const method = formData.id ? "PATCH" : "POST"; // If ID exists, PATCH; otherwise, POST
     const url = `${process.env.NEXT_PUBLIC_API_URL}/pay-info`;
 
-    const requestBody = {
+    const requestBody: {
+      designAmount: number;
+      partialAmount: number;
+      id?: string;
+    } = {
       designAmount: formData.designAmount,
       partialAmount: formData.partialAmount,
     };
@@ -128,7 +132,7 @@ const PaymentInfoPage: React.FC = () => {
         setError("ID is required for updating.");
         return;
       }
-      requestBody.id = formData.id; // For editing, include the ID
+      requestBody.id = formData.id; // Now safe and type-checked
     }
 
     try {

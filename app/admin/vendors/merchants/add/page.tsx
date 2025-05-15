@@ -127,7 +127,7 @@ const AddMerchant = () => {
 
       const data = await res.json();
       if (res.ok) {
-        router.push("/admin/merchants");
+        router.push("/admin/vendors/merchants");
       } else {
         setError(data.message || "Something went wrong");
       }

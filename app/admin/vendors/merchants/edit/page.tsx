@@ -48,7 +48,10 @@ const EditMerchant = () => {
   const [error, setError] = useState("");
   const searchParams = useSearchParams();
 
-  const keycloakId = useMemo(() => searchParams.get("keycloakId"), [searchParams]);
+  const keycloakId = useMemo(
+    () => searchParams.get("keycloakId"),
+    [searchParams]
+  );
 
   // Fetch Merchant Details
   useEffect(() => {
@@ -254,9 +257,7 @@ const EditMerchant = () => {
         <ReusableButton onClick={handleSubmit} disabled={loading}>
           {loading ? <CircularProgress size={20} /> : "Update"}
         </ReusableButton>
-        <CancelButton href="/admin/vendors/merchants">
-          Cancel
-        </CancelButton>
+        <CancelButton href="/admin/vendors/merchants">Cancel</CancelButton>
       </Box>
     </Box>
   );

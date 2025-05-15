@@ -7,14 +7,18 @@ import {
   TextField,
   useMediaQuery,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
 } from "@mui/material";
 import {
   DataGrid,
   GridColDef,
   GridPaginationModel,
-  GridValueGetter, // Use GridValueGetter directly
   GridRenderCellParams,
-  GridCellParams,
 } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
@@ -56,6 +60,9 @@ const WorkTasksPage = () => {
   const [tasks, setTasks] = useState<WorkTask[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   const fetchWorkTasks = async () => {
     setLoading(true);
@@ -108,11 +115,44 @@ const WorkTasksPage = () => {
     fetchWorkTasks();
   }, [paginationModel, search]);
 
+  const handleDeleteClick = (id: string) => {
+    setSelectedTaskId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setSelectedTaskId(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedTaskId) return;
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/work-tasks/${selectedTaskId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+
+      handleDeleteCancel();
+      fetchWorkTasks(); // Refresh list
+    } catch (err) {
+      console.error("Delete failed:", err);
+      setError("Failed to delete work task");
+    }
+  };
+
   const columns: GridColDef<WorkTask>[] = [
     { field: "sn", headerName: "SN", flex: 0.5 },
     { field: "name", headerName: "Name", flex: 1 },
     { field: "description", headerName: "Description", flex: 1.5 },
-
     {
       field: "workGroup",
       headerName: "Work Group",
@@ -142,11 +182,9 @@ const WorkTasksPage = () => {
         );
       },
     },
-
     { field: "targetDays", headerName: "Target Days", flex: 0.8 },
     { field: "bufferDays", headerName: "Buffer Days", flex: 0.8 },
     { field: "poDays", headerName: "PO Days", flex: 0.8 },
-
     {
       field: "actions",
       headerName: "Actions",
@@ -171,7 +209,11 @@ const WorkTasksPage = () => {
           >
             <Edit fontSize="small" />
           </IconButton>
-          <IconButton color="error" size="small">
+          <IconButton
+            color="error"
+            size="small"
+            onClick={() => handleDeleteClick(params.row.id!)}
+          >
             <Delete fontSize="small" />
           </IconButton>
         </Box>
@@ -229,6 +271,23 @@ const WorkTasksPage = () => {
           disableColumnMenu={isSmallScreen}
         />
       </Box>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+        <DialogTitle>Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this work task? This action cannot
+            be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

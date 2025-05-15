@@ -27,17 +27,17 @@ interface ProjectMapping {
 }
 
 interface Country {
-  _id: string;
+  _id: string | number;
   name: string;
 }
 
 interface State {
-  _id: string;
+  _id: string | number;
   name: string;
 }
 
 interface City {
-  _id: string;
+  _id: string | number;
   name: string;
 }
 
@@ -64,23 +64,72 @@ const AddKiosk = () => {
   const [states, setStates] = useState<State[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [projects, setProjects] = useState<ProjectMapping[]>([]);
+
   const [loading, setLoading] = useState(false);
   const [loadingProjects, setLoadingProjects] = useState(true);
-  const [loadingCountries, setLoadingCountries] = useState(false);
+  const [loadingCountries, setLoadingCountries] = useState(true);
 
   useEffect(() => {
-    fetchData(`${process.env.NEXT_PUBLIC_API_URL}/kiosks/countries`, setCountries);
-  }, []);
+    const fetchCountries = async () => {
+      try {
+        setLoadingCountries(true);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/countries`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setCountries(data.countries || []);
+      } catch (err) {
+        console.error("Error fetching countries:", err);
+      } finally {
+        setLoadingCountries(false);
+      }
+    };
+    fetchCountries();
+  }, [token]);
 
   useEffect(() => {
-    if (!form.country) return;
-    fetchData(`${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/states/${form.country}`, setStates);
-  }, [form.country]);
+    if (!form.country) {
+      setStates([]);
+      setForm((prev) => ({ ...prev, state: "", city: "" }));
+      return;
+    }
+
+    const fetchStates = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/states/${form.country}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setStates(data.states || []);
+      } catch (err) {
+        console.error("Error fetching states:", err);
+      }
+    };
+
+    fetchStates();
+  }, [form.country, token]);
 
   useEffect(() => {
-    if (!form.state) return;
-    fetchData(`${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/cities/${form.state}`, setCities);
-  }, [form.state]);
+    if (!form.state) {
+      setCities([]);
+      setForm((prev) => ({ ...prev, city: "" }));
+      return;
+    }
+
+    const fetchCities = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/cities/${form.state}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setCities(data.cities || []);
+      } catch (err) {
+        console.error("Error fetching cities:", err);
+      }
+    };
+
+    fetchCities();
+  }, [form.state, token]);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -89,31 +138,27 @@ const AddKiosk = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
-        if (Array.isArray(data.projects)) setProjects(data.projects);
+        setProjects(data.projects || []);
       } catch (err) {
         console.error("Error fetching projects:", err);
       } finally {
         setLoadingProjects(false);
       }
     };
+
     fetchProjects();
   }, [token]);
 
-  const fetchData = async (url: string, setState: React.Dispatch<React.SetStateAction<any[]>>) => {
-    try {
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      setState(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error(`Error fetching ${url}:`, err);
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<string>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<string>
+  ) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+      ...(name === "country" ? { state: "", city: "" } : {}),
+      ...(name === "state" ? { city: "" } : {}),
+    }));
   };
 
   const handleCheckboxChange = (projectId: string) => {
@@ -126,26 +171,48 @@ const AddKiosk = () => {
   };
 
   const handleSubmit = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kiosks`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(form),
-      });
-
-      if (!res.ok) throw new Error("Failed to create kiosk");
-      router.push("/admin/kiosk-management");
-    } catch (err) {
-      console.error(err);
-      alert("Error creating kiosk");
-    } finally {
+  setLoading(true);
+  try {
+    // Check required fields
+    if (!form.firstName || !form.username || !form.email || !form.country || !form.state || !form.city) {
+      alert("Please fill in all required fields.");
       setLoading(false);
+      return;
     }
-  };
+
+    // Construct payload with IDs, ensuring numbers if needed
+    const payload = {
+      ...form,
+      country: typeof form.country === "string" ? Number(form.country) : form.country,
+      state: typeof form.state === "string" ? Number(form.state) : form.state,
+      city: typeof form.city === "string" ? Number(form.city) : form.city,
+    };
+
+    console.log("Submitting payload:", payload);
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kiosks`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errData = await res.json();
+      console.error("API Error Response:", errData);
+      throw new Error(errData?.message || "Failed to create kiosk");
+    }
+
+    router.push("/admin/kiosk-management");
+  } catch (err: any) {
+    console.error(err);
+    alert(err.message || "Error creating kiosk");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const renderTextField = (label: string, name: keyof typeof form) => (
     <TextField
@@ -162,18 +229,20 @@ const AddKiosk = () => {
     label: string,
     value: string,
     name: keyof typeof form,
-    options: any[],
-    loading: boolean = false,
-    disabled: boolean = false
+    options: { _id: string | number; name: string }[],
+    loading = false,
+    disabled = false
   ) => (
-    <FormControl fullWidth sx={{ mb: 2 }} disabled={disabled}>
+    <FormControl fullWidth sx={{ mb: 2 }} disabled={disabled || loading}>
       <InputLabel>{label}</InputLabel>
       <Select name={name} value={value} label={label} onChange={handleChange}>
         {loading ? (
           <MenuItem disabled>Loading...</MenuItem>
+        ) : options.length === 0 ? (
+          <MenuItem disabled>No {label.toLowerCase()} available</MenuItem>
         ) : (
           options.map((opt) => (
-            <MenuItem key={opt._id} value={opt._id}>
+            <MenuItem key={opt._id} value={String(opt._id)}>
               {opt.name}
             </MenuItem>
           ))
@@ -196,19 +265,11 @@ const AddKiosk = () => {
         <Grid item xs={12} sm={6}>{renderTextField("Password", "password")}</Grid>
         <Grid item xs={12}>{renderTextField("Description", "description")}</Grid>
         <Grid item xs={12}>{renderTextField("Address", "address")}</Grid>
-        <Grid item xs={12} sm={6}>{renderSelect(
-            "Country",
-            form.country,
-            "country",
-            countries,
-            loadingCountries
-          )}</Grid>
+        <Grid item xs={12} sm={6}>{renderSelect("Country", form.country, "country", countries, loadingCountries)}</Grid>
         <Grid item xs={12} sm={6}>{renderSelect("State", form.state, "state", states, false, !form.country)}</Grid>
         <Grid item xs={12} sm={6}>{renderSelect("City", form.city, "city", cities, false, !form.state)}</Grid>
         <Grid item xs={12}>
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            Residence Mapping
-          </Typography>
+          <Typography variant="h6" sx={{ mb: 1 }}>Residence Mapping</Typography>
           <FormGroup>
             {loadingProjects ? (
               <Typography>Loading projects...</Typography>

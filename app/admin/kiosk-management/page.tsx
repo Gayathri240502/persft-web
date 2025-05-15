@@ -165,7 +165,7 @@ const KioskManagement = () => {
           <IconButton
             color="primary"
             onClick={() =>
-              router.push(`/admin/kiosk-management/${params.row.keycloakId}`)
+              router.push(`/admin/kiosk-management/${params.row.id}`)
             }
           >
             <Visibility />
@@ -174,7 +174,7 @@ const KioskManagement = () => {
             color="primary"
             onClick={() =>
               router.push(
-                `/admin/kiosk-management/edit?id=${params.row.keycloakId}`
+                `/admin/kiosk-management/edit?id=${params.row.id}`
               )
             }
           >

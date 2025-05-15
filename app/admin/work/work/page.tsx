@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
   TextField,
+  useMediaQuery,
   IconButton,
   CircularProgress,
   Alert,
@@ -15,55 +16,49 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
-import {
-  GridColDef,
-  GridPaginationModel,
-} from "@mui/x-data-grid";
-import { Visibility, Edit, Delete } from "@mui/icons-material";
+import { GridColDef, GridPaginationModel, GridCellParams } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
-import { useMediaQuery } from "@mui/material";
 import { useRouter } from "next/navigation";
-
-import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
+import { Delete, Edit, Visibility } from "@mui/icons-material";
 import ReusableButton from "@/app/components/Button";
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
-<<<<<<< HEAD
-interface Project {
+// Interfaces
+interface WorkTask {
+  _id: string;
+  name: string;
+}
+
+interface WorkGroup {
+  _id: string;
+  name: string;
+  workTasks: WorkTask[];
+}
+
+interface Work {
   _id: string;
   name: string;
   description: string;
   archive: boolean;
-  workGroups: WorkGroupEntry[];
   id?: string;
   sn?: number;
-=======
-// Interfaces
-interface WorkTaskEntry {
-  workTask: string;
-  order: number;
->>>>>>> 9e967d83d10000596beca99e0e9330018cc6a2e8
+  workGroups: {
+    workGroup: string;
+    order: number;
+    workTasks: {
+      workTask: string;
+      order: number;
+    }[];
+  }[];
 }
 
-interface WorkGroupEntry {
-  workGroup: string;
-  order: number;
-  workTasks: WorkTaskEntry[];
-}
-
-interface WorkProject {
-  id: string;
-  name: string;
-  description: string;
-  archive: boolean;
-  workGroups: WorkGroupEntry[];
-  sn?: number;
-}
-
-const Projects = () => {
-  const router = useRouter();
+// Component
+const WorkList = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  const router = useRouter();
+  const { token } = getTokenAndRole();
 
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -73,18 +68,39 @@ const Projects = () => {
     pageSize: 10,
   });
   const [rowCount, setRowCount] = useState(0);
-  const [work, setWork] = useState<WorkProject[]>([]);
+  const [works, setWorks] = useState<Work[]>([]);
+  const [workGroupMap, setWorkGroupMap] = useState<Record<string, string>>({});
+  const [workTaskMap, setWorkTaskMap] = useState<Record<string, string>>({});
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
 
-  const { token } = getTokenAndRole();
+  const fetchWorkMappings = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/works/work-groups-tasks`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
 
-<<<<<<< HEAD
-  // Fetch projects function wrapped in useCallback to debounce effect correctly
-  const fetchProjects = useCallback(async () => {
-=======
-  const fetchWork = async () => {
->>>>>>> 9e967d83d10000596beca99e0e9330018cc6a2e8
+      const groupMap: Record<string, string> = {};
+      const taskMap: Record<string, string> = {};
+
+      data?.workGroups?.forEach((group: any) => {
+        groupMap[group._id] = group.name;
+        group?.workTasks?.forEach((task: any) => {
+          taskMap[task._id] = task.name;
+        });
+      });
+
+      setWorkGroupMap(groupMap);
+      setWorkTaskMap(taskMap);
+    } catch (e) {
+      console.error("Mapping fetch failed", e);
+    }
+  };
+
+  const fetchWorks = async () => {
     const { page, pageSize } = paginationModel;
     setLoading(true);
     setError(null);
@@ -93,83 +109,45 @@ const Projects = () => {
       const queryParams = new URLSearchParams({
         page: String(page + 1),
         limit: String(pageSize),
+        searchTerm: search,
       });
-      if (search.trim() !== "") {
-        queryParams.append("searchTerm", search.trim());
-      }
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/works?${queryParams.toString()}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/works?${queryParams}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      if (!response.ok) throw new Error("Failed to fetch projects");
+      if (!res.ok) throw new Error("Failed to fetch works");
 
-      const result = await response.json();
-      const projectList = Array.isArray(result.projects) ? result.projects : [];
+      const result = await res.json();
 
-      const formatted = projectList.map((item: any, index: number) => ({
+      const worksData = result?.works?.map((item: any, index: number) => ({
         ...item,
-        id: item._id,
+        id: item._any,
         sn: page * pageSize + index + 1,
-      }));
+      })) || [];
 
-      setWork(formatted);
-      setRowCount(result.totalDocs || formatted.length);
+      setWorks(worksData);
+      setRowCount(result.totalDocs || worksData.length);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Unknown error");
-      setProjects([]);
-      setRowCount(0);
+      setError(error instanceof Error ? error.message : "Failed to fetch works");
     } finally {
       setLoading(false);
     }
-  }, [paginationModel, search, token]);
+  };
 
-  // Debounce the fetchProjects on search & pagination changes
   useEffect(() => {
-<<<<<<< HEAD
-    const debounceTimer = setTimeout(() => {
-      fetchProjects();
-    }, 500);
+    fetchWorkMappings();
+  }, []);
 
-    return () => clearTimeout(debounceTimer);
-  }, [fetchProjects]);
-=======
-    fetchWork();
+  useEffect(() => {
+    fetchWorks();
   }, [paginationModel, search]);
->>>>>>> 9e967d83d10000596beca99e0e9330018cc6a2e8
 
   const handleDeleteClick = (id: string) => {
     setSelectedDeleteId(id);
     setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!selectedDeleteId) return;
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/works/${selectedDeleteId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (!response.ok) throw new Error("Failed to delete project");
-
-      setDeleteDialogOpen(false);
-      setSelectedDeleteId(null);
-      fetchWork();
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Delete failed");
-      // Keep dialog open so user can retry or cancel
-    }
   };
 
   const handleDeleteCancel = () => {
@@ -177,98 +155,84 @@ const Projects = () => {
     setSelectedDeleteId(null);
   };
 
+  const handleDeleteConfirm = async () => {
+    if (!selectedDeleteId) return;
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/works/${selectedDeleteId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("Failed to delete work");
+
+      fetchWorks();
+      setDeleteDialogOpen(false);
+      setSelectedDeleteId(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete item");
+    }
+  };
+
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", width: 70 },
-    {
-      field: "name",
-      headerName: "Project Name",
-      flex: 1,
-      renderCell: (params) => <Typography>{params.row.name}</Typography>,
-    },
-    {
-      field: "description",
-      headerName: "Description",
-      flex: 2,
-      renderCell: (params) => (
-        <Typography>{params.row.description}</Typography>
-      ),
-    },
+    { field: "name", headerName: "Work Name", flex: 1 },
+    { field: "description", headerName: "Description", flex: 2 },
     {
       field: "workGroups",
       headerName: "Work Groups & Tasks",
       flex: 3,
-      renderCell: (params) => {
-        const workGroups: WorkGroupEntry[] = params.row.workGroups || [];
+      renderCell: (params: GridCellParams) => {
+        const groups = params.row.workGroups || [];
 
         return (
-          <Box>
-<<<<<<< HEAD
-            {workGroups.map((wg, i) => (
-              <Box key={i} sx={{ mb: 1 }}>
-                <Typography variant="body2" fontWeight="bold">
-                  Group ID: {wg.workGroup} (Order: {wg.order})
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            {groups.map((group: any, i: number) => (
+              <Box key={i}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  {workGroupMap[group.workGroup] || "Unknown Group"}
                 </Typography>
-                {wg.workTasks.length === 0 ? (
-                  <Typography variant="body2" sx={{ pl: 1 }}>
-                    No tasks
-                  </Typography>
-                ) : (
-                  wg.workTasks.map((task, idx) => (
-                    <Typography key={idx} variant="body2" sx={{ pl: 1 }}>
-                      ↳ Task ID: {task.workTask} (Order: {task.order})
-                    </Typography>
-                  ))
-                )}
-              </Box>
-            ))}
-=======
-            {workGroups.length === 0 ? (
-              <Typography>None</Typography>
-            ) : (
-              workGroups.map((wg, i) => (
-                <Box key={i} sx={{ mb: 1 }}>
-                  <Typography fontWeight="bold" variant="body2">
-                    Group ID: {wg.workGroup} (Order: {wg.order})
-                  </Typography>
-                  {wg.workTasks.map((task, idx) => (
-                    <Typography key={idx} variant="body2" sx={{ pl: 1 }}>
-                      ↳ Task ID: {task.workTask} (Order: {task.order})
+                <Box sx={{ pl: 2 }}>
+                  {group.workTasks.map((task: any, j: number) => (
+                    <Typography key={j} variant="body2">
+                      • {workTaskMap[task.workTask] || "Unknown Task"}
                     </Typography>
                   ))}
                 </Box>
-              ))
-            )}
->>>>>>> 9e967d83d10000596beca99e0e9330018cc6a2e8
+              </Box>
+            ))}
           </Box>
         );
       },
     },
     {
       field: "action",
-      headerName: "Actions",
+      headerName: "Action",
       flex: 1,
-      renderCell: (params) => (
+      renderCell: (params: GridCellParams) => (
         <Box>
           <IconButton
             color="info"
             size="small"
-            onClick={() => router.push(`/admin/work/work/${params.row.id}`)}
+            onClick={() => router.push(`/admin/works/${params.row.id}`)}
           >
-            <Visibility fontSize="small" />
+            <Visibility />
           </IconButton>
           <IconButton
             color="primary"
             size="small"
-            onClick={() => router.push(`/admin/work/work/edit?id=${params.row.id}`)}
+            onClick={() => router.push(`/admin/works/edit?id=${params.row.id}`)}
           >
-            <Edit fontSize="small" />
+            <Edit />
           </IconButton>
           <IconButton
             color="error"
             size="small"
             onClick={() => handleDeleteClick(params.row.id)}
           >
-            <Delete fontSize="small" />
+            <Delete />
           </IconButton>
         </Box>
       ),
@@ -278,55 +242,59 @@ const Projects = () => {
   return (
     <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
       <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-        Work
+        Works
       </Typography>
 
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2, gap: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          mb: 2,
+          gap: isSmallScreen ? 2 : 1,
+        }}
+      >
         <TextField
           label="Search"
+          variant="outlined"
           size="small"
           fullWidth={isSmallScreen}
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
-            setPaginationModel((prev) => ({ ...prev, page: 0 }));
+            setPaginationModel({ ...paginationModel, page: 0 });
           }}
         />
-        <ReusableButton onClick={() => router.push("/admin/work/work/add")}>
+        <ReusableButton onClick={() => router.push("/admin/works/add")}>
           ADD
         </ReusableButton>
       </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+      {error && <Alert severity="error">{error}</Alert>}
 
       {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
           <CircularProgress />
         </Box>
       ) : (
         <StyledDataGrid
-          rows={work}
+          rows={works}
           columns={columns}
           rowCount={rowCount}
           pagination
           paginationMode="server"
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={isSmallScreen ? [5, 10] : [5, 10, 25, 100]}
+          pageSizeOptions={[5, 10, 25, 100]}
           autoHeight
-          disableColumnMenu={isSmallScreen}
         />
       )}
 
+      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-        <DialogTitle>Delete Project</DialogTitle>
+        <DialogTitle>Delete Work</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this project? This action cannot be undone.
+            Are you sure you want to delete this work? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -340,4 +308,4 @@ const Projects = () => {
   );
 };
 
-export default Projects;
+export default WorkList;

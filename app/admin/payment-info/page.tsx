@@ -27,6 +27,7 @@ import { Edit } from "@mui/icons-material";
 import ReusableButton from "@/app/components/Button";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import CancelButton from "@/app/components/CancelButton";
 
 interface PaymentInfo {
   id: string;
@@ -115,7 +116,7 @@ const PaymentInfoPage: React.FC = () => {
   }, [search, paginationModel, allRows]);
 
   const handleSubmit = async () => {
-    const method = formData.id ? "PATCH" : "POST"; // If ID exists, PATCH; otherwise, POST
+    const method = formData.id ? "PATCH" : "POST";
     const url = `${process.env.NEXT_PUBLIC_API_URL}/pay-info`;
 
     const requestBody: {
@@ -132,7 +133,7 @@ const PaymentInfoPage: React.FC = () => {
         setError("ID is required for updating.");
         return;
       }
-      requestBody.id = formData.id; // Now safe and type-checked
+      requestBody.id = formData.id;
     }
 
     try {
@@ -146,7 +147,7 @@ const PaymentInfoPage: React.FC = () => {
       });
 
       if (!res.ok) {
-        const errorDetails = await res.json(); // Try to get the error details from the server response
+        const errorDetails = await res.json();
         setError(
           `Failed to ${method}: ${errorDetails.message || "Unknown error"}`
         );
@@ -158,8 +159,8 @@ const PaymentInfoPage: React.FC = () => {
       setSuccessMsg(
         `Payment info ${method === "POST" ? "added" : "updated"} successfully`
       );
-      setAddDialogOpen(false); // Close dialog after submission
-      fetchPaymentInfos(); // Refetch the payment info list
+      setAddDialogOpen(false);
+      fetchPaymentInfos();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Submission failed");
     }
@@ -167,16 +168,16 @@ const PaymentInfoPage: React.FC = () => {
 
   const handleEditClick = (params: GridRenderCellParams) => {
     setFormData({
-      id: params.row.id, // Set the ID when editing
+      id: params.row.id,
       designAmount: params.row.designAmount,
       partialAmount: params.row.partialAmount,
     });
-    setAddDialogOpen(true); // Open the dialog
+    setAddDialogOpen(true);
   };
 
   const handleAddClick = () => {
-    setFormData({ id: "", designAmount: 1000, partialAmount: 50 }); // Set default values for new entry
-    setAddDialogOpen(true); // Open the dialog
+    setFormData({ id: "", designAmount: 1000, partialAmount: 50 });
+    setAddDialogOpen(true);
   };
 
   const columns: GridColDef[] = [
@@ -280,38 +281,48 @@ const PaymentInfoPage: React.FC = () => {
           {formData.id ? "Edit Payment Info" : "Add Payment Info"}
         </DialogTitle>
         <DialogContent
-          sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 2 }}
-        >
-          <TextField
-            label="Design Amount"
-            type="number"
-            fullWidth
-            value={formData.designAmount}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                designAmount: parseFloat(e.target.value),
-              })
-            }
-          />
-          <TextField
-            label="Partial Amount"
-            type="number"
-            fullWidth
-            value={formData.partialAmount}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                partialAmount: parseFloat(e.target.value),
-              })
-            }
-          />
-        </DialogContent>
+  sx={{
+    mt: 2,
+    px: 2,
+    py: 1,
+    display: "flex",
+    flexDirection: "column",
+    gap: 2,
+    overflow: "visible",
+  }}
+>
+  <TextField
+    label="Design Amount"
+    type="number"
+    fullWidth
+    variant="outlined"
+    value={formData.designAmount}
+    onChange={(e) =>
+      setFormData({
+        ...formData,
+        designAmount: parseFloat(e.target.value),
+      })
+    }
+  />
+  <TextField
+    label="Partial Amount"
+    type="number"
+    fullWidth
+    variant="outlined"
+    value={formData.partialAmount}
+    onChange={(e) =>
+      setFormData({
+        ...formData,
+        partialAmount: parseFloat(e.target.value),
+      })
+    }
+  />
+</DialogContent>
         <DialogActions>
-          <Button onClick={() => setAddDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSubmit}>
+          <CancelButton onClick={() => setAddDialogOpen(false)}>Cancel</CancelButton>
+          <ReusableButton variant="contained" onClick={handleSubmit}>
             {formData.id ? "Update" : "Add"}
-          </Button>
+          </ReusableButton>
         </DialogActions>
       </Dialog>
 

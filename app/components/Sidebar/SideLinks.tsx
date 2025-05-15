@@ -119,13 +119,17 @@ const SideLinks: SideLink[] = [
     pathname: "work",
     icon: <WorkIcon />,
     subMenu: [
+      
+      {title:"works", pathname: "admin/work/works",},
+      
       { title: "work Group", pathname: "admin/work/work-group", },
+
       {
         title: "Work Task",
         pathname: "admin/work/work-task",
         
       },
-      { title: "Work", pathname: "admin/work/work",  },
+      
     ],
   },
   

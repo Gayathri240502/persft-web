@@ -36,15 +36,12 @@ const AddTheme = () => {
   const [loading, setLoading] = useState(false);
   const [loadingRoomTypes, setLoadingRoomTypes] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [thumbnail, setThumbnail] = useState<string>("");
-  const [selectedFileName, setSelectedFileName] =
-      useState<string>("No file selected");
+  const [selectedFileName, setSelectedFileName] = useState("No file selected");
 
   useEffect(() => {
     const fetchRoomTypes = async () => {
       try {
         setLoadingRoomTypes(true);
-
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/room-types`,
           {
@@ -94,38 +91,45 @@ const AddTheme = () => {
     }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormData((prev) => ({
-        ...prev,
-        thumbnail: file.name, // Optional: Convert to base64 if needed
-      }));
+      // Validate size (max 60KB)
+      if (file.size > 60 * 1024) {
+        setError("Image must be less than 60KB");
+        return;
+      }
+
+      // Validate format
+      const validFormats = ["image/jpeg", "image/png", "image/jpg"];
+      if (!validFormats.includes(file.type)) {
+        setError("Only JPG, JPEG, and PNG formats are accepted");
+        return;
+      }
+
+      setError(null);
+      setSelectedFileName(file.name);
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        setFormData((prev) => ({
+          ...prev,
+          thumbnail: base64,
+        }));
+      };
+      reader.readAsDataURL(file);
     }
   };
-
-  const handleThumbnailChange = async (
-      e: React.ChangeEvent<HTMLInputElement>
-    ) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        setSelectedFileName(file.name);
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64String = reader.result as string;
-          setThumbnail(base64String);
-        };
-        reader.readAsDataURL(file);
-      }
-    };
 
   const validateForm = () => {
     if (
       !formData.name ||
       !formData.description ||
-      formData.roomTypes.length === 0
+      formData.roomTypes.length === 0 ||
+      !formData.thumbnail
     ) {
-      setError("All fields are required");
+      setError("All fields including thumbnail are required");
       return false;
     }
     return true;
@@ -161,7 +165,9 @@ const AddTheme = () => {
       router.push("/admin/home-catalog/themes");
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "An error occurred while creating"
+        err instanceof Error
+          ? err.message
+          : "An error occurred while creating"
       );
     } finally {
       setLoading(false);
@@ -194,38 +200,38 @@ const AddTheme = () => {
         sx={{ mb: 3 }}
       />
 
-<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-    <Button
-      variant="outlined"
-      component="label"
-      startIcon={<UploadFileIcon />}
-      sx={{
-        color: "#05344c",
-        borderColor: "#05344c",
-        "&:hover": { backgroundColor: "#f0f4f8" },
-      }}
-    >
-      Upload Thumbnail
-      <input type="file" hidden onChange={handleThumbnailChange} />
-    </Button>
-    <Typography variant="body2" sx={{ color: "#666" }}>
-      {selectedFileName}
-    </Typography>
-  </Box>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+        <Button
+          variant="outlined"
+          component="label"
+          startIcon={<UploadFileIcon />}
+          sx={{
+            color: "#05344c",
+            borderColor: "#05344c",
+            "&:hover": { backgroundColor: "#f0f4f8" },
+          }}
+        >
+          Upload Thumbnail
+          <input type="file" hidden onChange={handleThumbnailChange} />
+        </Button>
+        <Typography variant="body2" sx={{ color: "#666" }}>
+          {selectedFileName}
+        </Typography>
+      </Box>
       <Typography variant="caption" sx={{ color: "#999" }}>
-                Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
-                </Typography>
-                {thumbnail && (
-                            <Box sx={{ mb: 3 }}>
-                              <Typography variant="subtitle2">Preview:</Typography>
-                              <img
-                                src={thumbnail}
-                                alt="Thumbnail Preview"
-                                style={{ width: 200, borderRadius: 8 }}
-                              />
-                            </Box>
-                          )}
+        Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+      </Typography>
 
+      {formData.thumbnail && (
+        <Box sx={{ mt: 2, mb: 3 }}>
+          <Typography variant="subtitle2">Preview:</Typography>
+          <img
+            src={formData.thumbnail}
+            alt="Thumbnail Preview"
+            style={{ width: 200, borderRadius: 8 }}
+          />
+        </Box>
+      )}
 
       <Typography variant="h6" sx={{ mb: 1 }}>
         Map Room Types

@@ -24,10 +24,22 @@ interface Kiosk {
   _id: string;
   firstName: string;
   lastName: string;
+  username: string;
+  keycloakId: string;
+  email: string;
+  phone: string;
+  role: string[];
+  enabled: boolean;
+  archive: boolean;
+  createdAt: string;
+  updatedAt: string;
   description: string;
   address: string;
+  country: string;
   countryName: string;
+  state: string;
   stateName: string;
+  city: string;
   cityName: string;
   projects: string[];
   projectNames: string[];
@@ -71,8 +83,8 @@ const KioskDetailsPage: React.FC = () => {
           );
         }
 
-        const data: Kiosk = await res.json();
-        setKiosk(data);
+        const data: { kiosk: Kiosk } = await res.json();
+        setKiosk(data.kiosk);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -110,12 +122,7 @@ const KioskDetailsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh"
-      >
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
         <CircularProgress />
       </Box>
     );
@@ -123,12 +130,7 @@ const KioskDetailsPage: React.FC = () => {
 
   if (error) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh"
-      >
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
         <Alert severity="error">{error}</Alert>
       </Box>
     );
@@ -136,12 +138,7 @@ const KioskDetailsPage: React.FC = () => {
 
   if (!kiosk) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh"
-      >
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
         <Alert severity="warning">Kiosk not found.</Alert>
       </Box>
     );
@@ -149,12 +146,8 @@ const KioskDetailsPage: React.FC = () => {
 
   return (
     <Box p={4}>
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => router.back()}
-        sx={{ marginBottom: 2 }}
-      >
-        Back       
+      <Button startIcon={<ArrowBack />} onClick={() => router.back()} sx={{ mb: 2 }}>
+        Back
       </Button>
 
       <Paper elevation={3} sx={{ p: 4 }}>
@@ -164,17 +157,13 @@ const KioskDetailsPage: React.FC = () => {
               {kiosk.firstName} {kiosk.lastName}
             </Typography>
             <Typography variant="subtitle1" color="textSecondary">
-              {kiosk.projects.length > 0
-                ? "Assigned Projects"
-                : "No Assigned Projects"}
+              {kiosk.projects.length > 0 ? "Assigned Projects" : "No Assigned Projects"}
             </Typography>
           </Box>
           <Box>
             <IconButton
               color="primary"
-              onClick={() =>
-                router.push(`/admin/kiosk-management/edit?id=${kiosk._id}`)
-              }
+              onClick={() => router.push(`/admin/kiosk-management/edit?id=${kiosk._id}`)}
             >
               <Edit />
             </IconButton>
@@ -186,39 +175,46 @@ const KioskDetailsPage: React.FC = () => {
 
         <Grid container spacing={2} sx={{ mt: 2 }}>
           <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>ID:</strong> {kiosk._id}
-            </Typography>
+            <Typography><strong>ID:</strong> {kiosk._id}</Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Name:</strong> {kiosk.firstName} {kiosk.lastName}
-            </Typography>
+            <Typography><strong>Username:</strong> {kiosk.username}</Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Description:</strong> {kiosk.description}
-            </Typography>
+            <Typography><strong>Email:</strong> {kiosk.email}</Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Address:</strong> {kiosk.address}
-            </Typography>
+            <Typography><strong>Phone:</strong> {kiosk.phone}</Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Country:</strong> {kiosk.countryName}
-            </Typography>
+            <Typography><strong>Role:</strong> {kiosk.role.join(", ")}</Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>State:</strong> {kiosk.stateName}
-            </Typography>
+            <Typography><strong>Enabled:</strong> {kiosk.enabled ? "Yes" : "No"}</Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>City:</strong> {kiosk.cityName}
-            </Typography>
+            <Typography><strong>Archived:</strong> {kiosk.archive ? "Yes" : "No"}</Typography>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Typography><strong>Created At:</strong> {new Date(kiosk.createdAt).toLocaleString()}</Typography>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Typography><strong>Updated At:</strong> {new Date(kiosk.updatedAt).toLocaleString()}</Typography>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Typography><strong>Description:</strong> {kiosk.description}</Typography>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Typography><strong>Address:</strong> {kiosk.address}</Typography>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Typography><strong>Country:</strong> {kiosk.countryName}</Typography>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Typography><strong>State:</strong> {kiosk.stateName}</Typography>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Typography><strong>City:</strong> {kiosk.cityName}</Typography>
           </Grid>
           <Grid item xs={12}>
             <Typography>
@@ -229,22 +225,16 @@ const KioskDetailsPage: React.FC = () => {
         </Grid>
       </Paper>
 
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this kiosk? This action cannot be
-            undone.
+            Are you sure you want to delete this kiosk? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={handleDelete}>
-            Delete
-          </Button>
+          <Button color="error" onClick={handleDelete}>Delete</Button>
         </DialogActions>
       </Dialog>
     </Box>

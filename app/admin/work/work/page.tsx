@@ -15,10 +15,7 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
-import {
-  GridColDef,
-  GridPaginationModel,
-} from "@mui/x-data-grid";
+import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import { useMediaQuery } from "@mui/material";
@@ -28,21 +25,9 @@ import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 import ReusableButton from "@/app/components/Button";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
-<<<<<<< HEAD
-interface Project {
-  _id: string;
-  name: string;
-  description: string;
-  archive: boolean;
-  workGroups: WorkGroupEntry[];
-  id?: string;
-  sn?: number;
-=======
-// Interfaces
 interface WorkTaskEntry {
   workTask: string;
   order: number;
->>>>>>> 9e967d83d10000596beca99e0e9330018cc6a2e8
 }
 
 interface WorkGroupEntry {
@@ -77,14 +62,51 @@ const Projects = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
 
+  const [groupMap, setGroupMap] = useState<Record<string, string>>({});
+  const [taskMap, setTaskMap] = useState<Record<string, string>>({});
+
   const { token } = getTokenAndRole();
 
-<<<<<<< HEAD
-  // Fetch projects function wrapped in useCallback to debounce effect correctly
+  const fetchNames = useCallback(async () => {
+    try {
+      if (!token) return;
+      const [groupRes, taskRes] = await Promise.all([
+        fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/work-groups`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        ),
+        fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/work-tasks/all`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        ),
+      ]);
+
+      const [groupData, taskData] = await Promise.all([
+        groupRes.json(),
+        taskRes.json(),
+      ]);
+
+      const groupObj = Object.fromEntries(
+        groupData.map((g: any) => [g._id, g.name])
+      );
+      const taskObj = Object.fromEntries(
+        taskData.map((t: any) => [t._id, t.name])
+      );
+
+      setGroupMap(groupObj);
+      setTaskMap(taskObj);
+    } catch (err) {
+      console.error("Failed to fetch group/task names", err);
+    }
+  }, [token]);
+
   const fetchProjects = useCallback(async () => {
-=======
-  const fetchWork = async () => {
->>>>>>> 9e967d83d10000596beca99e0e9330018cc6a2e8
+    if (!token) return;
+
     const { page, pageSize } = paginationModel;
     setLoading(true);
     setError(null);
@@ -94,6 +116,7 @@ const Projects = () => {
         page: String(page + 1),
         limit: String(pageSize),
       });
+
       if (search.trim() !== "") {
         queryParams.append("searchTerm", search.trim());
       }
@@ -111,7 +134,11 @@ const Projects = () => {
       if (!response.ok) throw new Error("Failed to fetch projects");
 
       const result = await response.json();
-      const projectList = Array.isArray(result.projects) ? result.projects : [];
+      const projectList = Array.isArray(result?.projects)
+        ? result.projects
+        : Array.isArray(result)
+          ? result
+          : [];
 
       const formatted = projectList.map((item: any, index: number) => ({
         ...item,
@@ -120,29 +147,27 @@ const Projects = () => {
       }));
 
       setWork(formatted);
-      setRowCount(result.totalDocs || formatted.length);
+      setRowCount(result?.totalDocs || formatted.length);
     } catch (error) {
+      console.error("Fetch error:", error);
       setError(error instanceof Error ? error.message : "Unknown error");
-      setProjects([]);
+      setWork([]);
       setRowCount(0);
     } finally {
       setLoading(false);
     }
   }, [paginationModel, search, token]);
 
-  // Debounce the fetchProjects on search & pagination changes
   useEffect(() => {
-<<<<<<< HEAD
+    fetchNames();
+  }, [fetchNames]);
+
+  useEffect(() => {
     const debounceTimer = setTimeout(() => {
       fetchProjects();
     }, 500);
-
     return () => clearTimeout(debounceTimer);
   }, [fetchProjects]);
-=======
-    fetchWork();
-  }, [paginationModel, search]);
->>>>>>> 9e967d83d10000596beca99e0e9330018cc6a2e8
 
   const handleDeleteClick = (id: string) => {
     setSelectedDeleteId(id);
@@ -150,7 +175,7 @@ const Projects = () => {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!selectedDeleteId) return;
+    if (!selectedDeleteId || !token) return;
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/works/${selectedDeleteId}`,
@@ -165,10 +190,9 @@ const Projects = () => {
 
       setDeleteDialogOpen(false);
       setSelectedDeleteId(null);
-      fetchWork();
+      fetchProjects();
     } catch (error) {
       setError(error instanceof Error ? error.message : "Delete failed");
-      // Keep dialog open so user can retry or cancel
     }
   };
 
@@ -189,9 +213,7 @@ const Projects = () => {
       field: "description",
       headerName: "Description",
       flex: 2,
-      renderCell: (params) => (
-        <Typography>{params.row.description}</Typography>
-      ),
+      renderCell: (params) => <Typography>{params.row.description}</Typography>,
     },
     {
       field: "workGroups",
@@ -202,11 +224,11 @@ const Projects = () => {
 
         return (
           <Box>
-<<<<<<< HEAD
             {workGroups.map((wg, i) => (
               <Box key={i} sx={{ mb: 1 }}>
                 <Typography variant="body2" fontWeight="bold">
-                  Group ID: {wg.workGroup} (Order: {wg.order})
+                  Group: {groupMap[wg.workGroup] || wg.workGroup} (Order:{" "}
+                  {wg.order})
                 </Typography>
                 {wg.workTasks.length === 0 ? (
                   <Typography variant="body2" sx={{ pl: 1 }}>
@@ -215,30 +237,13 @@ const Projects = () => {
                 ) : (
                   wg.workTasks.map((task, idx) => (
                     <Typography key={idx} variant="body2" sx={{ pl: 1 }}>
-                      ↳ Task ID: {task.workTask} (Order: {task.order})
+                      ↳ Task: {taskMap[task.workTask] || task.workTask} (Order:{" "}
+                      {task.order})
                     </Typography>
                   ))
                 )}
               </Box>
             ))}
-=======
-            {workGroups.length === 0 ? (
-              <Typography>None</Typography>
-            ) : (
-              workGroups.map((wg, i) => (
-                <Box key={i} sx={{ mb: 1 }}>
-                  <Typography fontWeight="bold" variant="body2">
-                    Group ID: {wg.workGroup} (Order: {wg.order})
-                  </Typography>
-                  {wg.workTasks.map((task, idx) => (
-                    <Typography key={idx} variant="body2" sx={{ pl: 1 }}>
-                      ↳ Task ID: {task.workTask} (Order: {task.order})
-                    </Typography>
-                  ))}
-                </Box>
-              ))
-            )}
->>>>>>> 9e967d83d10000596beca99e0e9330018cc6a2e8
           </Box>
         );
       },
@@ -259,7 +264,9 @@ const Projects = () => {
           <IconButton
             color="primary"
             size="small"
-            onClick={() => router.push(`/admin/work/work/edit?id=${params.row.id}`)}
+            onClick={() =>
+              router.push(`/admin/work/work/edit?id=${params.row.id}`)
+            }
           >
             <Edit fontSize="small" />
           </IconButton>
@@ -281,7 +288,9 @@ const Projects = () => {
         Work
       </Typography>
 
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2, gap: 2 }}>
+      <Box
+        sx={{ display: "flex", justifyContent: "space-between", mb: 2, gap: 2 }}
+      >
         <TextField
           label="Search"
           size="small"
@@ -326,7 +335,8 @@ const Projects = () => {
         <DialogTitle>Delete Project</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this project? This action cannot be undone.
+            Are you sure you want to delete this project? This action cannot be
+            undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

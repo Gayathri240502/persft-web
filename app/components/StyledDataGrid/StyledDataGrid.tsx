@@ -2,12 +2,12 @@
 import React from "react";
 import {
   DataGrid,
-  DataGridProps,
   GridToolbarContainer,
   GridToolbarColumnsButton,
   GridToolbarFilterButton,
   GridToolbarDensitySelector,
   GridToolbarExport,
+  GridColDef,
 } from "@mui/x-data-grid";
 import { Box } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
@@ -35,13 +35,28 @@ const CustomToolbar = () => {
   );
 };
 
-const StyledDataGrid: React.FC<DataGridProps> = (props) => {
+const StyledDataGrid = ({
+  rows,
+  columns,
+}: {
+  rows: any[];
+  columns: GridColDef[];
+}) => {
   return (
     <Box sx={{ overflowX: "auto" }}>
       <Box sx={{ minWidth: "1000px" }}>
         <DataGrid
+          rows={rows}
+          columns={columns}
           hideFooterSelectedRowCount
           slots={{ toolbar: CustomToolbar }}
+          pagination
+          pageSizeOptions={[5, 10, 25, 50]}
+          initialState={{
+            pagination: {
+              paginationModel: { pageSize: 10, page: 0 },
+            },
+          }}
           sx={{
             "& .MuiDataGrid-columnHeaders": {
               fontSize: "1.1rem",
@@ -55,9 +70,7 @@ const StyledDataGrid: React.FC<DataGridProps> = (props) => {
             "& .MuiDataGrid-row:nth-of-type(odd)": {
               backgroundColor: "#ffffff",
             },
-            ...props.sx,
           }}
-          {...props}
         />
       </Box>
     </Box>

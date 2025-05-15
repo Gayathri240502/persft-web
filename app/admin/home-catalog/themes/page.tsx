@@ -166,13 +166,26 @@ const ThemesPage = () => {
       field: "thumbnail",
       headerName: "Thumbnail",
       flex: 1,
-      renderCell: (params) => (
-        <img
-          src={params.row.thumbnail}
-          alt="Thumbnail"
-          style={{ width: 40, height: 40 }}
-        />
-      ),
+      renderCell: (params) => {
+        const thumbnail = params.row.thumbnail;
+
+        if (!thumbnail) {
+          return <Typography color="textSecondary">No Image</Typography>;
+        }
+
+        return (
+          <img
+            src={thumbnail}
+            alt="Thumbnail"
+            style={{
+              width: 40,
+              height: 40,
+              objectFit: "cover",
+              borderRadius: 4,
+            }}
+          />
+        );
+      },
     },
 
     {

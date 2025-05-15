@@ -18,6 +18,7 @@ import {
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useRouter } from "next/navigation"; // <-- import useRouter
 
 interface Category {
   _id: string;
@@ -41,6 +42,8 @@ interface City {
 }
 
 const AddShop = () => {
+  const router = useRouter(); // <-- initialize router
+
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -134,7 +137,7 @@ const AddShop = () => {
       try {
         setLoadingStates(true);
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/states?countryId=${form.country}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/shops/dropdown/states/${form.country}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -157,7 +160,7 @@ const AddShop = () => {
       try {
         setLoadingCities(true);
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/cities?stateId=${form.state}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/shops/dropdown/cities/${form.state}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -213,6 +216,8 @@ const AddShop = () => {
         category: "",
         subCategory: "",
       });
+
+      router.push("/admin/vendors/shops"); // <-- Redirect after success
     } catch (err: any) {
       setError(err.message || "Something went wrong while adding the shop.");
     }

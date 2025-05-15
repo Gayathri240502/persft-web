@@ -5,6 +5,7 @@ import {
   Box,
   Typography,
   TextField,
+  useMediaQuery,
   IconButton,
   CircularProgress,
   Alert,
@@ -15,16 +16,19 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
-import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import {
+  GridColDef,
+  GridCellParams,
+  GridPaginationModel,
+} from "@mui/x-data-grid";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
-import { useMediaQuery } from "@mui/material";
 import { useRouter } from "next/navigation";
-
-import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 import ReusableButton from "@/app/components/Button";
+import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
+// Interfaces
 interface WorkTaskEntry {
   workTask: string;
   order: number;
@@ -36,19 +40,22 @@ interface WorkGroupEntry {
   workTasks: WorkTaskEntry[];
 }
 
-interface WorkProject {
-  id: string;
+interface Work {
+  _id: string;
+  id?: string;
+  sn?: number;
   name: string;
   description: string;
   archive: boolean;
   workGroups: WorkGroupEntry[];
-  sn?: number;
 }
 
-const Projects = () => {
-  const router = useRouter();
+// Component
+const WorkList = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  const router = useRouter();
+  const { token } = getTokenAndRole();
 
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -58,55 +65,11 @@ const Projects = () => {
     pageSize: 10,
   });
   const [rowCount, setRowCount] = useState(0);
-  const [work, setWork] = useState<WorkProject[]>([]);
+  const [works, setWorks] = useState<Work[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
 
-  const [groupMap, setGroupMap] = useState<Record<string, string>>({});
-  const [taskMap, setTaskMap] = useState<Record<string, string>>({});
-
-  const { token } = getTokenAndRole();
-
-  const fetchNames = useCallback(async () => {
-    try {
-      if (!token) return;
-      const [groupRes, taskRes] = await Promise.all([
-        fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/work-groups`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        ),
-        fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/work-tasks/all`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        ),
-      ]);
-
-      const [groupData, taskData] = await Promise.all([
-        groupRes.json(),
-        taskRes.json(),
-      ]);
-
-      const groupObj = Object.fromEntries(
-        groupData.map((g: any) => [g._id, g.name])
-      );
-      const taskObj = Object.fromEntries(
-        taskData.map((t: any) => [t._id, t.name])
-      );
-
-      setGroupMap(groupObj);
-      setTaskMap(taskObj);
-    } catch (err) {
-      console.error("Failed to fetch group/task names", err);
-    }
-  }, [token]);
-
-  const fetchProjects = useCallback(async () => {
-    if (!token) return;
-
+  const fetchWorks = useCallback(async () => {
     const { page, pageSize } = paginationModel;
     setLoading(true);
     setError(null);
@@ -116,42 +79,36 @@ const Projects = () => {
         page: String(page + 1),
         limit: String(pageSize),
       });
-
       if (search.trim() !== "") {
         queryParams.append("searchTerm", search.trim());
       }
 
-      const response = await fetch(
+      const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/works?${queryParams.toString()}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
           },
         }
       );
 
-      if (!response.ok) throw new Error("Failed to fetch projects");
+      if (!res.ok) throw new Error("Failed to fetch works");
 
-      const result = await response.json();
-      const projectList = Array.isArray(result?.projects)
-        ? result.projects
-        : Array.isArray(result)
-          ? result
-          : [];
+      const result = await res.json();
 
-      const formatted = projectList.map((item: any, index: number) => ({
+      const worksData: Work[] = (
+        Array.isArray(result.works) ? result.works : []
+      ).map((item, index) => ({
         ...item,
         id: item._id,
         sn: page * pageSize + index + 1,
       }));
 
-      setWork(formatted);
-      setRowCount(result?.totalDocs || formatted.length);
-    } catch (error) {
-      console.error("Fetch error:", error);
-      setError(error instanceof Error ? error.message : "Unknown error");
-      setWork([]);
+      setWorks(worksData);
+      setRowCount(result.totalDocs || worksData.length);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+      setWorks([]);
       setRowCount(0);
     } finally {
       setLoading(false);
@@ -159,25 +116,24 @@ const Projects = () => {
   }, [paginationModel, search, token]);
 
   useEffect(() => {
-    fetchNames();
-  }, [fetchNames]);
-
-  useEffect(() => {
-    const debounceTimer = setTimeout(() => {
-      fetchProjects();
-    }, 500);
-    return () => clearTimeout(debounceTimer);
-  }, [fetchProjects]);
+    fetchWorks();
+  }, [fetchWorks]);
 
   const handleDeleteClick = (id: string) => {
     setSelectedDeleteId(id);
     setDeleteDialogOpen(true);
   };
 
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setSelectedDeleteId(null);
+  };
+
   const handleDeleteConfirm = async () => {
-    if (!selectedDeleteId || !token) return;
+    if (!selectedDeleteId) return;
+
     try {
-      const response = await fetch(
+      const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/works/${selectedDeleteId}`,
         {
           method: "DELETE",
@@ -186,19 +142,16 @@ const Projects = () => {
           },
         }
       );
-      if (!response.ok) throw new Error("Failed to delete project");
+
+      if (!res.ok) throw new Error("Failed to delete work");
 
       setDeleteDialogOpen(false);
       setSelectedDeleteId(null);
-      fetchProjects();
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Delete failed");
+      fetchWorks();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Delete failed");
+      // Dialog remains open for retry or cancel
     }
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteDialogOpen(false);
-    setSelectedDeleteId(null);
   };
 
   const columns: GridColDef[] = [
@@ -219,16 +172,19 @@ const Projects = () => {
       field: "workGroups",
       headerName: "Work Groups & Tasks",
       flex: 3,
-      renderCell: (params) => {
+      renderCell: (params: GridCellParams) => {
         const workGroups: WorkGroupEntry[] = params.row.workGroups || [];
+
+        if (workGroups.length === 0) {
+          return <Typography>None</Typography>;
+        }
 
         return (
           <Box>
             {workGroups.map((wg, i) => (
               <Box key={i} sx={{ mb: 1 }}>
-                <Typography variant="body2" fontWeight="bold">
-                  Group: {groupMap[wg.workGroup] || wg.workGroup} (Order:{" "}
-                  {wg.order})
+                <Typography fontWeight="bold" variant="body2">
+                  Group ID: {wg.workGroup} (Order: {wg.order})
                 </Typography>
                 {wg.workTasks.length === 0 ? (
                   <Typography variant="body2" sx={{ pl: 1 }}>
@@ -237,8 +193,7 @@ const Projects = () => {
                 ) : (
                   wg.workTasks.map((task, idx) => (
                     <Typography key={idx} variant="body2" sx={{ pl: 1 }}>
-                      ↳ Task: {taskMap[task.workTask] || task.workTask} (Order:{" "}
-                      {task.order})
+                      ↳ Task ID: {task.workTask} (Order: {task.order})
                     </Typography>
                   ))
                 )}
@@ -250,16 +205,16 @@ const Projects = () => {
     },
     {
       field: "action",
-      headerName: "Actions",
+      headerName: "Action",
       flex: 1,
-      renderCell: (params) => (
+      renderCell: (params: GridCellParams) => (
         <Box>
           <IconButton
             color="info"
             size="small"
-            onClick={() => router.push(`/admin/work/work/${params.row.id}`)}
+            onClick={() => router.push(`/admin/works/${params.row.id}`)}
           >
-            <Visibility fontSize="small" />
+            <Visibility />
           </IconButton>
           <IconButton
             color="primary"
@@ -268,14 +223,14 @@ const Projects = () => {
               router.push(`/admin/work/work/edit?id=${params.row.id}`)
             }
           >
-            <Edit fontSize="small" />
+            <Edit />
           </IconButton>
           <IconButton
             color="error"
             size="small"
             onClick={() => handleDeleteClick(params.row.id)}
           >
-            <Delete fontSize="small" />
+            <Delete />
           </IconButton>
         </Box>
       ),
@@ -285,7 +240,7 @@ const Projects = () => {
   return (
     <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
       <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-        Work
+        Works
       </Typography>
 
       <Box
@@ -293,6 +248,7 @@ const Projects = () => {
       >
         <TextField
           label="Search"
+          variant="outlined"
           size="small"
           fullWidth={isSmallScreen}
           value={search}
@@ -301,38 +257,34 @@ const Projects = () => {
             setPaginationModel((prev) => ({ ...prev, page: 0 }));
           }}
         />
-        <ReusableButton onClick={() => router.push("/admin/work/work/add")}>
+        <ReusableButton onClick={() => router.push("/admin/works/add")}>
           ADD
         </ReusableButton>
       </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+      {error && <Alert severity="error">{error}</Alert>}
 
       {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
           <CircularProgress />
         </Box>
       ) : (
         <StyledDataGrid
-          rows={work}
+          rows={works}
           columns={columns}
           rowCount={rowCount}
           pagination
           paginationMode="server"
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={isSmallScreen ? [5, 10] : [5, 10, 25, 100]}
+          pageSizeOptions={[5, 10, 25, 100]}
           autoHeight
-          disableColumnMenu={isSmallScreen}
         />
       )}
 
+      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-        <DialogTitle>Delete Project</DialogTitle>
+        <DialogTitle>Delete Work</DialogTitle>
         <DialogContent>
           <DialogContentText>
             Are you sure you want to delete this project? This action cannot be
@@ -350,4 +302,4 @@ const Projects = () => {
   );
 };
 
-export default Projects;
+export default WorkList;

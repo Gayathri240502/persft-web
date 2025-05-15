@@ -1,84 +1,317 @@
 "use client";
 
-import React from "react";
+import React, { useEffect,  useMemo, useState } from "react";
 import {
   Box,
   Typography,
-  Button,
+  Grid,
   TextField,
-  FormControlLabel,
-  Checkbox,
-  MenuItem,
-  Select,
   FormControl,
   InputLabel,
+  Select,
+  MenuItem,
+  Checkbox,
+  FormControlLabel,
+  CircularProgress,
+  FormGroup,
 } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
+import { useRouter,useSearchParams } from "next/navigation";
+import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { SelectChangeEvent } from "@mui/material";
 
+interface ProjectMapping {
+  _id: string;
+  name: string;
+}
 
-const EditProject = () => {
+interface Country {
+  _id: string | number;
+  name: string;
+}
+
+interface State {
+  _id: string | number;
+  name: string;
+}
+
+interface City {
+  _id: string | number;
+  name: string;
+}
+
+const EditKiosk = () => {
+  const router = useRouter();
+ const searchParams = useSearchParams();
+  const { token } = getTokenAndRole();
+
+ const id = useMemo(() => searchParams.get("id"), [searchParams]);
+
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    username: "",
+    email: "",
+    phone: "",
+    password: "", // optional for update
+    description: "",
+    country: "",
+    state: "",
+    city: "",
+    address: "",
+    projects: [] as string[],
+  });
+
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [states, setStates] = useState<State[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+  const [projects, setProjects] = useState<ProjectMapping[]>([]);
+
+  const [loading, setLoading] = useState(false);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [loadingCountries, setLoadingCountries] = useState(true);
+
+  // Fetch Kiosk Details
+  useEffect(() => {
+    const fetchKiosk = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kiosks/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setForm({
+          ...data,
+          country: String(data.country),
+          state: String(data.state),
+          city: String(data.city),
+          projects: data.projects?.map((p: any) => p._id || p) || [],
+        });
+      } catch (err) {
+        console.error("Error fetching kiosk:", err);
+      }
+    };
+    if (id) fetchKiosk();
+  }, [id, token]);
+
+  // Country dropdown
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        setLoadingCountries(true);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/countries`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setCountries(data.countries || []);
+      } catch (err) {
+        console.error("Error fetching countries:", err);
+      } finally {
+        setLoadingCountries(false);
+      }
+    };
+    fetchCountries();
+  }, [token]);
+
+  // State dropdown
+  useEffect(() => {
+    if (!form.country) return;
+
+    const fetchStates = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/states/${form.country}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setStates(data.states || []);
+      } catch (err) {
+        console.error("Error fetching states:", err);
+      }
+    };
+
+    fetchStates();
+  }, [form.country, token]);
+
+  // City dropdown
+  useEffect(() => {
+    if (!form.state) return;
+
+    const fetchCities = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/cities/${form.state}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setCities(data.cities || []);
+      } catch (err) {
+        console.error("Error fetching cities:", err);
+      }
+    };
+
+    fetchCities();
+  }, [form.state, token]);
+
+  // Projects dropdown
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/projects`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setProjects(data.projects || []);
+      } catch (err) {
+        console.error("Error fetching projects:", err);
+      } finally {
+        setLoadingProjects(false);
+      }
+    };
+
+    fetchProjects();
+  }, [token]);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<string>
+  ) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+      ...(name === "country" ? { state: "", city: "" } : {}),
+      ...(name === "state" ? { city: "" } : {}),
+    }));
+  };
+
+  const handleCheckboxChange = (projectId: string) => {
+    setForm((prev) => ({
+      ...prev,
+      projects: prev.projects.includes(projectId)
+        ? prev.projects.filter((id) => id !== projectId)
+        : [...prev.projects, projectId],
+    }));
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      const payload = {
+        ...form,
+        country: Number(form.country),
+        state: Number(form.state),
+        city: Number(form.city),
+      };
+
+      // Don't send empty password
+      if (!payload.password) delete payload.password;
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kiosks/${id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        console.error("API Error Response:", errData);
+        throw new Error(errData?.message || "Failed to update kiosk");
+      }
+
+      router.push("/admin/kiosk-management");
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Error updating kiosk");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderTextField = (label: string, name: keyof typeof form) => (
+    <TextField
+      label={label}
+      name={name}
+      value={form[name]}
+      onChange={handleChange}
+      fullWidth
+      sx={{ mb: 2 }}
+    />
+  );
+
+  const renderSelect = (
+    label: string,
+    value: string,
+    name: keyof typeof form,
+    options: { _id: string | number; name: string }[],
+    loading = false,
+    disabled = false
+  ) => (
+    <FormControl fullWidth sx={{ mb: 2 }} disabled={disabled || loading}>
+      <InputLabel>{label}</InputLabel>
+      <Select name={name} value={value} label={label} onChange={handleChange}>
+        {loading ? (
+          <MenuItem disabled>Loading...</MenuItem>
+        ) : options.length === 0 ? (
+          <MenuItem disabled>No {label.toLowerCase()} available</MenuItem>
+        ) : (
+          options.map((opt) => (
+            <MenuItem key={opt._id} value={String(opt._id)}>
+              {opt.name}
+            </MenuItem>
+          ))
+        )}
+      </Select>
+    </FormControl>
+  );
+
   return (
     <Box sx={{ p: 3 }}>
-      {/* Heading */}
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Edit Kiosk Management
+      <Typography variant="h5" sx={{ mb: 3 }}>
+        Edit Kiosk
       </Typography>
-
-      {/* Kiosk User Field */}
-      <TextField label="Kiosk User" fullWidth sx={{ mb: 3 }} />
-
-      {/* Name Field */}
-      <TextField label="Project Name" fullWidth sx={{ mb: 3 }} />
-
-      {/* Description Field */}
-      <TextField label="Description" multiline rows={3} fullWidth sx={{ mb: 3 }} />
-
-      {/* Location Dropdowns */}
-      <FormControl fullWidth sx={{ mb: 3 }}>
-        <InputLabel>State</InputLabel>
-        <Select label="state">
-          <MenuItem value="State1">State 1</MenuItem>
-          <MenuItem value="State2">State 2</MenuItem>
-        </Select>
-      </FormControl>
-
-      <FormControl fullWidth sx={{ mb: 3 }}>
-        <InputLabel>District</InputLabel>
-        <Select label="Destrict">
-          <MenuItem value="District1">District 1</MenuItem>
-          <MenuItem value="District2">District 2</MenuItem>
-        </Select>
-      </FormControl>
-
-      <FormControl fullWidth sx={{ mb: 3 }}>
-        <InputLabel>City</InputLabel>
-        <Select label="City">
-          <MenuItem value="City1">City 1</MenuItem>
-          <MenuItem value="City2">City 2</MenuItem>
-        </Select>
-      </FormControl>
-
-      {/* Project Mapping */}
-      <Typography variant="h6" sx={{ mb: 1 }}>
-        Project Mapping
-      </Typography>
-      <Box sx={{ mb: 3, display: "flex", flexDirection: "column", gap: 1 }}>
-        <FormControlLabel control={<Checkbox />} label="Rajpushpa" />
-        <FormControlLabel control={<Checkbox />} label="Brvteck" />
-      </Box>
-
-      {/* Submit and Cancel Buttons */}
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton>
-          Submit
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={6}>{renderTextField("First Name", "firstName")}</Grid>
+        <Grid item xs={12} sm={6}>{renderTextField("Last Name", "lastName")}</Grid>
+        <Grid item xs={12} sm={6}>{renderTextField("Username", "username")}</Grid>
+        <Grid item xs={12} sm={6}>{renderTextField("Email", "email")}</Grid>
+        <Grid item xs={12} sm={6}>{renderTextField("Phone", "phone")}</Grid>
+        <Grid item xs={12} sm={6}>{renderTextField("Password (leave blank to keep current)", "password")}</Grid>
+        <Grid item xs={12}>{renderTextField("Description", "description")}</Grid>
+        <Grid item xs={12}>{renderTextField("Address", "address")}</Grid>
+        <Grid item xs={12} sm={6}>{renderSelect("Country", form.country, "country", countries, loadingCountries)}</Grid>
+        <Grid item xs={12} sm={6}>{renderSelect("State", form.state, "state", states, false, !form.country)}</Grid>
+        <Grid item xs={12} sm={6}>{renderSelect("City", form.city, "city", cities, false, !form.state)}</Grid>
+        <Grid item xs={12}>
+          <Typography variant="h6" sx={{ mb: 1 }}>Residence Mapping</Typography>
+          <FormGroup>
+            {loadingProjects ? (
+              <Typography>Loading projects...</Typography>
+            ) : (
+              projects.map((proj) => (
+                <FormControlLabel
+                  key={proj._id}
+                  control={
+                    <Checkbox
+                      checked={form.projects.includes(proj._id)}
+                      onChange={() => handleCheckboxChange(proj._id)}
+                    />
+                  }
+                  label={proj.name}
+                />
+              ))
+            )}
+          </FormGroup>
+        </Grid>
+      </Grid>
+      <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
+        <ReusableButton onClick={handleSubmit} disabled={loading}>
+          {loading ? <CircularProgress size={20} /> : "Update"}
         </ReusableButton>
-        <CancelButton href="/admin/kiosk-management">
-          Cancel
-        </CancelButton>
+        <CancelButton href="/admin/kiosk-management">Cancel</CancelButton>
       </Box>
     </Box>
   );
 };
 
-export default EditProject;
+export default EditKiosk;

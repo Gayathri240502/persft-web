@@ -22,6 +22,8 @@ import CancelButton from "@/app/components/CancelButton";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
+const isValidObjectId = (id: string) => /^[a-f\d]{24}$/i.test(id);
+
 const EditSubCategory = () => {
   const { token } = getTokenAndRole();
   const router = useRouter();
@@ -34,9 +36,7 @@ const EditSubCategory = () => {
   const [name, setName] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [thumbnail, setThumbnail] = useState<string>("");
-  const [selectedAttributeGroups, setSelectedAttributeGroups] = useState<
-    string[]
-  >([]);
+  const [selectedAttributeGroups, setSelectedAttributeGroups] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,44 +45,39 @@ const EditSubCategory = () => {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [categoriesRes, attributeGroupsRes, subCategoryRes] =
-          await Promise.all([
-            fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/sub-categories/categories-selection`,
-              {
-                headers: { Authorization: `Bearer ${token}` },
-              }
-            ),
-            fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/sub-categories/attribute-groups-selection`,
-              {
-                headers: { Authorization: `Bearer ${token}` },
-              }
-            ),
-            fetch(`${process.env.NEXT_PUBLIC_API_URL}/sub-categories/${id}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            }),
-          ]);
+        const [categoriesRes, attributeGroupsRes, subCategoryRes] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/sub-categories/categories-selection`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/sub-categories/attribute-groups-selection`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/sub-categories/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
 
         if (!categoriesRes.ok || !attributeGroupsRes.ok || !subCategoryRes.ok) {
-          throw new Error("Failed to fetch data");
+          throw new Error("Failed to fetch one or more data sources");
         }
 
         const categoriesData = await categoriesRes.json();
         const attributeGroupsData = await attributeGroupsRes.json();
         const subCategoryData = await subCategoryRes.json();
 
-        setCategories(categoriesData?.data || []);
-        setAttributeGroups(attributeGroupsData?.data || []);
+        setCategories(categoriesData?.data ?? categoriesData);
+        setAttributeGroups(attributeGroupsData?.data ?? attributeGroupsData);
 
         const sub = subCategoryData?.data || subCategoryData;
         setCategory(sub.category || "");
         setName(sub.name || "");
         setDescription(sub.description || "");
         setThumbnail(sub.thumbnail || "");
-        setSelectedAttributeGroups((sub.attributeGroups || []).map(String));
+
+        const validIds = (sub.attributeGroups || []).map((id: any) => String(id)).filter(isValidObjectId);
+        setSelectedAttributeGroups(validIds);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error fetching data");
+        setError(err instanceof Error ? err.message : "Unknown error occurred");
       } finally {
         setInitialLoading(false);
       }
@@ -93,9 +88,7 @@ const EditSubCategory = () => {
 
   const handleAttributeGroupToggle = (groupId: string) => {
     setSelectedAttributeGroups((prev) =>
-      prev.includes(groupId)
-        ? prev.filter((id) => id !== groupId)
-        : [...prev, groupId]
+      prev.includes(groupId) ? prev.filter((id) => id !== groupId) : [...prev, groupId]
     );
   };
 
@@ -118,34 +111,36 @@ const EditSubCategory = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!name || !description || !thumbnail || !category) {
       setError("All fields are required.");
       return;
     }
 
+    const validAttributeGroupIds = selectedAttributeGroups.filter(isValidObjectId);
+
     setLoading(true);
+    setError(null);
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/sub-categories/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            name,
-            description,
-            thumbnail,
-            category,
-            attributeGroups: selectedAttributeGroups,
-          }),
-        }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sub-categories/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name,
+          description,
+          thumbnail,
+          category,
+          attributeGroups: validAttributeGroupIds,
+        }),
+      });
 
-      if (!response.ok) {
-        throw new Error("Failed to update sub-category.");
+      if (!res.ok) {
+        const result = await res.json();
+        throw new Error(result?.message || "Failed to update sub-category");
       }
 
       router.push("/admin/product-catalog/sub-category");
@@ -177,14 +172,8 @@ const EditSubCategory = () => {
       )}
 
       <FormControl fullWidth sx={{ mb: 3 }}>
-        <InputLabel id="category-select-label">Category</InputLabel>
-        <Select
-          labelId="category-select-label"
-          label="Category"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          displayEmpty
-        >
+        <InputLabel>Category</InputLabel>
+        <Select value={category} label="Category" onChange={(e) => setCategory(e.target.value)}>
           <MenuItem value="">
             <em>Select a category</em>
           </MenuItem>
@@ -226,30 +215,24 @@ const EditSubCategory = () => {
           }}
         >
           Upload Thumbnail
-          <input type="file" hidden onChange={handleThumbnailChange} />
+          <input type="file" hidden accept="image/*" onChange={handleThumbnailChange} />
         </Button>
-        <Typography variant="body2" sx={{ color: "#666" }}>
-          {selectedFileName}
-        </Typography>
+        <Typography variant="body2">{selectedFileName}</Typography>
       </Box>
 
       <Typography variant="caption" sx={{ color: "#999" }}>
-        Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+        Accepted formats: JPG, JPEG, PNG. Max size: 60KB.
       </Typography>
 
       {thumbnail && (
-        <Box sx={{ mb: 3 }}>
+        <Box sx={{ mt: 2, mb: 3 }}>
           <Typography variant="subtitle2">Preview:</Typography>
-          <img
-            src={thumbnail}
-            alt="Thumbnail Preview"
-            style={{ width: 200, borderRadius: 8 }}
-          />
+          <img src={thumbnail} alt="Thumbnail Preview" style={{ width: 200, borderRadius: 8 }} />
         </Box>
       )}
 
       <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12}>
           <Typography variant="h6" sx={{ mb: 1 }}>
             Attribute Groups
           </Typography>
@@ -274,9 +257,7 @@ const EditSubCategory = () => {
         <ReusableButton type="submit" disabled={loading}>
           {loading ? <CircularProgress size={24} color="inherit" /> : "Update"}
         </ReusableButton>
-        <CancelButton href="/admin/product-catalog/sub-category">
-          Cancel
-        </CancelButton>
+        <CancelButton href="/admin/product-catalog/sub-category">Cancel</CancelButton>
       </Box>
     </Box>
   );

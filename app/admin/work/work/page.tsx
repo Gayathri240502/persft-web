@@ -18,7 +18,6 @@ import {
 import {
   GridColDef,
   GridPaginationModel,
-  GridCellParams,
 } from "@mui/x-data-grid";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
@@ -29,6 +28,7 @@ import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 import ReusableButton from "@/app/components/Button";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
+<<<<<<< HEAD
 interface Project {
   _id: string;
   name: string;
@@ -37,6 +37,12 @@ interface Project {
   workGroups: WorkGroupEntry[];
   id?: string;
   sn?: number;
+=======
+// Interfaces
+interface WorkTaskEntry {
+  workTask: string;
+  order: number;
+>>>>>>> 9e967d83d10000596beca99e0e9330018cc6a2e8
 }
 
 interface WorkGroupEntry {
@@ -45,9 +51,13 @@ interface WorkGroupEntry {
   workTasks: WorkTaskEntry[];
 }
 
-interface WorkTaskEntry {
-  workTask: string;
-  order: number;
+interface WorkProject {
+  id: string;
+  name: string;
+  description: string;
+  archive: boolean;
+  workGroups: WorkGroupEntry[];
+  sn?: number;
 }
 
 const Projects = () => {
@@ -63,14 +73,18 @@ const Projects = () => {
     pageSize: 10,
   });
   const [rowCount, setRowCount] = useState(0);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [work, setWork] = useState<WorkProject[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
 
   const { token } = getTokenAndRole();
 
+<<<<<<< HEAD
   // Fetch projects function wrapped in useCallback to debounce effect correctly
   const fetchProjects = useCallback(async () => {
+=======
+  const fetchWork = async () => {
+>>>>>>> 9e967d83d10000596beca99e0e9330018cc6a2e8
     const { page, pageSize } = paginationModel;
     setLoading(true);
     setError(null);
@@ -105,7 +119,7 @@ const Projects = () => {
         sn: page * pageSize + index + 1,
       }));
 
-      setProjects(formatted);
+      setWork(formatted);
       setRowCount(result.totalDocs || formatted.length);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Unknown error");
@@ -118,12 +132,17 @@ const Projects = () => {
 
   // Debounce the fetchProjects on search & pagination changes
   useEffect(() => {
+<<<<<<< HEAD
     const debounceTimer = setTimeout(() => {
       fetchProjects();
     }, 500);
 
     return () => clearTimeout(debounceTimer);
   }, [fetchProjects]);
+=======
+    fetchWork();
+  }, [paginationModel, search]);
+>>>>>>> 9e967d83d10000596beca99e0e9330018cc6a2e8
 
   const handleDeleteClick = (id: string) => {
     setSelectedDeleteId(id);
@@ -146,7 +165,7 @@ const Projects = () => {
 
       setDeleteDialogOpen(false);
       setSelectedDeleteId(null);
-      fetchProjects();
+      fetchWork();
     } catch (error) {
       setError(error instanceof Error ? error.message : "Delete failed");
       // Keep dialog open so user can retry or cancel
@@ -160,19 +179,30 @@ const Projects = () => {
 
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", width: 70 },
-    { field: "name", headerName: "Project Name", flex: 1 },
-    { field: "description", headerName: "Description", flex: 2 },
+    {
+      field: "name",
+      headerName: "Project Name",
+      flex: 1,
+      renderCell: (params) => <Typography>{params.row.name}</Typography>,
+    },
+    {
+      field: "description",
+      headerName: "Description",
+      flex: 2,
+      renderCell: (params) => (
+        <Typography>{params.row.description}</Typography>
+      ),
+    },
     {
       field: "workGroups",
       headerName: "Work Groups & Tasks",
       flex: 3,
-      renderCell: (params: GridCellParams) => {
+      renderCell: (params) => {
         const workGroups: WorkGroupEntry[] = params.row.workGroups || [];
-
-        if (workGroups.length === 0) return "None";
 
         return (
           <Box>
+<<<<<<< HEAD
             {workGroups.map((wg, i) => (
               <Box key={i} sx={{ mb: 1 }}>
                 <Typography variant="body2" fontWeight="bold">
@@ -191,15 +221,33 @@ const Projects = () => {
                 )}
               </Box>
             ))}
+=======
+            {workGroups.length === 0 ? (
+              <Typography>None</Typography>
+            ) : (
+              workGroups.map((wg, i) => (
+                <Box key={i} sx={{ mb: 1 }}>
+                  <Typography fontWeight="bold" variant="body2">
+                    Group ID: {wg.workGroup} (Order: {wg.order})
+                  </Typography>
+                  {wg.workTasks.map((task, idx) => (
+                    <Typography key={idx} variant="body2" sx={{ pl: 1 }}>
+                      ↳ Task ID: {task.workTask} (Order: {task.order})
+                    </Typography>
+                  ))}
+                </Box>
+              ))
+            )}
+>>>>>>> 9e967d83d10000596beca99e0e9330018cc6a2e8
           </Box>
         );
       },
     },
     {
       field: "action",
-      headerName: "Action",
+      headerName: "Actions",
       flex: 1,
-      renderCell: (params: GridCellParams) => (
+      renderCell: (params) => (
         <Box>
           <IconButton
             color="info"
@@ -261,7 +309,7 @@ const Projects = () => {
         </Box>
       ) : (
         <StyledDataGrid
-          rows={projects}
+          rows={work}
           columns={columns}
           rowCount={rowCount}
           pagination

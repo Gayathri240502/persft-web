@@ -14,7 +14,7 @@ import {
   MenuItem,
   CircularProgress,
   Alert,
-  Button
+  Button,
 } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
@@ -29,12 +29,14 @@ const EditSubCategory = () => {
   const id = useMemo(() => searchParams.get("id"), [searchParams]);
 
   const [categories, setCategories] = useState<any[]>([]);
-  const [roomTypes, setRoomTypes] = useState<any[]>([]);  // Ensure it's initialized as an array
-  const [categoryId, setCategoryId] = useState<string>("");
+  const [attributeGroups, setAttributeGroups] = useState<any[]>([]);
+  const [category, setCategory] = useState<string>("");
   const [name, setName] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [thumbnail, setThumbnail] = useState<string>("");
-  const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
+  const [selectedAttributeGroups, setSelectedAttributeGroups] = useState<
+    string[]
+  >([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,37 +45,42 @@ const EditSubCategory = () => {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [categoriesRes, roomTypesRes, subCategoryRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/room-types`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/sub-categories/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
+        const [categoriesRes, attributeGroupsRes, subCategoryRes] =
+          await Promise.all([
+            fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/sub-categories/categories-selection`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            ),
+            fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/sub-categories/attribute-groups-selection`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            ),
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/sub-categories/${id}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+          ]);
 
-        if (!categoriesRes.ok || !roomTypesRes.ok || !subCategoryRes.ok) {
+        if (!categoriesRes.ok || !attributeGroupsRes.ok || !subCategoryRes.ok) {
           throw new Error("Failed to fetch data");
         }
 
         const categoriesData = await categoriesRes.json();
-        const roomTypesData = await roomTypesRes.json();
+        const attributeGroupsData = await attributeGroupsRes.json();
         const subCategoryData = await subCategoryRes.json();
 
-        // Ensure roomTypes is always an array
-        setCategories(Array.isArray(categoriesData.data) ? categoriesData.data : categoriesData || []);
-        setRoomTypes(Array.isArray(roomTypesData.data) ? roomTypesData.data : roomTypesData || []);  // Check if roomTypes is an array
+        setCategories(categoriesData?.data || []);
+        setAttributeGroups(attributeGroupsData?.data || []);
 
-        const sub = subCategoryData.data || subCategoryData;
-
-        setCategoryId(sub.categoryId || "");
+        const sub = subCategoryData?.data || subCategoryData;
+        setCategory(sub.category || "");
         setName(sub.name || "");
         setDescription(sub.description || "");
         setThumbnail(sub.thumbnail || "");
-        setSelectedRooms(sub.roomTypeIds || []);
+        setSelectedAttributeGroups((sub.attributeGroups || []).map(String));
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error fetching data");
       } finally {
@@ -84,27 +91,34 @@ const EditSubCategory = () => {
     if (id) fetchInitialData();
   }, [id, token]);
 
-  const handleRoomToggle = (roomId: string) => {
-    setSelectedRooms((prev) =>
-      prev.includes(roomId) ? prev.filter((id) => id !== roomId) : [...prev, roomId]
+  const handleAttributeGroupToggle = (groupId: string) => {
+    setSelectedAttributeGroups((prev) =>
+      prev.includes(groupId)
+        ? prev.filter((id) => id !== groupId)
+        : [...prev, groupId]
     );
   };
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        setSelectedFileName(file.name);
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setThumbnail(reader.result as string);
-        };
-        reader.readAsDataURL(file);
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 60000) {
+        setError("File size should not exceed 60KB.");
+        return;
       }
-    };
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setThumbnail(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      setSelectedFileName(file.name);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !description || !thumbnail || !categoryId) {
+    if (!name || !description || !thumbnail || !category) {
       setError("All fields are required.");
       return;
     }
@@ -112,23 +126,26 @@ const EditSubCategory = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sub-categories/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name,
-          description,
-          thumbnail,
-          categoryId,
-          roomTypeIds: selectedRooms,
-        }),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/sub-categories/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name,
+            description,
+            thumbnail,
+            category,
+            attributeGroups: selectedAttributeGroups,
+          }),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error("Failed to update sub category.");
+        throw new Error("Failed to update sub-category.");
       }
 
       router.push("/admin/product-catalog/sub-category");
@@ -160,28 +177,22 @@ const EditSubCategory = () => {
       )}
 
       <FormControl fullWidth sx={{ mb: 3 }}>
-        <InputLabel id="category">Category</InputLabel>
+        <InputLabel id="category-select-label">Category</InputLabel>
         <Select
           labelId="category-select-label"
           label="Category"
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
           displayEmpty
         >
           <MenuItem value="">
             <em>Select a category</em>
           </MenuItem>
-          {Array.isArray(categories) && categories.length > 0 ? (
-            categories.map((cat: any) => (
-              <MenuItem key={cat._id} value={cat._id}>
-                {cat.name}
-              </MenuItem>
-            ))
-          ) : (
-            <MenuItem disabled>
-              {Array.isArray(categories) ? "No categories found" : "Loading..."}
+          {categories.map((cat) => (
+            <MenuItem key={cat.id} value={cat.id}>
+              {cat.name}
             </MenuItem>
-          )}
+          ))}
         </Select>
       </FormControl>
 
@@ -203,62 +214,58 @@ const EditSubCategory = () => {
         sx={{ mb: 3 }}
       />
 
-<Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
-            <Button
-              variant="outlined"
-              component="label"
-              startIcon={<UploadFileIcon />}
-              sx={{
-                color: "#05344c",
-                borderColor: "#05344c",
-                "&:hover": { backgroundColor: "#f0f4f8" },
-              }}
-            >
-              Upload Thumbnail
-              <input type="file" hidden onChange={handleThumbnailChange} />
-            </Button>
-            <Typography variant="body2" sx={{ color: "#666" }}>
-              {selectedFileName}
-            </Typography>
-          </Box>
+      <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
+        <Button
+          variant="outlined"
+          component="label"
+          startIcon={<UploadFileIcon />}
+          sx={{
+            color: "#05344c",
+            borderColor: "#05344c",
+            "&:hover": { backgroundColor: "#f0f4f8" },
+          }}
+        >
+          Upload Thumbnail
+          <input type="file" hidden onChange={handleThumbnailChange} />
+        </Button>
+        <Typography variant="body2" sx={{ color: "#666" }}>
+          {selectedFileName}
+        </Typography>
+      </Box>
 
-           <Typography variant="caption" sx={{ color: "#999" }}>
-                    Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
-                    </Typography>
+      <Typography variant="caption" sx={{ color: "#999" }}>
+        Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+      </Typography>
 
-          {thumbnail && (
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2">Preview:</Typography>
-              <img
-                src={thumbnail}
-                alt="Thumbnail Preview"
-                style={{ width: 200, borderRadius: 8 }}
-              />
-            </Box>
-          )}
+      {thumbnail && (
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle2">Preview:</Typography>
+          <img
+            src={thumbnail}
+            alt="Thumbnail Preview"
+            style={{ width: 200, borderRadius: 8 }}
+          />
+        </Box>
+      )}
 
       <Grid container spacing={2}>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={6}>
           <Typography variant="h6" sx={{ mb: 1 }}>
-            Room Mapping
+            Attribute Groups
           </Typography>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            {Array.isArray(roomTypes) && roomTypes.length > 0 ? (
-              roomTypes.map((room: any) => (
-                <FormControlLabel
-                  key={room._id}
-                  control={
-                    <Checkbox
-                      checked={selectedRooms.includes(room._id)}
-                      onChange={() => handleRoomToggle(room._id)}
-                    />
-                  }
-                  label={room.name}
-                />
-              ))
-            ) : (
-              <Typography>No rooms available</Typography>
-            )}
+            {attributeGroups.map((group) => (
+              <FormControlLabel
+                key={group.id}
+                control={
+                  <Checkbox
+                    checked={selectedAttributeGroups.includes(group.id)}
+                    onChange={() => handleAttributeGroupToggle(group.id)}
+                  />
+                }
+                label={group.name}
+              />
+            ))}
           </Box>
         </Grid>
       </Grid>
@@ -267,7 +274,9 @@ const EditSubCategory = () => {
         <ReusableButton type="submit" disabled={loading}>
           {loading ? <CircularProgress size={24} color="inherit" /> : "Update"}
         </ReusableButton>
-        <CancelButton href="/admin/product-catalog/sub-category">Cancel</CancelButton>
+        <CancelButton href="/admin/product-catalog/sub-category">
+          Cancel
+        </CancelButton>
       </Box>
     </Box>
   );

@@ -109,22 +109,25 @@ const EditAttributeGroup = () => {
   };
 
   const handleSubmit = async () => {
+    // Filter out selected IDs that are not part of the valid attributes list
+    const validAttributeIds = new Set(attributes.map((attr) => attr._id));
+
     const selected = Object.entries(selectedAttributes)
-      .filter(([_, isChecked]) => isChecked)
+      .filter(([id, isChecked]) => isChecked && validAttributeIds.has(id))
       .map(([id], index) => ({
         attribute: id,
         order: index,
       }));
 
     if (!name.trim() || selected.length === 0) {
-      setError("Group name and at least one attribute are required.");
+      setError("Group name and at least one valid attribute are required.");
       return;
     }
 
-    try {
-      setLoading(true);
-      setError("");
+    setLoading(true);
+    setError("");
 
+    try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/attribute-groups/${id}`,
         {
@@ -134,19 +137,23 @@ const EditAttributeGroup = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            name,
-            description,
+            name: name.trim(),
+            description: description.trim(),
             attributes: selected,
           }),
         }
       );
 
       if (!response.ok) {
-        throw new Error("Failed to update attribute group.");
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || "Failed to update attribute group."
+        );
       }
 
       router.push("/admin/attribute-catalog/attributes-groups");
     } catch (err: any) {
+      console.error("Update failed:", err);
       setError(err.message || "Something went wrong.");
     } finally {
       setLoading(false);

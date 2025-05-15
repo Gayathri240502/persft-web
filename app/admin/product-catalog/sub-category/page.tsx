@@ -163,19 +163,27 @@ const SubCategory = () => {
       field: "thumbnail",
       headerName: "Thumbnail",
       flex: 1,
+      sortable: false,
+      filterable: false,
       renderCell: (params) =>
         params.row.thumbnail ? (
           <img
             src={params.row.thumbnail}
             alt="Thumbnail"
-            style={{ width: 40, height: 40 }}
+            style={{
+              width: 40,
+              height: 40,
+              objectFit: "cover",
+              borderRadius: 4,
+            }}
           />
         ) : (
-          <Typography variant="body2" color="textSecondary">
+          <Typography variant="body2" color="text.secondary">
             No Image
           </Typography>
         ),
     },
+
     {
       field: "category",
       headerName: "Category",
@@ -207,7 +215,7 @@ const SubCategory = () => {
                 style={{ color: "#1976d2", cursor: "pointer" }}
                 onClick={() =>
                   router.push(
-                    `/admin/attribute-catalog/attributes-groups/${group._id}`
+                    `/admin/product-catalog/category/${params.row.id}`
                   )
                 }
               >
@@ -286,9 +294,7 @@ const SubCategory = () => {
           onChange={(e) => setSearch(e.target.value)}
         />
         <ReusableButton
-          onClick={() =>
-            router.push("/admin/product-catalog/sub-category/add")
-          }
+          onClick={() => router.push("/admin/product-catalog/sub-category/add")}
         >
           ADD
         </ReusableButton>

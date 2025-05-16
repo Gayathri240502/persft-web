@@ -242,11 +242,11 @@ const WorkForm = () => {
         </Alert>
       )}
 
-      <Box sx={{ display: "flex", gap: 2, mt: 4 }}>
+      <Box sx={{ display: "flex", gap: 2 }}>
         <ReusableButton onClick={handleSubmit} disabled={loading}>
           {loading ? <CircularProgress size={24} /> : "Submit"}
         </ReusableButton>
-        <CancelButton href="/admin/work/works" />
+        <CancelButton href="/admin/work/works">Cancel</CancelButton>
       </Box>
     </Box>
   );

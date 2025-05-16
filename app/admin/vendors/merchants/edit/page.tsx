@@ -217,7 +217,10 @@ const EditMerchant = () => {
 
     try {
       const payload = { ...formData };
-      if (!payload.password) delete payload.password;
+      if (!payload.password) {
+        // delete password if empty to avoid sending empty string
+        delete (payload as any).password;
+      }
       const id = keycloakId || merchantId;
 
       const response = await fetch(

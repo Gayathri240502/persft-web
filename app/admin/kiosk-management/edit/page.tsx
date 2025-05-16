@@ -41,6 +41,8 @@ interface City {
   name: string;
 }
 
+
+
 const EditKiosk = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -73,6 +75,8 @@ const EditKiosk = () => {
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [loadingCountries, setLoadingCountries] = useState(true);
   const [loadingKiosk, setLoadingKiosk] = useState(true);
+
+  
 
   useEffect(() => {
     const fetchKiosk = async () => {
@@ -251,7 +255,11 @@ const EditKiosk = () => {
         city: form.city ? Number(form.city) : null,
       };
 
-      if (!payload.password) delete payload.password;
+      if (!payload.password) {
+        // delete password if empty to avoid sending empty string
+        delete (payload as any).password;
+      }
+
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/kiosks/${id}`,

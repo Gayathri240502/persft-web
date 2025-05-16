@@ -21,7 +21,10 @@ import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 type WorkGroup = {
   _id: string;
   name: string;
+  id?: string;
 };
+
+
 
 const EditWorkTask = () => {
   const router = useRouter();

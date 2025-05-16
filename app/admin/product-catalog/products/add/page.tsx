@@ -56,7 +56,7 @@ const AddProduct = () => {
     subCategory: "",
     workGroup: "",
     workTask: "",
-    attributeValues: [] as string[],
+    attributeValues: [],
   });
 
   const [dropdowns, setDropdowns] = useState({
@@ -69,7 +69,6 @@ const AddProduct = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch categories and work groups
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
@@ -96,8 +95,8 @@ const AddProduct = () => {
           categories: catData.categories || [],
           workGroups: wgData.workGroups || [],
         }));
-      } catch (error) {
-        console.error(error);
+      } catch (err) {
+        console.error(err);
         setError("Failed to fetch categories or work groups");
       }
     };
@@ -105,7 +104,6 @@ const AddProduct = () => {
     if (token) fetchDropdowns();
   }, [token]);
 
-  // Fetch subcategories when category changes
   useEffect(() => {
     if (formData.category) {
       fetch(
@@ -125,7 +123,6 @@ const AddProduct = () => {
     }
   }, [formData.category, token]);
 
-  // Fetch work tasks when work group changes
   useEffect(() => {
     if (formData.workGroup) {
       fetch(
@@ -160,7 +157,14 @@ const AddProduct = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormData((prev) => ({ ...prev, thumbnail: file.name }));
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prev) => ({
+          ...prev,
+          thumbnail: reader.result as string,
+        }));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -202,9 +206,7 @@ const AddProduct = () => {
         }
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to create product");
-      }
+      if (!response.ok) throw new Error("Failed to create product");
 
       router.push("/admin/product-catalog/products");
     } catch (err) {
@@ -240,6 +242,7 @@ const AddProduct = () => {
             fullWidth
             sx={{ mb: 3 }}
           />
+
           <FormControl fullWidth sx={{ mb: 3 }}>
             <InputLabel>Category</InputLabel>
             <Select
@@ -271,6 +274,7 @@ const AddProduct = () => {
               ))}
             </Select>
           </FormControl>
+
           <TextField
             label="Price"
             name="price"
@@ -279,6 +283,7 @@ const AddProduct = () => {
             fullWidth
             sx={{ mb: 3 }}
           />
+
           <FormControl fullWidth sx={{ mb: 3 }}>
             <InputLabel>Work Group</InputLabel>
             <Select
@@ -294,6 +299,7 @@ const AddProduct = () => {
               ))}
             </Select>
           </FormControl>
+
           <FormControl fullWidth sx={{ mb: 3 }}>
             <InputLabel>Work Task</InputLabel>
             <Select
@@ -336,6 +342,14 @@ const AddProduct = () => {
             fullWidth
             sx={{ mb: 3 }}
           />
+          <TextField
+            label="Model Name"
+            name="modelName"
+            value={formData.modelName}
+            onChange={handleInputChange}
+            fullWidth
+            sx={{ mb: 3 }}
+          />
         </Grid>
       </Grid>
 
@@ -349,7 +363,7 @@ const AddProduct = () => {
           <input type="file" hidden onChange={handleFileChange} />
         </Button>
         <Typography variant="body2">
-          {formData.thumbnail || "No file selected"}
+          {formData.thumbnail ? "File uploaded" : "No file selected"}
         </Typography>
       </Box>
       <Typography variant="caption" sx={{ color: "#999" }}>

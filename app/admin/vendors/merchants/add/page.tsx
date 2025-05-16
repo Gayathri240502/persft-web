@@ -290,7 +290,7 @@ const AddMerchant = () => {
           <ReusableButton type="submit" loading={loading}>
             Submit
           </ReusableButton>
-          <CancelButton href="/admin/vendors/merchants">Cancel</CancelButton>
+          <CancelButton href="/admin/vendors/merchants"> Cancel </CancelButton>
         </Box>
       </form>
     </Box>

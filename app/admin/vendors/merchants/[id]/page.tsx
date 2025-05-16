@@ -1,22 +1,23 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import {
   Box,
-  CircularProgress,
   Typography,
-  Grid,
+  CircularProgress,
   Alert,
+  Paper,
   IconButton,
   Button,
   Dialog,
-  DialogActions,
+  DialogTitle,
   DialogContent,
   DialogContentText,
-  DialogTitle,
+  DialogActions,
 } from "@mui/material";
-import { Edit, Delete, ArrowBack } from "@mui/icons-material";
+import { useParams, useRouter } from "next/navigation";
+import { ArrowBack, Edit, Delete } from "@mui/icons-material";
+import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface Merchant {
   _id: string;
@@ -26,8 +27,8 @@ interface Merchant {
   email: string;
   phone: string;
   enabled: boolean;
-  role: string[];
   archive: boolean;
+  role: string[] | null;
   createdAt: string;
   updatedAt: string;
   businessName: string;
@@ -37,22 +38,19 @@ interface Merchant {
 }
 
 const MerchantDetailsPage: React.FC = () => {
+  const { id } = useParams();
+  const router = useRouter();
+  const { token } = getTokenAndRole();
+
   const [merchant, setMerchant] = useState<Merchant | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const id = searchParams.get("id"); // Use query param ?id=
-
-  const { token } = getTokenAndRole();
-
   useEffect(() => {
-    if (!id || !token) return;
+    if (!id) return;
 
     const fetchMerchant = async () => {
-      setLoading(true);
       try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/merchants/${id}`,
@@ -64,14 +62,23 @@ const MerchantDetailsPage: React.FC = () => {
           }
         );
 
-        if (!res.ok) {
-          throw new Error(`Failed to fetch merchant: ${res.statusText}`);
-        }
+        if (!res.ok) throw new Error("Failed to fetch merchant");
 
-        const data: Merchant = await res.json();
-        setMerchant(data);
+        const data = await res.json();
+
+        // Your data shape has the merchant object nested inside "merchant"
+        // Also, businessName, address, categoryName, subCategoryName are outside _doc, so merge properly
+
+        const mergedMerchant: Merchant = {
+          ...data.merchant._doc,
+          businessName: data.merchant.businessName ?? "",
+          address: data.merchant.address ?? "",
+          categoryName: data.merchant.categoryName ?? "",
+          subCategoryName: data.merchant.subCategoryName ?? "",
+        };
+
+        setMerchant(mergedMerchant);
       } catch (err: any) {
-        console.error("Fetch error:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -124,7 +131,7 @@ const MerchantDetailsPage: React.FC = () => {
         alignItems="center"
         height="100vh"
       >
-        <Alert severity="error">{error}</Alert>
+        <Alert severity="error">Error: {error}</Alert>
       </Box>
     );
   }
@@ -137,7 +144,7 @@ const MerchantDetailsPage: React.FC = () => {
         alignItems="center"
         height="100vh"
       >
-        <Alert severity="warning">No merchant found</Alert>
+        <Alert severity="warning">Merchant not found</Alert>
       </Box>
     );
   }
@@ -151,37 +158,37 @@ const MerchantDetailsPage: React.FC = () => {
       >
         Back
       </Button>
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={2}
-      >
-        <Box>
-          <Typography variant="h4">{merchant.username}</Typography>
-          <Typography variant="subtitle1" color="textSecondary">
-            {merchant.archive ? "Inactive" : "Active"}
-          </Typography>
-        </Box>
-        <Box>
-          <IconButton
-            color="primary"
-            onClick={() =>
-              router.push(`/admin/vendors/merchants/edit?id=${id}`)
-            }
-          >
-            <Edit />
-          </IconButton>
-          <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
-            <Delete />
-          </IconButton>
-        </Box>
-      </Box>
 
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
+      <Paper elevation={3} sx={{ p: 4 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Box>
+            <Typography variant="h4">
+              {merchant.firstName} {merchant.lastName}
+            </Typography>
+            <Typography color="text.secondary">
+              {merchant.archive ? "Archived" : "Active"} —{" "}
+              {merchant.enabled ? "Enabled" : "Disabled"}
+            </Typography>
+          </Box>
+          <Box>
+            <IconButton
+              color="primary"
+              onClick={() => router.push(`/admin/vendors/merchants/edit?id=${id}`)}
+            >
+              <Edit />
+            </IconButton>
+            <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
+              <Delete />
+            </IconButton>
+          </Box>
+        </Box>
+
+        <Box mt={3}>
           <Typography>
             <strong>ID:</strong> {merchant._id}
+          </Typography>
+          <Typography>
+            <strong>Username:</strong> {merchant.username}
           </Typography>
           <Typography>
             <strong>Email:</strong> {merchant.email}
@@ -189,27 +196,22 @@ const MerchantDetailsPage: React.FC = () => {
           <Typography>
             <strong>Phone:</strong> {merchant.phone}
           </Typography>
-        </Grid>
-        <Grid item xs={12} sm={6}>
           <Typography>
-            <strong>Name:</strong> {merchant.firstName} {merchant.lastName}
+            <strong>Business Name:</strong> {merchant.businessName}
           </Typography>
-          <Typography>
-            <strong>Business:</strong> {merchant.businessName}
-          </Typography>
-        </Grid>
-        <Grid item xs={12} sm={6}>
           <Typography>
             <strong>Address:</strong> {merchant.address}
           </Typography>
           <Typography>
-            <strong>Category:</strong> {merchant.categoryName}
+            <strong>Category:</strong> {merchant.categoryName ?? "Not set"}
           </Typography>
           <Typography>
-            <strong>SubCategory:</strong> {merchant.subCategoryName}
+            <strong>Subcategory:</strong> {merchant.subCategoryName ?? "Not set"}
           </Typography>
-        </Grid>
-        <Grid item xs={12} sm={6}>
+          <Typography>
+            <strong>Role:</strong>{" "}
+            {Array.isArray(merchant.role) ? merchant.role.join(", ") : "Not set"}
+          </Typography>
           <Typography>
             <strong>Created At:</strong>{" "}
             {new Date(merchant.createdAt).toLocaleString()}
@@ -218,13 +220,10 @@ const MerchantDetailsPage: React.FC = () => {
             <strong>Updated At:</strong>{" "}
             {new Date(merchant.updatedAt).toLocaleString()}
           </Typography>
-        </Grid>
-      </Grid>
+        </Box>
+      </Paper>
 
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <DialogContentText>

@@ -263,7 +263,7 @@ const EditWorkTask = () => {
         <ReusableButton onClick={handleSubmit} disabled={loading}>
           {loading ? <CircularProgress size={20} /> : "Update"}
         </ReusableButton>
-        <CancelButton href="/admin/work/work-task">Cancel</CancelButton>
+        <CancelButton href="/admin/work/work-task"> Cancel </CancelButton>
       </Box>
     </Box>
   );

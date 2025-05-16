@@ -263,7 +263,7 @@ const WorkList = () => {
             setPaginationModel((prev) => ({ ...prev, page: 0 }));
           }}
         />
-        <ReusableButton onClick={() => router.push("/admin/works/add")}>
+        <ReusableButton onClick={() => router.push("/admin/work/works/add")}>
           ADD
         </ReusableButton>
       </Box>

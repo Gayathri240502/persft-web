@@ -183,11 +183,13 @@ const EditWorkTask = () => {
           label="Work Group"
           onChange={(e) => setWorkGroup(String(e.target.value))}
         >
-          {workGroups.map((group: any) => (
-            <MenuItem key={group._id} value={String(group._id)}>
-              {group.name}
-            </MenuItem>
-          ))}
+          {workGroups
+            .filter((group: any) => group && group._id) // Filter out entries without _id
+            .map((group: any) => (
+              <MenuItem key={group._id} value={String(group._id)}>
+                {group.name}
+              </MenuItem>
+            ))}
         </Select>
       </FormControl>
 

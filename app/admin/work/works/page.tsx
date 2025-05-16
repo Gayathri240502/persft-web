@@ -70,19 +70,20 @@ const WorkList = () => {
   const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
 
   const fetchWorks = useCallback(async () => {
-    const { page, pageSize } = paginationModel;
     setLoading(true);
     setError(null);
 
-    try {
-      const queryParams = new URLSearchParams({
-        page: String(page + 1),
-        limit: String(pageSize),
-      });
-      if (search.trim() !== "") {
-        queryParams.append("searchTerm", search.trim());
-      }
+    const { page, pageSize } = paginationModel;
+    const queryParams = new URLSearchParams({
+      page: String(page + 1),
+      limit: String(pageSize),
+    });
 
+    if (search.trim()) {
+      queryParams.append("searchTerm", search.trim());
+    }
+
+    try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/works?${queryParams.toString()}`,
         {
@@ -96,9 +97,17 @@ const WorkList = () => {
 
       const result = await res.json();
 
-      const worksData: Work[] = (
-        Array.isArray(result.works) ? result.works : []
-      ).map((item, index) => ({
+      const worksArray = Array.isArray(result)
+        ? result
+        : Array.isArray(result.works)
+          ? result.works
+          : Array.isArray(result.docs)
+            ? result.docs
+            : result._id
+              ? [result]
+              : [];
+
+      const worksData: Work[] = worksArray.map((item: any, index: number) => ({
         ...item,
         id: item._id,
         sn: page * pageSize + index + 1,
@@ -150,7 +159,6 @@ const WorkList = () => {
       fetchWorks();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Delete failed");
-      // Dialog remains open for retry or cancel
     }
   };
 
@@ -175,11 +183,9 @@ const WorkList = () => {
       renderCell: (params: GridCellParams) => {
         const workGroups: WorkGroupEntry[] = params.row.workGroups || [];
 
-        if (workGroups.length === 0) {
-          return <Typography>None</Typography>;
-        }
-
-        return (
+        return workGroups.length === 0 ? (
+          <Typography>None</Typography>
+        ) : (
           <Box>
             {workGroups.map((wg, i) => (
               <Box key={i} sx={{ mb: 1 }}>
@@ -268,6 +274,8 @@ const WorkList = () => {
         <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
           <CircularProgress />
         </Box>
+      ) : works.length === 0 ? (
+        <Typography>No works found.</Typography>
       ) : (
         <StyledDataGrid
           rows={works}
@@ -282,7 +290,6 @@ const WorkList = () => {
         />
       )}
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
         <DialogTitle>Delete Work</DialogTitle>
         <DialogContent>

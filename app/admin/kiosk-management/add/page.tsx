@@ -73,9 +73,12 @@ const AddKiosk = () => {
     const fetchCountries = async () => {
       try {
         setLoadingCountries(true);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/countries`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/countries`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         const data = await res.json();
         setCountries(data.countries || []);
       } catch (err) {
@@ -96,9 +99,12 @@ const AddKiosk = () => {
 
     const fetchStates = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/states/${form.country}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/states/${form.country}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         const data = await res.json();
         setStates(data.states || []);
       } catch (err) {
@@ -118,9 +124,12 @@ const AddKiosk = () => {
 
     const fetchCities = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/cities/${form.state}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/cities/${form.state}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         const data = await res.json();
         setCities(data.cities || []);
       } catch (err) {
@@ -134,9 +143,12 @@ const AddKiosk = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/projects`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/projects`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         const data = await res.json();
         setProjects(data.projects || []);
       } catch (err) {
@@ -150,7 +162,9 @@ const AddKiosk = () => {
   }, [token]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<string>
+    e:
+      | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+      | SelectChangeEvent<string>
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({
@@ -171,48 +185,58 @@ const AddKiosk = () => {
   };
 
   const handleSubmit = async () => {
-  setLoading(true);
-  try {
-    // Check required fields
-    if (!form.firstName || !form.username || !form.email || !form.country || !form.state || !form.city) {
-      alert("Please fill in all required fields.");
+    setLoading(true);
+    try {
+      // Check required fields
+      if (
+        !form.firstName ||
+        !form.username ||
+        !form.email ||
+        !form.country ||
+        !form.state ||
+        !form.city
+      ) {
+        alert("Please fill in all required fields.");
+        setLoading(false);
+        return;
+      }
+
+      // Construct payload with IDs, ensuring numbers if needed
+      const payload = {
+        ...form,
+        country:
+          typeof form.country === "string"
+            ? Number(form.country)
+            : form.country,
+        state: typeof form.state === "string" ? Number(form.state) : form.state,
+        city: typeof form.city === "string" ? Number(form.city) : form.city,
+      };
+
+      console.log("Submitting payload:", payload);
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kiosks`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        console.error("API Error Response:", errData);
+        throw new Error(errData?.message || "Failed to create kiosk");
+      }
+
+      router.push("/admin/kiosk-management");
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Error creating kiosk");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    // Construct payload with IDs, ensuring numbers if needed
-    const payload = {
-      ...form,
-      country: typeof form.country === "string" ? Number(form.country) : form.country,
-      state: typeof form.state === "string" ? Number(form.state) : form.state,
-      city: typeof form.city === "string" ? Number(form.city) : form.city,
-    };
-
-    console.log("Submitting payload:", payload);
-
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kiosks`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      const errData = await res.json();
-      console.error("API Error Response:", errData);
-      throw new Error(errData?.message || "Failed to create kiosk");
-    }
-
-    router.push("/admin/kiosk-management");
-  } catch (err: any) {
-    console.error(err);
-    alert(err.message || "Error creating kiosk");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const renderTextField = (label: string, name: keyof typeof form) => (
     <TextField
@@ -257,19 +281,56 @@ const AddKiosk = () => {
         Add New Kiosk
       </Typography>
       <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>{renderTextField("First Name", "firstName")}</Grid>
-        <Grid item xs={12} sm={6}>{renderTextField("Last Name", "lastName")}</Grid>
-        <Grid item xs={12} sm={6}>{renderTextField("Username", "username")}</Grid>
-        <Grid item xs={12} sm={6}>{renderTextField("Email", "email")}</Grid>
-        <Grid item xs={12} sm={6}>{renderTextField("Phone", "phone")}</Grid>
-        <Grid item xs={12} sm={6}>{renderTextField("Password", "password")}</Grid>
-        <Grid item xs={12}>{renderTextField("Description", "description")}</Grid>
-        <Grid item xs={12}>{renderTextField("Address", "address")}</Grid>
-        <Grid item xs={12} sm={6}>{renderSelect("Country", form.country, "country", countries, loadingCountries)}</Grid>
-        <Grid item xs={12} sm={6}>{renderSelect("State", form.state, "state", states, false, !form.country)}</Grid>
-        <Grid item xs={12} sm={6}>{renderSelect("City", form.city, "city", cities, false, !form.state)}</Grid>
+        <Grid item xs={12} sm={6}>
+          {renderTextField("First Name", "firstName")}
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          {renderTextField("Last Name", "lastName")}
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          {renderTextField("Username", "username")}
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          {renderTextField("Email", "email")}
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          {renderTextField("Phone", "phone")}
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          {renderTextField("Password", "password")}
+        </Grid>
         <Grid item xs={12}>
-          <Typography variant="h6" sx={{ mb: 1 }}>Residence Mapping</Typography>
+          {renderTextField("Description", "description")}
+        </Grid>
+        <Grid item xs={12}>
+          {renderTextField("Address", "address")}
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          {renderSelect(
+            "Country",
+            form.country,
+            "country",
+            countries,
+            loadingCountries
+          )}
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          {renderSelect(
+            "State",
+            form.state,
+            "state",
+            states,
+            false,
+            !form.country
+          )}
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          {renderSelect("City", form.city, "city", cities, false, !form.state)}
+        </Grid>
+        <Grid item xs={12}>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            Projects
+          </Typography>
           <FormGroup>
             {loadingProjects ? (
               <Typography>Loading projects...</Typography>

@@ -64,7 +64,6 @@ const EditKiosk = () => {
   });
 
   const [error, setError] = useState("");
-  const [error, setError] = useState("");
   const [countries, setCountries] = useState<Country[]>([]);
   const [states, setStates] = useState<State[]>([]);
   const [cities, setCities] = useState<City[]>([]);
@@ -130,12 +129,7 @@ const EditKiosk = () => {
     const fetchCountries = async () => {
       try {
         setLoadingCountries(true);
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/countries`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/countries`,
           {
@@ -265,17 +259,6 @@ const EditKiosk = () => {
         delete (payload as any).password;
       }
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/kiosks/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/kiosks/${id}`,
         {

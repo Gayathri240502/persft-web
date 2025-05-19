@@ -6,10 +6,8 @@ import {
   Typography,
   Button,
   TextField,
-  FormGroup,
   FormControlLabel,
   Checkbox,
-  FormHelperText,
   Alert,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
@@ -65,21 +63,19 @@ const CreateProject = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState<string | null>(null);
-  const [selectedFileName, setSelectedFileName] =
-    useState<string>("No file selected");
-  const [thumbnail, setThumbnail] = useState<string>("");
+  const [selectedFileName, setSelectedFileName] = useState("No file selected");
 
   useEffect(() => {
     const fetchSelectionOptions = async () => {
       try {
-        const headers = {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        };
-
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/projects/selection-options/hierarchy`,
-          { headers }
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
         );
 
         if (!response.ok) {
@@ -101,28 +97,22 @@ const CreateProject = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleThumbnailChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFileName(file.name);
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
-        setThumbnail(base64String);
+        setFormData((prev) => ({
+          ...prev,
+          thumbnail: file,
+          thumbnailBase64: base64String,
+          thumbnailPreview: base64String,
+        }));
       };
       reader.readAsDataURL(file);
     }
-  };
-
-  const handleRemoveImage = () => {
-    setFormData((prev) => ({
-      ...prev,
-      thumbnail: null,
-      thumbnailBase64: "",
-      thumbnailPreview: "",
-    }));
   };
 
   const handleResidenceSelection = (residenceId: string) => {
@@ -132,12 +122,10 @@ const CreateProject = () => {
       );
 
       if (existingIndex >= 0) {
-        // Remove the selection if it exists
         const newSelections = [...prev.selections];
         newSelections.splice(existingIndex, 1);
         return { ...prev, selections: newSelections };
       } else {
-        // Add new selection with empty sub-selections
         return {
           ...prev,
           selections: [
@@ -157,21 +145,17 @@ const CreateProject = () => {
   const handleRoomSelection = (residenceId: string, roomId: string) => {
     setFormData((prev) => {
       const newSelections = [...prev.selections];
-      const selectionIndex = newSelections.findIndex(
+      const index = newSelections.findIndex(
         (s) => s.residenceType === residenceId
       );
-
-      if (selectionIndex >= 0) {
-        // Toggle room selection (only one room per residence)
-        newSelections[selectionIndex] = {
-          ...newSelections[selectionIndex],
-          roomType:
-            newSelections[selectionIndex].roomType === roomId ? "" : roomId,
+      if (index >= 0) {
+        newSelections[index] = {
+          ...newSelections[index],
+          roomType: newSelections[index].roomType === roomId ? "" : roomId,
           theme: "",
           design: "",
         };
       }
-
       return { ...prev, selections: newSelections };
     });
   };
@@ -183,19 +167,16 @@ const CreateProject = () => {
   ) => {
     setFormData((prev) => {
       const newSelections = [...prev.selections];
-      const selectionIndex = newSelections.findIndex(
+      const index = newSelections.findIndex(
         (s) => s.residenceType === residenceId && s.roomType === roomId
       );
-
-      if (selectionIndex >= 0) {
-        // Toggle theme selection (only one theme per room)
-        newSelections[selectionIndex] = {
-          ...newSelections[selectionIndex],
-          theme: newSelections[selectionIndex].theme === themeId ? "" : themeId,
+      if (index >= 0) {
+        newSelections[index] = {
+          ...newSelections[index],
+          theme: newSelections[index].theme === themeId ? "" : themeId,
           design: "",
         };
       }
-
       return { ...prev, selections: newSelections };
     });
   };
@@ -208,61 +189,54 @@ const CreateProject = () => {
   ) => {
     setFormData((prev) => {
       const newSelections = [...prev.selections];
-      const selectionIndex = newSelections.findIndex(
+      const index = newSelections.findIndex(
         (s) =>
           s.residenceType === residenceId &&
           s.roomType === roomId &&
           s.theme === themeId
       );
-
-      if (selectionIndex >= 0) {
-        // Toggle design selection (only one design per theme)
-        newSelections[selectionIndex] = {
-          ...newSelections[selectionIndex],
-          design:
-            newSelections[selectionIndex].design === designId ? "" : designId,
+      if (index >= 0) {
+        newSelections[index] = {
+          ...newSelections[index],
+          design: newSelections[index].design === designId ? "" : designId,
         };
       }
-
       return { ...prev, selections: newSelections };
     });
   };
 
-  const isResidenceSelected = (residenceId: string) => {
-    return formData.selections.some((s) => s.residenceType === residenceId);
-  };
+  const isSelected = {
+    residence: (residenceId: string) =>
+      formData.selections.some((s) => s.residenceType === residenceId),
 
-  const isRoomSelected = (residenceId: string, roomId: string) => {
-    const selection = formData.selections.find(
-      (s) => s.residenceType === residenceId
-    );
-    return selection ? selection.roomType === roomId : false;
-  };
+    room: (residenceId: string, roomId: string) => {
+      const sel = formData.selections.find(
+        (s) => s.residenceType === residenceId
+      );
+      return sel?.roomType === roomId;
+    },
 
-  const isThemeSelected = (
-    residenceId: string,
-    roomId: string,
-    themeId: string
-  ) => {
-    const selection = formData.selections.find(
-      (s) => s.residenceType === residenceId && s.roomType === roomId
-    );
-    return selection ? selection.theme === themeId : false;
-  };
+    theme: (residenceId: string, roomId: string, themeId: string) => {
+      const sel = formData.selections.find(
+        (s) => s.residenceType === residenceId && s.roomType === roomId
+      );
+      return sel?.theme === themeId;
+    },
 
-  const isDesignSelected = (
-    residenceId: string,
-    roomId: string,
-    themeId: string,
-    designId: string
-  ) => {
-    const selection = formData.selections.find(
-      (s) =>
-        s.residenceType === residenceId &&
-        s.roomType === roomId &&
-        s.theme === themeId
-    );
-    return selection ? selection.design === designId : false;
+    design: (
+      residenceId: string,
+      roomId: string,
+      themeId: string,
+      designId: string
+    ) => {
+      const sel = formData.selections.find(
+        (s) =>
+          s.residenceType === residenceId &&
+          s.roomType === roomId &&
+          s.theme === themeId
+      );
+      return sel?.design === designId;
+    },
   };
 
   const validate = () => {
@@ -271,22 +245,19 @@ const CreateProject = () => {
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
     }
-
-    if (!formData.thumbnail) {
+    if (!formData.thumbnailBase64) {
       newErrors.thumbnail = "Thumbnail is required";
     }
 
     if (formData.selections.length === 0) {
       newErrors.selections = "Select at least one residence";
     } else {
-      const incompleteSelections = formData.selections.filter(
-        (selection) =>
-          !selection.roomType || !selection.theme || !selection.design
+      const incomplete = formData.selections.some(
+        (s) => !s.roomType || !s.theme || !s.design
       );
-
-      if (incompleteSelections.length > 0) {
+      if (incomplete) {
         newErrors.selections =
-          "Complete all selections (residence → room → theme → design) for each selected residence";
+          "Complete all selections (residence → room → theme → design)";
       }
     }
 
@@ -295,9 +266,7 @@ const CreateProject = () => {
   };
 
   const handleSubmit = async () => {
-    if (!validate()) {
-      return;
-    }
+    if (!validate()) return;
 
     try {
       const payload = {
@@ -332,9 +301,14 @@ const CreateProject = () => {
         thumbnailPreview: "",
         selections: [],
       });
-    } catch (error) {
+      setSelectedFileName("No file selected");
+      setErrors({});
+      setApiError(null);
+    } catch (error: any) {
       console.error("Submit error:", error);
-      setApiError("Something went wrong while submitting the form.");
+      setApiError(
+        error.message || "Something went wrong while submitting the form."
+      );
     }
   };
 
@@ -372,36 +346,26 @@ const CreateProject = () => {
           variant="outlined"
           component="label"
           startIcon={<UploadFileIcon />}
-          sx={{
-            color: "#05344c",
-            borderColor: "#05344c",
-            "&:hover": { backgroundColor: "#f0f4f8" },
-          }}
         >
           Upload Thumbnail
           <input type="file" hidden onChange={handleThumbnailChange} />
         </Button>
-        <Typography variant="body2" sx={{ color: "#666" }}>
-          {selectedFileName}
-        </Typography>
+        <Typography variant="body2">{selectedFileName}</Typography>
       </Box>
-
-      {/* Help Text */}
       <Typography variant="caption" sx={{ color: "#999" }}>
         Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
       </Typography>
-      {thumbnail && (
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2">Preview:</Typography>
+      {formData.thumbnailPreview && (
+        <Box sx={{ mt: 2 }}>
           <img
-            src={thumbnail}
+            src={formData.thumbnailPreview}
             alt="Thumbnail Preview"
             style={{ width: 200, borderRadius: 8 }}
           />
         </Box>
       )}
 
-      <Typography variant="h6" sx={{ mb: 2 }}>
+      <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
         Selections
       </Typography>
 
@@ -413,21 +377,21 @@ const CreateProject = () => {
           <FormControlLabel
             control={
               <Checkbox
-                checked={isResidenceSelected(residence.id)}
+                checked={isSelected.residence(residence.id)}
                 onChange={() => handleResidenceSelection(residence.id)}
               />
             }
             label={residence.name}
           />
 
-          {isResidenceSelected(residence.id) && (
+          {isSelected.residence(residence.id) && (
             <Box sx={{ ml: 3 }}>
               {residence.roomTypes?.map((room) => (
                 <Box key={room.id} sx={{ mb: 1 }}>
                   <FormControlLabel
                     control={
                       <Checkbox
-                        checked={isRoomSelected(residence.id, room.id)}
+                        checked={isSelected.room(residence.id, room.id)}
                         onChange={() =>
                           handleRoomSelection(residence.id, room.id)
                         }
@@ -436,14 +400,14 @@ const CreateProject = () => {
                     label={room.name}
                   />
 
-                  {isRoomSelected(residence.id, room.id) && (
+                  {isSelected.room(residence.id, room.id) && (
                     <Box sx={{ ml: 3 }}>
                       {room.themes?.map((theme) => (
                         <Box key={theme.id}>
                           <FormControlLabel
                             control={
                               <Checkbox
-                                checked={isThemeSelected(
+                                checked={isSelected.theme(
                                   residence.id,
                                   room.id,
                                   theme.id
@@ -460,14 +424,18 @@ const CreateProject = () => {
                             label={theme.name}
                           />
 
-                          {isThemeSelected(residence.id, room.id, theme.id) && (
+                          {isSelected.theme(
+                            residence.id,
+                            room.id,
+                            theme.id
+                          ) && (
                             <Box sx={{ ml: 3 }}>
                               {theme.designs?.map((design) => (
                                 <FormControlLabel
                                   key={design.id}
                                   control={
                                     <Checkbox
-                                      checked={isDesignSelected(
+                                      checked={isSelected.design(
                                         residence.id,
                                         room.id,
                                         theme.id,
@@ -498,6 +466,10 @@ const CreateProject = () => {
           )}
         </Box>
       ))}
+
+      {errors.selections && (
+        <Typography color="error">{errors.selections}</Typography>
+      )}
 
       {apiError && (
         <Alert severity="error" sx={{ mt: 2 }}>

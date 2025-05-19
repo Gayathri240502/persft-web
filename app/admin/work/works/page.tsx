@@ -96,6 +96,7 @@ const WorkList = () => {
       if (!res.ok) throw new Error("Failed to fetch works");
 
       const result = await res.json();
+      console.log("API result:", result); // ✅ Debug log
 
       const worksArray = Array.isArray(result)
         ? result
@@ -277,17 +278,19 @@ const WorkList = () => {
       ) : works.length === 0 ? (
         <Typography>No works found.</Typography>
       ) : (
-        <StyledDataGrid
-          rows={works}
-          columns={columns}
-          rowCount={rowCount}
-          pagination
-          paginationMode="server"
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25, 100]}
-          autoHeight
-        />
+        <>
+          <StyledDataGrid
+            rows={works}
+            columns={columns}
+            rowCount={rowCount}
+            pagination
+            paginationMode="server"
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            pageSizeOptions={[5, 10, 25, 100]}
+            autoHeight
+          />
+        </>
       )}
 
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>

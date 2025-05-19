@@ -198,7 +198,7 @@ const Projects = () => {
           <IconButton
             color="error"
             size="small"
-            onClick={() => handleOpenDeleteDialog(params.row)}
+            onClick={() => handleOpenDeleteDialog(params.row.id)}
           >
             <Delete fontSize="small" />
           </IconButton>

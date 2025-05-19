@@ -97,23 +97,28 @@ const CreateProject = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFileName(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setFormData((prev) => ({
-          ...prev,
-          thumbnail: file,
-          thumbnailBase64: base64String,
-          thumbnailPreview: base64String,
-        }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+ const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    setSelectedFileName(file.name);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+
+      // Strip the data URL prefix to get only base64 string
+      const base64String = result.split(',')[1];
+
+      setFormData((prev) => ({
+        ...prev,
+        thumbnail: file,
+        thumbnailBase64: base64String, // now it's just base64
+        thumbnailPreview: result,      // still use full string for image preview
+      }));
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
 
   const handleResidenceSelection = (residenceId: string) => {
     setFormData((prev) => {

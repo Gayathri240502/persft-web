@@ -41,6 +41,35 @@ const EditRoomType = () => {
 
     const fetchData = async () => {
       try {
+        // First fetch residence types to have them available
+        const resResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/residence-types`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!resResponse.ok)
+          throw new Error("Failed to fetch residence types.");
+        const residenceData = await resResponse.json();
+        console.log("Fetched Residence Types:", residenceData);
+
+        // Handle different possible response structures
+        let resTypes = [];
+        if (Array.isArray(residenceData)) {
+          resTypes = residenceData;
+        } else if (Array.isArray(residenceData?.data)) {
+          resTypes = residenceData.data;
+        } else if (Array.isArray(residenceData?.residenceTypes)) {
+          resTypes = residenceData.residenceTypes;
+        } else {
+          console.warn("Unexpected residence data structure:", residenceData);
+        }
+        setResidenceTypes(resTypes);
+
+        // Then fetch room type by ID
         const roomResponse = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/room-types/${id}`,
           {
@@ -53,41 +82,39 @@ const EditRoomType = () => {
 
         if (!roomResponse.ok) throw new Error("Failed to fetch room type.");
         const roomData = await roomResponse.json();
+        console.log("Fetched Room Type:", roomData);
+
+        // Extract room data based on response structure
         const room = roomData.data || roomData;
 
         setName(room.name || "");
         setDescription(room.description || "");
         setThumbnail(room.thumbnail || "");
-        setSelectedFileName("Existing Thumbnail");
-        setSelectedResidences(room.residences || []);
-
-        // Fetch residence types
-        const resResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/residence-types`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+        setSelectedFileName(
+          room.thumbnail ? "Existing Thumbnail" : "No file selected"
         );
 
-        const residenceData = await resResponse.json();
-        console.log("Fetched Residence Data", residenceData);
-
-        let resTypes = [];
-
-        if (Array.isArray(residenceData)) {
-          resTypes = residenceData;
-        } else if (Array.isArray(residenceData?.data)) {
-          resTypes = residenceData.data;
-        } else if (Array.isArray(residenceData?.residenceTypes)) {
-          resTypes = residenceData.residenceTypes;
+        // Extract selected residence IDs correctly
+        if (Array.isArray(room.residenceTypes)) {
+          // Map the residenceTypes array to extract just the IDs
+          const residenceIds = room.residenceTypes.map((res: any) => res._id);
+          setSelectedResidences(residenceIds);
+        } else if (Array.isArray(room.residences)) {
+          setSelectedResidences(room.residences);
         } else {
-          console.warn("Unexpected residence data structure:", residenceData);
+          setSelectedResidences([]);
         }
 
-        setResidenceTypes(resTypes);
+        console.log(
+          "Selected residence IDs:",
+          Array.isArray(room.residenceTypes)
+            ? room.residenceTypes.map((res: any) => res._id)
+            : Array.isArray(room.residences)
+              ? room.residences
+              : []
+        );
       } catch (err) {
+        console.error("Error fetching data:", err);
         setError(err instanceof Error ? err.message : "Something went wrong.");
       } finally {
         setInitialLoading(false);
@@ -117,8 +144,6 @@ const EditRoomType = () => {
     );
   };
 
-  
-
   const validateForm = () => {
     if (!name) return setError("Name is required"), false;
     if (!description) return setError("Description is required"), false;
@@ -135,12 +160,15 @@ const EditRoomType = () => {
 
     setLoading(true);
     try {
+      // Prepare payload based on backend expectations
       const body = JSON.stringify({
         name,
         description,
         thumbnail,
-        residences: selectedResidences,
+        residenceTypes: selectedResidences, // Updated key name to match backend
       });
+
+      console.log("Submitting data:", body);
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/room-types/${id}`,
@@ -154,10 +182,20 @@ const EditRoomType = () => {
         }
       );
 
-      if (!response.ok) throw new Error("Failed to update room type.");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.message ||
+            `Failed to update room type. Status: ${response.status}`
+        );
+      }
+
       router.push("/admin/home-catalog/room-types");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error occurred");
+      console.error("Error submitting form:", err);
+      setError(
+        err instanceof Error ? err.message : "Unexpected error occurred"
+      );
     } finally {
       setLoading(false);
     }
@@ -218,7 +256,7 @@ const EditRoomType = () => {
             </Typography>
           </Box>
           <Typography variant="caption" sx={{ color: "#999" }}>
-          Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+            Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
           </Typography>
 
           {thumbnail && (
@@ -233,22 +271,28 @@ const EditRoomType = () => {
           )}
 
           <Typography variant="h6" sx={{ mb: 1 }}>
-            Residence Mapping
+            Residence Type Mapping
           </Typography>
 
           <Box sx={{ mb: 3, display: "flex", flexDirection: "column", gap: 1 }}>
-            {residenceTypes.map((res) => (
-              <FormControlLabel
-                key={res._id}
-                control={
-                  <Checkbox
-                    checked={selectedResidences.includes(res._id)}
-                    onChange={() => toggleResidenceSelection(res._id)}
-                  />
-                }
-                label={res.name}
-              />
-            ))}
+            {residenceTypes.length > 0 ? (
+              residenceTypes.map((res) => (
+                <FormControlLabel
+                  key={res._id}
+                  control={
+                    <Checkbox
+                      checked={selectedResidences.includes(res._id)}
+                      onChange={() => toggleResidenceSelection(res._id)}
+                    />
+                  }
+                  label={res.name}
+                />
+              ))
+            ) : (
+              <Typography color="text.secondary">
+                No residence types available
+              </Typography>
+            )}
           </Box>
 
           <Box sx={{ display: "flex", gap: 2 }}>

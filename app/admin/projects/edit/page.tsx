@@ -40,7 +40,7 @@ const CreateProject = () => {
   const searchParams = useSearchParams();
 
   const id = useMemo(() => searchParams.get("id"), [searchParams]);
-
+  console.log("id", id);
   const [residenceList, setResidenceList] = useState<OptionType[]>([]);
   const [roomList, setRoomList] = useState<OptionType[]>([]);
   const [themeList, setThemeList] = useState<OptionType[]>([]);
@@ -70,7 +70,9 @@ const CreateProject = () => {
         };
 
         const [residences, rooms, themes, designs] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/residence-types`, { headers }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/residence-types`, {
+            headers,
+          }),
           fetch(`${process.env.NEXT_PUBLIC_API_URL}/room-types`, { headers }),
           fetch(`${process.env.NEXT_PUBLIC_API_URL}/themes`, { headers }),
           fetch(`${process.env.NEXT_PUBLIC_API_URL}/designs`, { headers }),
@@ -121,7 +123,10 @@ const CreateProject = () => {
   };
 
   const handleCheckboxChange = (
-    listKey: keyof Pick<FormData, "residenceTypes" | "roomTypes" | "themes" | "designs">,
+    listKey: keyof Pick<
+      FormData,
+      "residenceTypes" | "roomTypes" | "themes" | "designs"
+    >,
     value: string,
     checked: boolean
   ) => {
@@ -145,10 +150,13 @@ const CreateProject = () => {
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.name) newErrors.name = "Name is required";
-    if (!formData.residenceTypes.length) newErrors.residenceTypes = "Select at least one residence";
-    if (!formData.roomTypes.length) newErrors.roomTypes = "Select at least one room";
+    if (!formData.residenceTypes.length)
+      newErrors.residenceTypes = "Select at least one residence";
+    if (!formData.roomTypes.length)
+      newErrors.roomTypes = "Select at least one room";
     if (!formData.themes.length) newErrors.themes = "Select at least one theme";
-    if (!formData.designs.length) newErrors.designs = "Select at least one design";
+    if (!formData.designs.length)
+      newErrors.designs = "Select at least one design";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -191,9 +199,12 @@ const CreateProject = () => {
       });
 
       const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Failed to submit project");
+      if (!response.ok)
+        throw new Error(result.message || "Failed to submit project");
 
-      alert(id ? "Project updated successfully!" : "Project created successfully!");
+      alert(
+        id ? "Project updated successfully!" : "Project created successfully!"
+      );
       setFormData({
         name: "",
         description: "",
@@ -243,9 +254,18 @@ const CreateProject = () => {
       />
 
       <Box sx={{ mb: 3 }}>
-        <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
+        <Button
+          variant="outlined"
+          component="label"
+          startIcon={<UploadFileIcon />}
+        >
           Upload Thumbnail
-          <input type="file" hidden accept=".jpg,.jpeg,.png" onChange={handleFileChange} />
+          <input
+            type="file"
+            hidden
+            accept=".jpg,.jpeg,.png"
+            onChange={handleFileChange}
+          />
         </Button>
         {formData.thumbnailPreview && (
           <>
@@ -263,12 +283,16 @@ const CreateProject = () => {
         )}
       </Box>
       <Typography variant="caption" sx={{ color: "#999" }}>
-                              Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
-                              </Typography>
+        Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+      </Typography>
 
       <Grid container spacing={3}>
         {[
-          { title: "Residence Mapping", data: residenceList, key: "residenceTypes" },
+          {
+            title: "Residence Mapping",
+            data: residenceList,
+            key: "residenceTypes",
+          },
           { title: "Room Mapping", data: roomList, key: "roomTypes" },
           { title: "Theme Mapping", data: themeList, key: "themes" },
           { title: "Design Mapping", data: designList, key: "designs" },
@@ -283,21 +307,29 @@ const CreateProject = () => {
                   key={item._id}
                   control={
                     <Checkbox
-  checked={(formData[key as keyof FormData] as string[]).includes(item._id)}
-  onChange={(e) =>
-    handleCheckboxChange(
-      key as "residenceTypes" | "roomTypes" | "themes" | "designs",
-      item._id,
-      e.target.checked
-    )
-  }
-/>
+                      checked={(
+                        formData[key as keyof FormData] as string[]
+                      ).includes(item._id)}
+                      onChange={(e) =>
+                        handleCheckboxChange(
+                          key as
+                            | "residenceTypes"
+                            | "roomTypes"
+                            | "themes"
+                            | "designs",
+                          item._id,
+                          e.target.checked
+                        )
+                      }
+                    />
                   }
                   label={item.name}
                 />
               ))}
             </FormGroup>
-            {errors[key] && <FormHelperText error>{errors[key]}</FormHelperText>}
+            {errors[key] && (
+              <FormHelperText error>{errors[key]}</FormHelperText>
+            )}
           </Grid>
         ))}
       </Grid>

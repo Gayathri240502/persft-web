@@ -13,27 +13,56 @@ import {
   MenuItem,
   CircularProgress,
   Alert,
+  Button,
 } from "@mui/material";
 import { useRouter, useSearchParams } from "next/navigation";
-import { SelectChangeEvent } from "@mui/material/Select";
+import { SelectChangeEvent } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
+interface Category {
+  _id: string;
+  name: string;
+}
+
+interface SubCategory {
+  _id: string;
+  name: string;
+}
+
+interface MerchantForm {
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+  phone: string;
+  password: string;
+  enabled: boolean;
+  businessName: string;
+  address: string;
+  category: string;
+  subCategory: string;
+}
+
 const EditMerchant = () => {
   const router = useRouter();
-  const params = useSearchParams();
-  const merchantId = params.get("id");
-
+  const searchParams = useSearchParams();
   const { token } = getTokenAndRole();
 
-  const [formData, setFormData] = useState({
+  const merchantId = useMemo(() => searchParams.get("id"), [searchParams]);
+  const keycloakId = useMemo(
+    () => searchParams.get("keycloakId"),
+    [searchParams]
+  );
+
+  const [formData, setFormData] = useState<MerchantForm>({
     firstName: "",
     lastName: "",
     username: "",
     email: "",
     phone: "",
-    password: "Merchant@123",
+    password: "",
     enabled: true,
     businessName: "",
     address: "",
@@ -41,25 +70,25 @@ const EditMerchant = () => {
     subCategory: "",
   });
 
-  const [categories, setCategories] = useState<any[]>([]);
-  const [subCategories, setSubCategories] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
   const [error, setError] = useState("");
-  const searchParams = useSearchParams();
+  const [loading, setLoading] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [loadingSubCategories, setLoadingSubCategories] = useState(false);
+  const [loadingMerchant, setLoadingMerchant] = useState(true);
 
-  const keycloakId = useMemo(
-    () => searchParams.get("keycloakId"),
-    [searchParams]
-  );
+  const missingId = !merchantId && !keycloakId;
 
-  // Fetch Merchant Details
   useEffect(() => {
+    if (missingId) return;
+
     const fetchMerchant = async () => {
-      if (!merchantId) return;
       try {
+        setLoadingMerchant(true);
+        const id = keycloakId || merchantId;
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/merchants/${keycloakId}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/merchants/${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -67,114 +96,222 @@ const EditMerchant = () => {
             },
           }
         );
-        if (!response.ok) throw new Error("Failed to fetch merchant data.");
-        const merchant = await response.json();
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to fetch merchant");
+        }
+
+        const responseData = await response.json();
+        const rawMerchant = responseData.merchant || responseData;
+        const merchant = rawMerchant._doc
+          ? { ...rawMerchant._doc, ...rawMerchant }
+          : rawMerchant;
+
         setFormData({
           firstName: merchant.firstName || "",
           lastName: merchant.lastName || "",
           username: merchant.username || "",
           email: merchant.email || "",
           phone: merchant.phone || "",
-          password: "Merchant@123",
+          password: "",
           enabled: merchant.enabled ?? true,
           businessName: merchant.businessName || "",
           address: merchant.address || "",
           category: merchant.category || "",
           subCategory: merchant.subCategory || "",
         });
-      } catch (err) {
-        console.error(err);
-        setError("Unable to load merchant data.");
+      } catch (err: any) {
+        setError(err.message);
       } finally {
-        setInitialLoading(false);
-      }
-    };
-
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/categories`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        if (!response.ok) throw new Error("Failed to fetch categories.");
-        const data = await response.json();
-        setCategories(data.categories || []);
-      } catch (err) {
-        console.error("Failed to fetch categories.", err);
+        setLoadingMerchant(false);
       }
     };
 
     fetchMerchant();
-    fetchCategories();
-  }, [merchantId, token]);
+  }, [merchantId, keycloakId, token, missingId]);
 
-  // Fetch SubCategories When Category Changes
   useEffect(() => {
-    const fetchSubCategories = async () => {
-      if (!formData.category) return;
+    const fetchCategories = async () => {
       try {
+        setLoadingCategories(true);
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/sub-categories/${formData.category}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/merchants/dropdown/categories`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        if (!response.ok) throw new Error("Failed to fetch sub-categories.");
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to fetch categories");
+        }
+
         const data = await response.json();
-        setSubCategories(data.categories || []);
-      } catch (err) {
-        console.error("Failed to fetch sub-categories.", err);
+        setCategories(data.categories || []);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, [token]);
+
+  useEffect(() => {
+    if (!formData.category) {
+      setSubCategories([]);
+      setFormData((prev) => ({ ...prev, subCategory: "" }));
+      return;
+    }
+
+    const fetchSubCategories = async () => {
+      try {
+        setLoadingSubCategories(true);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/merchants/dropdown/subcategories/${formData.category}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to fetch subcategories");
+        }
+
+        const data = await response.json();
+        setSubCategories(data.subCategories || data.categories || []);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoadingSubCategories(false);
       }
     };
 
     fetchSubCategories();
   }, [formData.category, token]);
 
-  // Handle Form Input
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  const handleChange = (
+    e:
+      | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+      | SelectChangeEvent<string>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+      ...(name === "category" ? { subCategory: "" } : {}),
+    }));
   };
 
-  const handleSelectChange = (e: SelectChangeEvent<string>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Handle Form Submit
   const handleSubmit = async () => {
-    if (!merchantId) return;
+    if (missingId) {
+      setError("No merchant ID or Keycloak ID provided");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
     try {
-      setLoading(true);
+      const payload = { ...formData };
+      if (!payload.password) {
+        // delete password if empty to avoid sending empty string
+        delete (payload as any).password;
+      }
+      const id = keycloakId || merchantId;
+
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/merchants/${keycloakId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/merchants/${id}`,
         {
           method: "PUT",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         }
       );
-      if (!response.ok) throw new Error("Failed to update merchant.");
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update merchant");
+      }
+
       router.push("/admin/vendors/merchants");
-    } catch (err) {
-      console.error(err);
-      setError("Failed to update merchant.");
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  if (initialLoading) {
+  const renderTextField = (label: string, name: keyof MerchantForm) => (
+    <TextField
+      fullWidth
+      label={label}
+      name={name}
+      value={formData[name]}
+      onChange={handleChange}
+      sx={{ mb: 2 }}
+    />
+  );
+
+  const renderSelect = (
+    label: string,
+    value: string,
+    name: keyof MerchantForm,
+    options: { _id: string; name: string }[],
+    loading = false,
+    disabled = false
+  ) => (
+    <FormControl fullWidth sx={{ mb: 2 }} disabled={disabled || loading}>
+      <InputLabel>{label}</InputLabel>
+      <Select name={name} value={value} label={label} onChange={handleChange}>
+        {loading ? (
+          <MenuItem disabled>Loading...</MenuItem>
+        ) : options.length === 0 ? (
+          <MenuItem disabled>No {label.toLowerCase()} available</MenuItem>
+        ) : (
+          options.map((opt) => (
+            <MenuItem key={opt._id} value={opt._id}>
+              {opt.name}
+            </MenuItem>
+          ))
+        )}
+      </Select>
+    </FormControl>
+  );
+
+  // Render error if ID is missing
+  if (missingId) {
     return (
-      <Box sx={{ p: 4, textAlign: "center" }}>
-        <CircularProgress />
+      <Box sx={{ p: 4 }}>
+        <Alert severity="error">
+          No merchant ID or Keycloak ID provided. Please select a valid
+          merchant.
+        </Alert>
+        <CancelButton href="/admin/vendors/merchants">
+          Back to Merchants
+        </CancelButton>
+      </Box>
+    );
+  }
+
+  if (loadingMerchant) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "300px",
+        }}
+      >
+        <CircularProgress size={24} />
+        <Typography sx={{ ml: 2 }}>Loading merchant data...</Typography>
       </Box>
     );
   }
@@ -186,68 +323,66 @@ const EditMerchant = () => {
       </Typography>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert
+          severity="error"
+          sx={{ mb: 2 }}
+          action={
+            <Button
+              color="inherit"
+              size="small"
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </Button>
+          }
+        >
           {error}
         </Alert>
       )}
 
       <Grid container spacing={3}>
-        {[
-          { name: "firstName", label: "First Name" },
-          { name: "lastName", label: "Last Name" },
-          { name: "username", label: "Username" },
-          { name: "email", label: "Email" },
-          { name: "phone", label: "Phone" },
-          { name: "businessName", label: "Business Name" },
-          { name: "address", label: "Address" },
-          { name: "password", label: "Password" },
-        ].map(({ name, label }) => (
-          <Grid item xs={12} md={6} key={name}>
-            <TextField
-              fullWidth
-              label={label}
-              name={name}
-              value={formData[name as keyof typeof formData]}
-              onChange={handleInputChange}
-            />
-          </Grid>
-        ))}
-
         <Grid item xs={12} md={6}>
-          <FormControl fullWidth>
-            <InputLabel>Category</InputLabel>
-            <Select
-              name="category"
-              value={formData.category}
-              onChange={handleSelectChange}
-              label="Category"
-            >
-              {categories.map((cat) => (
-                <MenuItem key={cat._id} value={cat._id}>
-                  {cat.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          {renderTextField("First Name", "firstName")}
         </Grid>
-
         <Grid item xs={12} md={6}>
-          <FormControl fullWidth>
-            <InputLabel>Sub Category</InputLabel>
-            <Select
-              name="subCategory"
-              value={formData.subCategory}
-              onChange={handleSelectChange}
-              label="Sub Category"
-              disabled={!formData.category}
-            >
-              {subCategories.map((sub) => (
-                <MenuItem key={sub._id} value={sub._id}>
-                  {sub.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          {renderTextField("Last Name", "lastName")}
+        </Grid>
+        <Grid item xs={12} md={6}>
+          {renderTextField("Username", "username")}
+        </Grid>
+        <Grid item xs={12} md={6}>
+          {renderTextField("Email", "email")}
+        </Grid>
+        <Grid item xs={12} md={6}>
+          {renderTextField("Phone", "phone")}
+        </Grid>
+        <Grid item xs={12} md={6}>
+          {renderTextField("Password", "password")}
+        </Grid>
+        <Grid item xs={12} md={6}>
+          {renderTextField("Business Name", "businessName")}
+        </Grid>
+        <Grid item xs={12} md={6}>
+          {renderTextField("Address", "address")}
+        </Grid>
+        <Grid item xs={12} md={6}>
+          {renderSelect(
+            "Category",
+            formData.category,
+            "category",
+            categories,
+            loadingCategories
+          )}
+        </Grid>
+        <Grid item xs={12} md={6}>
+          {renderSelect(
+            "Sub Category",
+            formData.subCategory,
+            "subCategory",
+            subCategories,
+            loadingSubCategories,
+            !formData.category
+          )}
         </Grid>
       </Grid>
 

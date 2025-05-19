@@ -46,7 +46,6 @@ const EditKiosk = () => {
   const searchParams = useSearchParams();
   const { token } = getTokenAndRole();
 
-  // Extract the ID from the URL parameters
   const id = useMemo(() => searchParams.get("id"), [searchParams]);
 
   const [form, setForm] = useState({
@@ -55,7 +54,7 @@ const EditKiosk = () => {
     username: "",
     email: "",
     phone: "",
-    password: "", // optional for update
+    password: "",
     description: "",
     country: "",
     state: "",
@@ -64,6 +63,7 @@ const EditKiosk = () => {
     projects: [] as string[],
   });
 
+  const [error, setError] = useState("");
   const [error, setError] = useState("");
   const [countries, setCountries] = useState<Country[]>([]);
   const [states, setStates] = useState<State[]>([]);
@@ -75,7 +75,6 @@ const EditKiosk = () => {
   const [loadingCountries, setLoadingCountries] = useState(true);
   const [loadingKiosk, setLoadingKiosk] = useState(true);
 
-  // Fetch Kiosk Details
   useEffect(() => {
     const fetchKiosk = async () => {
       if (!id) return;
@@ -96,8 +95,7 @@ const EditKiosk = () => {
         }
 
         const data = await res.json();
-        const kiosk = data.kiosk; // <- Correct the nesting
-        console.log("Kiosk data received:", kiosk);
+        const kiosk = data.kiosk;
 
         setForm({
           firstName: kiosk.firstName || "",
@@ -105,7 +103,7 @@ const EditKiosk = () => {
           username: kiosk.username || "",
           email: kiosk.email || "",
           phone: kiosk.phone || "",
-          password: "", // Always empty for security
+          password: "",
           description: kiosk.description || "",
           country: kiosk.country ? String(kiosk.country) : "",
           state: kiosk.state ? String(kiosk.state) : "",
@@ -128,11 +126,16 @@ const EditKiosk = () => {
     fetchKiosk();
   }, [id, token]);
 
-  // Country dropdown
   useEffect(() => {
     const fetchCountries = async () => {
       try {
         setLoadingCountries(true);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/countries`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/kiosks/dropdown/countries`,
           {
@@ -150,7 +153,6 @@ const EditKiosk = () => {
     fetchCountries();
   }, [token]);
 
-  // State dropdown
   useEffect(() => {
     if (!form.country) {
       setStates([]);
@@ -175,7 +177,6 @@ const EditKiosk = () => {
     fetchStates();
   }, [form.country, token]);
 
-  // City dropdown
   useEffect(() => {
     if (!form.state) {
       setCities([]);
@@ -200,7 +201,6 @@ const EditKiosk = () => {
     fetchCities();
   }, [form.state, token]);
 
-  // Projects dropdown
   useEffect(() => {
     const fetchProjects = async () => {
       try {
@@ -250,6 +250,8 @@ const EditKiosk = () => {
     setLoading(true);
     setError("");
 
+    setError("");
+
     try {
       const payload = {
         ...form,
@@ -258,9 +260,22 @@ const EditKiosk = () => {
         city: form.city ? Number(form.city) : null,
       };
 
-      // Don't send empty password
-      if (!payload.password) delete payload.password;
+      if (!payload.password) {
+        // delete password if empty to avoid sending empty string
+        delete (payload as any).password;
+      }
 
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/kiosks/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/kiosks/${id}`,
         {
@@ -431,6 +446,7 @@ const EditKiosk = () => {
           </FormGroup>
         </Grid>
       </Grid>
+
       <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
         <ReusableButton onClick={handleSubmit} disabled={loading}>
           {loading ? <CircularProgress size={20} /> : "Update"}

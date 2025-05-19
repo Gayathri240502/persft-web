@@ -7,6 +7,11 @@ import {
   TextField,
   IconButton,
   useMediaQuery,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
@@ -96,30 +101,6 @@ const Products = () => {
     { field: "brand", headerName: "Brand", flex: 1 },
     { field: "modelName", headerName: "Model Name", flex: 1 },
     { field: "description", headerName: "Description", flex: 1 },
-    // {
-    //   field: "category",
-    //   headerName: "Category",
-    //   flex: 1,
-    //   valueGetter: (params) => params?.row?.category?.name ?? "",
-    // },
-    // {
-    //   field: "subCategory",
-    //   headerName: "SubCategory",
-    //   flex: 1,
-    //   valueGetter: (params) => params?.row?.subCategory?.name ?? "",
-    // },
-    // {
-    //   field: "workGroup",
-    //   headerName: "Work Group",
-    //   flex: 1,
-    //   valueGetter: (params) => params?.row?.workGroup?.name ?? "",
-    // },
-    // {
-    //   field: "workTask",
-    //   headerName: "Work Task",
-    //   flex: 1,
-    //   valueGetter: (params) => params?.row?.workTask?.name ?? "",
-    // },
     {
       field: "action",
       headerName: "Action",
@@ -273,6 +254,23 @@ const Products = () => {
           paginationMode="server"
         />
       </Box>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to delete this product?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -68,7 +69,7 @@ const ShopDetailsPage: React.FC = () => {
         if (!res.ok) throw new Error("Failed to fetch shop");
 
         const data = await res.json();
-        setShop(data);
+        setShop(data.shop);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -164,7 +165,9 @@ const ShopDetailsPage: React.FC = () => {
           <Box>
             <IconButton
               color="primary"
-              onClick={() => router.push(`/admin/vendors/shops/edit`)}
+               onClick={() =>
+                router.push(`/admin/vendors/shops/edit?id=${id}`)
+              }
             >
               <Edit />
             </IconButton>
@@ -175,6 +178,9 @@ const ShopDetailsPage: React.FC = () => {
         </Box>
 
         <Box mt={3}>
+          <Typography>
+            <strong>ID:</strong> {shop._id}
+          </Typography>
           <Typography>
             <strong>Username:</strong> {shop.username}
           </Typography>
@@ -220,7 +226,6 @@ const ShopDetailsPage: React.FC = () => {
         </Box>
       </Paper>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}

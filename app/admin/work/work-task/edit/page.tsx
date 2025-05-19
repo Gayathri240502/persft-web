@@ -11,11 +11,20 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  SelectChangeEvent,
 } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+
+type WorkGroup = {
+  _id: string;
+  name: string;
+  id?: string;
+};
+
+
 
 const EditWorkTask = () => {
   const router = useRouter();
@@ -23,24 +32,26 @@ const EditWorkTask = () => {
   const id = searchParams.get("id");
   const { token } = getTokenAndRole();
 
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [workGroup, setWorkGroup] = useState(""); // selected workGroup ID as string
-  const [workGroups, setWorkGroups] = useState([]); // list of work groups
-  const [targetDays, setTargetDays] = useState(0);
-  const [bufferDays, setBufferDays] = useState(0);
-  const [poDays, setPoDays] = useState(0);
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    workGroup: "",
+    targetDays: 0,
+    bufferDays: 0,
+    poDays: 0,
+  });
+
+  const [workGroups, setWorkGroups] = useState<WorkGroup[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [initialLoading, setInitialLoading] = useState(true);
+  const [loadingWorkGroups, setLoadingWorkGroups] = useState(true);
 
-  // Load workGroups first, then fetch workTask details
   useEffect(() => {
     const loadData = async () => {
       setInitialLoading(true);
       try {
-        // Fetch work groups list first
-        const groupsResponse = await fetch(
+        const groupsRes = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/work-tasks/work-groups-selection`,
           {
             headers: {
@@ -50,13 +61,11 @@ const EditWorkTask = () => {
           }
         );
 
-        if (!groupsResponse.ok) throw new Error("Failed to fetch work groups.");
-
-        const groupsData = await groupsResponse.json();
+        if (!groupsRes.ok) throw new Error("Failed to fetch work groups.");
+        const groupsData = await groupsRes.json();
         setWorkGroups(groupsData);
 
-        // Now fetch work task details
-        const taskResponse = await fetch(
+        const taskRes = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/work-tasks/${id}`,
           {
             headers: {
@@ -66,26 +75,23 @@ const EditWorkTask = () => {
           }
         );
 
-        if (!taskResponse.ok) throw new Error("Failed to fetch work task.");
+        if (!taskRes.ok) throw new Error("Failed to fetch work task.");
+        const taskData = await taskRes.json();
 
-        const taskData = await taskResponse.json();
-
-        // Set fields from task data
-        setName(taskData.name || "");
-        setDescription(taskData.description || "");
-        setTargetDays(taskData.targetDays || 0);
-        setBufferDays(taskData.bufferDays || 0);
-        setPoDays(taskData.poDays || 0);
-
-        // Set selected workGroup as string ID if present
-        const wgId = taskData.workGroup?._id
-          ? String(taskData.workGroup._id)
-          : "";
-        setWorkGroup(wgId);
+        setFormData({
+          name: taskData.name || "",
+          description: taskData.description || "",
+          // extract id as string for workGroup
+          workGroup: taskData.workGroup?._id?.toString() ?? "",
+          targetDays: taskData.targetDays || 0,
+          bufferDays: taskData.bufferDays || 0,
+          poDays: taskData.poDays || 0,
+        });
       } catch (err) {
         setError((err as Error).message || "Failed to load data.");
       } finally {
         setInitialLoading(false);
+        setLoadingWorkGroups(false);
       }
     };
 
@@ -97,18 +103,44 @@ const EditWorkTask = () => {
     }
   }, [id, token]);
 
-  // Handle form submit to update work task
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        name === "targetDays" || name === "bufferDays" || name === "poDays"
+          ? Number(value)
+          : value,
+    }));
+  };
+
+  const handleSelectChange = (event: SelectChangeEvent<string>) => {
+    setFormData((prev) => ({ ...prev, workGroup: event.target.value }));
+  };
+
   const handleSubmit = async () => {
-    if (!name.trim() || !workGroup || !targetDays) {
+    if (!formData.name.trim() || !formData.workGroup || !formData.targetDays) {
       setError("Please fill all required fields.");
       return;
     }
+
+    // Send workGroup as id string directly (not as object)
+    const payload = {
+      name: formData.name,
+      description: formData.description,
+      workGroup: formData.workGroup, // <-- just the id string here
+      targetDays: formData.targetDays,
+      bufferDays: formData.bufferDays,
+      poDays: formData.poDays,
+    };
 
     try {
       setLoading(true);
       setError("");
 
-      const response = await fetch(
+      const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/work-tasks/${id}`,
         {
           method: "PUT",
@@ -116,18 +148,15 @@ const EditWorkTask = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            name,
-            description,
-            workGroup,
-            targetDays,
-            bufferDays,
-            poDays,
-          }),
+          body: JSON.stringify(payload),
         }
       );
 
-      if (!response.ok) throw new Error("Failed to update work task.");
+      const resBody = await res.json();
+
+      if (!res.ok) {
+        throw new Error(resBody.message || "Failed to update work task.");
+      }
 
       router.push("/admin/work/work-task");
     } catch (err: any) {
@@ -158,71 +187,86 @@ const EditWorkTask = () => {
       )}
 
       <TextField
+        name="name"
         label="Task Name"
         fullWidth
         sx={{ mb: 3 }}
-        value={name}
-        onChange={(e) => setName(e.target.value)}
+        value={formData.name}
+        onChange={handleChange}
       />
 
       <TextField
+        name="description"
         label="Description"
         multiline
         rows={3}
         fullWidth
         sx={{ mb: 3 }}
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
+        value={formData.description}
+        onChange={handleChange}
       />
 
-      <FormControl fullWidth sx={{ mb: 3 }}>
+      <FormControl fullWidth sx={{ mb: 3 }} disabled={loadingWorkGroups || workGroups.length === 0}>
         <InputLabel id="work-group-label">Work Group</InputLabel>
         <Select
           labelId="work-group-label"
-          value={workGroup}
+          id="work-group-select"
+          value={formData.workGroup || ""}
           label="Work Group"
-          onChange={(e) => setWorkGroup(String(e.target.value))}
+          onChange={handleSelectChange}
         >
-          {workGroups.map((group: any) => (
-            <MenuItem key={group._id} value={String(group._id)}>
-              {group.name}
-            </MenuItem>
-          ))}
+          <MenuItem value="" disabled>
+            {loadingWorkGroups
+              ? "Loading..."
+              : workGroups.length === 0
+              ? "No Work Groups Available"
+              : "Select Work Group"}
+          </MenuItem>
+          {workGroups
+            .filter((group) => group._id || group.id)
+            .map((group) => (
+              <MenuItem key={group._id || group.id} value={group._id || group.id}>
+                {group.name || "Unnamed Group"}
+              </MenuItem>
+            ))}
         </Select>
       </FormControl>
 
       <TextField
+        name="targetDays"
         label="Target Days"
         type="number"
         fullWidth
         sx={{ mb: 3 }}
-        value={targetDays}
-        onChange={(e) => setTargetDays(Number(e.target.value))}
+        value={formData.targetDays}
+        onChange={handleChange}
       />
 
       <TextField
+        name="bufferDays"
         label="Buffer Days"
         type="number"
         fullWidth
         sx={{ mb: 3 }}
-        value={bufferDays}
-        onChange={(e) => setBufferDays(Number(e.target.value))}
+        value={formData.bufferDays}
+        onChange={handleChange}
       />
 
       <TextField
+        name="poDays"
         label="PO Days"
         type="number"
         fullWidth
         sx={{ mb: 3 }}
-        value={poDays}
-        onChange={(e) => setPoDays(Number(e.target.value))}
+        value={formData.poDays}
+        onChange={handleChange}
       />
 
       <Box sx={{ display: "flex", gap: 2 }}>
         <ReusableButton onClick={handleSubmit} disabled={loading}>
           {loading ? <CircularProgress size={20} /> : "Update"}
         </ReusableButton>
-        <CancelButton href="/admin/work/work-task">Cancel</CancelButton>
+        <CancelButton href="/admin/work/work-task"> Cancel </CancelButton>
       </Box>
     </Box>
   );

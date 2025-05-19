@@ -12,6 +12,8 @@ import {
   Select,
   MenuItem,
   CircularProgress,
+  Checkbox,
+  FormControlLabel,
   Alert,
 } from "@mui/material";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -79,10 +81,10 @@ const EditShop = () => {
   const [loadingCities, setLoadingCities] = useState(false);
   const [error, setError] = useState("");
 
-  // Fetch shop data
   useEffect(() => {
     const fetchShop = async () => {
       if (!shopId) return;
+      console.log("Fetching shop with ID:", shopId); // ✅ Debug
       try {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/shops/${shopId}`,
@@ -93,8 +95,11 @@ const EditShop = () => {
             },
           }
         );
-        if (!response.ok) throw new Error("Failed to fetch shop data.");
-        const shop = await response.json();
+        const data = await response.json();
+        console.log("Fetched shop data:", data); // ✅ Debug
+
+        const shop = data.shop ?? data;
+
         setFormData({
           firstName: shop.firstName || "",
           lastName: shop.lastName || "",
@@ -253,7 +258,7 @@ const EditShop = () => {
 
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/shops/${shopId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/shops/${shopId}`,
         {
           method: "PUT",
           headers: {
@@ -452,6 +457,23 @@ const EditShop = () => {
             !formData.state
           )}
         </Grid>
+      </Grid>
+
+      <Grid item xs={12} sm={6}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={formData.enabled}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  enabled: e.target.checked,
+                }))
+              }
+            />
+          }
+          label={formData.enabled ? "Active" : "Inactive"}
+        />
       </Grid>
 
       <Divider sx={{ my: 4 }} />

@@ -6,20 +6,30 @@ import {
   Typography,
   Button,
   TextField,
-  FormGroup,
   FormControlLabel,
   Checkbox,
-  Grid,
-  FormHelperText,
+  Alert,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
-interface OptionType {
-  _id: string;
+interface SelectionOption {
+  id: string;
   name: string;
+  roomTypes?: {
+    id: string;
+    name: string;
+    themes?: {
+      id: string;
+      name: string;
+      designs?: {
+        id: string;
+        name: string;
+      }[];
+    }[];
+  }[];
 }
 
 interface FormData {
@@ -28,71 +38,58 @@ interface FormData {
   thumbnail: File | null;
   thumbnailBase64: string;
   thumbnailPreview: string;
-  residenceTypes: string[];
-  roomTypes: string[];
-  themes: string[];
-  designs: string[];
+  selections: {
+    residenceType: string;
+    roomType: string;
+    theme: string;
+    design: string;
+  }[];
 }
 
 const CreateProject = () => {
   const { token } = getTokenAndRole();
 
-  const [residenceList, setResidenceList] = useState<OptionType[]>([]);
-  const [roomList, setRoomList] = useState<OptionType[]>([]);
-  const [themeList, setThemeList] = useState<OptionType[]>([]);
-  const [designList, setDesignList] = useState<OptionType[]>([]);
-
+  const [selectionOptions, setSelectionOptions] = useState<SelectionOption[]>(
+    []
+  );
   const [formData, setFormData] = useState<FormData>({
     name: "",
     description: "",
     thumbnail: null,
     thumbnailBase64: "",
     thumbnailPreview: "",
-    residenceTypes: [],
-    roomTypes: [],
-    themes: [],
-    designs: [],
+    selections: [],
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState<string | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState("No file selected");
 
   useEffect(() => {
-    const fetchOptions = async () => {
+    const fetchSelectionOptions = async () => {
       try {
-        const headers = {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        };
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/projects/selection-options/hierarchy`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
-        const [residences, rooms, themes, designs] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/residence-types`, { headers }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/room-types`, { headers }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/themes`, { headers }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/designs`, { headers }),
-        ]);
-
-        if (![residences, rooms, themes, designs].every((res) => res.ok)) {
-          throw new Error("One or more fetches failed");
+        if (!response.ok) {
+          throw new Error("Failed to fetch selection options");
         }
 
-        const [resData, roomData, themeData, designData] = await Promise.all([
-          residences.json(),
-          rooms.json(),
-          themes.json(),
-          designs.json(),
-        ]);
-
-        setResidenceList(resData.residenceTypes);
-        setRoomList(roomData.roomTypes);
-        setThemeList(themeData.themes);
-        setDesignList(designData.designs);
+        const data = await response.json();
+        setSelectionOptions(data);
       } catch (err) {
         console.error("Fetch error:", err);
       }
     };
 
-    fetchOptions();
+    fetchSelectionOptions();
   }, [token]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,87 +97,200 @@ const CreateProject = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setSelectedFileName(file.name);
       const reader = new FileReader();
       reader.onloadend = () => {
+        const base64String = reader.result as string;
         setFormData((prev) => ({
           ...prev,
           thumbnail: file,
-          thumbnailBase64: reader.result as string,
-          thumbnailPreview: reader.result as string,
+          thumbnailBase64: base64String,
+          thumbnailPreview: base64String,
         }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleCheckboxChange = (
-    listKey: keyof FormData,
-    value: string,
-    checked: boolean
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [listKey]: checked
-        ? [...(prev[listKey] as string[]), value]
-        : (prev[listKey] as string[]).filter((id) => id !== value),
-    }));
+  const handleResidenceSelection = (residenceId: string) => {
+    setFormData((prev) => {
+      const existingIndex = prev.selections.findIndex(
+        (s) => s.residenceType === residenceId
+      );
+
+      if (existingIndex >= 0) {
+        const newSelections = [...prev.selections];
+        newSelections.splice(existingIndex, 1);
+        return { ...prev, selections: newSelections };
+      } else {
+        return {
+          ...prev,
+          selections: [
+            ...prev.selections,
+            {
+              residenceType: residenceId,
+              roomType: "",
+              theme: "",
+              design: "",
+            },
+          ],
+        };
+      }
+    });
   };
 
-  const handleRemoveImage = () => {
-    setFormData((prev) => ({
-      ...prev,
-      thumbnail: null,
-      thumbnailBase64: "",
-      thumbnailPreview: "",
-    }));
+  const handleRoomSelection = (residenceId: string, roomId: string) => {
+    setFormData((prev) => {
+      const newSelections = [...prev.selections];
+      const index = newSelections.findIndex(
+        (s) => s.residenceType === residenceId
+      );
+      if (index >= 0) {
+        newSelections[index] = {
+          ...newSelections[index],
+          roomType: newSelections[index].roomType === roomId ? "" : roomId,
+          theme: "",
+          design: "",
+        };
+      }
+      return { ...prev, selections: newSelections };
+    });
+  };
+
+  const handleThemeSelection = (
+    residenceId: string,
+    roomId: string,
+    themeId: string
+  ) => {
+    setFormData((prev) => {
+      const newSelections = [...prev.selections];
+      const index = newSelections.findIndex(
+        (s) => s.residenceType === residenceId && s.roomType === roomId
+      );
+      if (index >= 0) {
+        newSelections[index] = {
+          ...newSelections[index],
+          theme: newSelections[index].theme === themeId ? "" : themeId,
+          design: "",
+        };
+      }
+      return { ...prev, selections: newSelections };
+    });
+  };
+
+  const handleDesignSelection = (
+    residenceId: string,
+    roomId: string,
+    themeId: string,
+    designId: string
+  ) => {
+    setFormData((prev) => {
+      const newSelections = [...prev.selections];
+      const index = newSelections.findIndex(
+        (s) =>
+          s.residenceType === residenceId &&
+          s.roomType === roomId &&
+          s.theme === themeId
+      );
+      if (index >= 0) {
+        newSelections[index] = {
+          ...newSelections[index],
+          design: newSelections[index].design === designId ? "" : designId,
+        };
+      }
+      return { ...prev, selections: newSelections };
+    });
+  };
+
+  const isSelected = {
+    residence: (residenceId: string) =>
+      formData.selections.some((s) => s.residenceType === residenceId),
+
+    room: (residenceId: string, roomId: string) => {
+      const sel = formData.selections.find(
+        (s) => s.residenceType === residenceId
+      );
+      return sel?.roomType === roomId;
+    },
+
+    theme: (residenceId: string, roomId: string, themeId: string) => {
+      const sel = formData.selections.find(
+        (s) => s.residenceType === residenceId && s.roomType === roomId
+      );
+      return sel?.theme === themeId;
+    },
+
+    design: (
+      residenceId: string,
+      roomId: string,
+      themeId: string,
+      designId: string
+    ) => {
+      const sel = formData.selections.find(
+        (s) =>
+          s.residenceType === residenceId &&
+          s.roomType === roomId &&
+          s.theme === themeId
+      );
+      return sel?.design === designId;
+    },
   };
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!formData.name) newErrors.name = "Name is required";
-    if (!formData.residenceTypes.length) newErrors.residenceTypes = "Select at least one residence";
-    if (!formData.roomTypes.length) newErrors.roomTypes = "Select at least one room";
-    if (!formData.themes.length) newErrors.themes = "Select at least one theme";
-    if (!formData.designs.length) newErrors.designs = "Select at least one design";
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Name is required";
+    }
+    if (!formData.thumbnailBase64) {
+      newErrors.thumbnail = "Thumbnail is required";
+    }
+
+    if (formData.selections.length === 0) {
+      newErrors.selections = "Select at least one residence";
+    } else {
+      const incomplete = formData.selections.some(
+        (s) => !s.roomType || !s.theme || !s.design
+      );
+      if (incomplete) {
+        newErrors.selections =
+          "Complete all selections (residence → room → theme → design)";
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async () => {
-    if (!validate()) {
-      setApiError("Please fix the validation errors");
-      return;
-    }
+    if (!validate()) return;
 
     try {
       const payload = {
         name: formData.name,
         description: formData.description,
         thumbnail: formData.thumbnailBase64,
-        selections: [
-          {
-            residenceType: formData.residenceTypes,
-            roomType: formData.roomTypes,
-            theme: formData.themes,
-            design: formData.designs,
-          },
-        ],
+        selections: formData.selections,
       };
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/projects`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/projects`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Failed to create project");
+      if (!response.ok)
+        throw new Error(result.message || "Failed to create project");
 
       alert("Project created successfully!");
       setFormData({
@@ -189,14 +299,16 @@ const CreateProject = () => {
         thumbnail: null,
         thumbnailBase64: "",
         thumbnailPreview: "",
-        residenceTypes: [],
-        roomTypes: [],
-        themes: [],
-        designs: [],
+        selections: [],
       });
-    } catch (error) {
+      setSelectedFileName("No file selected");
+      setErrors({});
+      setApiError(null);
+    } catch (error: any) {
       console.error("Submit error:", error);
-      setApiError("Something went wrong while submitting the form.");
+      setApiError(
+        error.message || "Something went wrong while submitting the form."
+      );
     }
   };
 
@@ -229,81 +341,144 @@ const CreateProject = () => {
         sx={{ mb: 3 }}
       />
 
-      <Box sx={{ mb: 3 }}>
-        <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+        <Button
+          variant="outlined"
+          component="label"
+          startIcon={<UploadFileIcon />}
+        >
           Upload Thumbnail
-          <input type="file" hidden accept=".jpg,.jpeg,.png" onChange={handleFileChange} />
-          
+          <input type="file" hidden onChange={handleThumbnailChange} />
         </Button>
-        
-        {formData.thumbnailPreview && (
-          <>
-            <Button color="error" onClick={handleRemoveImage}>
-              Remove
-            </Button>
-            <Box sx={{ mt: 2 }}>
-              <img
-                src={formData.thumbnailPreview}
-                alt="Thumbnail Preview"
-                style={{ maxWidth: 150, maxHeight: 150 }}
-              />
-            </Box>
-            
-          </>
-        )}
-        
+        <Typography variant="body2">{selectedFileName}</Typography>
       </Box>
       <Typography variant="caption" sx={{ color: "#999" }}>
-                        Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
-                        </Typography>
+        Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+      </Typography>
+      {formData.thumbnailPreview && (
+        <Box sx={{ mt: 2 }}>
+          <img
+            src={formData.thumbnailPreview}
+            alt="Thumbnail Preview"
+            style={{ width: 200, borderRadius: 8 }}
+          />
+        </Box>
+      )}
 
-      <Grid container spacing={3}>
-        {[
-          { title: "Residence Mapping", data: residenceList, key: "residenceTypes" },
-          { title: "Room Mapping", data: roomList, key: "roomTypes" },
-          { title: "Theme Mapping", data: themeList, key: "themes" },
-          { title: "Design Mapping", data: designList, key: "designs" },
-        ].map(({ title, data, key }) => (
-          <Grid item xs={12} md={6} lg={3} key={key}>
-            <Typography variant="subtitle1" sx={{ mb: 1 }}>{title}</Typography>
-            <FormGroup>
-              {data.map((item) => (
-                <FormControlLabel
-                  key={item._id}
-                  control={
-                    <Checkbox
-                      checked={
-                        Array.isArray(formData[key as keyof FormData]) &&
-                        (formData[key as keyof FormData] as string[]).includes(item._id)
-                      }
-                      onChange={(e) =>
-                        handleCheckboxChange(
-                          key as keyof FormData,
-                          item._id,
-                          e.target.checked
-                        )
-                      }
-                    />
-                  }
-                  label={item.name}
-                />
+      <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
+        Selections
+      </Typography>
+
+      {selectionOptions.map((residence) => (
+        <Box
+          key={residence.id}
+          sx={{ mb: 2, border: "1px solid #ccc", p: 2, borderRadius: 2 }}
+        >
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={isSelected.residence(residence.id)}
+                onChange={() => handleResidenceSelection(residence.id)}
+              />
+            }
+            label={residence.name}
+          />
+
+          {isSelected.residence(residence.id) && (
+            <Box sx={{ ml: 3 }}>
+              {residence.roomTypes?.map((room) => (
+                <Box key={room.id} sx={{ mb: 1 }}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={isSelected.room(residence.id, room.id)}
+                        onChange={() =>
+                          handleRoomSelection(residence.id, room.id)
+                        }
+                      />
+                    }
+                    label={room.name}
+                  />
+
+                  {isSelected.room(residence.id, room.id) && (
+                    <Box sx={{ ml: 3 }}>
+                      {room.themes?.map((theme) => (
+                        <Box key={theme.id}>
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                checked={isSelected.theme(
+                                  residence.id,
+                                  room.id,
+                                  theme.id
+                                )}
+                                onChange={() =>
+                                  handleThemeSelection(
+                                    residence.id,
+                                    room.id,
+                                    theme.id
+                                  )
+                                }
+                              />
+                            }
+                            label={theme.name}
+                          />
+
+                          {isSelected.theme(
+                            residence.id,
+                            room.id,
+                            theme.id
+                          ) && (
+                            <Box sx={{ ml: 3 }}>
+                              {theme.designs?.map((design) => (
+                                <FormControlLabel
+                                  key={design.id}
+                                  control={
+                                    <Checkbox
+                                      checked={isSelected.design(
+                                        residence.id,
+                                        room.id,
+                                        theme.id,
+                                        design.id
+                                      )}
+                                      onChange={() =>
+                                        handleDesignSelection(
+                                          residence.id,
+                                          room.id,
+                                          theme.id,
+                                          design.id
+                                        )
+                                      }
+                                    />
+                                  }
+                                  label={design.name}
+                                />
+                              ))}
+                            </Box>
+                          )}
+                        </Box>
+                      ))}
+                    </Box>
+                  )}
+                </Box>
               ))}
-            </FormGroup>
-            {errors[key] && <FormHelperText error>{errors[key]}</FormHelperText>}
-          </Grid>
-        ))}
-      </Grid>
+            </Box>
+          )}
+        </Box>
+      ))}
+
+      {errors.selections && (
+        <Typography color="error">{errors.selections}</Typography>
+      )}
 
       {apiError && (
-        <Typography color="error" sx={{ mt: 2 }}>
+        <Alert severity="error" sx={{ mt: 2 }}>
           {apiError}
-        </Typography>
+        </Alert>
       )}
 
       <Box sx={{ display: "flex", gap: 2, mt: 4 }}>
-        <ReusableButton onClick={handleSubmit} disabled={!token}>
-          Submit
-        </ReusableButton>
+        <ReusableButton onClick={handleSubmit}>Submit</ReusableButton>
         <CancelButton href="/admin/projects">Cancel</CancelButton>
       </Box>
     </Box>

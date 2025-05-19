@@ -58,7 +58,12 @@ const EditThemeType = () => {
         setDescription(theme.description || "");
         setThumbnail(theme.thumbnail || "");
         setSelectedFileName("Existing Thumbnail");
-        setSelectedRooms(theme.rooms || []);
+
+        // ✅ Extract only room IDs
+        const roomIds = (theme.rooms || []).map(
+          (room: any) => room._id || room
+        );
+        setSelectedRooms(roomIds);
 
         const roomsRes = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/room-types`,
@@ -69,8 +74,7 @@ const EditThemeType = () => {
           }
         );
         const roomData = await roomsRes.json();
-        const roomList =
-          roomData.data || roomData.roomTypes || roomData || [];
+        const roomList = roomData.data || roomData.roomTypes || roomData || [];
 
         setRoomTypes(roomList);
       } catch (err) {
@@ -138,10 +142,17 @@ const EditThemeType = () => {
         }
       );
 
-      if (!response.ok) throw new Error("Failed to update theme.");
-      router.push("/admin/home-catalog/themes");
+      const result = await response.json();
+      console.log("UPDATE RESPONSE", result); // ✅ debug this
+
+      if (!response.ok) throw new Error(result.message || "Update failed");
+
+      await router.push("/admin/home-catalog/themes");
+      router.refresh(); // ✅ Ensure fresh data is loaded
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error occurred");
+      setError(
+        err instanceof Error ? err.message : "Unexpected error occurred"
+      );
     } finally {
       setLoading(false);
     }
@@ -202,8 +213,8 @@ const EditThemeType = () => {
             </Typography>
           </Box>
           <Typography variant="caption" sx={{ color: "#999" }}>
-                    Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
-                    </Typography>
+            Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+          </Typography>
 
           {thumbnail && (
             <Box sx={{ mb: 3 }}>
@@ -215,8 +226,6 @@ const EditThemeType = () => {
               />
             </Box>
           )}
-
-          
 
           <Typography variant="h6" sx={{ mb: 1 }}>
             Room Mapping

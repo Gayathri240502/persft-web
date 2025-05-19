@@ -70,19 +70,20 @@ const WorkList = () => {
   const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
 
   const fetchWorks = useCallback(async () => {
-    const { page, pageSize } = paginationModel;
     setLoading(true);
     setError(null);
 
-    try {
-      const queryParams = new URLSearchParams({
-        page: String(page + 1),
-        limit: String(pageSize),
-      });
-      if (search.trim() !== "") {
-        queryParams.append("searchTerm", search.trim());
-      }
+    const { page, pageSize } = paginationModel;
+    const queryParams = new URLSearchParams({
+      page: String(page + 1),
+      limit: String(pageSize),
+    });
 
+    if (search.trim()) {
+      queryParams.append("searchTerm", search.trim());
+    }
+
+    try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/works?${queryParams.toString()}`,
         {
@@ -183,11 +184,9 @@ const WorkList = () => {
       renderCell: (params: GridCellParams) => {
         const workGroups: WorkGroupEntry[] = params.row.workGroups || [];
 
-        if (workGroups.length === 0) {
-          return <Typography>None</Typography>;
-        }
-
-        return (
+        return workGroups.length === 0 ? (
+          <Typography>None</Typography>
+        ) : (
           <Box>
             {workGroups.map((wg, i) => (
               <Box key={i} sx={{ mb: 1 }}>
@@ -265,7 +264,7 @@ const WorkList = () => {
             setPaginationModel((prev) => ({ ...prev, page: 0 }));
           }}
         />
-        <ReusableButton onClick={() => router.push("/admin/works/add")}>
+        <ReusableButton onClick={() => router.push("/admin/work/works/add")}>
           ADD
         </ReusableButton>
       </Box>
@@ -294,7 +293,6 @@ const WorkList = () => {
         </>
       )}
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
         <DialogTitle>Delete Work</DialogTitle>
         <DialogContent>

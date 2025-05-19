@@ -7,7 +7,7 @@ import {
   GridToolbarFilterButton,
   GridToolbarDensitySelector,
   GridToolbarExport,
-  GridColDef,
+  DataGridProps,
 } from "@mui/x-data-grid";
 import { Box } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
@@ -35,28 +35,14 @@ const CustomToolbar = () => {
   );
 };
 
-const StyledDataGrid = ({
-  rows,
-  columns,
-}: {
-  rows: any[];
-  columns: GridColDef[];
-}) => {
+const StyledDataGrid = (props: DataGridProps) => {
   return (
     <Box sx={{ overflowX: "auto" }}>
       <Box sx={{ minWidth: "1000px" }}>
         <DataGrid
-          rows={rows}
-          columns={columns}
+          {...props}
           hideFooterSelectedRowCount
           slots={{ toolbar: CustomToolbar }}
-          pagination
-          pageSizeOptions={[5, 10, 25, 50]}
-          initialState={{
-            pagination: {
-              paginationModel: { pageSize: 10, page: 0 },
-            },
-          }}
           sx={{
             "& .MuiDataGrid-columnHeaders": {
               fontSize: "1.1rem",
@@ -70,6 +56,7 @@ const StyledDataGrid = ({
             "& .MuiDataGrid-row:nth-of-type(odd)": {
               backgroundColor: "#ffffff",
             },
+            ...props.sx, // Allow external sx to be passed in
           }}
         />
       </Box>

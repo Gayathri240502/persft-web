@@ -35,7 +35,7 @@ const WorkForm = () => {
     };
   }>({});
 
-  // Fetch groups + tasks
+  // Fetch work groups and their tasks
   useEffect(() => {
     const fetchGroups = async () => {
       try {
@@ -49,9 +49,12 @@ const WorkForm = () => {
         );
         if (!res.ok) throw new Error("Failed to fetch work groups");
         const data = await res.json();
+
+        console.log("Work groups data:", data); // <-- Check your data shape here
+
         setWorkGroupTasks(data);
       } catch (err: any) {
-        setError(err.message);
+        setError(err.message || "An error occurred while fetching data.");
       }
     };
     fetchGroups();
@@ -75,7 +78,11 @@ const WorkForm = () => {
     setSelectedGroups((prev) => {
       const group = prev[groupId] || { checked: false, taskIds: new Set() };
       const updatedTaskIds = new Set(group.taskIds);
-      checked ? updatedTaskIds.add(taskId) : updatedTaskIds.delete(taskId);
+      if (checked) {
+        updatedTaskIds.add(taskId);
+      } else {
+        updatedTaskIds.delete(taskId);
+      }
 
       return {
         ...prev,
@@ -90,11 +97,11 @@ const WorkForm = () => {
       return false;
     }
 
-    const hasSelectedGroupWithTask = Object.values(selectedGroups).some(
+    const hasValidSelection = Object.values(selectedGroups).some(
       (group) => group.checked && group.taskIds.size > 0
     );
 
-    if (!hasSelectedGroupWithTask) {
+    if (!hasValidSelection) {
       setError("Please select at least one group and one task.");
       return false;
     }
@@ -142,7 +149,7 @@ const WorkForm = () => {
       setSuccess("Work created successfully!");
       router.push("/admin/work");
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "An error occurred during submission.");
     } finally {
       setLoading(false);
     }
@@ -178,8 +185,8 @@ const WorkForm = () => {
         Select Work Groups & Tasks
       </Typography>
 
-      {workGroupTasks.map((group) => (
-        <Box key={group._id} sx={{ mb: 3 }}>
+      {workGroupTasks.map((group, groupIndex) => (
+        <Box key={group._id || `group-${groupIndex}`} sx={{ mb: 3 }}>
           <FormControlLabel
             control={
               <Checkbox
@@ -191,23 +198,35 @@ const WorkForm = () => {
           />
 
           <FormGroup sx={{ pl: 3 }}>
-            {group.tasks.map((task: any) => (
-              <FormControlLabel
-                key={task._id}
-                control={
-                  <Checkbox
-                    checked={
-                      selectedGroups[group._id]?.taskIds.has(task._id) || false
+            {Array.isArray(group.workTasks) &&
+              group.workTasks.map((task: any, taskIndex: number) => {
+                if (!group._id || !task._id) return null; // skip invalid data
+
+                const uniqueKey = `task-${group._id}-${task._id}`;
+
+                return (
+                  <FormControlLabel
+                    key={uniqueKey}
+                    control={
+                      <Checkbox
+                        checked={
+                          selectedGroups[group._id]?.taskIds.has(task._id) ||
+                          false
+                        }
+                        onChange={(e) =>
+                          handleTaskToggle(
+                            group._id,
+                            task._id,
+                            e.target.checked
+                          )
+                        }
+                        disabled={!selectedGroups[group._id]?.checked}
+                      />
                     }
-                    onChange={(e) =>
-                      handleTaskToggle(group._id, task._id, e.target.checked)
-                    }
-                    disabled={!selectedGroups[group._id]?.checked}
+                    label={task.name}
                   />
-                }
-                label={task.name}
-              />
-            ))}
+                );
+              })}
           </FormGroup>
         </Box>
       ))}
@@ -223,11 +242,11 @@ const WorkForm = () => {
         </Alert>
       )}
 
-      <Box sx={{ display: "flex", gap: 2, mt: 4 }}>
+      <Box sx={{ display: "flex", gap: 2 }}>
         <ReusableButton onClick={handleSubmit} disabled={loading}>
           {loading ? <CircularProgress size={24} /> : "Submit"}
         </ReusableButton>
-        <CancelButton href="/admin/work/work" />
+        <CancelButton href="/admin/work/works">Cancel</CancelButton>
       </Box>
     </Box>
   );

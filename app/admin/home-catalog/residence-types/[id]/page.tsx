@@ -85,7 +85,7 @@ const ResidenceTypesPage: React.FC = () => {
         throw new Error("Failed to delete residence types");
       }
       setDeleteDialogOpen(false);
-      router.push("/admin/residence-types");
+      router.push("/admin/home-catalog/residence-types");
     } catch (err: any) {
       setError(err.message);
     }

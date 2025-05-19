@@ -47,8 +47,8 @@ const AddSubCategory = () => {
   const [attributeGroups, setAttributeGroups] = useState<AttributeGroup[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-   const [thumbnail, setThumbnail] = useState(""); // base64 string
-    const [selectedFileName, setSelectedFileName] = useState("No file selected");
+  const [thumbnail, setThumbnail] = useState(""); // base64 string
+  const [selectedFileName, setSelectedFileName] = useState("No file selected");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -110,19 +110,20 @@ const AddSubCategory = () => {
   };
 
   const handleThumbnailChange = async (
-        e: React.ChangeEvent<HTMLInputElement>
-      ) => {
-        const file = e.target.files?.[0];
-        if (file) {
-          setSelectedFileName(file.name);
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const base64String = reader.result as string;
-            setThumbnail(base64String);
-          };
-          reader.readAsDataURL(file);
-        }
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFileName(file.name);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setThumbnail(base64String);
+        setFormData((prev) => ({ ...prev, thumbnail: base64String }));
       };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const validateForm = () => {
     if (
@@ -214,40 +215,40 @@ const AddSubCategory = () => {
         sx={{ mb: 3 }}
       />
 
-<Box sx={{ mb: 3 }}>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-    <Button
-      variant="outlined"
-      component="label"
-      startIcon={<UploadFileIcon />}
-      sx={{
-        color: "#05344c",
-        borderColor: "#05344c",
-        "&:hover": { backgroundColor: "#f0f4f8" },
-      }}
-    >
-      Upload Thumbnail
-      <input type="file" hidden onChange={handleThumbnailChange} />
-    </Button>
-    <Typography variant="body2" sx={{ color: "#666" }}>
-      {selectedFileName}
-    </Typography>
-  </Box>
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Button
+            variant="outlined"
+            component="label"
+            startIcon={<UploadFileIcon />}
+            sx={{
+              color: "#05344c",
+              borderColor: "#05344c",
+              "&:hover": { backgroundColor: "#f0f4f8" },
+            }}
+          >
+            Upload Thumbnail
+            <input type="file" hidden onChange={handleThumbnailChange} />
+          </Button>
+          <Typography variant="body2" sx={{ color: "#666" }}>
+            {selectedFileName}
+          </Typography>
+        </Box>
       </Box>
-        {/* Help Text */}
-               <Typography variant="caption" sx={{ color: "#999" }}>
-               Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
-               </Typography>
-               {thumbnail && (
-                           <Box sx={{ mb: 3 }}>
-                             <Typography variant="subtitle2">Preview:</Typography>
-                             <img
-                               src={thumbnail}
-                               alt="Thumbnail Preview"
-                               style={{ width: 200, borderRadius: 8 }}
-                             />
-                           </Box>
-                         )}
+      {/* Help Text */}
+      <Typography variant="caption" sx={{ color: "#999" }}>
+        Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+      </Typography>
+      {thumbnail && (
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle2">Preview:</Typography>
+          <img
+            src={thumbnail}
+            alt="Thumbnail Preview"
+            style={{ width: 200, borderRadius: 8 }}
+          />
+        </Box>
+      )}
 
       <Typography variant="h6" sx={{ mb: 1 }}>
         Attribute Groups

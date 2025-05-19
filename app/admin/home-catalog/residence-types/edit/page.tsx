@@ -29,6 +29,9 @@ const EditResidenceType = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [residenceTypes, setResidenceTypes] = useState<
+    { _id: string; name: string }[]
+  >([]);
 
   useEffect(() => {
     if (!id) {
@@ -58,6 +61,7 @@ const EditResidenceType = () => {
         setName(residenceType.name || "");
         setDescription(residenceType.description || "");
         setThumbnail(residenceType.thumbnail || "");
+        setResidenceTypes(residenceType.residenceTypes || []);
         setSelectedFileName("Existing Thumbnail");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error fetching data");
@@ -160,6 +164,22 @@ const EditResidenceType = () => {
             sx={{ mb: 3 }}
           />
 
+          {/* Residence Types List */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle1">Residence Types:</Typography>
+            {residenceTypes.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">
+                No residence types available
+              </Typography>
+            ) : (
+              residenceTypes.map((type) => (
+                <Typography key={type._id} variant="body2">
+                  - {type.name}
+                </Typography>
+              ))
+            )}
+          </Box>
+
           <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
             <Button
               variant="outlined"
@@ -180,8 +200,8 @@ const EditResidenceType = () => {
           </Box>
 
           <Typography variant="caption" sx={{ color: "#999" }}>
-          Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
-  </Typography>
+            Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+          </Typography>
 
           {thumbnail && (
             <Box sx={{ mb: 3 }}>

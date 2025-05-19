@@ -253,7 +253,7 @@ const ResidenceTypePage = () => {
         </Box>
       ) : (
         <Box sx={{ width: "100%" }}>
-          <Box>
+          <Box sx={{ width: "100%" }}>
             <StyledDataGrid
               rows={residenceTypes}
               columns={columns}
@@ -262,11 +262,8 @@ const ResidenceTypePage = () => {
               pagination
               paginationMode="server"
               paginationModel={paginationModel}
-              onPaginationModelChange={(model: GridPaginationModel) =>
-                setPaginationModel(model)
-              }
+              onPaginationModelChange={setPaginationModel}
               pageSizeOptions={[5, 10, 25, 100]}
-              disableColumnMenu={isSmallScreen}
               autoHeight={false}
             />
           </Box>

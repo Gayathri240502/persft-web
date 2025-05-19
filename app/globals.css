@@ -2,14 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Add custom class */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #d1d5db; /* Tailwind gray-300 */
-  border-radius: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
 }

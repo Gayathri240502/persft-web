@@ -95,10 +95,19 @@ const WorkList = () => {
       if (!res.ok) throw new Error("Failed to fetch works");
 
       const result = await res.json();
+      console.log("API result:", result); // ✅ Debug log
 
-      const worksData: Work[] = (
-        Array.isArray(result.works) ? result.works : []
-      ).map((item, index) => ({
+      const worksArray = Array.isArray(result)
+        ? result
+        : Array.isArray(result.works)
+          ? result.works
+          : Array.isArray(result.docs)
+            ? result.docs
+            : result._id
+              ? [result]
+              : [];
+
+      const worksData: Work[] = worksArray.map((item: any, index: number) => ({
         ...item,
         id: item._id,
         sn: page * pageSize + index + 1,
@@ -150,7 +159,6 @@ const WorkList = () => {
       fetchWorks();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Delete failed");
-      // Dialog remains open for retry or cancel
     }
   };
 
@@ -268,18 +276,22 @@ const WorkList = () => {
         <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
           <CircularProgress />
         </Box>
+      ) : works.length === 0 ? (
+        <Typography>No works found.</Typography>
       ) : (
-        <StyledDataGrid
-          rows={works}
-          columns={columns}
-          rowCount={rowCount}
-          pagination
-          paginationMode="server"
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25, 100]}
-          autoHeight
-        />
+        <>
+          <StyledDataGrid
+            rows={works}
+            columns={columns}
+            rowCount={rowCount}
+            pagination
+            paginationMode="server"
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            pageSizeOptions={[5, 10, 25, 100]}
+            autoHeight
+          />
+        </>
       )}
 
       {/* Delete Confirmation Dialog */}

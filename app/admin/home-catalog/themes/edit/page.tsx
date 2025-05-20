@@ -59,6 +59,7 @@ const EditThemeType = () => {
         setThumbnail(theme.thumbnail || "");
         setSelectedFileName("Existing Thumbnail");
 
+        // ✅ Extract only room IDs
         const roomIds = (theme.rooms || []).map(
           (room: any) => room._id || room
         );
@@ -126,7 +127,7 @@ const EditThemeType = () => {
         name,
         description,
         thumbnail,
-        rooms: selectedRooms.map((id) => ({ _id: id })), // ✅ Fix applied
+        rooms: selectedRooms,
       });
 
       const response = await fetch(
@@ -142,12 +143,12 @@ const EditThemeType = () => {
       );
 
       const result = await response.json();
-      console.log("UPDATE RESPONSE", result);
+      console.log("UPDATE RESPONSE", result); // ✅ debug this
 
       if (!response.ok) throw new Error(result.message || "Update failed");
 
       await router.push("/admin/home-catalog/themes");
-      router.refresh();
+      router.refresh(); // ✅ Ensure fresh data is loaded
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Unexpected error occurred"

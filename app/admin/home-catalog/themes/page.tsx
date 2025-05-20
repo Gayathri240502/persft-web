@@ -304,7 +304,7 @@ const ThemesPage = () => {
         </Alert>
       )}
 
-      <Box sx={{ height: 400, width: "100%", overflowX: "auto" }}>
+      <Box>
         <StyledDataGrid
           rows={filteredThemes}
           columns={columns}
@@ -316,7 +316,6 @@ const ThemesPage = () => {
             setPaginationModel(model)
           }
           pageSizeOptions={[5, 10, 25, 100]}
-          autoHeight
           disableColumnMenu={isSmallScreen}
         />
       </Box>

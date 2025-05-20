@@ -41,9 +41,6 @@ const StyledDataGrid = (props: DataGridProps) => {
       <Box sx={{ minWidth: "1000px" }}>
         <DataGrid
           {...props}
-          pagination
-          pageSize={5} // default page size
-          rowsPerPageOptions={[5, 10, 20]}
           hideFooterSelectedRowCount
           slots={{ toolbar: CustomToolbar }}
           sx={{

@@ -16,7 +16,7 @@ import {
   Button,
   Chip,
   InputAdornment,
-  Alert
+  Alert,
 } from "@mui/material";
 import {
   GridColDef,
@@ -148,7 +148,7 @@ const Shop = () => {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to delete residence type");
+        throw new Error("Failed to delete Shop");
       }
 
       fetchShops();
@@ -239,9 +239,7 @@ const Shop = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <ReusableButton
-          onClick={() => router.push("/admin/vendors/shops/add")}
-        >
+        <ReusableButton onClick={() => router.push("/admin/vendors/shops/add")}>
           ADD
         </ReusableButton>
       </Box>
@@ -251,7 +249,6 @@ const Shop = () => {
           {error}
         </Alert>
       )}
-
 
       <Box sx={{ width: "100%" }}>
         {loading ? (

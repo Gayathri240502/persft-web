@@ -13,6 +13,8 @@ import {
   MenuItem,
   CircularProgress,
   Alert,
+  Checkbox,
+  FormControlLabel,
   Button,
 } from "@mui/material";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -384,6 +386,23 @@ const EditMerchant = () => {
             !formData.category
           )}
         </Grid>
+      </Grid>
+
+      <Grid item xs={12} sm={6}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={formData.enabled}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  enabled: e.target.checked,
+                }))
+              }
+            />
+          }
+          label={formData.enabled ? "Active" : "Inactive"}
+        />
       </Grid>
 
       <Divider sx={{ my: 4 }} />

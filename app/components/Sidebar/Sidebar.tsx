@@ -29,9 +29,9 @@ const preferredOrder = [
   "Home Catalog",
   "Attribute Catalog",
   "Product Catalog",
-  "Vendors",
   "Orders",
   "Users",
+  "Vendors",
   "Projects",
   "Payment Orders",
   "Payment Info",
@@ -170,10 +170,11 @@ export default function Sidebar() {
 
   if (loading || pathName === "/login") return null;
 
+  // Improved sorting function with fallback to exact order value
   const parentMenus = menus
     .filter((item) => item.parentId === null)
     .sort((a, b) => {
-      // Sort based on the preferredOrder array
+      // Get the index of each item in the preferred order array
       const indexA = preferredOrder.indexOf(a.name);
       const indexB = preferredOrder.indexOf(b.name);
 
@@ -186,12 +187,13 @@ export default function Sidebar() {
       if (indexA >= 0) return -1;
       if (indexB >= 0) return 1;
 
-      // If neither item is in the list, sort by the order property
+      // If neither is in the preferred list, use the order property
       return a.order - b.order;
     });
 
   const childMenus = menus.filter((item) => item.parentId !== null);
 
+  // Sort child menus by their explicit order property
   const getChildren = (parentId: string) =>
     childMenus
       .filter((child) => child.parentId === parentId)
@@ -213,6 +215,16 @@ export default function Sidebar() {
       />
     );
   };
+
+  // For debugging - log the menu items and their order
+  console.log(
+    "Parent Menus Order:",
+    parentMenus.map((m) => ({
+      name: m.name,
+      order: m.order,
+      index: preferredOrder.indexOf(m.name),
+    }))
+  );
 
   return (
     <div

@@ -56,7 +56,7 @@ const RoomTypes = () => {
   const [error, setError] = useState<string | null>(null);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
-    pageSize: 10,
+    pageSize: 5,
   });
   const [rowCount, setRowCount] = useState(0);
   const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
@@ -70,23 +70,21 @@ const RoomTypes = () => {
     setError(null);
 
     try {
-      const { page, pageSize } = paginationModel;
+      // API expects 1-based index for page
+      const page = paginationModel.page + 1;
+      const limit = paginationModel.pageSize;
+      const sortField = "createdAt"; // adjust as needed
+      const sortOrder = "desc";
 
-      const queryParams = new URLSearchParams({
-        page: String(page + 1), // DataGrid is 0-based, backend is 1-based
-        limit: String(pageSize),
-        searchTerm: search.trim(),
+      // Fix the URL template string syntax and properly encode the search term
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/room-types?page=${page}&limit=${limit}&sortField=${sortField}&sortOrder=${sortOrder}&searchTerm=${encodeURIComponent(search)}`;
+
+      const response = await fetch(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/room-types?${queryParams}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
 
       if (!response.ok) {
         throw new Error("Failed to fetch room types");
@@ -94,11 +92,14 @@ const RoomTypes = () => {
 
       const result = await response.json();
 
+      // Calculate serial number correctly based on pagination
+      const startIndex = (page - 1) * limit;
+
       const fetchedRoomTypes = Array.isArray(result.roomTypes)
         ? result.roomTypes.map((item: RoomType, index: number) => ({
             ...item,
             id: item._id,
-            sn: page * pageSize + index + 1,
+            sn: startIndex + index + 1,
             residenceTypes: Array.isArray(item.residenceTypes)
               ? item.residenceTypes
               : [],
@@ -106,7 +107,8 @@ const RoomTypes = () => {
         : [];
 
       setRoomTypes(fetchedRoomTypes);
-      setRowCount(result.totalDocs || fetchedRoomTypes.length);
+      setRowCount(result.total || 0);
+      console.log(result.total);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
@@ -116,7 +118,7 @@ const RoomTypes = () => {
 
   useEffect(() => {
     fetchRoomTypes();
-  }, [paginationModel, search]);
+  }, [paginationModel.page, paginationModel.pageSize, search]);
 
   const handleDeleteClick = (id: string) => {
     setSelectedDeleteId(id);
@@ -295,6 +297,7 @@ const RoomTypes = () => {
           pageSizeOptions={[5, 10, 25, 100]}
           autoHeight
           disableColumnMenu={isSmallScreen}
+          loading={loading}
         />
       )}
 

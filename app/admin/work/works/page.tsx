@@ -210,38 +210,38 @@ const WorkList = () => {
         );
       },
     },
-    {
-      field: "action",
-      headerName: "Action",
-      flex: 1,
-      renderCell: (params: GridCellParams) => (
-        <Box>
-          <IconButton
-            color="info"
-            size="small"
-            onClick={() => router.push(`/admin/works/${params.row.id}`)}
-          >
-            <Visibility />
-          </IconButton>
-          <IconButton
-            color="primary"
-            size="small"
-            onClick={() =>
-              router.push(`/admin/work/work/edit?id=${params.row.id}`)
-            }
-          >
-            <Edit />
-          </IconButton>
-          <IconButton
-            color="error"
-            size="small"
-            onClick={() => handleDeleteClick(params.row.id)}
-          >
-            <Delete />
-          </IconButton>
-        </Box>
-      ),
-    },
+    // {
+    //   field: "action",
+    //   headerName: "Action",
+    //   flex: 1,
+    //   renderCell: (params: GridCellParams) => (
+    //     <Box>
+    //       <IconButton
+    //         color="info"
+    //         size="small"
+    //         onClick={() => router.push(`/admin/work/works/${params.row.id}`)}
+    //       >
+    //         <Visibility />
+    //       </IconButton>
+    //       <IconButton
+    //         color="primary"
+    //         size="small"
+    //         onClick={() =>
+    //           router.push(`/admin/work/works/edit?id=${params.row.id}`)
+    //         }
+    //       >
+    //         <Edit />
+    //       </IconButton>
+    //       <IconButton
+    //         color="error"
+    //         size="small"
+    //         onClick={() => handleDeleteClick(params.row.id)}
+    //       >
+    //         <Delete />
+    //       </IconButton>
+    //     </Box>
+    //   ),
+    // },
   ];
 
   return (

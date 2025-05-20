@@ -22,12 +22,11 @@ import {
   GridCellParams,
 } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
-import ReusableButton from "@/app/components/Button";
 import { useRouter } from "next/navigation";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
-import { Sree_Krushnadevaraya } from "next/font/google";
+import ReusableButton from "@/app/components/Button";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
+import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 // Interfaces
 interface ResidenceTypeReference {
@@ -39,6 +38,7 @@ interface RoomType {
   _id: string;
   name: string;
   description: string;
+  thumbnail?: string;
   residenceTypes: ResidenceTypeReference[];
   archive: boolean;
   id?: string;
@@ -65,17 +65,17 @@ const RoomTypes = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
 
-  // Fetch Room Types
   const fetchRoomTypes = async () => {
-    const { page, pageSize } = paginationModel;
     setLoading(true);
     setError(null);
 
     try {
+      const { page, pageSize } = paginationModel;
+
       const queryParams = new URLSearchParams({
-        page: String(page + 1),
+        page: String(page + 1), // DataGrid is 0-based, backend is 1-based
         limit: String(pageSize),
-        searchTerm: search,
+        searchTerm: search.trim(),
       });
 
       const response = await fetch(
@@ -94,26 +94,21 @@ const RoomTypes = () => {
 
       const result = await response.json();
 
-      if (Array.isArray(result.roomTypes)) {
-        const typesWithId = result.roomTypes.map((item: any, index: any) => ({
-          ...item,
-          residenceTypes: Array.isArray(item.residenceTypes)
-            ? item.residenceTypes
-            : [],
-          id: item._id,
-          sn: page * pageSize + index + 1,
-        }));
+      const fetchedRoomTypes = Array.isArray(result.roomTypes)
+        ? result.roomTypes.map((item: RoomType, index: number) => ({
+            ...item,
+            id: item._id,
+            sn: page * pageSize + index + 1,
+            residenceTypes: Array.isArray(item.residenceTypes)
+              ? item.residenceTypes
+              : [],
+          }))
+        : [];
 
-        setRoomTypes(typesWithId);
-        setRowCount(result.totalDocs || typesWithId.length);
-      } else {
-        setRoomTypes([]);
-        setRowCount(0);
-      }
-    } catch (error) {
-      setError(
-        `Error: ${error instanceof Error ? error.message : "Unknown error"}`
-      );
+      setRoomTypes(fetchedRoomTypes);
+      setRowCount(result.totalDocs || fetchedRoomTypes.length);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
     }
@@ -123,7 +118,6 @@ const RoomTypes = () => {
     fetchRoomTypes();
   }, [paginationModel, search]);
 
-  // Handle delete
   const handleDeleteClick = (id: string) => {
     setSelectedDeleteId(id);
     setDeleteDialogOpen(true);
@@ -175,10 +169,7 @@ const RoomTypes = () => {
           <img
             src={params.row.thumbnail}
             alt="Thumbnail"
-            style={{
-              width: 40,
-              height: 40,
-            }}
+            style={{ width: 40, height: 40 }}
           />
         ) : (
           <Typography variant="body2" color="textSecondary">
@@ -191,31 +182,27 @@ const RoomTypes = () => {
       headerName: "Residence Types",
       flex: 2,
       renderCell: (params: GridCellParams) => {
-        const resTypes: ResidenceTypeReference[] =
-          params.row?.residenceTypes || [];
-
-        if (!resTypes.length) return "N/A";
-
-        return (
+        const resTypes = params.row.residenceTypes || [];
+        return resTypes.length > 0 ? (
           <Box sx={{ display: "flex", flexWrap: "wrap" }}>
             {resTypes.map((res) => (
               <Button
                 key={res._id}
                 variant="text"
-                color="primary"
                 size="small"
                 onClick={() =>
                   router.push(`/admin/home-catalog/residence-types/${res._id}`)
                 }
               >
-                {res.name || "Unknown"}
+                {res.name}
               </Button>
             ))}
           </Box>
+        ) : (
+          "N/A"
         );
       },
     },
-
     {
       field: "action",
       headerName: "Action",
@@ -297,31 +284,26 @@ const RoomTypes = () => {
           <CircularProgress />
         </Box>
       ) : (
-        <Box sx={{ width: "100%" }}>
-          <Box>
-            <StyledDataGrid
-              rows={roomTypes}
-              columns={columns}
-              rowCount={rowCount}
-              pagination
-              paginationMode="server"
-              paginationModel={paginationModel}
-              onPaginationModelChange={setPaginationModel}
-              pageSizeOptions={[5, 10, 25, 100]}
-              autoHeight
-              disableColumnMenu={isSmallScreen}
-            />
-          </Box>
-        </Box>
+        <StyledDataGrid
+          rows={roomTypes}
+          columns={columns}
+          rowCount={rowCount}
+          pagination
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          pageSizeOptions={[5, 10, 25, 100]}
+          autoHeight
+          disableColumnMenu={isSmallScreen}
+        />
       )}
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
         <DialogTitle>Delete Room Type</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this room type? This action will
-            archive the item and cannot be undone.
+            Are you sure you want to delete this room type? This action cannot
+            be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

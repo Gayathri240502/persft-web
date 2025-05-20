@@ -200,7 +200,9 @@ const KioskManagement = () => {
         Kiosk Management
       </Typography>
 
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+      <Box
+        sx={{ display: "flex", justifyContent: "space-between", mb: 2, gap: 2 }}
+      >
         <TextField
           label="Search"
           size="small"
@@ -227,6 +229,7 @@ const KioskManagement = () => {
         </Box>
       ) : (
         <StyledDataGrid
+          minWidth={1500}
           rows={kiosks}
           columns={columns}
           rowCount={rowCount}

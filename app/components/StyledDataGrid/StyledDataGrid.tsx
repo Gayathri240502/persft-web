@@ -34,11 +34,14 @@ const CustomToolbar = () => {
     </GridToolbarContainer>
   );
 };
+interface StyledDataGridProps extends DataGridProps {
+  minWidth?: number | string;
+}
 
-const StyledDataGrid = (props: DataGridProps) => {
+const StyledDataGrid = ({ minWidth = 1000, ...props }: StyledDataGridProps) => {
   return (
     <Box sx={{ overflowX: "auto" }}>
-      <Box sx={{ minWidth: "1000px" }}>
+      <Box sx={{ minWidth }}>
         <DataGrid
           {...props}
           hideFooterSelectedRowCount

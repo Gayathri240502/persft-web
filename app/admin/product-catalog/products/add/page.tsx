@@ -11,6 +11,8 @@ import {
   MenuItem,
   Button,
   Grid,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { useRouter } from "next/navigation";
@@ -39,6 +41,12 @@ interface WorkTask {
   name: string;
 }
 
+interface Attribute {
+  _id: string;
+  name: string;
+  values: string[];
+}
+
 const AddProduct = () => {
   const router = useRouter();
   const { token } = getTokenAndRole();
@@ -64,15 +72,23 @@ const AddProduct = () => {
     subCategories: [] as SubCategory[],
     workGroups: [] as WorkGroup[],
     workTasks: [] as WorkTask[],
+    attributes: [] as Attribute[],
   });
 
   const [loading, setLoading] = useState(false);
+  const [fetchingDropdowns, setFetchingDropdowns] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
+  // Fetch initial dropdowns (categories and work groups)
   useEffect(() => {
-    const fetchDropdowns = async () => {
+    const fetchInitialDropdowns = async () => {
+      if (!token) return;
+      
+      setFetchingDropdowns(true);
+      setError(null);
+      
       try {
         const [catRes, wgRes] = await Promise.all([
           fetch(`${apiUrl}/products/dropdowns/categories`, {
@@ -83,15 +99,16 @@ const AddProduct = () => {
           }),
         ]);
 
-        if (!catRes.ok || !wgRes.ok) {
-          throw new Error("Failed to fetch categories or work groups");
+        if (!catRes.ok) {
+          throw new Error(`Failed to fetch categories: ${catRes.status}`);
+        }
+        
+        if (!wgRes.ok) {
+          throw new Error(`Failed to fetch work groups: ${wgRes.status}`);
         }
 
         const catData = await catRes.json();
         const wgData = await wgRes.json();
-
-        console.log("Fetched Categories:", catData);
-        console.log("Fetched Work Groups:", wgData);
 
         setDropdowns((prev) => ({
           ...prev,
@@ -99,73 +116,138 @@ const AddProduct = () => {
           workGroups: wgData.workGroups || [],
         }));
       } catch (err) {
-        console.error(err);
-        setError("Failed to fetch categories or work groups");
+        console.error("Error fetching initial dropdowns:", err);
+        setError("Failed to fetch dropdown options. Please refresh the page.");
+      } finally {
+        setFetchingDropdowns(false);
       }
     };
 
-    if (token) fetchDropdowns();
-  }, [token]);
+    fetchInitialDropdowns();
+  }, [token, apiUrl]);
 
+  // Fetch subcategories when category changes
   useEffect(() => {
-    if (formData.category) {
-      const fetchSubCategories = async () => {
-        try {
-          const res = await fetch(
-            `${apiUrl}/products/dropdowns/subcategories/${formData.category}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-
-          if (!res.ok) throw new Error("Failed to fetch subcategories");
-
-          const data = await res.json();
-          console.log("Fetched SubCategories:", data);
-
-          setDropdowns((prev) => ({
-            ...prev,
-            subCategories: data.subCategories || [],
-          }));
-        } catch (err) {
-          console.error(err);
-          setError("Failed to fetch subcategories");
-        }
-      };
-
-      fetchSubCategories();
+    if (!formData.category) {
+      setDropdowns(prev => ({ ...prev, subCategories: [] }));
+      return;
     }
-  }, [formData.category, token]);
+    
+    const fetchSubCategories = async () => {
+      setFetchingDropdowns(true);
+      
+      try {
+        const res = await fetch(
+          `${apiUrl}/products/dropdowns/subcategories/${formData.category}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
+        if (!res.ok) {
+          throw new Error(`Failed to fetch subcategories: ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        setDropdowns((prev) => ({
+          ...prev,
+          subCategories: data.subCategories || [],
+        }));
+        
+        // Clear the subCategory selection when category changes
+        setFormData(prev => ({ ...prev, subCategory: "" }));
+      } catch (err) {
+        console.error("Error fetching subcategories:", err);
+        setError("Failed to fetch subcategories");
+      } finally {
+        setFetchingDropdowns(false);
+      }
+    };
+
+    fetchSubCategories();
+  }, [formData.category, token, apiUrl]);
+
+  // Fetch attributes when subCategory changes
   useEffect(() => {
-    if (formData.workGroup) {
-      const fetchWorkTasks = async () => {
-        try {
-          const res = await fetch(
-            `${apiUrl}/products/dropdowns/work-tasks/${formData.workGroup}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-
-          if (!res.ok) throw new Error("Failed to fetch work tasks");
-
-          const data = await res.json();
-          console.log("Fetched Work Tasks:", data);
-
-          setDropdowns((prev) => ({
-            ...prev,
-            workTasks: data.workTasks || [],
-          }));
-        } catch (err) {
-          console.error(err);
-          setError("Failed to fetch work tasks");
-        }
-      };
-
-      fetchWorkTasks();
+    if (!formData.subCategory) {
+      setDropdowns(prev => ({ ...prev, attributes: [] }));
+      return;
     }
-  }, [formData.workGroup, token]);
+    
+    const fetchAttributes = async () => {
+      setFetchingDropdowns(true);
+      
+      try {
+        const res = await fetch(
+          `${apiUrl}/products/attributes/${formData.subCategory}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch attributes: ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        setDropdowns((prev) => ({
+          ...prev,
+          attributes: data.attributes || [],
+        }));
+      } catch (err) {
+        console.error("Error fetching attributes:", err);
+        setError("Failed to fetch attributes");
+      } finally {
+        setFetchingDropdowns(false);
+      }
+    };
+
+    fetchAttributes();
+  }, [formData.subCategory, token, apiUrl]);
+
+  // Fetch work tasks when work group changes
+  useEffect(() => {
+    if (!formData.workGroup) {
+      setDropdowns(prev => ({ ...prev, workTasks: [] }));
+      return;
+    }
+    
+    const fetchWorkTasks = async () => {
+      setFetchingDropdowns(true);
+      
+      try {
+        const res = await fetch(
+          `${apiUrl}/products/dropdowns/work-tasks/${formData.workGroup}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch work tasks: ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        setDropdowns((prev) => ({
+          ...prev,
+          workTasks: data.workTasks || [],
+        }));
+        
+        // Clear the workTask selection when workGroup changes
+        setFormData(prev => ({ ...prev, workTask: "" }));
+      } catch (err) {
+        console.error("Error fetching work tasks:", err);
+        setError("Failed to fetch work tasks");
+      } finally {
+        setFetchingDropdowns(false);
+      }
+    };
+
+    fetchWorkTasks();
+  }, [formData.workGroup, token, apiUrl]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -181,42 +263,65 @@ const AddProduct = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData((prev) => ({
-          ...prev,
-          thumbnail: reader.result as string,
-        }));
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    
+    // Validate file type
+    const acceptedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!acceptedTypes.includes(file.type)) {
+      setError("File must be JPG, JPEG, or PNG format");
+      return;
     }
+    
+    // Validate file size (60KB = 61440 bytes)
+    if (file.size > 61440) {
+      setError("File size must be less than 60KB");
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData((prev) => ({
+        ...prev,
+        thumbnail: reader.result as string,
+      }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const validateForm = () => {
-    if (
-      !formData.name ||
-      !formData.description ||
-      !formData.category ||
-      !formData.subCategory ||
-      !formData.workGroup ||
-      !formData.workTask
-    ) {
-      setError("All required fields must be filled.");
+    const requiredFields = [
+      "name", 
+      "description", 
+      "category", 
+      "subCategory", 
+      "workGroup", 
+      "workTask"
+    ];
+    
+    const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
+    
+    if (missingFields.length > 0) {
+      setError(`Please fill in all required fields: ${missingFields.join(", ")}`);
       return false;
     }
+    
+    if (formData.price && isNaN(Number(formData.price))) {
+      setError("Price must be a valid number");
+      return false;
+    }
+    
     return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-
+    
     if (!validateForm()) {
-      setLoading(false);
       return;
     }
+    
+    setLoading(true);
+    setError(null);
 
     try {
       const response = await fetch(`${apiUrl}/products`, {
@@ -228,12 +333,15 @@ const AddProduct = () => {
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) throw new Error("Failed to create product");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to create product (${response.status})`);
+      }
 
       router.push("/admin/product-catalog/products");
     } catch (err) {
-      console.error(err);
-      setError(err instanceof Error ? err.message : "An error occurred");
+      console.error("Error submitting product:", err);
+      setError(err instanceof Error ? err.message : "An error occurred while creating the product");
     } finally {
       setLoading(false);
     }
@@ -245,34 +353,52 @@ const AddProduct = () => {
         Add New Product
       </Typography>
 
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
+
+      {fetchingDropdowns && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
+          <CircularProgress size={24} />
+          <Typography variant="body2" sx={{ ml: 1 }}>
+            Loading options...
+          </Typography>
+        </Box>
+      )}
+
       <Grid container spacing={4}>
         <Grid item xs={12} sm={6}>
           <TextField
-            label="Name"
+            label="Name *"
             name="name"
             value={formData.name}
             onChange={handleInputChange}
             fullWidth
+            required
             sx={{ mb: 3 }}
           />
           <TextField
-            label="Description"
+            label="Description *"
             name="description"
             value={formData.description}
             onChange={handleInputChange}
             multiline
             rows={3}
             fullWidth
+            required
             sx={{ mb: 3 }}
           />
 
-          <FormControl fullWidth sx={{ mb: 3 }}>
+          <FormControl fullWidth sx={{ mb: 3 }} required>
             <InputLabel>Category</InputLabel>
             <Select
               name="category"
               value={formData.category}
               label="Category"
               onChange={handleSelectChange}
+              disabled={fetchingDropdowns || dropdowns.categories.length === 0}
             >
               {dropdowns.categories.map((cat) => (
                 <MenuItem key={cat._id} value={cat._id}>
@@ -282,13 +408,14 @@ const AddProduct = () => {
             </Select>
           </FormControl>
 
-          <FormControl fullWidth sx={{ mb: 3 }}>
+          <FormControl fullWidth sx={{ mb: 3 }} required>
             <InputLabel>Sub Category</InputLabel>
             <Select
               name="subCategory"
               value={formData.subCategory}
               label="Sub Category"
               onChange={handleSelectChange}
+              disabled={fetchingDropdowns || !formData.category || dropdowns.subCategories.length === 0}
             >
               {dropdowns.subCategories.map((sub) => (
                 <MenuItem key={sub._id} value={sub._id}>
@@ -301,19 +428,22 @@ const AddProduct = () => {
           <TextField
             label="Price"
             name="price"
+            type="number"
             value={formData.price}
             onChange={handleInputChange}
             fullWidth
             sx={{ mb: 3 }}
+            InputProps={{ inputProps: { min: 0, step: 0.01 } }}
           />
 
-          <FormControl fullWidth sx={{ mb: 3 }}>
+          <FormControl fullWidth sx={{ mb: 3 }} required>
             <InputLabel>Work Group</InputLabel>
             <Select
               name="workGroup"
               value={formData.workGroup}
               label="Work Group"
               onChange={handleSelectChange}
+              disabled={fetchingDropdowns || dropdowns.workGroups.length === 0}
             >
               {dropdowns.workGroups.map((wg) => (
                 <MenuItem key={wg._id} value={wg._id}>
@@ -323,13 +453,14 @@ const AddProduct = () => {
             </Select>
           </FormControl>
 
-          <FormControl fullWidth sx={{ mb: 3 }}>
+          <FormControl fullWidth sx={{ mb: 3 }} required>
             <InputLabel>Work Task</InputLabel>
             <Select
               name="workTask"
               value={formData.workTask}
               label="Work Task"
               onChange={handleSelectChange}
+              disabled={fetchingDropdowns || !formData.workGroup || dropdowns.workTasks.length === 0}
             >
               {dropdowns.workTasks.map((task) => (
                 <MenuItem key={task._id} value={task._id}>
@@ -373,37 +504,56 @@ const AddProduct = () => {
             fullWidth
             sx={{ mb: 3 }}
           />
+
+          <Box sx={{ mb: 3 }}>
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<UploadFileIcon />}
+              sx={{ mb: 1 }}
+            >
+              Upload Thumbnail
+              <input 
+                type="file" 
+                hidden 
+                onChange={handleFileChange}
+                accept="image/jpeg,image/jpg,image/png" 
+              />
+            </Button>
+            
+            {formData.thumbnail && (
+              <Box sx={{ mt: 2, textAlign: 'center' }}>
+                <img 
+                  src={formData.thumbnail} 
+                  alt="Product thumbnail preview" 
+                  style={{ 
+                    maxWidth: '100%', 
+                    maxHeight: '200px',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px'
+                  }} 
+                />
+              </Box>
+            )}
+            
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              {formData.thumbnail ? "File uploaded" : "No file selected"}
+            </Typography>
+            
+            <Typography variant="caption" sx={{ color: "#666", display: 'block' }}>
+              Accepted formats: JPG, JPEG, PNG. Max size: 60KB.
+            </Typography>
+          </Box>
         </Grid>
       </Grid>
 
-      <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
-        <Button
-          variant="outlined"
-          component="label"
-          startIcon={<UploadFileIcon />}
-        >
-          Upload Thumbnail
-          <input type="file" hidden onChange={handleFileChange} />
-        </Button>
-        <Typography variant="body2">
-          {formData.thumbnail ? "File uploaded" : "No file selected"}
-        </Typography>
-      </Box>
-      <Typography variant="caption" sx={{ color: "#999" }}>
-        Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
-      </Typography>
-
-      {error && (
-        <Typography sx={{ color: "error.main", mb: 2 }}>{error}</Typography>
-      )}
-
-      <Box sx={{ display: "flex", gap: 2 }}>
+      <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
         <ReusableButton
           variant="contained"
           onClick={handleSubmit}
-          disabled={loading}
+          disabled={loading || fetchingDropdowns}
         >
-          {loading ? "Submitting..." : "Submit"}
+          {loading ? "Submitting..." : "Save Product"}
         </ReusableButton>
         <CancelButton href="/admin/product-catalog/products" variant="outlined">
           Cancel

@@ -60,16 +60,21 @@ const Category = () => {
     setLoading(true);
     setError("");
 
+    const page = paginationModel.page + 1; // 1-based index for API
+    const limit = paginationModel.pageSize;
+    const searchTermParam = search
+      ? `&searchTerm=${encodeURIComponent(search)}`
+      : "";
+
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/categories?page=${page}&limit=${limit}${searchTermParam}`;
+
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/categories`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to fetch: ${response.statusText}`);
@@ -80,14 +85,14 @@ const Category = () => {
 
       if (Array.isArray(result.categories)) {
         const categoryWithExtras = result.categories.map(
-          (item: any, index: any) => ({
+          (item: any, index: number) => ({
             ...item,
             id: item._id,
             sn: paginationModel.page * paginationModel.pageSize + index + 1,
           })
         );
         setCategory(categoryWithExtras);
-        setRowCount(result.total || result.categories.length);
+        setRowCount(result.total || 0);
       } else {
         setCategory([]);
         setRowCount(0);
@@ -104,22 +109,6 @@ const Category = () => {
   useEffect(() => {
     fetchCategory();
   }, [paginationModel, search]);
-
-  const filteredCategory = category.filter((cat) =>
-    Object.values(cat)
-      .flatMap((val) =>
-        Array.isArray(val)
-          ? val.map((sub) =>
-              typeof sub === "object" ? JSON.stringify(sub) : sub
-            )
-          : typeof val === "object"
-            ? JSON.stringify(val)
-            : val
-      )
-      .join(" ")
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  );
 
   const handleDeleteConfirm = async () => {
     if (selectedCategoryId) {
@@ -139,10 +128,9 @@ const Category = () => {
           throw new Error(`Failed to delete category: ${response.statusText}`);
         }
 
-        // After deletion, fetch the updated category list
-        fetchCategory();
-        setDeleteDialogOpen(false); // Close dialog
-        setSelectedCategoryId(null); // Clear selected category
+        fetchCategory(); // Refresh data
+        setDeleteDialogOpen(false);
+        setSelectedCategoryId(null);
       } catch (error) {
         setError("Failed to delete category");
       }
@@ -151,7 +139,7 @@ const Category = () => {
 
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
-    setSelectedCategoryId(null); // Clear selected category
+    setSelectedCategoryId(null);
   };
 
   const columns: GridColDef[] = [
@@ -170,7 +158,6 @@ const Category = () => {
         />
       ),
     },
-
     {
       field: "action",
       headerName: "Action",
@@ -201,8 +188,8 @@ const Category = () => {
             color="error"
             size="small"
             onClick={() => {
-              setSelectedCategoryId(params.row.id); // Set category to delete
-              setDeleteDialogOpen(true); // Open delete dialog
+              setSelectedCategoryId(params.row.id);
+              setDeleteDialogOpen(true);
             }}
           >
             <Delete fontSize="small" />
@@ -218,7 +205,6 @@ const Category = () => {
         Category
       </Typography>
 
-      {/* Search and Add */}
       <Box
         sx={{
           display: "flex",
@@ -244,7 +230,6 @@ const Category = () => {
         </ReusableButton>
       </Box>
 
-      {/* Loading or Error */}
       {loading && (
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <CircularProgress size={20} sx={{ mr: 1 }} />
@@ -258,10 +243,9 @@ const Category = () => {
         </Typography>
       )}
 
-      {/* DataGrid */}
       <Box sx={{ width: "100%" }}>
         <StyledDataGrid
-          rows={filteredCategory}
+          rows={category}
           columns={columns}
           rowCount={rowCount}
           loading={loading}
@@ -275,7 +259,6 @@ const Category = () => {
         />
       </Box>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
         <DialogTitle>Delete</DialogTitle>
         <DialogContent>

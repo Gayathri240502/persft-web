@@ -98,7 +98,7 @@ const Attributes = () => {
       );
 
       setAttributes(dataWithSN);
-      setRowCount(result.totalCount || dataWithSN.length);
+      setRowCount(result.total || 0);
     } catch (err: any) {
       setError(err.message || "Something went wrong.");
       setAttributes([]);

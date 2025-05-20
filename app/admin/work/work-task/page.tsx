@@ -101,7 +101,7 @@ const WorkTasksPage = () => {
       );
 
       setTasks(formatted);
-      setRowCount(result.totalDocs || formatted.length);
+      setRowCount(result.total || 0);
     } catch (err: any) {
       console.error("Fetch error:", err);
       setError("Failed to fetch work tasks");

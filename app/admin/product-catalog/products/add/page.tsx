@@ -69,26 +69,29 @@ const AddProduct = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
         const [catRes, wgRes] = await Promise.all([
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/categories`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          ),
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/work-groups`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          ),
+          fetch(`${apiUrl}/products/dropdowns/categories`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${apiUrl}/products/dropdowns/work-groups`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
+
+        if (!catRes.ok || !wgRes.ok) {
+          throw new Error("Failed to fetch categories or work groups");
+        }
 
         const catData = await catRes.json();
         const wgData = await wgRes.json();
+
+        console.log("Fetched Categories:", catData);
+        console.log("Fetched Work Groups:", wgData);
 
         setDropdowns((prev) => ({
           ...prev,
@@ -106,39 +109,61 @@ const AddProduct = () => {
 
   useEffect(() => {
     if (formData.category) {
-      fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/subcategories/${formData.category}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      )
-        .then((res) => res.json())
-        .then((data) =>
+      const fetchSubCategories = async () => {
+        try {
+          const res = await fetch(
+            `${apiUrl}/products/dropdowns/subcategories/${formData.category}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+
+          if (!res.ok) throw new Error("Failed to fetch subcategories");
+
+          const data = await res.json();
+          console.log("Fetched SubCategories:", data);
+
           setDropdowns((prev) => ({
             ...prev,
             subCategories: data.subCategories || [],
-          }))
-        )
-        .catch(() => setError("Failed to fetch subcategories"));
+          }));
+        } catch (err) {
+          console.error(err);
+          setError("Failed to fetch subcategories");
+        }
+      };
+
+      fetchSubCategories();
     }
   }, [formData.category, token]);
 
   useEffect(() => {
     if (formData.workGroup) {
-      fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/work-tasks/${formData.workGroup}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      )
-        .then((res) => res.json())
-        .then((data) =>
+      const fetchWorkTasks = async () => {
+        try {
+          const res = await fetch(
+            `${apiUrl}/products/dropdowns/work-tasks/${formData.workGroup}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+
+          if (!res.ok) throw new Error("Failed to fetch work tasks");
+
+          const data = await res.json();
+          console.log("Fetched Work Tasks:", data);
+
           setDropdowns((prev) => ({
             ...prev,
             workTasks: data.workTasks || [],
-          }))
-        )
-        .catch(() => setError("Failed to fetch work tasks"));
+          }));
+        } catch (err) {
+          console.error(err);
+          setError("Failed to fetch work tasks");
+        }
+      };
+
+      fetchWorkTasks();
     }
   }, [formData.workGroup, token]);
 
@@ -194,22 +219,20 @@ const AddProduct = () => {
     }
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/products`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
+      const response = await fetch(`${apiUrl}/products`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
       if (!response.ok) throw new Error("Failed to create product");
 
       router.push("/admin/product-catalog/products");
     } catch (err) {
+      console.error(err);
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);

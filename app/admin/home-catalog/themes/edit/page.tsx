@@ -59,10 +59,13 @@ const EditThemeType = () => {
         setThumbnail(theme.thumbnail || "");
         setSelectedFileName("Existing Thumbnail");
 
-        // ✅ Extract only room IDs
-        const roomIds = (theme.rooms || []).map(
+        const roomIds = (theme.roomTypes || []).map(
           (room: any) => room._id || room
         );
+        setSelectedRooms(roomIds);
+
+        setSelectedRooms(roomIds);
+
         setSelectedRooms(roomIds);
 
         const roomsRes = await fetch(
@@ -127,7 +130,7 @@ const EditThemeType = () => {
         name,
         description,
         thumbnail,
-        rooms: selectedRooms,
+        roomTypes: selectedRooms, // ✅ not "rooms"
       });
 
       const response = await fetch(

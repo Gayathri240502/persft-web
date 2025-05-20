@@ -48,10 +48,9 @@ const WorkForm = () => {
           }
         );
         if (!res.ok) throw new Error("Failed to fetch work groups");
+
         const data = await res.json();
-
-        console.log("Work groups data:", data); // <-- Check your data shape here
-
+        console.log("Work groups data:", data);
         setWorkGroupTasks(data);
       } catch (err: any) {
         setError(err.message || "An error occurred while fetching data.");
@@ -134,6 +133,8 @@ const WorkForm = () => {
       workGroups,
     };
 
+    console.log("Submitting payload:", JSON.stringify(payload, null, 2));
+
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/works`, {
         method: "POST",
@@ -144,7 +145,11 @@ const WorkForm = () => {
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Failed to create work");
+      if (!res.ok) {
+        const errorResponse = await res.json();
+        console.error("API Error Response:", errorResponse);
+        throw new Error(errorResponse.message || "Failed to create work");
+      }
 
       setSuccess("Work created successfully!");
       router.push("/admin/work");
@@ -186,23 +191,23 @@ const WorkForm = () => {
       </Typography>
 
       {workGroupTasks.map((group, groupIndex) => (
-        <Box key={group._id || `group-${groupIndex}`} sx={{ mb: 3 }}>
+        <Box key={group.id || `group-${groupIndex}`} sx={{ mb: 3 }}>
           <FormControlLabel
             control={
               <Checkbox
-                checked={selectedGroups[group._id]?.checked || false}
-                onChange={(e) => handleGroupToggle(group._id, e.target.checked)}
+                checked={selectedGroups[group.id]?.checked || false}
+                onChange={(e) => handleGroupToggle(group.id, e.target.checked)}
               />
             }
             label={<Typography fontWeight="bold">{group.name}</Typography>}
           />
 
           <FormGroup sx={{ pl: 3 }}>
-            {Array.isArray(group.workTasks) &&
-              group.workTasks.map((task: any, taskIndex: number) => {
-                if (!group._id || !task._id) return null; // skip invalid data
+            {Array.isArray(group.tasks) &&
+              group.tasks.map((task: any, taskIndex: number) => {
+                if (!group.id || !task.id) return null;
 
-                const uniqueKey = `task-${group._id}-${task._id}`;
+                const uniqueKey = `task-${group.id}-${task.id}`;
 
                 return (
                   <FormControlLabel
@@ -210,17 +215,13 @@ const WorkForm = () => {
                     control={
                       <Checkbox
                         checked={
-                          selectedGroups[group._id]?.taskIds.has(task._id) ||
+                          selectedGroups[group.id]?.taskIds.has(task.id) ||
                           false
                         }
                         onChange={(e) =>
-                          handleTaskToggle(
-                            group._id,
-                            task._id,
-                            e.target.checked
-                          )
+                          handleTaskToggle(group.id, task.id, e.target.checked)
                         }
-                        disabled={!selectedGroups[group._id]?.checked}
+                        disabled={!selectedGroups[group.id]?.checked}
                       />
                     }
                     label={task.name}
@@ -242,7 +243,7 @@ const WorkForm = () => {
         </Alert>
       )}
 
-      <Box sx={{ display: "flex", gap: 2 }}>
+      <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
         <ReusableButton onClick={handleSubmit} disabled={loading}>
           {loading ? <CircularProgress size={24} /> : "Submit"}
         </ReusableButton>

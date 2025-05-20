@@ -80,9 +80,11 @@ const EditAttributeGroup = () => {
 
       // Set selected attributes
       const selected = data.attributes.reduce((acc: any, curr: any) => {
-        acc[curr._id] = true;
+        const attrId = curr.attributeId || curr.attributeDetails?._id;
+        if (attrId) acc[attrId] = true;
         return acc;
       }, {});
+
       setSelectedAttributes(selected);
     } catch (err) {
       setError("Failed to fetch attribute group.");

@@ -93,7 +93,7 @@ const UserManagement = () => {
       );
 
       setUsers(dataWithSN);
-      setRowCount(result.totalCount || dataWithSN.length);
+      setRowCount(result.total || 0);
     } catch (err: any) {
       setError(err.message || "Something went wrong.");
       setUsers([]);

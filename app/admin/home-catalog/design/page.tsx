@@ -103,7 +103,7 @@ const DesignType = () => {
         }));
 
         setDesigns(typesWithId);
-        setRowCount(result.totalDocs || typesWithId.length); // fallback
+        setRowCount(result.total || 0);
       } else {
         setDesigns([]);
         setRowCount(0);

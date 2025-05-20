@@ -106,7 +106,7 @@ const SubCategory = () => {
           })
         );
         setRows(dataWithMeta);
-        setRowCount(result.totalDocs || dataWithMeta.length);
+        setRowCount(result.total || 0);
       } else {
         setRows([]);
         setRowCount(0);

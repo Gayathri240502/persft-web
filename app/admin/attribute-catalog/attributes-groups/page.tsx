@@ -94,7 +94,7 @@ const AttributeGroups = () => {
         );
 
         setAttributeGroups(groupsWithMeta);
-        setRowCount(result.totalDocs || groupsWithMeta.length);
+        setRowCount(result.total || 0);
       } else {
         setAttributeGroups([]);
         setRowCount(0);

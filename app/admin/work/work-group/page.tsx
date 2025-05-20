@@ -92,7 +92,7 @@ const WorkGroups = () => {
         );
 
         setWorkGroups(formatted);
-        setRowCount(result.totalDocs || formatted.length);
+        setRowCount(result.total || 0);
       } else {
         setWorkGroups([]);
         setRowCount(0);

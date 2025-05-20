@@ -75,10 +75,12 @@ const Merchant = () => {
       setError("");
 
       const queryParams = new URLSearchParams({
-        page: String(page + 1),
+        page: String(page + 1), // DataGrid is 0-based, API is 1-based
         limit: String(pageSize),
         searchTerm: search,
       });
+
+      console.log("Fetching merchants → page:", page + 1, "limit:", pageSize);
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/merchants?${queryParams}`,
@@ -95,16 +97,26 @@ const Merchant = () => {
       }
 
       const result: MerchantResponse = await response.json();
-      if (Array.isArray(result.merchants)) {
-        const dataWithSN = result.merchants.map((merchant, index) => ({
-          ...merchant,
-          id: merchant._id,
-          sn: page * pageSize + index + 1,
-        }));
-        setRows(dataWithSN);
-        setRowCount(result.total || dataWithSN.length);
+      console.log("API response:", result);
+
+      if (!Array.isArray(result.merchants)) {
+        throw new Error("Invalid data format: merchants not found");
       }
+
+      if (typeof result.total !== "number") {
+        throw new Error("Invalid data format: total count missing");
+      }
+
+      const dataWithSN = result.merchants.map((merchant, index) => ({
+        ...merchant,
+        id: merchant._id,
+        sn: page * pageSize + index + 1,
+      }));
+
+      setRows(dataWithSN);
+      setRowCount(result.total);
     } catch (err: any) {
+      console.error("Error fetching merchants:", err);
       setError(err.message || "Something went wrong.");
     } finally {
       setLoading(false);

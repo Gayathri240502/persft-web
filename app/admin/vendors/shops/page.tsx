@@ -74,7 +74,7 @@ const Shop = () => {
       const queryParams = new URLSearchParams({
         page: String(page + 1),
         limit: String(pageSize),
-        searchTerm: search,
+        ...(search && { searchTerm: search }),
       });
 
       const response = await fetch(
@@ -88,7 +88,10 @@ const Shop = () => {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch data.");
+        const errorData = await response.json().catch(() => null);
+        throw new Error(
+          errorData?.message || `Failed to fetch data: ${response.statusText}`
+        );
       }
 
       const result: ShopResponse = await response.json();
@@ -96,23 +99,33 @@ const Shop = () => {
       if (Array.isArray(result.shops)) {
         const dataWithSN = result.shops.map((shop, index) => ({
           ...shop,
-          id: shop._id,   // use Mongo _id as row id
+          id: shop._id || shop.keycloakId,
           sn: page * pageSize + index + 1,
         }));
 
         setRows(dataWithSN);
-        setRowCount(result.total || dataWithSN.length);
+        setRowCount(result.total || 0);
+      } else {
+        throw new Error("Invalid data format received from server");
       }
     } catch (err: any) {
-      setError(err.message || "Something went wrong.");
+      console.error("Error fetching shops:", err);
+      setError(err.message || "Failed to load shops. Please try again.");
+      setRows([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // ✅ Fetch data when page, pageSize, or search changes
   useEffect(() => {
     fetchShops();
-  }, [paginationModel, search]);
+  }, [paginationModel.page, paginationModel.pageSize, search]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setPaginationModel((prev) => ({ ...prev, page: 0 })); // reset to first page on search
+  };
 
   const handleDeleteClick = (id: string) => {
     setSelectedDeleteId(id);
@@ -128,25 +141,32 @@ const Shop = () => {
     if (!selectedDeleteId) return;
 
     try {
+      setLoading(true);
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/shops/${selectedDeleteId}`,
         {
           method: "DELETE",
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
 
       if (!response.ok) {
-        throw new Error("Failed to delete shop");
+        const errorData = await response.json().catch(() => null);
+        throw new Error(
+          errorData?.message || `Failed to delete shop: ${response.statusText}`
+        );
       }
 
-      // Await fresh data before closing dialog
       await fetchShops();
       handleDeleteCancel();
     } catch (err: any) {
-      setError(err.message || "Failed to delete item");
+      console.error("Error deleting shop:", err);
+      setError(err.message || "Failed to delete shop. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -201,7 +221,7 @@ const Shop = () => {
           <IconButton
             color="error"
             size="small"
-            onClick={() => handleDeleteClick(params.row.keycloakId)} // use id here
+            onClick={() => handleDeleteClick(params.row.keycloakId)}
           >
             <Delete fontSize="small" />
           </IconButton>
@@ -223,9 +243,12 @@ const Shop = () => {
           size="small"
           fullWidth={isSmallScreen}
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={handleSearchChange}
+          placeholder="Search shops..."
         />
-        <ReusableButton onClick={() => router.push("/admin/vendors/shops/add")}>ADD</ReusableButton>
+        <ReusableButton onClick={() => router.push("/admin/vendors/shops/add")}>
+          ADD
+        </ReusableButton>
       </Box>
 
       {error && (
@@ -234,7 +257,7 @@ const Shop = () => {
         </Alert>
       )}
 
-      <Box>
+      <Box sx={{ position: "relative", minHeight: "400px" }}>
         {loading && (
           <Box
             sx={{
@@ -259,14 +282,16 @@ const Shop = () => {
           autoHeight
           disableColumnMenu={isSmallScreen}
           loading={loading}
+          getRowId={(row) => row.id || row._id || row.keycloakId}
         />
       </Box>
 
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-        <DialogTitle>Delete</DialogTitle>
+        <DialogTitle>Delete Shop</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this Shop? This action cannot be undone.
+            Are you sure you want to delete this Shop? This action cannot be
+            undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

@@ -93,7 +93,7 @@ const ResidenceTypePage = () => {
       );
 
       setResidenceTypes(typesWithId);
-      setRowCount(result.totalCount || 0);
+      setRowCount(result.total || 0);
     } catch (err) {
       setError(
         `Error: ${err instanceof Error ? err.message : "Unknown error"}`

@@ -15,26 +15,15 @@ import {
   DialogActions,
   Button,
   Chip,
-  InputAdornment,
   Alert,
 } from "@mui/material";
-import {
-  GridColDef,
-  GridPaginationModel,
-  GridToolbarColumnsButton,
-  GridToolbarContainer,
-  GridToolbarDensitySelector,
-  GridToolbarExport,
-  GridToolbarFilterButton,
-  GridToolbarQuickFilter,
-} from "@mui/x-data-grid";
+import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
 import ReusableButton from "@/app/components/Button";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
-import { SearchIcon } from "lucide-react";
 
 interface Shop {
   _id: string;
@@ -47,6 +36,7 @@ interface Shop {
   role: string[];
   archive: boolean;
   ownerName: string;
+  keycloakId: string;
 }
 
 interface ShopResponse {
@@ -64,6 +54,7 @@ const Shop = () => {
     page: 0,
     pageSize: 10,
   });
+
   const [rowCount, setRowCount] = useState(0);
   const [rows, setRows] = useState<Shop[]>([]);
   const [loading, setLoading] = useState(false);
@@ -97,7 +88,7 @@ const Shop = () => {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch shops");
+        throw new Error("Failed to fetch data.");
       }
 
       const result: ShopResponse = await response.json();
@@ -105,7 +96,7 @@ const Shop = () => {
       if (Array.isArray(result.shops)) {
         const dataWithSN = result.shops.map((shop, index) => ({
           ...shop,
-          id: shop._id,
+          id: shop._id,   // use Mongo _id as row id
           sn: page * pageSize + index + 1,
         }));
 
@@ -113,7 +104,7 @@ const Shop = () => {
         setRowCount(result.total || dataWithSN.length);
       }
     } catch (err: any) {
-      setError(err.message || "An unexpected error occurred.");
+      setError(err.message || "Something went wrong.");
     } finally {
       setLoading(false);
     }
@@ -148,22 +139,23 @@ const Shop = () => {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to delete Shop");
+        throw new Error("Failed to delete shop");
       }
 
-      fetchShops();
+      // Await fresh data before closing dialog
+      await fetchShops();
       handleDeleteCancel();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete item");
+    } catch (err: any) {
+      setError(err.message || "Failed to delete item");
     }
   };
 
   const columns: GridColDef[] = [
-    { field: "sn", headerName: "SN", flex: 0.3 },
+    { field: "sn", headerName: "SN", flex: 0.4 },
     { field: "firstName", headerName: "First Name", flex: 0.8 },
     { field: "lastName", headerName: "Last Name", flex: 0.8 },
     { field: "username", headerName: "Username", flex: 1 },
-    { field: "email", headerName: "Email", flex: 1.2 },
+    { field: "email", headerName: "Email", flex: 1 },
     { field: "phone", headerName: "Phone", flex: 1 },
     { field: "ownerName", headerName: "Owner Name", flex: 1 },
     {
@@ -180,7 +172,6 @@ const Shop = () => {
         />
       ),
     },
-
     {
       field: "action",
       headerName: "Action",
@@ -188,13 +179,13 @@ const Shop = () => {
       renderCell: (params) => (
         <Box display="flex" gap={1}>
           <IconButton
-            color="info"
+            color="primary"
             size="small"
             onClick={() =>
               router.push(`/admin/vendors/shops/${params.row.keycloakId}`)
             }
           >
-            <Visibility fontSize="small" />
+            <Visibility />
           </IconButton>
           <IconButton
             color="primary"
@@ -210,7 +201,7 @@ const Shop = () => {
           <IconButton
             color="error"
             size="small"
-            onClick={() => handleDeleteClick(params.row.id)}
+            onClick={() => handleDeleteClick(params.row.keycloakId)} // use id here
           >
             <Delete fontSize="small" />
           </IconButton>
@@ -222,15 +213,10 @@ const Shop = () => {
   return (
     <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
       <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-        Shop
+        Shops
       </Typography>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          mb: 2,
-        }}
-      >
+
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
         <TextField
           label="Search"
           variant="outlined"
@@ -239,9 +225,7 @@ const Shop = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <ReusableButton onClick={() => router.push("/admin/vendors/shops/add")}>
-          ADD
-        </ReusableButton>
+        <ReusableButton onClick={() => router.push("/admin/vendors/shops/add")}>ADD</ReusableButton>
       </Box>
 
       {error && (
@@ -250,41 +234,39 @@ const Shop = () => {
         </Alert>
       )}
 
-      <Box sx={{ width: "100%" }}>
-        {loading ? (
+      <Box>
+        {loading && (
           <Box
             sx={{
-              display: "flex",
-              justifyContent: "center",
-              height: 300,
+              position: "absolute",
+              top: "40%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              zIndex: 1,
             }}
           >
             <CircularProgress />
           </Box>
-        ) : error ? (
-          <Typography color="error" sx={{ mt: 2 }}>
-            {error}
-          </Typography>
-        ) : (
-          <StyledDataGrid
-            columns={columns}
-            rows={rows}
-            paginationModel={paginationModel}
-            onPaginationModelChange={setPaginationModel}
-            rowCount={rowCount}
-            paginationMode="server"
-            pageSizeOptions={[5, 10, 25, 100]}
-            autoHeight
-            disableColumnMenu={isSmallScreen}
-          />
         )}
+        <StyledDataGrid
+          columns={columns}
+          rows={rows}
+          rowCount={rowCount}
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          pageSizeOptions={[5, 10, 25, 100]}
+          autoHeight
+          disableColumnMenu={isSmallScreen}
+          loading={loading}
+        />
       </Box>
+
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
         <DialogTitle>Delete</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this residence type? This action
-            cannot be undone.
+            Are you sure you want to delete this Shop? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

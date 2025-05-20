@@ -65,9 +65,14 @@ const ThemesPage = () => {
     setLoading(true);
     setError(null);
 
+    const page = paginationModel.page + 1; // API expects 1-based index
+    const limit = paginationModel.pageSize;
+    const sortField = "createdAt"; // adjust as needed
+    const sortOrder = "desc";
+
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/themes`,
+        `${process.env.NEXT_PUBLIC_API_URL}/themes?page=${page}&limit=${limit}&sortField=${sortField}&sortOrder=${sortOrder}&searchTerm=${encodeURIComponent(search)}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -87,7 +92,7 @@ const ThemesPage = () => {
           (item: ThemeType, index: number) => ({
             ...item,
             id: item._id,
-            sn: paginationModel.page * paginationModel.pageSize + index + 1,
+            sn: (page - 1) * limit + index + 1,
           })
         );
 
@@ -107,7 +112,7 @@ const ThemesPage = () => {
 
   useEffect(() => {
     fetchThemes();
-  }, [paginationModel, search]);
+  }, [paginationModel.page, paginationModel.pageSize, search]);
 
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);

@@ -166,11 +166,9 @@ const ResidenceTypesPage: React.FC = () => {
         <Grid container spacing={2} sx={{ marginTop: 2 }}>
           <Grid item xs={12} sm={6}>
             <Typography variant="body1">
-<<<<<<< HEAD
+
               <strong>ID:</strong> {residence._id}
-=======
-              <strong>ID</strong> {residence._id}
->>>>>>> a82808d3dca21b0c710550e55fabd3161f96e062
+
             </Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -180,16 +178,14 @@ const ResidenceTypesPage: React.FC = () => {
           </Grid>
           <Grid item xs={12} sm={6}>
             <Typography variant="body1">
-<<<<<<< HEAD
+
               <strong>Descripation:</strong> {residence.description}
             </Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
             <Typography variant="body1">
               <strong>Archived:</strong> {residence.archive ? "Yes" : "No"}
-=======
-              <strong>description</strong> {residence.description}
->>>>>>> a82808d3dca21b0c710550e55fabd3161f96e062
+              
             </Typography>
           </Grid>
 

@@ -72,13 +72,13 @@ const Shop = () => {
 
     try {
       const queryParams = new URLSearchParams({
-        page: String(page + 1),
+        page: String(page + 1), // Backend is 1-based
         limit: String(pageSize),
         ...(search && { searchTerm: search }),
       });
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/shops?${queryParams}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/shops?${queryParams.toString()}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -95,6 +95,9 @@ const Shop = () => {
       }
 
       const result: ShopResponse = await response.json();
+
+      console.log("Fetched result:", result);
+      console.log("Pagination model:", paginationModel);
 
       if (Array.isArray(result.shops)) {
         const dataWithSN = result.shops.map((shop, index) => ({
@@ -117,14 +120,13 @@ const Shop = () => {
     }
   };
 
-  // ✅ Fetch data when page, pageSize, or search changes
   useEffect(() => {
     fetchShops();
   }, [paginationModel.page, paginationModel.pageSize, search]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
-    setPaginationModel((prev) => ({ ...prev, page: 0 })); // reset to first page on search
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
   };
 
   const handleDeleteClick = (id: string) => {
@@ -279,7 +281,6 @@ const Shop = () => {
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           pageSizeOptions={[5, 10, 25, 100]}
-          autoHeight
           disableColumnMenu={isSmallScreen}
           loading={loading}
           getRowId={(row) => row.id || row._id || row.keycloakId}

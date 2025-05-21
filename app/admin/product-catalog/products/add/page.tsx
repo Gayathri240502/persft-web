@@ -21,6 +21,8 @@ import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { useRouter } from "next/navigation";
+import DeleteIcon from "@mui/icons-material/Delete";
+import IconButton from "@mui/material/IconButton";
 
 interface Category {
   _id: string;
@@ -371,7 +373,8 @@ export default function AddProduct() {
     { id: "brand", label: "Brand", type: "text", multiline: false },
     { id: "modelName", label: "Model Name", type: "text", multiline: false },
     { id: "coohomId", label: "Coohom ID", type: "text", multiline: false },
-    { id: "description", label: "Description", type: "text", multiline: true },
+    { id: "description", label: "Description", type: "text", multiline: false },
+    
   ];
 
   return (
@@ -397,6 +400,9 @@ export default function AddProduct() {
             />
           </Grid>
         ))}
+        </Grid>
+        <Divider sx={{ my: 4 }} />
+        <Grid container spacing={2}>
 
         <Grid item xs={12} sm={6}>
           {renderSelect(
@@ -420,6 +426,7 @@ export default function AddProduct() {
             !form.category,
             handleSelectChange
           )}
+          
         </Grid>
 
         <Grid item xs={12} sm={6}>
@@ -444,30 +451,68 @@ export default function AddProduct() {
             !form.workGroup,
             handleSelectChange
           )}
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          {renderSelect(
-            "Attribute",
-            form.attributeValues[0]?.attribute || "",
-            "attribute",
-            attributes,
-            loadingAttributes,
-            !form.subCategory,
-            (_, e) => handleAttributeChange(0, "attribute", e.target.value)
-          )}
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Attribute Value"
-            value={form.attributeValues[0]?.value || ""}
-            onChange={(e) => handleAttributeChange(0, "value", e.target.value)}
-            disabled={!form.attributeValues[0]?.attribute}
-          />
-        </Grid>
+        </Grid>   
       </Grid>
+
+      <Divider sx={{ my: 4 }} />
+
+      {form.attributeValues.map((attr, index) => (
+  <Grid container
+  spacing={2}
+  key={index}
+  alignItems="center"
+  justifyContent="space-between"
+  sx={{ mb: 1 }}>
+    <Grid item xs={12} sm={5}>
+      {renderSelect(
+        "Attribute",
+        attr.attribute,
+        "attributeValues",
+        attributes,
+        loadingAttributes,
+        !form.subCategory,
+        (_, e) => handleAttributeChange(index, "attribute", e.target.value)
+      )}
+    </Grid>
+
+    <Grid item xs={12} sm={5}>
+      <TextField
+        fullWidth
+        label="Attribute Value"
+        value={attr.value}
+        onChange={(e) => handleAttributeChange(index, "value", e.target.value)}
+        disabled={!attr.attribute}
+      />
+    </Grid>
+
+    <Grid item xs={12} sm={2}>
+      <IconButton
+        onClick={() => {
+          const newAttrs = [...form.attributeValues];
+          newAttrs.splice(index, 1);
+          setForm(prev => ({ ...prev, attributeValues: newAttrs }));
+        }}
+        disabled={form.attributeValues.length === 1}
+        color="error"
+      >
+        <DeleteIcon />
+      </IconButton>
+    </Grid>
+  </Grid>
+))}
+
+<Button
+  onClick={() =>
+    setForm((prev) => ({
+      ...prev,
+      attributeValues: [...prev.attributeValues, { attribute: "", value: "" }],
+    }))
+  }
+  variant="outlined"
+  sx={{ mt: 2 }}
+>
+  Add Attribute
+</Button>
 
       <Divider sx={{ my: 4 }} />
 

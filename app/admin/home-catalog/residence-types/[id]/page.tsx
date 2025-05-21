@@ -137,7 +137,7 @@ const ResidenceTypesPage: React.FC = () => {
         onClick={() => router.back()}
         sx={{ marginBottom: 2 }}
       >
-        Back       
+        Back 
       </Button>
       <Paper elevation={3} sx={{ padding: 4 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">

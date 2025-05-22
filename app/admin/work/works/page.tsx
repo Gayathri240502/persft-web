@@ -144,9 +144,7 @@ const WorkFormDialog: React.FC<{
       setWorkTasks(tasksArray);
     } catch (err: any) {
       console.error("Error fetching work groups and tasks:", err);
-      setError(
-        `${err.message || "Failed to load resources"}. Please check API endpoints.`
-      );
+      setError(err.message || "Failed to load resources");
     } finally {
       setLoadingResources(false);
     }
@@ -340,7 +338,7 @@ const WorkFormDialog: React.FC<{
               {workGroups.length === 0 ? (
                 <Alert severity="info">
                   No work groups available. (expecting:{" "}
-                  {process.env.NEXT_PUBLIC_API_URL}/work-groups and
+                  {process.env.NEXT_PUBLIC_API_URL}/work-groups and{" "}
                   {process.env.NEXT_PUBLIC_API_URL}/work-tasks)
                 </Alert>
               ) : (

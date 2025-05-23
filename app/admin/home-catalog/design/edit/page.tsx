@@ -18,12 +18,13 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 const EditDesignType = () => {
   const { token } = getTokenAndRole();
   const searchParams = useSearchParams();
   const designId = searchParams.get("id");
+  const router = useRouter();
 
   const [residences, setResidences] = useState([]);
   const [rooms, setRooms] = useState([]);
@@ -34,7 +35,7 @@ const EditDesignType = () => {
     name: "",
     description: "",
     coohomUrl: "",
-    thumbnail: null as File | null,
+    thumbnail: null,
     thumbnailBase64: "",
     thumbnailPreview: "",
     residenceType: "",
@@ -54,34 +55,20 @@ const EditDesignType = () => {
   const [apiError, setApiError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  // URL validation regex
-  const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
-  // MongoDB ObjectId validation regex
+  const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/;
   const mongoIdRegex = /^[0-9a-fA-F]{24}$/;
-
-  // Allowed file types
   const allowedFileTypes = ["image/jpeg", "image/png", "image/jpg"];
   const maxFileSize = 60 * 1024; // 60kb
 
   const validateForm = () => {
-    const newErrors = {
-      name: "",
-      coohomUrl: "",
-      residenceType: "",
-      roomType: "",
-      theme: "",
-      thumbnail: "",
-    };
-
+    const newErrors = { ...errors };
     let isValid = true;
 
-    // Name validation
     if (!formData.name.trim()) {
       newErrors.name = "Name should not be empty";
       isValid = false;
     }
 
-    // Coohom URL validation
     if (!formData.coohomUrl.trim()) {
       newErrors.coohomUrl = "Coohom URL should not be empty";
       isValid = false;
@@ -90,39 +77,22 @@ const EditDesignType = () => {
       isValid = false;
     }
 
-    // Residence Type validation
-    if (!formData.residenceType) {
-      newErrors.residenceType = "Residence Type should not be empty";
-      isValid = false;
-    } else if (!mongoIdRegex.test(formData.residenceType)) {
-      newErrors.residenceType = "Residence Type must be a valid MongoDB ID";
+    if (!mongoIdRegex.test(formData.residenceType)) {
+      newErrors.residenceType = "Select valid residence type";
       isValid = false;
     }
 
-    // Room Type validation
-    if (!formData.roomType) {
-      newErrors.roomType = "Room Type should not be empty";
-      isValid = false;
-    } else if (!mongoIdRegex.test(formData.roomType)) {
-      newErrors.roomType = "Room Type must be a valid MongoDB ID";
+    if (!mongoIdRegex.test(formData.roomType)) {
+      newErrors.roomType = "Select valid room type";
       isValid = false;
     }
 
-    // Theme validation
-    if (!formData.theme) {
-      newErrors.theme = "Theme should not be empty";
-      isValid = false;
-    } else if (!mongoIdRegex.test(formData.theme)) {
-      newErrors.theme = "Theme must be a valid MongoDB ID";
+    if (!mongoIdRegex.test(formData.theme)) {
+      newErrors.theme = "Select valid theme";
       isValid = false;
     }
 
-    // For edit, thumbnail is not required if we already have one
-    if (
-      !formData.thumbnail &&
-      !formData.thumbnailBase64 &&
-      !formData.thumbnailPreview
-    ) {
+    if (!formData.thumbnail && !formData.thumbnailPreview) {
       newErrors.thumbnail = "Please upload a thumbnail image";
       isValid = false;
     }
@@ -131,172 +101,109 @@ const EditDesignType = () => {
     return isValid;
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-
-    // Clear error for this field when user starts typing
-    if (errors[name as keyof typeof errors]) {
-      setErrors({ ...errors, [name]: "" });
-    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const handleSelectChange = (field: string, value: string) => {
+  const handleSelectChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-
-    // Clear error for this field when user selects an option
-    if (errors[field as keyof typeof errors]) {
-      setErrors({ ...errors, [field]: "" });
-    }
+    setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
-  // Convert file to base64
-  const fileToBase64 = (
-    file: File
-  ): Promise<{ fullUrl: string; base64: string }> => {
+  const fileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.readAsDataURL(file);
       reader.onload = () => {
         if (typeof reader.result === "string") {
-          // Get the full data URL for preview
-          const fullDataUrl = reader.result;
-          // Extract only the base64 part without the prefix for API
-          const base64String = reader.result.split(",")[1];
-          resolve({ fullUrl: fullDataUrl, base64: base64String });
-        } else {
-          reject(new Error("Failed to convert file to base64"));
-        }
+          resolve({
+            fullUrl: reader.result,
+            base64: reader.result.split(",")[1],
+          });
+        } else reject("Failed to convert file");
       };
-      reader.onerror = (error) => reject(error);
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
     });
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
+    if (!file) return;
 
-    if (file) {
-      // Validate file type
-      if (!allowedFileTypes.includes(file.type)) {
-        setErrors({
-          ...errors,
-          thumbnail: "Invalid file type. Only JPG, JPEG, and PNG are allowed.",
-        });
-        return;
-      }
+    if (!allowedFileTypes.includes(file.type)) {
+      setErrors((prev) => ({ ...prev, thumbnail: "Invalid file type" }));
+      return;
+    }
 
-      // Validate file size
-      if (file.size > maxFileSize) {
-        setErrors({
-          ...errors,
-          thumbnail: "File size exceeds 60kb limit.",
-        });
-        return;
-      }
+    if (file.size > maxFileSize) {
+      setErrors((prev) => ({ ...prev, thumbnail: "File size exceeds 60KB" }));
+      return;
+    }
 
-      try {
-        // Convert file to base64
-        const { fullUrl, base64 } = await fileToBase64(file);
-
-        setFormData({
-          ...formData,
-          thumbnail: file,
-          thumbnailBase64: base64,
-          thumbnailPreview: fullUrl,
-        });
-        setErrors({ ...errors, thumbnail: "" });
-      } catch (err) {
-        setErrors({
-          ...errors,
-          thumbnail: "Failed to process the image.",
-        });
-      }
+    try {
+      const { fullUrl, base64 } = await fileToBase64(file);
+      setFormData((prev) => ({
+        ...prev,
+        thumbnail: file,
+        thumbnailBase64: base64,
+        thumbnailPreview: fullUrl,
+      }));
+      setErrors((prev) => ({ ...prev, thumbnail: "" }));
+    } catch {
+      setErrors((prev) => ({ ...prev, thumbnail: "Failed to process image" }));
     }
   };
 
   const fetchData = async () => {
     try {
-      setLoading(true);
-      const headers = {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      };
-
-      // Fetch design data and dropdown options in parallel
-      const [designRes, residencesRes, roomsRes, themesRes] = await Promise.all(
-        [
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/designs/${designId}`, {
-            headers,
-          }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/residence-types`, {
-            headers,
-          }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/room-types`, { headers }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/themes`, { headers }),
-        ]
-      );
-
-      if (!designRes.ok) {
-        throw new Error("Failed to fetch design data");
-      }
-
-      if (!residencesRes.ok || !roomsRes.ok || !themesRes.ok) {
-        throw new Error("Failed to fetch dropdown data");
-      }
-
-      const designData = await designRes.json();
-      const [residencesData, roomsData, themesData] = await Promise.all([
-        residencesRes.json(),
-        roomsRes.json(),
-        themesRes.json(),
+      const headers = { Authorization: `Bearer ${token}` };
+      const [designRes, resRes, roomRes, themeRes] = await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/designs/${designId}`, { headers }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/residence-types`, { headers }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/room-types`, { headers }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/themes`, { headers }),
       ]);
 
-      setResidences(residencesData.residenceTypes);
-      setRooms(roomsData.roomTypes);
-      setThemes(themesData.themes);
+      const designData = await designRes.json();
+      const residencesData = await resRes.json();
+      const roomsData = await roomRes.json();
+      const themesData = await themeRes.json();
 
-      // Extract the first combination (if exists)
-      const combination =
-        designData.combinations && designData.combinations.length > 0
-          ? designData.combinations[0]
-          : { residenceType: "", roomType: "", theme: "" };
+      const combination = designData.combinations?.[0] || {};
 
-      // Populate the form with existing data
       setFormData({
         name: designData.name || "",
         description: designData.description || "",
         coohomUrl: designData.coohomUrl || "",
         thumbnail: null,
-        thumbnailBase64: "", // We don't need the base64 for existing image
-        thumbnailPreview: designData.thumbnailUrl || "", // Use the URL from API
-        residenceType: combination.residenceType || "",
-        roomType: combination.roomType || "",
-        theme: combination.theme || "",
+        thumbnailBase64: "",
+        thumbnailPreview: designData.thumbnailUrl || "",
+        residenceType: combination.residenceType?._id || "",
+        roomType: combination.roomType?._id || "",
+        theme: combination.theme?._id || "",
       });
-    } catch (err: any) {
-      setApiError(err.message || "Error fetching data");
+
+      setResidences(residencesData.residenceTypes);
+      setRooms(roomsData.roomTypes);
+      setThemes(themesData.themes);
+    } catch (err) {
+      setApiError("Error fetching data");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (designId) {
-      fetchData();
-    } else {
-      setApiError("Design ID is missing");
-      setLoading(false);
-    }
+    if (designId) fetchData();
   }, [designId]);
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
-      setApiError("Please fix the validation errors");
-      return;
-    }
+    if (!validateForm()) return;
 
     try {
-      const designPayload: any = {
+      const payload = {
         name: formData.name,
         description: formData.description,
         coohomUrl: formData.coohomUrl,
@@ -307,58 +214,27 @@ const EditDesignType = () => {
             theme: formData.theme,
           },
         ],
+        ...(formData.thumbnailBase64 && { thumbnail: formData.thumbnailBase64 }),
       };
 
-      // Only include thumbnail if a new one was uploaded
-      if (formData.thumbnailBase64) {
-        designPayload.thumbnail = formData.thumbnailBase64;
-      }
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/designs/${designId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/designs/${designId}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(designPayload),
-        }
-      );
-
-      const responseBody = await res.json();
-
-      if (!res.ok) {
-        console.error("API error response:", responseBody);
-        throw new Error(responseBody.message || "Failed to update design");
-      }
-
+      if (!response.ok) throw new Error("Failed to update design");
       setSuccess(true);
-      setApiError("");
-
-      alert("Design type updated successfully!");
-      window.location.href = "/admin/home-catalog/design";
-    } catch (err: any) {
-      setApiError(err.message || "Unexpected error occurred");
+      router.push("/designs");
+    } catch (err) {
+      setApiError("Failed to submit form");
     }
   };
 
-  const handleRemoveImage = () => {
-    setFormData({
-      ...formData,
-      thumbnail: null,
-      thumbnailBase64: "",
-      thumbnailPreview: "",
-    });
-  };
-
-  if (loading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", p: 5 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+  if (loading) return <CircularProgress />;
 
   return (
     <Box sx={{ p: 3 }}>

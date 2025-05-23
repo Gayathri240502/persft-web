@@ -294,7 +294,7 @@ const AddKiosk = () => {
           {renderTextField("Email", "email")}
         </Grid>
         <Grid item xs={12} sm={6}>
-          {renderTextField("Phone", "phone")}
+          {renderTextField("Phone", "phone", )}
         </Grid>
         <Grid item xs={12} sm={6}>
           {renderTextField("Password", "password")}

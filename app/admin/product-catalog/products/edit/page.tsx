@@ -63,7 +63,11 @@ interface Product {
   attributeValues: AttributeValue[];
 }
 
-const EditProduct = ({ params }: { params: { id: string } }) => {
+interface EditProductProps {
+  params: { id: string };
+}
+
+const EditProduct = ({ params }: EditProductProps) => {
   const router = useRouter();
   const [form, setForm] = useState({
     name: "",
@@ -101,7 +105,8 @@ const EditProduct = ({ params }: { params: { id: string } }) => {
   const [loadingProduct, setLoadingProduct] = useState(false);
 
   const [thumbnail, setThumbnail] = useState<string>("");
-  const [selectedFileName, setSelectedFileName] = useState<string>("No file selected");
+  const [selectedFileName, setSelectedFileName] =
+    useState<string>("No file selected");
   const [thumbnailChanged, setThumbnailChanged] = useState(false);
 
   const [error, setError] = useState("");
@@ -114,12 +119,15 @@ const EditProduct = ({ params }: { params: { id: string } }) => {
     const fetchProduct = async () => {
       try {
         setLoadingProduct(true);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${productId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          ${process.env.NEXT_PUBLIC_API_URL}/products/${productId},
+          {
+            headers: { Authorization: Bearer ${token} },
+          }
+        );
         const data = await res.json();
         setProduct(data);
-        
+
         // Set form with existing product data
         setForm({
           name: data.name,
@@ -134,11 +142,12 @@ const EditProduct = ({ params }: { params: { id: string } }) => {
           subCategory: data.subCategory,
           workGroup: data.workGroup,
           workTask: data.workTask,
-          attributeValues: data.attributeValues.length > 0 
-            ? data.attributeValues 
-            : [{ attribute: "", value: "" }],
+          attributeValues:
+            data.attributeValues.length > 0
+              ? data.attributeValues
+              : [{ attribute: "", value: "" }],
         });
-        
+
         if (data.thumbnail) {
           setThumbnail(data.thumbnail);
           setSelectedFileName("Current thumbnail");
@@ -153,9 +162,12 @@ const EditProduct = ({ params }: { params: { id: string } }) => {
     const fetchData = async () => {
       try {
         setLoadingCategories(true);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          ${process.env.NEXT_PUBLIC_API_URL}/categories,
+          {
+            headers: { Authorization: Bearer ${token} },
+          }
+        );
         const data = await res.json();
         setCategories(data.categories || data || []);
       } catch (err: any) {
@@ -166,9 +178,12 @@ const EditProduct = ({ params }: { params: { id: string } }) => {
 
       try {
         setLoadingSubCategories(true);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sub-categories`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          ${process.env.NEXT_PUBLIC_API_URL}/sub-categories,
+          {
+            headers: { Authorization: Bearer ${token} },
+          }
+        );
         const data = await res.json();
         setSubCategories(data.subCategories || data || []);
       } catch (err: any) {
@@ -179,9 +194,12 @@ const EditProduct = ({ params }: { params: { id: string } }) => {
 
       try {
         setLoadingWorkGroups(true);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/work-groups`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          ${process.env.NEXT_PUBLIC_API_URL}/work-groups,
+          {
+            headers: { Authorization: Bearer ${token} },
+          }
+        );
         const data = await res.json();
         setWorkGroups(data.workGroups || data || []);
       } catch (err: any) {
@@ -192,9 +210,12 @@ const EditProduct = ({ params }: { params: { id: string } }) => {
 
       try {
         setLoadingWorkTasks(true);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/work-tasks`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          ${process.env.NEXT_PUBLIC_API_URL}/work-tasks,
+          {
+            headers: { Authorization: Bearer ${token} },
+          }
+        );
         const data = await res.json();
         setWorkTasks(data.workTasks || data || []);
       } catch (err: any) {
@@ -205,9 +226,12 @@ const EditProduct = ({ params }: { params: { id: string } }) => {
 
       try {
         setLoadingAttributes(true);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/attributes`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          ${process.env.NEXT_PUBLIC_API_URL}/attributes,
+          {
+            headers: { Authorization: Bearer ${token} },
+          }
+        );
         const data = await res.json();
         setAttributes(data.attributes || data || []);
       } catch (err: any) {
@@ -225,7 +249,9 @@ const EditProduct = ({ params }: { params: { id: string } }) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleThumbnailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleThumbnailChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFileName(file.name);
@@ -245,7 +271,10 @@ const EditProduct = ({ params }: { params: { id: string } }) => {
     value: string
   ) => {
     const newAttributeValues = [...form.attributeValues];
-    newAttributeValues[index] = { ...newAttributeValues[index], [field]: value };
+    newAttributeValues[index] = {
+      ...newAttributeValues[index],
+      [field]: value,
+    };
     setForm((prev) => ({ ...prev, attributeValues: newAttributeValues }));
   };
 
@@ -294,14 +323,17 @@ const EditProduct = ({ params }: { params: { id: string } }) => {
     };
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${productId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(body),
-      });
+      const res = await fetch(
+        ${process.env.NEXT_PUBLIC_API_URL}/products/${productId},
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: Bearer ${token},
+          },
+          body: JSON.stringify(body),
+        }
+      );
 
       if (!res.ok) {
         const errorText = await res.text();
@@ -312,7 +344,9 @@ const EditProduct = ({ params }: { params: { id: string } }) => {
       setSuccess("Product updated successfully!");
       router.push("/admin/product-catalog/products");
     } catch (err: any) {
-      setError(err.message || "Something went wrong while updating the product.");
+      setError(
+        err.message || "Something went wrong while updating the product."
+      );
     }
   };
 
@@ -361,8 +395,16 @@ const EditProduct = ({ params }: { params: { id: string } }) => {
         Edit Product
       </Typography>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      {success && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          {success}
+        </Alert>
+      )}
 
       <Grid container spacing={2}>
         {[
@@ -379,7 +421,9 @@ const EditProduct = ({ params }: { params: { id: string } }) => {
               fullWidth
               label={label}
               value={form[key as keyof typeof form]}
-              onChange={(e) => handleChange(key as keyof typeof form, e.target.value)}
+              onChange={(e) =>
+                handleChange(key as keyof typeof form, e.target.value)
+              }
               type={key === "price" ? "number" : "text"}
               multiline={key === "description"}
             />
@@ -387,19 +431,43 @@ const EditProduct = ({ params }: { params: { id: string } }) => {
         ))}
 
         <Grid item xs={12} sm={6}>
-          {renderSelect("Category", form.category, "category", categories, loadingCategories)}
+          {renderSelect(
+            "Category",
+            form.category,
+            "category",
+            categories,
+            loadingCategories
+          )}
         </Grid>
 
         <Grid item xs={12} sm={6}>
-          {renderSelect("SubCategory", form.subCategory, "subCategory", subCategories, loadingSubCategories)}
+          {renderSelect(
+            "SubCategory",
+            form.subCategory,
+            "subCategory",
+            subCategories,
+            loadingSubCategories
+          )}
         </Grid>
 
         <Grid item xs={12} sm={6}>
-          {renderSelect("Work Group", form.workGroup, "workGroup", workGroups, loadingWorkGroups)}
+          {renderSelect(
+            "Work Group",
+            form.workGroup,
+            "workGroup",
+            workGroups,
+            loadingWorkGroups
+          )}
         </Grid>
 
         <Grid item xs={12} sm={6}>
-          {renderSelect("Work Task", form.workTask, "workTask", workTasks, loadingWorkTasks)}
+          {renderSelect(
+            "Work Task",
+            form.workTask,
+            "workTask",
+            workTasks,
+            loadingWorkTasks
+          )}
         </Grid>
 
         {/* AttributeValues input: attribute dropdown + value text input */}
@@ -408,7 +476,9 @@ const EditProduct = ({ params }: { params: { id: string } }) => {
             <InputLabel>Attribute</InputLabel>
             <Select
               value={form.attributeValues[0].attribute}
-              onChange={(e) => handleAttributeChange(0, "attribute", e.target.value)}
+              onChange={(e) =>
+                handleAttributeChange(0, "attribute", e.target.value)
+              }
               label="Attribute"
             >
               {loadingAttributes ? (
@@ -477,7 +547,9 @@ const EditProduct = ({ params }: { params: { id: string } }) => {
 
       <Box sx={{ display: "flex", gap: 2 }}>
         <ReusableButton onClick={handleSubmit}>Update</ReusableButton>
-        <CancelButton href="/admin/product-catalog/products">Cancel</CancelButton>
+        <CancelButton href="/admin/product-catalog/products">
+          Cancel
+        </CancelButton>
       </Box>
     </Box>
   );

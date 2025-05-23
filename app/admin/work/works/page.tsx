@@ -157,32 +157,20 @@ const WorkGroupsTasksPage: React.FC = () => {
 
       const data = await res.json();
 
-      // Handle both single item and array responses
-      const projects: Project[] = Array.isArray(data) 
-        ? data.map((item, index) => ({
-            id: item._id,
-            _id: item._id,
-            sn: index + 1,
-            name: item.name || "",
-            description: item.description || "",
-            archive: item.archive || false,
-            workGroups: item.workGroups || []
-          }))
-        : [{
-            id: data._id,
-            _id: data._id,
-            sn: 1,
-            name: data.name || "",
-            description: data.description || "",
-            archive: data.archive || false,
-            workGroups: data.workGroups || []
-          }];
+      // Handle different response formats
+      const tasksArray = Array.isArray(
+        tasksData?.docs || tasksData?.workTasks || tasksData
+      )
+        ? tasksData.docs || tasksData.workTasks || tasksData
+        : tasksData._id
+          ? [tasksData]
+          : [];
 
-      setAllRows(projects);
-      setRowCount(projects.length);
-    } catch (err) {
+      setWorkTasks(tasksArray);
+    } catch (err: any) {
+      console.error("Error fetching work groups and tasks:", err);
       setError(
-        err instanceof Error ? err.message : "An unknown error occurred"
+        `${err.message || "Failed to load resources"}. Please check API endpoints.`
       );
     } finally {
       setLoading(false);
@@ -229,128 +217,222 @@ const WorkGroupsTasksPage: React.FC = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({
+          name,
+          description,
+          archive: editData?.archive || false,
+          workGroups: workGroupsData,
+        }),
       });
 
-      if (!res.ok) {
-        const errorDetails = await res.json();
-        setError(
-          `Failed to update: ${errorDetails.message || "Unknown error"}`
-        );
-        throw new Error(
-          `Failed to update: ${errorDetails.message || "Unknown error"}`
-        );
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || "Save failed");
       }
 
-      setSuccessMsg("Project updated successfully");
-      setEditDialogOpen(false);
-      fetchProjects();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Update failed");
+      onSuccess();
+      onClose();
+    } catch (err: any) {
+      setError(err.message || "Unknown error");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleEditClick = (params: GridRenderCellParams) => {
-    setFormData({
-      id: params.row.id,
-      name: params.row.name,
-      description: params.row.description,
-      workGroups: params.row.workGroups || [
-        {
-          workGroup: "",
-          order: 0,
-          workTasks: [{ workTask: "", order: 0 }],
-        },
-      ],
-    });
-    setEditDialogOpen(true);
-  };
-
-  // When clicking "Add", open edit dialog for the first available project
-  const handleAddClick = () => {
-    if (allRows.length > 0) {
-      const firstProject = allRows[0];
-      setFormData({
-        id: firstProject.id || firstProject._id,
-        name: firstProject.name,
-        description: firstProject.description,
-        workGroups: firstProject.workGroups || [
-          {
-            workGroup: "",
-            order: 0,
-            workTasks: [{ workTask: "", order: 0 }],
-          },
-        ],
-      });
-      setEditDialogOpen(true);
-    } else {
-      setError("No projects available to edit");
-    }
-  };
-
-  const addWorkGroup = () => {
-    setFormData({
-      ...formData,
-      workGroups: [
-        ...formData.workGroups,
-        {
-          workGroup: "",
-          order: formData.workGroups.length,
-          workTasks: [{ workTask: "", order: 0 }],
-        },
-      ],
-    });
-  };
-
-  const removeWorkGroup = (index: number) => {
-    const newWorkGroups = formData.workGroups.filter((_, i) => i !== index);
-    setFormData({ ...formData, workGroups: newWorkGroups });
-  };
-
-  const updateWorkGroup = (index: number, workGroupId: string) => {
-    const newWorkGroups = [...formData.workGroups];
-    newWorkGroups[index].workGroup = workGroupId;
-    // Reset work tasks when work group changes
-    newWorkGroups[index].workTasks = [{ workTask: "", order: 0 }];
-    setFormData({ ...formData, workGroups: newWorkGroups });
-  };
-
-  const addWorkTask = (workGroupIndex: number) => {
-    const newWorkGroups = [...formData.workGroups];
-    newWorkGroups[workGroupIndex].workTasks.push({
-      workTask: "",
-      order: newWorkGroups[workGroupIndex].workTasks.length,
-    });
-    setFormData({ ...formData, workGroups: newWorkGroups });
-  };
-
-  const removeWorkTask = (workGroupIndex: number, taskIndex: number) => {
-    const newWorkGroups = [...formData.workGroups];
-    newWorkGroups[workGroupIndex].workTasks = newWorkGroups[workGroupIndex].workTasks.filter(
-      (_, i) => i !== taskIndex
+  // Group tasks by their work group
+  const getTasksByGroup = (groupId: string) => {
+    return workTasks.filter(
+      (task) =>
+        task.workGroupId === groupId ||
+        task.workGroup === groupId ||
+        task.groupId === groupId
     );
-    setFormData({ ...formData, workGroups: newWorkGroups });
   };
 
-  const updateWorkTask = (workGroupIndex: number, taskIndex: number, workTaskId: string) => {
-    const newWorkGroups = [...formData.workGroups];
-    newWorkGroups[workGroupIndex].workTasks[taskIndex].workTask = workTaskId;
-    setFormData({ ...formData, workGroups: newWorkGroups });
-  };
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+      <DialogTitle>{editData ? "Edit Work" : "Add Work"}</DialogTitle>
+      <DialogContent>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        <TextField
+          fullWidth
+          margin="normal"
+          label="Project Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <TextField
+          fullWidth
+          margin="normal"
+          label="Description"
+          multiline
+          rows={4}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
 
-  const getWorkGroupName = (workGroupId: string) => {
-    const workGroup = availableWorkGroups.find(wg => wg._id === workGroupId);
-    return workGroup ? workGroup.name : workGroupId;
-  };
+        <Box sx={{ mt: 3 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Work Groups & Tasks
+          </Typography>
 
-  const getWorkTaskName = (workTaskId: string) => {
-    const workTask = availableWorkTasks.find(wt => wt._id === workTaskId);
-    return workTask ? workTask.name : workTaskId;
-  };
+          {loadingResources ? (
+            <Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : (
+            <Box>
+              {workGroups.length === 0 ? (
+                <Alert severity="info">
+                  No work groups available. (expecting:{" "}
+                  {process.env.NEXT_PUBLIC_API_URL}/work-groups and
+                  {process.env.NEXT_PUBLIC_API_URL}/work-tasks)
+                </Alert>
+              ) : (
+                workGroups.map((group) => (
+                  <Accordion key={group._id} sx={{ mb: 1 }}>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={selectedWorkGroups.includes(group._id)}
+                            onChange={() => handleWorkGroupChange(group._id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        }
+                        label={
+                          <Typography fontWeight="medium">
+                            {group.name || group.title || `Group ${group._id}`}
+                          </Typography>
+                        }
+                        onClick={(e) => e.stopPropagation()}
+                        sx={{ mr: 2 }}
+                      />
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <FormGroup sx={{ pl: 3 }}>
+                        {getTasksByGroup(group._id).map((task) => (
+                          <FormControlLabel
+                            key={task._id}
+                            control={
+                              <Checkbox
+                                checked={selectedWorkTasks.includes(task._id)}
+                                onChange={() =>
+                                  handleWorkTaskChange(task._id, group._id)
+                                }
+                                disabled={
+                                  !selectedWorkGroups.includes(group._id)
+                                }
+                              />
+                            }
+                            label={task.name}
+                          />
+                        ))}
+                        {getTasksByGroup(group._id).length === 0 && (
+                          <Typography variant="body2" color="text.secondary">
+                            No tasks available for this work group
+                          </Typography>
+                        )}
+                      </FormGroup>
+                    </AccordionDetails>
+                  </Accordion>
+                ))
+              )}
+            </Box>
+          )}
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button
+          onClick={handleSubmit}
+          disabled={loading || !name.trim() || !description.trim()}
+          variant="contained"
+        >
+          {loading ? <CircularProgress size={24} /> : "Save"}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
 
-  const getFilteredWorkTasks = (workGroupId: string) => {
-    return availableWorkTasks.filter(task => task.workGroup === workGroupId);
-  };
+const WorkList = () => {
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  const router = useRouter();
+  const [token, setToken] = useState("");
+
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
+    pageSize: 10,
+  });
+  const [rowCount, setRowCount] = useState(0);
+  const [works, setWorks] = useState<Work[]>([]);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editData, setEditData] = useState<Work | null>(null);
+
+  useEffect(() => {
+    const { token } = getTokenAndRole();
+    setToken(token);
+  }, []);
+
+  const fetchWorks = useCallback(async () => {
+    if (!token) return;
+
+    setLoading(true);
+    setError(null);
+
+    const { page, pageSize } = paginationModel;
+    const queryParams = new URLSearchParams({
+      page: String(page + 1),
+      limit: String(pageSize),
+    });
+
+    if (search.trim()) queryParams.append("searchTerm", search.trim());
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/works?${queryParams.toString()}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message || "Failed to fetch");
+
+      const worksArray = Array.isArray(result?.docs || result?.works || result)
+        ? result.docs || result.works || result
+        : result._id
+          ? [result]
+          : [];
+
+      setWorks(
+        worksArray.map((item: any, index: number) => ({
+          ...item,
+          id: item._id,
+          sn: page * pageSize + index + 1,
+        }))
+      );
+      setRowCount(result.totalDocs || worksArray.length);
+    } catch (err: any) {
+      setError(err.message || "Unknown error");
+      setWorks([]);
+      setRowCount(0);
+    } finally {
+      setLoading(false);
+    }
+  }, [paginationModel, search, token]);
+
+  useEffect(() => {
+    fetchWorks();
+  }, [fetchWorks]);
 
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", width: 50 },

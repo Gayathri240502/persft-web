@@ -48,6 +48,25 @@ interface FormData {
   }[];
 }
 
+// Define the interface for the selection data from the API
+interface ProjectSelection {
+  _id?: string;
+  residenceType?: string;
+  roomType?: string;
+  theme?: string;
+  design?: string;
+  [key: string]: any; // Allow for other properties
+}
+
+// Define the interface for project data from the API
+interface ProjectData {
+  name: string;
+  description: string;
+  thumbnailUrl?: string;
+  selections: ProjectSelection[];
+  [key: string]: any; // Allow for other properties
+}
+
 const EditProject = () => {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
@@ -111,12 +130,18 @@ const EditProject = () => {
           throw new Error("Failed to fetch project data");
         }
 
-        const projectData = await projectResponse.json();
+        const projectData: ProjectData = await projectResponse.json();
         console.log("Project data received:", projectData);
 
         // Handle the case where we need to fetch detailed selection data
         // The project data only contains selection IDs, so we need to fetch the actual selection details
-        let processedSelections = [];
+        let processedSelections: {
+          residenceType: string;
+          roomType: string;
+          theme: string;
+          design: string;
+          originalId?: string;
+        }[] = [];
 
         // Check if selections exist and have the expected structure
         if (projectData.selections && Array.isArray(projectData.selections)) {
@@ -125,14 +150,16 @@ const EditProject = () => {
           try {
             // For now, we'll just create empty selection objects
             // In a real scenario, you would fetch the actual selection details from your API
-            processedSelections = projectData.selections.map((selection) => ({
-              residenceType: "",
-              roomType: "",
-              theme: "",
-              design: "",
-              // Store the original selection ID in case we need it
-              originalId: selection._id || "",
-            }));
+            processedSelections = projectData.selections.map(
+              (selection: ProjectSelection) => ({
+                residenceType: selection.residenceType || "",
+                roomType: selection.roomType || "",
+                theme: selection.theme || "",
+                design: selection.design || "",
+                // Store the original selection ID in case we need it
+                originalId: selection._id || "",
+              })
+            );
           } catch (err) {
             console.error("Error processing selections:", err);
           }
@@ -338,7 +365,7 @@ const EditProject = () => {
       // Format the selections properly for the API
       const formattedSelections = formData.selections.map((sel) => {
         // If we have an originalId, include it in the payload
-        const selectionData = {
+        const selectionData: ProjectSelection = {
           residenceType: sel.residenceType,
           roomType: sel.roomType,
           theme: sel.theme,

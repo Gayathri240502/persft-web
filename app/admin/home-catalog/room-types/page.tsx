@@ -187,7 +187,7 @@ const RoomTypes = () => {
         const resTypes = params.row.residenceTypes || [];
         return resTypes.length > 0 ? (
           <Box sx={{ display: "flex", flexWrap: "wrap" }}>
-            {resTypes.map((res) => (
+            {resTypes.map((res: ResidenceTypeReference) => (
               <Button
                 key={res._id}
                 variant="text"

@@ -15,7 +15,7 @@ import {
   DialogTitle,
   Button,
 } from "@mui/material";
-import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import { GridColDef, GridPaginationModel,  GridRenderCellParams, } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
@@ -154,25 +154,29 @@ const Projects = () => {
     { field: "name", headerName: "Name", flex: 1 },
     { field: "description", headerName: "Description", flex: 2 },
     {
-      field: "thumbnail",
-      headerName: "Thumbnail",
-      flex: 1,
-      renderCell: (params) =>
-        params.row.thumbnail ? (
-          <img
-            src={params.row.thumbnail}
-            alt="Thumbnail"
-            style={{
-              width: 40,
-              height: 40,
-            }}
-          />
-        ) : (
-          <Typography variant="body2" color="textSecondary">
-            No Image
-          </Typography>
-        ),
-    },
+  field: "thumbnail",
+  headerName: "Thumbnail",
+  flex: 1,
+  renderCell: (params: GridRenderCellParams) => {
+    const base64String = params.value;
+    return base64String ? (
+      <img
+        src={`data:image/jpeg;base64,${base64String}`}
+        alt="Thumbnail"
+        style={{
+          width: 40,
+          height: 40,
+          objectFit: "cover",
+          borderRadius: 4,
+        }}
+      />
+    ) : (
+      <span style={{ fontStyle: "italic", color: "#999" }}>
+        No Thumbnail
+      </span>
+    );
+  },
+},
     {
       field: "action",
       headerName: "Actions",

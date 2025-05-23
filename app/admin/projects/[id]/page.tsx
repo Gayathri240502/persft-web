@@ -202,7 +202,7 @@ const ProjectDetailsPage: React.FC = () => {
           {project.thumbnail ? (
             <Box
               component="img"
-              src={project.thumbnail}
+              src={`data:image/jpeg;base64,${project.thumbnail}`}
               alt="Thumbnail"
               sx={{ maxWidth: 100 }}
             />

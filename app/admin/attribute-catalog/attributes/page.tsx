@@ -13,6 +13,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Button,
 } from "@mui/material";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
@@ -267,16 +268,16 @@ const Attributes = () => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <ReusableButton variant="outlined" onClick={handleDeleteCancel}>
+          <Button  onClick={handleDeleteCancel}>
             Cancel
-          </ReusableButton>
-          <ReusableButton
+          </Button>
+          <Button
             color="error"
             onClick={handleDeleteConfirm}
             disabled={loading}
           >
             {loading ? <CircularProgress size={20} /> : "Delete"}
-          </ReusableButton>
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

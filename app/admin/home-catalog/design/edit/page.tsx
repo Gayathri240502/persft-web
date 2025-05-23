@@ -13,10 +13,8 @@ import {
   FormControl,
   FormHelperText,
   CircularProgress,
-  IconButton,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
-import DeleteIcon from "@mui/icons-material/Delete";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
@@ -33,6 +31,8 @@ const EditDesignType = () => {
   const [themes, setThemes] = useState([]);
   const [loading, setLoading] = useState(true);
 
+   const [thumbnail, setThumbnail] = useState<string>("at");
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -40,25 +40,30 @@ const EditDesignType = () => {
     thumbnail: null,
     thumbnailBase64: "",
     thumbnailPreview: "",
-    combinations: [],
+    residenceType: "",
+    roomType: "",
+    theme: "",
   });
 
   const [errors, setErrors] = useState({
     name: "",
     coohomUrl: "",
+    residenceType: "",
+    roomType: "",
+    theme: "",
+    thumbnail: "",
   });
 
   const [apiError, setApiError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  const urlRegex =
-    /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/;
+  const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/;
   const mongoIdRegex = /^[0-9a-fA-F]{24}$/;
   const allowedFileTypes = ["image/jpeg", "image/png", "image/jpg"];
   const maxFileSize = 60 * 1024; // 60kb
 
   const validateForm = () => {
-    const newErrors = { name: "", coohomUrl: "" };
+    const newErrors = { ...errors };
     let isValid = true;
 
     if (!formData.name.trim()) {
@@ -74,6 +79,26 @@ const EditDesignType = () => {
       isValid = false;
     }
 
+    if (!mongoIdRegex.test(formData.residenceType)) {
+      newErrors.residenceType = "Select valid residence type";
+      isValid = false;
+    }
+
+    if (!mongoIdRegex.test(formData.roomType)) {
+      newErrors.roomType = "Select valid room type";
+      isValid = false;
+    }
+
+    if (!mongoIdRegex.test(formData.theme)) {
+      newErrors.theme = "Select valid theme";
+      isValid = false;
+    }
+
+    if (!formData.thumbnail && !formData.thumbnailPreview) {
+      newErrors.thumbnail = "Please upload a thumbnail image";
+      isValid = false;
+    }
+
     setErrors(newErrors);
     return isValid;
   };
@@ -84,8 +109,13 @@ const EditDesignType = () => {
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const fileToBase64 = (file) =>
-    new Promise((resolve, reject) => {
+  const handleSelectChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
         if (typeof reader.result === "string") {
@@ -98,13 +128,21 @@ const EditDesignType = () => {
       reader.onerror = (err) => reject(err);
       reader.readAsDataURL(file);
     });
+  };
 
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!allowedFileTypes.includes(file.type) || file.size > maxFileSize)
+    if (!allowedFileTypes.includes(file.type)) {
+      setErrors((prev) => ({ ...prev, thumbnail: "Invalid file type" }));
       return;
+    }
+
+    if (file.size > maxFileSize) {
+      setErrors((prev) => ({ ...prev, thumbnail: "File size exceeds 60KB" }));
+      return;
+    }
 
     try {
       const { fullUrl, base64 } = await fileToBase64(file);
@@ -114,51 +152,18 @@ const EditDesignType = () => {
         thumbnailBase64: base64,
         thumbnailPreview: fullUrl,
       }));
+      setErrors((prev) => ({ ...prev, thumbnail: "" }));
     } catch {
-      // silently fail
+      setErrors((prev) => ({ ...prev, thumbnail: "Failed to process image" }));
     }
-  };
-
-  const handleRemoveImage = () => {
-    setFormData((prev) => ({
-      ...prev,
-      thumbnail: null,
-      thumbnailBase64: "",
-      thumbnailPreview: "",
-    }));
-  };
-
-  const handleCombinationChange = (index, field, value) => {
-    const updated = [...formData.combinations];
-    updated[index][field] = value;
-    setFormData((prev) => ({ ...prev, combinations: updated }));
-  };
-
-  const addCombination = () => {
-    setFormData((prev) => ({
-      ...prev,
-      combinations: [
-        ...prev.combinations,
-        { residenceType: "", roomType: "", theme: "" },
-      ],
-    }));
-  };
-
-  const removeCombination = (index) => {
-    const updated = formData.combinations.filter((_, i) => i !== index);
-    setFormData((prev) => ({ ...prev, combinations: updated }));
   };
 
   const fetchData = async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const [designRes, resRes, roomRes, themeRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/designs/${designId}`, {
-          headers,
-        }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/residence-types`, {
-          headers,
-        }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/designs/${designId}`, { headers }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/residence-types`, { headers }),
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/room-types`, { headers }),
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/themes`, { headers }),
       ]);
@@ -168,6 +173,8 @@ const EditDesignType = () => {
       const roomsData = await roomRes.json();
       const themesData = await themeRes.json();
 
+      const combination = designData.combinations?.[0] || {};
+
       setFormData({
         name: designData.name || "",
         description: designData.description || "",
@@ -175,16 +182,15 @@ const EditDesignType = () => {
         thumbnail: null,
         thumbnailBase64: "",
         thumbnailPreview: designData.thumbnailUrl || "",
-        combinations: designData.combinations.map((c) => ({
-          residenceType: c.residenceType?._id || "",
-          roomType: c.roomType?._id || "",
-          theme: c.theme?._id || "",
-        })),
+        residenceType: combination.residenceType?._id || "",
+        roomType: combination.roomType?._id || "",
+        theme: combination.theme?._id || "",
       });
 
       setResidences(residencesData.residenceTypes);
       setRooms(roomsData.roomTypes);
       setThemes(themesData.themes);
+      setThumbnail(designData.thumbnail || "");
     } catch (err) {
       setApiError("Error fetching data");
     } finally {
@@ -204,29 +210,29 @@ const EditDesignType = () => {
         name: formData.name,
         description: formData.description,
         coohomUrl: formData.coohomUrl,
-        combinations: formData.combinations,
-        ...(formData.thumbnailBase64 && {
-          thumbnail: formData.thumbnailBase64,
-        }),
+        combinations: [
+          {
+            residenceType: formData.residenceType,
+            roomType: formData.roomType,
+            theme: formData.theme,
+          },
+        ],
+        ...(formData.thumbnailBase64 && { thumbnail: formData.thumbnailBase64 }),
       };
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/designs/${designId}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/designs/${designId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
       if (!response.ok) throw new Error("Failed to update design");
-
       setSuccess(true);
-      router.push("/admin/home-catalog/design");
-    } catch {
+      router.push("/designs");
+    } catch (err) {
       setApiError("Failed to submit form");
     }
   };
@@ -282,7 +288,7 @@ const EditDesignType = () => {
             startIcon={<UploadFileIcon />}
             sx={{
               color: "#05344c",
-              borderColor: "#05344c",
+              borderColor: errors.thumbnail ? "error.main" : "#05344c",
               "&:hover": { backgroundColor: "#f0f4f8" },
             }}
           >
@@ -296,6 +302,13 @@ const EditDesignType = () => {
               accept=".jpg,.jpeg,.png"
             />
           </Button>
+          <Typography variant="body2" sx={{ color: "#666" }}>
+            {formData.thumbnail?.name ||
+              (formData.thumbnailPreview
+                ? "Using existing image"
+                : "No file selected")}
+          </Typography>
+
           {formData.thumbnailPreview && (
             <Button
               variant="text"
@@ -308,6 +321,7 @@ const EditDesignType = () => {
           )}
         </Box>
 
+        {/* Image Preview */}
         {formData.thumbnailPreview && (
           <Box sx={{ mt: 2, mb: 2 }}>
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
@@ -320,6 +334,9 @@ const EditDesignType = () => {
                 border: "1px solid #ddd",
                 borderRadius: 1,
                 overflow: "hidden",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
               <img
@@ -334,84 +351,92 @@ const EditDesignType = () => {
             </Box>
           </Box>
         )}
+
+        {errors.thumbnail && (
+          <FormHelperText error>{errors.thumbnail}</FormHelperText>
+        )}
+        <FormHelperText>
+          Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+        </FormHelperText>
+
+        {thumbnail && (
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant="subtitle2">Preview:</Typography>
+                      <img
+                        src={thumbnail}
+                        alt="Thumbnail Preview"
+                        style={{ width: 200, borderRadius: 8 }}
+                      />
+                    </Box>
+                  )}
       </Box>
 
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        Design Combinations
-      </Typography>
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={4}>
+          <FormControl fullWidth error={!!errors.residenceType}>
+            <InputLabel required>Residence Type</InputLabel>
+            <Select
+              value={formData.residenceType}
+              onChange={(e) =>
+                handleSelectChange("residenceType", e.target.value as string)
+              }
+              label="Residence Type *"
+            >
+              {residences.map((res: any) => (
+                <MenuItem key={res._id} value={res._id}>
+                  {res.name}
+                </MenuItem>
+              ))}
+            </Select>
+            {errors.residenceType && (
+              <FormHelperText>{errors.residenceType}</FormHelperText>
+            )}
+          </FormControl>
+        </Grid>
 
-      {formData.combinations.map((comb, index) => (
-        <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
-          <Grid item xs={12} md={4}>
-            <FormControl fullWidth>
-              <InputLabel>Residence Type</InputLabel>
-              <Select
-                value={comb.residenceType}
-                onChange={(e) =>
-                  handleCombinationChange(
-                    index,
-                    "residenceType",
-                    e.target.value
-                  )
-                }
-              >
-                {residences.map((res) => (
-                  <MenuItem key={res._id} value={res._id}>
-                    {res.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <FormControl fullWidth>
-              <InputLabel>Room Type</InputLabel>
-              <Select
-                value={comb.roomType}
-                onChange={(e) =>
-                  handleCombinationChange(index, "roomType", e.target.value)
-                }
-              >
-                {rooms.map((room) => (
-                  <MenuItem key={room._id} value={room._id}>
-                    {room.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={10} md={3}>
-            <FormControl fullWidth>
-              <InputLabel>Theme</InputLabel>
-              <Select
-                value={comb.theme}
-                onChange={(e) =>
-                  handleCombinationChange(index, "theme", e.target.value)
-                }
-              >
-                {themes.map((theme) => (
+        <Grid item xs={12} md={4}>
+          <FormControl fullWidth error={!!errors.roomType}>
+            <InputLabel required>Room Type</InputLabel>
+            <Select
+              value={formData.roomType}
+              onChange={(e) =>
+                handleSelectChange("roomType", e.target.value as string)
+              }
+              label="Room Type *"
+            >
+              {rooms.map((room: any) => (
+                <MenuItem key={room._id} value={room._id}>
+                  {room.name}
+                </MenuItem>
+              ))}
+            </Select>
+            {errors.roomType && (
+              <FormHelperText>{errors.roomType}</FormHelperText>
+            )}
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <FormControl fullWidth error={!!errors.theme}>
+            <InputLabel required>Theme</InputLabel>
+            <Select
+              value={formData.theme}
+              onChange={(e) =>
+                handleSelectChange("theme", e.target.value as string)
+              }
+              label="Theme *"
+            >
+              {Array.isArray(themes) &&
+                themes.map((theme: any) => (
                   <MenuItem key={theme._id} value={theme._id}>
                     {theme.name}
                   </MenuItem>
                 ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={2} md={1}>
-            <IconButton
-              onClick={() => removeCombination(index)}
-              color="error"
-              sx={{ mt: 2 }}
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Grid>
+            </Select>
+            {errors.theme && <FormHelperText>{errors.theme}</FormHelperText>}
+          </FormControl>
         </Grid>
-      ))}
-
-      <Button variant="outlined" onClick={addCombination} sx={{ mb: 3 }}>
-        Add Combination
-      </Button>
+      </Grid>
 
       {apiError && (
         <Typography sx={{ mt: 2, color: "error.main" }}>{apiError}</Typography>

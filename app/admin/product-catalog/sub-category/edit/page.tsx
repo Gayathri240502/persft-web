@@ -65,17 +65,30 @@ const EditSubCategory = () => {
         const attributeGroupsData = await attributeGroupsRes.json();
         const subCategoryData = await subCategoryRes.json();
 
-        setCategories(categoriesData?.data ?? categoriesData);
-        setAttributeGroups(attributeGroupsData?.data ?? attributeGroupsData);
+        const cats = (categoriesData?.data ?? categoriesData).map((cat: any) => ({
+          id: cat._id ?? cat.id,
+          name: cat.name,
+        }));
+        const attrs = (attributeGroupsData?.data ?? attributeGroupsData).map((attr: any) => ({
+          id: attr._id ?? attr.id,
+          name: attr.name,
+        }));
 
-        const sub = subCategoryData?.data || subCategoryData;
-        setCategory(sub.category || "");
-        setName(sub.name || "");
-        setDescription(sub.description || "");
-        setThumbnail(sub.thumbnail || "");
+        setCategories(cats);
+        setAttributeGroups(attrs);
 
-        const validIds = (sub.attributeGroups || []).map((id: any) => String(id)).filter(isValidObjectId);
-        setSelectedAttributeGroups(validIds);
+        const sub = subCategoryData?.data ?? subCategoryData;
+
+        setName(sub.name ?? "");
+        setDescription(sub.description ?? "");
+        setThumbnail(sub.thumbnail ?? "");
+
+        setCategory(sub.category?._id ?? sub.category ?? "");
+
+        const attrIds = (sub.attributeGroups ?? []).map((ag: any) =>
+          typeof ag === "object" ? ag._id ?? ag.id : ag
+        );
+        setSelectedAttributeGroups(attrIds.filter(isValidObjectId));
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error occurred");
       } finally {
@@ -99,7 +112,6 @@ const EditSubCategory = () => {
         setError("File size should not exceed 60KB.");
         return;
       }
-
       const reader = new FileReader();
       reader.onloadend = () => {
         setThumbnail(reader.result as string);

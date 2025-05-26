@@ -138,7 +138,7 @@ const DesignPayments = () => {
       flex: 1,
       renderCell: (params) => (
         <Typography variant="body2" sx={{ color: theme.palette.primary.main }}>
-          <a href={`/admin/payment-orders/${params.row._id}`}>
+          <a href={`/admin/design-payments/${params.row._id}`}>
             {params.row._id}
           </a>
         </Typography>

@@ -19,7 +19,7 @@ import { useRouter } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 // Roles in lowercase for backend compatibility
-const roles = ["admin", "user"];
+const roles = ["admin", "merchant", "customer", "kisok"];
 
 // Define the type of your form state
 interface FormDataType {

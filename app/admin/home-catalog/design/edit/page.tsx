@@ -115,23 +115,27 @@ const EditDesignType = () => {
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
-  const fileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === "string") {
-          resolve({
-            fullUrl: reader.result,
-            base64: reader.result.split(",")[1],
-          });
-        } else reject("Failed to convert file");
-      };
-      reader.onerror = (err) => reject(err);
-      reader.readAsDataURL(file);
-    });
-  };
+ type FileBase64Result = {
+  fullUrl: string;
+  base64: string;
+};
 
-  const handleFileChange = async (e) => {
+const fileToBase64 = (file: File): Promise<FileBase64Result> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      resolve({
+        fullUrl: URL.createObjectURL(file),
+        base64,
+      });
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
+  const handleFileChange = async (e:any) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -312,18 +316,17 @@ const EditDesignType = () => {
               accept=".jpg,.jpeg,.png"
             />
           </Button>
-          <Typography variant="body2" sx={{ color: "#666" }}>
+          {/* <Typography variant="body2" sx={{ color: "#666" }}>
             {formData.thumbnail?.name ||
               (formData.thumbnailPreview
                 ? "Using existing image"
                 : "No file selected")}
-          </Typography>
+          </Typography> */}
 
           {formData.thumbnailPreview && (
             <Button
               variant="text"
               color="error"
-              onClick={handleRemoveImage}
               size="small"
             >
               Remove

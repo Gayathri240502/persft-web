@@ -20,7 +20,6 @@ import {
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
-  UploadFile as UploadFileIcon,
 } from "@mui/icons-material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
@@ -30,6 +29,14 @@ import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 const AddProduct = () => {
   const router = useRouter();
   const { token } = getTokenAndRole();
+
+  type Attribute = {
+  id: string;
+  name: string;
+  value: string;
+  type: string;
+  // Add any other properties if needed
+};
 
   // Form state
   const [product, setProduct] = useState({
@@ -49,8 +56,7 @@ const AddProduct = () => {
   });
 
   // File upload state
-  const [selectedFileName, setSelectedFileName] =
-    useState<string>("No file selected");
+ 
 
   // Dropdown data
   const [categories, setCategories] = useState([]);
@@ -58,7 +64,7 @@ const AddProduct = () => {
   const [workGroups, setWorkGroups] = useState([]);
   const [workTasks, setWorkTasks] = useState([]);
   const [attributeGroups, setAttributeGroups] = useState([]); // Raw API response
-  const [flattenedAttributes, setFlattenedAttributes] = useState([]); // Flattened attributes for display
+ const [flattenedAttributes, setFlattenedAttributes] = useState<Attribute[]>([]); // Flattened attributes for display
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -638,7 +644,7 @@ const AddProduct = () => {
                   color="text.secondary"
                   sx={{ fontStyle: "italic" }}
                 >
-                  No attributes added yet. Click "Add Attribute" to get started.
+                  No attributes added yet. Click Add Attribute to get started.
                 </Typography>
               </Box>
             ) : (
@@ -730,7 +736,7 @@ const AddProduct = () => {
                   (a: any) => a.id === attr.attribute
                 );
                 const attributeName = attributeInfo?.name || "Unknown";
-                const attributeType = attributeInfo?.type || "";
+                const attributeType = attributeInfo?.type || "Unknown";
                 return (
                   <Chip
                     key={index}

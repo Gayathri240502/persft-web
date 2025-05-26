@@ -1,53 +1,38 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
   TextField,
+  Button,
   Grid,
-  Divider,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  SelectChangeEvent,
-  CircularProgress,
+  Chip,
   Alert,
-  Button,
+  CircularProgress,
+  Card,
+  CardContent,
 } from "@mui/material";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import ReusableButton from "@/app/components/Button"; // Assuming this path is correct
-import CancelButton from "@/app/components/CancelButton"; // Assuming this path is correct
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession"; // Assuming this path is correct
+import {
+  Add as AddIcon,
+  Delete as DeleteIcon,
+  UploadFile as UploadFileIcon,
+} from "@mui/icons-material";
+import ReusableButton from "@/app/components/Button";
+import CancelButton from "@/app/components/CancelButton";
 import { useRouter } from "next/navigation";
-import DeleteIcon from "@mui/icons-material/Delete";
-import IconButton from "@mui/material/IconButton";
+import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
-interface Category {
-  _id: string;
-  name: string;
-}
-interface SubCategory {
-  _id: string;
-  name: string;
-}
-interface WorkGroup {
-  _id: string;
-  name: string;
-}
-interface WorkTask {
-  _id: string;
-  name: string;
-}
-interface Attribute {
-  _id: string;
-  name: string;
-}
-
-export default function AddProduct() {
+const AddProduct = () => {
   const router = useRouter();
-  const [form, setForm] = useState({
+  const { token } = getTokenAndRole();
+
+  // Form state
+  const [product, setProduct] = useState({
     name: "",
     sku: "",
     price: "",
@@ -60,350 +45,275 @@ export default function AddProduct() {
     subCategory: "",
     workGroup: "",
     workTask: "",
-    attributeValues: [
-      {
-        attribute: "",
-        value: "",
-      },
-    ],
+    attributeValues: [] as { attribute: string; value: string }[],
   });
 
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
-  const [workGroups, setWorkGroups] = useState<WorkGroup[]>([]);
-  const [workTasks, setWorkTasks] = useState<WorkTask[]>([]);
-  const [attributes, setAttributes] = useState<Attribute[]>([]);
+  // File upload state
+  const [selectedFileName, setSelectedFileName] = useState<string>("No file selected");
 
-  const [loadingCategories, setLoadingCategories] = useState(false);
-  const [loadingSubCategories, setLoadingSubCategories] = useState(false);
-  const [loadingWorkGroups, setLoadingWorkGroups] = useState(false);
-  const [loadingWorkTasks, setLoadingWorkTasks] = useState(false);
-  const [loadingAttributes, setLoadingAttributes] = useState(false);
+  // Dropdown data
+  const [categories, setCategories] = useState([]);
+  const [subCategories, setSubCategories] = useState([]);
+  const [workGroups, setWorkGroups] = useState([]);
+  const [workTasks, setWorkTasks] = useState([]);
+  const [attributes, setAttributes] = useState([]); // This will hold the definitions of attributes (e.g., { _id: '...', name: 'weight' })
 
-  const [thumbnail, setThumbnail] = useState<string>("");
-  const [selectedFileName, setSelectedFileName] =
-    useState<string>("No file selected");
+  // UI state
+  const [loading, setLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  // API call helper
+  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          ...options.headers,
+        },
+        ...options,
+      });
 
-  const { token } = getTokenAndRole();
-
-  // Fetch initial dropdown data
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        setLoadingCategories(true);
-        setLoadingWorkGroups(true);
-
-        const [categoriesRes, workGroupsRes] = await Promise.all([
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/categories`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          ),
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/work-groups`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          ),
-        ]);
-
-        const categoriesData = await categoriesRes.json();
-        const workGroupsData = await workGroupsRes.json();
-
-        setCategories(categoriesData.categories || categoriesData || []);
-        setWorkGroups(workGroupsData.workGroups || workGroupsData || []);
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch initial data.");
-      } finally {
-        setLoadingCategories(false);
-        setLoadingWorkGroups(false);
+      if (!response.ok) {
+        // Attempt to parse JSON error message if available
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
-    };
 
-    fetchInitialData();
-  }, [token]);
-
-  // Fetch subcategories when category changes
-  useEffect(() => {
-    if (!form.category) {
-      setSubCategories([]);
-      return;
+      return await response.json();
+    } catch (error) {
+      console.error("API call failed:", error);
+      throw error;
     }
-
-    const fetchSubCategories = async () => {
-      try {
-        setLoadingSubCategories(true);
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/subcategories/${form.category}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const data = await res.json();
-        setSubCategories(data.subCategories || data || []);
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch subcategories.");
-      } finally {
-        setLoadingSubCategories(false);
-      }
-    };
-
-    fetchSubCategories();
-  }, [form.category, token]);
-
-  // Fetch work tasks when work group changes
-  useEffect(() => {
-    if (!form.workGroup) {
-      setWorkTasks([]);
-      return;
-    }
-
-    const fetchWorkTasks = async () => {
-      try {
-        setLoadingWorkTasks(true);
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/work-tasks/${form.workGroup}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const data = await res.json();
-        setWorkTasks(data.workTasks || data || []);
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch work tasks.");
-      } finally {
-        setLoadingWorkTasks(false);
-      }
-    };
-
-    fetchWorkTasks();
-  }, [form.workGroup, token]);
-
-  // Fetch attributes when subcategory changes
-  useEffect(() => {
-    if (!form.subCategory) {
-      setAttributes([]);
-      return;
-    }
-
-    const fetchAttributes = async () => {
-      try {
-        setLoadingAttributes(true);
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/products/attributes/${form.subCategory}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const data = await res.json();
-        setAttributes(data.attributes || data || []);
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch attributes.");
-      } finally {
-        setLoadingAttributes(false);
-      }
-    };
-
-    fetchAttributes();
-  }, [form.subCategory, token]);
-
-  const handleChange = (field: keyof typeof form, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleThumbnailChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  // Load initial data
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  const loadInitialData = async () => {
+    setLoading(true);
+    try {
+      const [categoriesData, workGroupsData] = await Promise.all([
+        apiCall("/products/dropdowns/categories"),
+        apiCall("/products/dropdowns/work-groups"),
+      ]);
+
+      setCategories(categoriesData);
+      setWorkGroups(workGroupsData);
+    } catch (err: any) {
+      setError(err.message || "Failed to load initial data");
+    }
+    setLoading(false);
+  };
+
+  // Load subcategories when category changes
+  useEffect(() => {
+    if (product.category) {
+      loadSubCategories(product.category);
+    } else {
+      setSubCategories([]);
+      setProduct((prev) => ({ ...prev, subCategory: "", attributeValues: [] }));
+    }
+  }, [product.category]);
+
+  // Load work tasks when work group changes
+  useEffect(() => {
+    if (product.workGroup) {
+      loadWorkTasks(product.workGroup);
+    } else {
+      setWorkTasks([]);
+      setProduct((prev) => ({ ...prev, workTask: "" }));
+    }
+  }, [product.workGroup]);
+
+  // Load attributes when subcategory changes
+  useEffect(() => {
+    if (product.subCategory) {
+      loadAttributes(product.subCategory);
+    } else {
+      setAttributes([]);
+      setProduct((prev) => ({ ...prev, attributeValues: [] }));
+    }
+  }, [product.subCategory]);
+
+  const loadSubCategories = async (categoryId: string) => {
+    try {
+      const data = await apiCall(`/products/dropdowns/subcategories/${categoryId}`);
+      setSubCategories(data);
+    } catch (err: any) {
+      setError(err.message || "Failed to load subcategories");
+    }
+  };
+
+  const loadWorkTasks = async (workGroupId: string) => {
+    try {
+      const data = await apiCall(`/products/dropdowns/work-tasks/${workGroupId}`);
+      setWorkTasks(data);
+    } catch (err: any) {
+      setError(err.message || "Failed to load work tasks");
+    }
+  };
+
+  const loadAttributes = async (subCategoryId: string) => {
+    try {
+      const data = await apiCall(`/products/attributes/${subCategoryId}`);
+      setAttributes(data);
+      // Reset attribute values when attributes change to ensure consistency
+      setProduct((prev) => ({ ...prev, attributeValues: [] }));
+    } catch (err: any) {
+      setError(err.message || "Failed to load attributes");
+    }
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setProduct((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleThumbnailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFileName(file.name);
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
-        setThumbnail(base64String);
-        setForm((prev) => ({ ...prev, thumbnail: base64String }));
+        setProduct((prev) => ({ ...prev, thumbnail: base64String }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleAttributeChange = (
-    index: number,
-    field: "attribute" | "value",
-    value: string
-  ) => {
-    const newAttributeValues = [...form.attributeValues];
-    newAttributeValues[index] = {
-      ...newAttributeValues[index],
-      [field]: value,
-    };
-    setForm((prev) => ({ ...prev, attributeValues: newAttributeValues }));
+  const addNewAttributeEntry = () => {
+    setProduct((prev) => ({
+      ...prev,
+      attributeValues: [...prev.attributeValues, { attribute: "", value: "" }],
+    }));
   };
 
-  const handleSelectChange = (
-    field: keyof typeof form,
-    event: SelectChangeEvent<string>
-  ) => {
-    const value = event.target.value;
-    
-    setForm(prev => {
-      // Handle reset logic for dependent fields
-      if (field === "category") {
-        return {
-          ...prev,
-          category: value,
-          subCategory: "", // Reset dependent field
-          attributeValues: [{ attribute: "", value: "" }], // Reset attributes
-        };
-      } else if (field === "workGroup") {
-        return {
-          ...prev,
-          workGroup: value,
-          workTask: "", // Reset dependent field
-        };
-      } else if (field === "subCategory") {
-        return {
-          ...prev,
-          subCategory: value,
-          attributeValues: [{ attribute: "", value: "" }], // Reset attributes
-        };
-      } else {
-        return {
-          ...prev,
-          [field]: value,
-        };
-      }
+  const removeAttributeEntry = (index: number) => {
+    setProduct((prev) => ({
+      ...prev,
+      attributeValues: prev.attributeValues.filter((_, i) => i !== index),
+    }));
+  };
+
+  const updateAttributeEntry = (index: number, field: "attribute" | "value", newValue: string) => {
+    setProduct((prev) => {
+      const newAttributeValues = [...prev.attributeValues];
+      newAttributeValues[index] = {
+        ...newAttributeValues[index],
+        [field]: newValue,
+      };
+      return { ...prev, attributeValues: newAttributeValues };
     });
   };
 
-  const renderSelect = (
-    label: string,
-    value: string,
-    field: keyof typeof form,
-    options: { _id: string; name: string }[],
-    loading: boolean,
-    disabled = false,
-    onChange?: (
-      field: keyof typeof form,
-      event: SelectChangeEvent<string>
-    ) => void
-  ) => (
-    <FormControl fullWidth>
-      <InputLabel>{label}</InputLabel>
-      <Select
-        value={value}
-        onChange={(e) =>
-          onChange ? onChange(field, e) : handleChange(field, e.target.value)
-        }
-        label={label}
-        disabled={disabled || loading}
-      >
-        {loading ? (
-          <MenuItem disabled key={`${label}-loading`}>
-            <CircularProgress size={20} />
-          </MenuItem>
-        ) : options.length > 0 ? (
-          options.map((opt, index) => (
-            <MenuItem
-              key={`${label}-${opt._id || `fallback-${index}`}`}
-              value={opt._id || ""}
-            >
-              {opt.name || "Unknown"}
-            </MenuItem>
-          ))
-        ) : (
-          <MenuItem disabled>
-            {label === "SubCategory" && !form.category ? "Select a category first" : 
-             label === "Work Task" && !form.workGroup ? "Select a work group first" :
-             label === "Attribute" && !form.subCategory ? "Select a subcategory first" :
-             `No ${label.toLowerCase()}s found`}
-          </MenuItem>
-        )}
-      </Select>
-    </FormControl>
-  );
-
-  const handleSubmit = async () => {
-    setError("");
-    setSuccess("");
-
-    // Validation
-    if (
-      !form.name ||
-      !form.sku ||
-      !form.price ||
-      !form.brand ||
-      !form.modelName ||
-      !form.coohomId ||
-      !form.description ||
-      !form.category ||
-      !form.subCategory ||
-      !form.workGroup ||
-      !form.workTask ||
-      !form.attributeValues[0]?.attribute ||
-      !form.attributeValues[0]?.value
-    ) {
-      setError("Please fill all required fields.");
-      return;
+  const validateForm = () => {
+    if (!product.name) {
+      setError("Product name is required");
+      return false;
+    }
+    if (!product.sku) {
+      setError("SKU is required");
+      return false;
+    }
+    if (!product.price) {
+      setError("Price is required");
+      return false;
+    }
+    if (!product.brand) {
+      setError("Brand is required");
+      return false;
+    }
+    if (!product.category) {
+      setError("Category is required");
+      return false;
+    }
+    if (!product.subCategory) {
+      setError("Subcategory is required");
+      return false;
     }
 
+    if (isNaN(parseFloat(product.price)) || parseFloat(product.price) <= 0) {
+      setError("Please enter a valid price greater than 0");
+      return false;
+    }
+
+    // Validate attributes
+    // Assuming all attributes fetched for the selected subcategory are required
+    for (const attribute of attributes) {
+      const attributeId = (attribute as any)._id || (attribute as any).id;
+      const attributeName = (attribute as any).name;
+
+      // Check if this attribute has a non-empty value in product.attributeValues
+      const hasValue = product.attributeValues.some(
+        (av) => (av.attribute === attributeId) && av.value.trim() !== ""
+      );
+
+      if (!hasValue) {
+        setError(`Missing value for required attribute: ${attributeName}`);
+        return false;
+      }
+    }
+
+    setError(null);
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) return;
+
+    setSubmitLoading(true);
+
     try {
-      const body = {
-        name: form.name,
-        sku: form.sku,
-        price: parseFloat(form.price),
-        brand: form.brand,
-        modelName: form.modelName,
-        coohomId: form.coohomId,
-        description: form.description,
-        thumbnail: thumbnail || "string",
-        category: form.category,
-        subCategory: form.subCategory,
-        workGroup: form.workGroup,
-        workTask: form.workTask,
-        attributeValues: form.attributeValues.map((av) => ({
-          attribute: av.attribute,
-          value: av.value,
-        })),
+      const productData = {
+        ...product,
+        price: parseFloat(product.price),
       };
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`, {
+      const body = JSON.stringify(productData);
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(body),
+        body,
       });
 
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(errorText || "Failed to add product");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
+        throw new Error(errorData.message || "Failed to create product");
       }
 
-      setSuccess("Product added successfully!");
-      setTimeout(() => {
-        router.push("/admin/product-catalog/products");
-      }, 1500);
+      router.push("/admin/products");
     } catch (err: any) {
-      setError(err.message || "Something went wrong while adding the product.");
+      setError(err.message || "An unexpected error occurred");
+    } finally {
+      setSubmitLoading(false);
     }
   };
 
-  // Define field array with unique keys
-  const textFields = [
-    { id: "name", label: "Name", type: "text", multiline: false },
-    { id: "sku", label: "SKU", type: "text", multiline: false },
-    { id: "price", label: "Price", type: "number", multiline: false },
-    { id: "brand", label: "Brand", type: "text", multiline: false },
-    { id: "modelName", label: "Model Name", type: "text", multiline: false },
-    { id: "coohomId", label: "Coohom ID", type: "text", multiline: false },
-    { id: "description", label: "Description", type: "text", multiline: false },
-    
-  ];
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
 
   return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-        Add New Product
+    <Box sx={{ p: 3 }} component="form" onSubmit={handleSubmit}>
+      <Typography variant="h5" sx={{ mb: 2 }}>
+        Add Product
       </Typography>
 
       {error && (
@@ -411,199 +321,325 @@ export default function AddProduct() {
           {error}
         </Alert>
       )}
-      {success && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          {success}
-        </Alert>
-      )}
 
-      <Grid container spacing={2}>
-        {textFields.map((field) => (
-          <Grid item xs={12} sm={6} key={field.id}>
-            <TextField
-              fullWidth
-              label={field.label}
-              value={form[field.id as keyof typeof form]}
-              onChange={(e) =>
-                handleChange(field.id as keyof typeof form, e.target.value)
-              }
-              type={field.type}
-              multiline={field.multiline}
-              rows={field.multiline ? 4 : 1}
-            />
+      {/* Basic Information */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom color="primary">
+            Basic Information
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Product Name *"
+                fullWidth
+                value={product.name}
+                onChange={(e) => handleInputChange("name", e.target.value)}
+                sx={{ mb: 2 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="SKU *"
+                fullWidth
+                value={product.sku}
+                onChange={(e) => handleInputChange("sku", e.target.value)}
+                sx={{ mb: 2 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                label="Price *"
+                type="number"
+                fullWidth
+                value={product.price}
+                onChange={(e) => handleInputChange("price", e.target.value)}
+                inputProps={{ min: 0, step: 0.01 }}
+                sx={{ mb: 2 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                label="Brand *"
+                fullWidth
+                value={product.brand}
+                onChange={(e) => handleInputChange("brand", e.target.value)}
+                sx={{ mb: 2 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                label="Model Name"
+                fullWidth
+                value={product.modelName}
+                onChange={(e) => handleInputChange("modelName", e.target.value)}
+                sx={{ mb: 2 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Coohom ID"
+                fullWidth
+                value={product.coohomId}
+                onChange={(e) => handleInputChange("coohomId", e.target.value)}
+                sx={{ mb: 2 }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Description"
+                multiline
+                rows={3}
+                fullWidth
+                value={product.description}
+                onChange={(e) => handleInputChange("description", e.target.value)}
+                sx={{ mb: 2 }}
+              />
+            </Grid>
           </Grid>
-        ))}
-      </Grid>
+        </CardContent>
+      </Card>
 
-      <Divider sx={{ my: 4 }} />
-
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
-          {renderSelect(
-            "Category",
-            form.category,
-            "category",
-            categories,
-            loadingCategories,
-            false,
-            handleSelectChange
-          )}
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          {renderSelect(
-            "SubCategory",
-            form.subCategory,
-            "subCategory",
-            subCategories,
-            loadingSubCategories,
-            !form.category,
-            handleSelectChange
-          )}
-          
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          {renderSelect(
-            "Work Group",
-            form.workGroup,
-            "workGroup",
-            workGroups,
-            loadingWorkGroups,
-            false,
-            handleSelectChange
-          )}
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          {renderSelect(
-            "Work Task",
-            form.workTask,
-            "workTask",
-            workTasks,
-            loadingWorkTasks,
-            !form.workGroup,
-            handleSelectChange
-          )}
-        </Grid>
-      </Grid>
-
-      <Divider sx={{ my: 4 }} />
-
-      {form.attributeValues.map((attr, index) => (
-        <Grid
-          container
-          spacing={2}
-          key={`attribute-${index}`}
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{ mb: 1 }}
-        >
-          <Grid item xs={12} sm={5}>
-            {renderSelect(
-              "Attribute",
-              attr.attribute,
-              "attributeValues",
-              attributes,
-              loadingAttributes,
-              !form.subCategory,
-              (_, e) =>
-                handleAttributeChange(index, "attribute", e.target.value)
+      {/* Thumbnail Upload */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom color="primary">
+            Product Image
+          </Typography>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Button
+                variant="outlined"
+                component="label"
+                startIcon={<UploadFileIcon />}
+                sx={{
+                  color: "#05344c",
+                  borderColor: "#05344c",
+                  "&:hover": { backgroundColor: "#f0f4f8" },
+                }}
+              >
+                Upload Thumbnail
+                <input type="file" hidden onChange={handleThumbnailChange} accept="image/*" />
+              </Button>
+              <Typography variant="body2" sx={{ color: "#666" }}>
+                {selectedFileName}
+              </Typography>
+            </Box>
+            <Typography variant="caption" sx={{ color: "#999" }}>
+              Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+            </Typography>
+            {product.thumbnail && (
+              <Box>
+                <Typography variant="subtitle2">Preview:</Typography>
+                <img
+                  src={product.thumbnail}
+                  alt="Thumbnail Preview"
+                  style={{ width: 200, borderRadius: 8 }}
+                />
+              </Box>
             )}
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* Categories and Classification */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom color="primary">
+            Categories & Classification
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Category *</InputLabel>
+                <Select
+                  value={product.category}
+                  label="Category *"
+                  onChange={(e) => handleInputChange("category", e.target.value)}
+                >
+                  {categories.map((category: any) => (
+                    <MenuItem key={category._id || category.id} value={category._id || category.id}>
+                      {category.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth disabled={!product.category} sx={{ mb: 2 }}>
+                <InputLabel>Subcategory *</InputLabel>
+                <Select
+                  value={product.subCategory}
+                  label="Subcategory *"
+                  onChange={(e) => handleInputChange("subCategory", e.target.value)}
+                >
+                  {subCategories.map((subCategory: any) => (
+                    <MenuItem key={subCategory._id || subCategory.id} value={subCategory._id || subCategory.id}>
+                      {subCategory.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Work Group</InputLabel>
+                <Select
+                  value={product.workGroup}
+                  label="Work Group"
+                  onChange={(e) => handleInputChange("workGroup", e.target.value)}
+                >
+                  {workGroups.map((workGroup: any) => (
+                    <MenuItem key={workGroup._id || workGroup.id} value={workGroup._id || workGroup.id}>
+                      {workGroup.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth disabled={!product.workGroup} sx={{ mb: 2 }}>
+                <InputLabel>Work Task</InputLabel>
+                <Select
+                  value={product.workTask}
+                  label="Work Task"
+                  onChange={(e) => handleInputChange("workTask", e.target.value)}
+                >
+                  {workTasks.map((workTask: any) => (
+                    <MenuItem key={workTask._id || workTask.id} value={workTask._id || workTask.id}>
+                      {workTask.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
           </Grid>
+        </CardContent>
+      </Card>
 
-          <Grid item xs={12} sm={5}>
-            <TextField
-              fullWidth
-              label="Attribute Value"
-              value={attr.value}
-              onChange={(e) =>
-                handleAttributeChange(index, "value", e.target.value)
-              }
-              disabled={!attr.attribute}
-            />
-          </Grid>
+      {/* Attributes */}
+      {attributes.length > 0 && (
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+              <Typography variant="h6" color="primary">
+                Product Attributes
+              </Typography>
+              <Button
+                variant="outlined"
+                startIcon={<AddIcon />}
+                onClick={addNewAttributeEntry}
+                size="small"
+              >
+                Add Attribute
+              </Button>
+            </Box>
 
-          <Grid item xs={12} sm={2}>
-            <IconButton
-              onClick={() => {
-                const newAttrs = [...form.attributeValues];
-                newAttrs.splice(index, 1);
-                setForm((prev) => ({ ...prev, attributeValues: newAttrs }));
-              }}
-              disabled={form.attributeValues.length === 1}
-              color="error"
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Grid>
-        </Grid>
-      ))}
-
-      <Button
-        onClick={() =>
-          setForm((prev) => ({
-            ...prev,
-            attributeValues: [
-              ...prev.attributeValues,
-              { attribute: "", value: "" },
-            ],
-          }))
-        }
-        variant="outlined"
-        sx={{ mt: 2 }}
-      >
-        Add Attribute
-      </Button>
-
-      <Divider sx={{ my: 4 }} />
-
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-        <Button
-          variant="outlined"
-          component="label"
-          startIcon={<UploadFileIcon />}
-          sx={{
-            color: "#05344c",
-            borderColor: "#05344c",
-            "&:hover": { backgroundColor: "#f0f4f8" },
-          }}
-        >
-          Upload Thumbnail
-          <input
-            type="file"
-            hidden
-            onChange={handleThumbnailChange}
-            accept="image/jpeg,image/png"
-          />
-        </Button>
-        <Typography variant="body2" sx={{ color: "#666" }}>
-          {selectedFileName}
-        </Typography>
-      </Box>
-
-      <Typography variant="caption" sx={{ color: "#999" }}>
-        Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
-      </Typography>
-      {thumbnail && (
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2">Preview:</Typography>
-          <img
-            src={thumbnail}
-            alt="Thumbnail Preview"
-            style={{ width: 200, borderRadius: 8 }}
-          />
-        </Box>
+            {product.attributeValues.length === 0 ? (
+              <Box sx={{ textAlign: "center", py: 3 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic" }}>
+                  No attributes added yet. Click "Add Attribute" to get started.
+                </Typography>
+              </Box>
+            ) : (
+              <Grid container spacing={2}>
+                {product.attributeValues.map((attr: any, index: number) => (
+                  <Grid item xs={12} key={index}>
+                    <Box
+                      sx={{
+                        p: 2,
+                        border: "1px solid #e0e0e0",
+                        borderRadius: 2,
+                        backgroundColor: "#fafafa",
+                      }}
+                    >
+                      <Grid container spacing={2} sx={{ alignItems: "center" }}>
+                        <Grid item xs={12} md={4}>
+                          <FormControl fullWidth>
+                            <InputLabel>Select Attribute</InputLabel>
+                            <Select
+                              value={attr.attribute}
+                              label="Select Attribute"
+                              onChange={(e) => updateAttributeEntry(index, "attribute", e.target.value)}
+                            >
+                              {attributes.map((attribute: any) => (
+                                <MenuItem
+                                  key={attribute._id || attribute.id}
+                                  value={attribute._id || attribute.id}
+                                >
+                                  {attribute.name}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <TextField
+                            fullWidth
+                            label="Attribute Value"
+                            value={attr.value}
+                            onChange={(e) => updateAttributeEntry(index, "value", e.target.value)}
+                            placeholder="Enter attribute value"
+                            variant="outlined"
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={2}>
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={() => removeAttributeEntry(index)}
+                            startIcon={<DeleteIcon />}
+                            fullWidth
+                            size="small"
+                          >
+                            Remove
+                          </Button>
+                        </Grid>
+                      </Grid>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+            )}
+          </CardContent>
+        </Card>
       )}
 
-      <Divider sx={{ my: 4 }} />
+      {/* Current Attribute Values Display */}
+      {product.attributeValues.length > 0 && (
+        <Card sx={{ mb: 3, bgcolor: "grey.50" }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Attribute Summary
+            </Typography>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+              {product.attributeValues.map((attr: any, index: number) => {
+                const attributeName =
+                  attributes.find((a: any) => (a._id || a.id) === attr.attribute)?.name || "Unknown";
+                return (
+                  <Chip
+                    key={index}
+                    label={`${attributeName}: ${attr.value}`}
+                    variant="filled"
+                    color="primary"
+                    size="medium"
+                  />
+                );
+              })}
+            </Box>
+          </CardContent>
+        </Card>
+      )}
 
+      {/* Action Buttons */}
       <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton onClick={handleSubmit}>Submit</ReusableButton>
-        <CancelButton href="/admin/product-catalog/products">
-          Cancel
-        </CancelButton>
+        <ReusableButton type="submit" disabled={submitLoading}>
+          {submitLoading ? <CircularProgress size={24} /> : "Submit"}
+        </ReusableButton>
+        <CancelButton href="/admin/products">Cancel</CancelButton>
       </Box>
     </Box>
   );
-}
+};
+
+export default AddProduct;

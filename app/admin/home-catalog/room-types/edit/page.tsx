@@ -281,7 +281,7 @@ const EditRoomType = () => {
                   key={res._id}
                   control={
                     <Checkbox
-                      checked={selectedResidences.includes(res._id)}
+                      // checked={selectedResidences.includes(res._id)}
                       onChange={() => toggleResidenceSelection(res._id)}
                     />
                   }

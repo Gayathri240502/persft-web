@@ -371,106 +371,118 @@ const CreateProject = () => {
       )}
 
       <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
-        Selections
-      </Typography>
+  Selections
+</Typography>
 
-      {selectionOptions.map((residence) => (
-        <Box
-          key={residence.id}
-          sx={{ mb: 2, border: "1px solid #ccc", p: 2, borderRadius: 2 }}
-        >
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={isSelected.residence(residence.id)}
-                onChange={() => handleResidenceSelection(residence.id)}
-              />
-            }
-            label={residence.name}
-          />
+<Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'bold' }}>
+  Select Residence Types
+</Typography>
 
-          {isSelected.residence(residence.id) && (
-            <Box sx={{ ml: 3 }}>
-              {residence.roomTypes?.map((room) => (
-                <Box key={room.id} sx={{ mb: 1 }}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={isSelected.room(residence.id, room.id)}
-                        onChange={() =>
-                          handleRoomSelection(residence.id, room.id)
-                        }
-                      />
-                    }
-                    label={room.name}
-                  />
+{selectionOptions.map((residence) => (
+  <Box
+    key={residence.id}
+    sx={{ mb: 2, border: "1px solid #ccc", p: 2, borderRadius: 2 }}
+  >
+    <FormControlLabel
+      control={
+        <Checkbox
+          checked={isSelected.residence(residence.id)}
+          onChange={() => handleResidenceSelection(residence.id)}
+        />
+      }
+      label={residence.name}
+    />
 
-                  {isSelected.room(residence.id, room.id) && (
-                    <Box sx={{ ml: 3 }}>
-                      {room.themes?.map((theme) => (
-                        <Box key={theme.id}>
+    {isSelected.residence(residence.id) && (
+      <Box sx={{ ml: 3 }}>
+        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+          Select Room Types
+        </Typography>
+
+        {residence.roomTypes?.map((room) => (
+          <Box key={room.id} sx={{ mb: 1 }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={isSelected.room(residence.id, room.id)}
+                  onChange={() =>
+                    handleRoomSelection(residence.id, room.id)
+                  }
+                />
+              }
+              label={room.name}
+            />
+
+            {isSelected.room(residence.id, room.id) && (
+              <Box sx={{ ml: 3 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                  Select Themes
+                </Typography>
+
+                {room.themes?.map((theme) => (
+                  <Box key={theme.id}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={isSelected.theme(
+                            residence.id,
+                            room.id,
+                            theme.id
+                          )}
+                          onChange={() =>
+                            handleThemeSelection(
+                              residence.id,
+                              room.id,
+                              theme.id
+                            )
+                          }
+                        />
+                      }
+                      label={theme.name}
+                    />
+
+                    {isSelected.theme(residence.id, room.id, theme.id) && (
+                      <Box sx={{ ml: 3 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                          Select Designs
+                        </Typography>
+
+                        {theme.designs?.map((design) => (
                           <FormControlLabel
+                            key={design.id}
                             control={
                               <Checkbox
-                                checked={isSelected.theme(
+                                checked={isSelected.design(
                                   residence.id,
                                   room.id,
-                                  theme.id
+                                  theme.id,
+                                  design.id
                                 )}
                                 onChange={() =>
-                                  handleThemeSelection(
+                                  handleDesignSelection(
                                     residence.id,
                                     room.id,
-                                    theme.id
+                                    theme.id,
+                                    design.id
                                   )
                                 }
                               />
                             }
-                            label={theme.name}
+                            label={design.name}
                           />
-
-                          {isSelected.theme(
-                            residence.id,
-                            room.id,
-                            theme.id
-                          ) && (
-                            <Box sx={{ ml: 3 }}>
-                              {theme.designs?.map((design) => (
-                                <FormControlLabel
-                                  key={design.id}
-                                  control={
-                                    <Checkbox
-                                      checked={isSelected.design(
-                                        residence.id,
-                                        room.id,
-                                        theme.id,
-                                        design.id
-                                      )}
-                                      onChange={() =>
-                                        handleDesignSelection(
-                                          residence.id,
-                                          room.id,
-                                          theme.id,
-                                          design.id
-                                        )
-                                      }
-                                    />
-                                  }
-                                  label={design.name}
-                                />
-                              ))}
-                            </Box>
-                          )}
-                        </Box>
-                      ))}
-                    </Box>
-                  )}
-                </Box>
-              ))}
-            </Box>
-          )}
-        </Box>
-      ))}
+                        ))}
+                      </Box>
+                    )}
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </Box>
+        ))}
+      </Box>
+    )}
+  </Box>
+))}
 
       {errors.selections && (
         <Typography color="error">{errors.selections}</Typography>

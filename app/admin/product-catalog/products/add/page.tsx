@@ -17,9 +17,9 @@ import {
   Button,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
-import ReusableButton from "@/app/components/Button";
-import CancelButton from "@/app/components/CancelButton";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import ReusableButton from "@/app/components/Button"; // Assuming this path is correct
+import CancelButton from "@/app/components/CancelButton"; // Assuming this path is correct
+import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession"; // Assuming this path is correct
 import { useRouter } from "next/navigation";
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
@@ -94,7 +94,7 @@ export default function AddProduct() {
       try {
         setLoadingCategories(true);
         setLoadingWorkGroups(true);
-        
+
         const [categoriesRes, workGroupsRes] = await Promise.all([
           fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/categories`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -228,7 +228,7 @@ export default function AddProduct() {
 
   const handleSelectChange = (field: keyof typeof form, event: SelectChangeEvent<string>) => {
     const value = event.target.value;
-    
+
     setForm(prev => {
       // Handle reset logic for dependent fields
       if (field === "category") {
@@ -288,10 +288,10 @@ export default function AddProduct() {
           ))
         ) : (
           <MenuItem disabled>
-            {label === "SubCategory" && !form.category ? "Select a category first" : 
-             label === "Work Task" && !form.workGroup ? "Select a work group first" :
-             label === "Attribute" && !form.subCategory ? "Select a subcategory first" :
-             `No ${label.toLowerCase()}s found`}
+            {label === "SubCategory" && !form.category ? "Select a category first" :
+              label === "Work Task" && !form.workGroup ? "Select a work group first" :
+              label === "Attribute" && !form.subCategory ? "Select a subcategory first" :
+              `No ${label.toLowerCase()}s found`}
           </MenuItem>
         )}
       </Select>
@@ -374,7 +374,7 @@ export default function AddProduct() {
     { id: "modelName", label: "Model Name", type: "text", multiline: false },
     { id: "coohomId", label: "Coohom ID", type: "text", multiline: false },
     { id: "description", label: "Description", type: "text", multiline: false },
-    
+
   ];
 
   return (
@@ -426,7 +426,7 @@ export default function AddProduct() {
             !form.category,
             handleSelectChange
           )}
-          
+
         </Grid>
 
         <Grid item xs={12} sm={6}>
@@ -451,7 +451,7 @@ export default function AddProduct() {
             !form.workGroup,
             handleSelectChange
           )}
-        </Grid>   
+        </Grid>
       </Grid>
 
       <Divider sx={{ my: 4 }} />

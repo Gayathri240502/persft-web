@@ -11,11 +11,12 @@ import {
   Alert,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
-import ReusableButton from "@/app/components/Button";
-import CancelButton from "@/app/components/CancelButton";
+import ReusableButton from "@/app/components/Button"; // Assuming these are your custom components
+import CancelButton from "@/app/components/CancelButton"; // Assuming these are your custom components
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { useSearchParams, useRouter } from "next/navigation";
 
+// Interface for selection options fetched from the API (hierarchy)
 interface SelectionOption {
   id: string;
   name: string;
@@ -33,6 +34,7 @@ interface SelectionOption {
   }[];
 }
 
+// Interface for the form data state
 interface FormData {
   name: string;
   description: string;
@@ -44,26 +46,26 @@ interface FormData {
     roomType: string;
     theme: string;
     design: string;
-    originalId?: string;
+    originalId?: string; // To store the _id of the existing selection if it came from the API
   }[];
 }
 
-// Define the interface for the selection data from the API
-interface ProjectSelection {
+// Interface for the project selection data as it comes from the API
+interface ProjectSelectionFromApi {
   _id?: string;
-  residenceType?: string;
-  roomType?: string;
-  theme?: string;
-  design?: string;
+  residenceType?: { _id: string; name: string; [key: string]: any };
+  roomType?: { _id: string; name: string; [key: string]: any };
+  theme?: { _id: string; name: string; [key: string]: any };
+  design?: { _id: string; name: string; [key: string]: any };
   [key: string]: any; // Allow for other properties
 }
 
-// Define the interface for project data from the API
-interface ProjectData {
+// Interface for project data as it comes from the API
+interface ProjectDataFromApi {
   name: string;
   description: string;
   thumbnailUrl?: string;
-  selections: ProjectSelection[];
+  selections: ProjectSelectionFromApi[];
   [key: string]: any; // Allow for other properties
 }
 
@@ -71,7 +73,7 @@ const EditProject = () => {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
   const router = useRouter();
-  const { token } = getTokenAndRole();
+  const { token } = getTokenAndRole(); // Custom hook to get token and role
 
   console.log("Project ID:", id);
 
@@ -96,7 +98,7 @@ const EditProject = () => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        // Fetch selection options
+        // Fetch selection options (residence types, room types, themes, designs hierarchy)
         const optionsResponse = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/projects/selection-options/hierarchy`,
           {
@@ -115,7 +117,7 @@ const EditProject = () => {
         setSelectionOptions(optionsData);
         console.log("Selection options:", optionsData);
 
-        // Fetch project data
+        // Fetch project data for the given ID
         const projectResponse = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/projects/${id}`,
           {
@@ -130,51 +132,36 @@ const EditProject = () => {
           throw new Error("Failed to fetch project data");
         }
 
-        const projectData: ProjectData = await projectResponse.json();
+        const projectData: ProjectDataFromApi = await projectResponse.json();
         console.log("Project data received:", projectData);
 
-        // Handle the case where we need to fetch detailed selection data
-        // The project data only contains selection IDs, so we need to fetch the actual selection details
-        let processedSelections: {
-          residenceType: string;
-          roomType: string;
-          theme: string;
-          design: string;
-          originalId?: string;
-        }[] = [];
+        // Process existing selections from the project data to fit the form's state
+        let processedSelections: FormData["selections"] = [];
 
-        // Check if selections exist and have the expected structure
         if (projectData.selections && Array.isArray(projectData.selections)) {
-          // If selections exist but don't have our expected fields, we need to fetch the detailed data
-          // This is just a placeholder - your API might have a different endpoint to fetch detailed selection data
-          try {
-            // For now, we'll just create empty selection objects
-            // In a real scenario, you would fetch the actual selection details from your API
-            processedSelections = projectData.selections.map(
-              (selection: ProjectSelection) => ({
-                residenceType: selection.residenceType || "",
-                roomType: selection.roomType || "",
-                theme: selection.theme || "",
-                design: selection.design || "",
-                // Store the original selection ID in case we need it
-                originalId: selection._id || "",
-              })
-            );
-          } catch (err) {
-            console.error("Error processing selections:", err);
-          }
+          processedSelections = projectData.selections.map(
+            (selection: ProjectSelectionFromApi) => ({
+              // Extract the _id from nested objects for form state
+              residenceType: selection.residenceType?._id || "",
+              roomType: selection.roomType?._id || "",
+              theme: selection.theme?._id || "",
+              design: selection.design?._id || "",
+              originalId: selection._id || "", // Store the original selection ID
+            })
+          );
         }
 
-        // Convert project data to our form format
+        // Set the form data with fetched project details
         setFormData({
           name: projectData.name || "",
           description: projectData.description || "",
-          thumbnail: null,
-          thumbnailBase64: "",
-          thumbnailPreview: projectData.thumbnailUrl || "",
+          thumbnail: null, // Thumbnail file is not pre-filled
+          thumbnailBase64: "", // Base64 is not pre-filled
+          thumbnailPreview: projectData.thumbnailUrl || "", // Use existing URL for preview
           selections: processedSelections,
         });
 
+        // Store the original thumbnail URL separately
         setOriginalThumbnail(projectData.thumbnailUrl || "");
       } catch (err) {
         console.error("Fetch error:", err);
@@ -185,13 +172,15 @@ const EditProject = () => {
     };
 
     fetchData();
-  }, [id, token]);
+  }, [id, token]); // Dependencies for useEffect
 
+  // Handles changes to text input fields (name, description)
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Handles thumbnail file selection and preview generation
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -199,7 +188,7 @@ const EditProject = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
-        const base64String = result.split(",")[1];
+        const base64String = result.split(",")[1]; // Extract base64 part
         setFormData((prev) => ({
           ...prev,
           thumbnail: file,
@@ -207,10 +196,11 @@ const EditProject = () => {
           thumbnailPreview: result,
         }));
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(file); // Read file as Data URL for preview
     }
   };
 
+  // Handles selection/deselection of a residence type
   const handleResidenceSelection = (residenceId: string) => {
     setFormData((prev) => {
       const existingIndex = prev.selections.findIndex(
@@ -218,10 +208,12 @@ const EditProject = () => {
       );
 
       if (existingIndex >= 0) {
+        // If residence is already selected, remove it and its children
         const newSelections = [...prev.selections];
         newSelections.splice(existingIndex, 1);
         return { ...prev, selections: newSelections };
       } else {
+        // If residence is not selected, add a new entry
         return {
           ...prev,
           selections: [
@@ -238,6 +230,7 @@ const EditProject = () => {
     });
   };
 
+  // Handles selection/deselection of a room type for a given residence
   const handleRoomSelection = (residenceId: string, roomId: string) => {
     setFormData((prev) => {
       const newSelections = [...prev.selections];
@@ -247,6 +240,7 @@ const EditProject = () => {
       if (index >= 0) {
         newSelections[index] = {
           ...newSelections[index],
+          // Toggle roomType, and reset theme/design if roomType changes
           roomType: newSelections[index].roomType === roomId ? "" : roomId,
           theme: "",
           design: "",
@@ -256,6 +250,7 @@ const EditProject = () => {
     });
   };
 
+  // Handles selection/deselection of a theme for a given room type
   const handleThemeSelection = (
     residenceId: string,
     roomId: string,
@@ -269,6 +264,7 @@ const EditProject = () => {
       if (index >= 0) {
         newSelections[index] = {
           ...newSelections[index],
+          // Toggle theme, and reset design if theme changes
           theme: newSelections[index].theme === themeId ? "" : themeId,
           design: "",
         };
@@ -277,6 +273,7 @@ const EditProject = () => {
     });
   };
 
+  // Handles selection/deselection of a design for a given theme
   const handleDesignSelection = (
     residenceId: string,
     roomId: string,
@@ -294,6 +291,7 @@ const EditProject = () => {
       if (index >= 0) {
         newSelections[index] = {
           ...newSelections[index],
+          // Toggle design
           design: newSelections[index].design === designId ? "" : designId,
         };
       }
@@ -301,6 +299,7 @@ const EditProject = () => {
     });
   };
 
+  // Helper functions to determine if a selection option is currently selected
   const isSelected = {
     residence: (residenceId: string) =>
       formData.selections.some((s) => s.residenceType === residenceId),
@@ -335,6 +334,7 @@ const EditProject = () => {
     },
   };
 
+  // Form validation
   const validate = () => {
     const newErrors: Record<string, string> = {};
 
@@ -342,53 +342,47 @@ const EditProject = () => {
       newErrors.name = "Name is required";
     }
 
-    // In this case, we don't require thumbnail for existing projects
-    // if (!formData.thumbnailBase64 && !formData.thumbnailPreview) {
-    //   newErrors.thumbnail = "Thumbnail is required";
-    // }
-
-    // Add an info alert if there are no selections instead of an error
-    if (formData.selections.length === 0) {
-      console.warn("No selections defined for this project.");
-      // newErrors.selections = "Select at least one residence";
-      // Comment out the error to allow saving without selections
-    }
+    // You can add validation for thumbnail here if it's required for new uploads.
+    // For existing projects, it might not be mandatory to upload a new one.
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  // Handles form submission
   const handleSubmit = async () => {
-    if (!validate()) return;
+    if (!validate()) {
+      setApiError(null); // Clear previous API errors if validation fails
+      return;
+    }
 
     try {
-      // Format the selections properly for the API
+      // Format the selections properly for the API payload
       const formattedSelections = formData.selections.map((sel) => {
-        // If we have an originalId, include it in the payload
-        const selectionData: ProjectSelection = {
+        const selectionData: { [key: string]: string | undefined } = {
           residenceType: sel.residenceType,
           roomType: sel.roomType,
           theme: sel.theme,
           design: sel.design,
         };
-
+        // Include originalId if it exists for updating existing selections
         if (sel.originalId) {
           selectionData._id = sel.originalId;
         }
-
         return selectionData;
       });
 
       const payload = {
         name: formData.name,
         description: formData.description,
+        // Send base64 only if a new thumbnail is selected, otherwise an empty string
         thumbnail: formData.thumbnailBase64 || "",
         selections: formattedSelections,
       };
 
       console.log("Submitting payload:", payload);
 
-      // Changed from PUT to PATCH to match API expectations
+      // Use PATCH method for partial updates
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/projects/${id}`,
         {
@@ -401,7 +395,7 @@ const EditProject = () => {
         }
       );
 
-      // Check if the response is JSON before parsing
+      // Check content type before parsing JSON
       const contentType = response.headers.get("content-type");
       let result;
       if (contentType && contentType.includes("application/json")) {
@@ -418,7 +412,7 @@ const EditProject = () => {
 
       console.log("Update successful:", result);
       alert("Project updated successfully!");
-      router.push("/admin/projects");
+      router.push("/admin/projects"); // Redirect to projects list
     } catch (error: any) {
       console.error("Submit error:", error);
       setApiError(
@@ -427,6 +421,7 @@ const EditProject = () => {
     }
   };
 
+  // Show loading state while data is being fetched
   if (isLoading) {
     return (
       <Box sx={{ p: 3 }}>
@@ -495,118 +490,137 @@ const EditProject = () => {
         </Typography>
       )}
 
-      <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
-        Selections
-      </Typography>
+      ---
 
-      {selectionOptions.map((residence) => (
-        <Box
-          key={residence.id}
-          sx={{ mb: 2, border: "1px solid #ccc", p: 2, borderRadius: 2 }}
-        >
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={isSelected.residence(residence.id)}
-                onChange={() => handleResidenceSelection(residence.id)}
-              />
-            }
-            label={residence.name}
-          />
+     <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
+       Selections
+     </Typography>
+     
+     <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'bold' }}>
+       Select Residence Types
+     </Typography>
+     
+     {selectionOptions.map((residence) => (
+       <Box
+         key={residence.id}
+         sx={{ mb: 2, border: "1px solid #ccc", p: 2, borderRadius: 2 }}
+       >
+         <FormControlLabel
+           control={
+             <Checkbox
+               checked={isSelected.residence(residence.id)}
+               onChange={() => handleResidenceSelection(residence.id)}
+             />
+           }
+           label={residence.name}
+         />
+     
+         {isSelected.residence(residence.id) && (
+           <Box sx={{ ml: 3 }}>
+             <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+               Select Room Types
+             </Typography>
+     
+             {residence.roomTypes?.map((room) => (
+               <Box key={room.id} sx={{ mb: 1 }}>
+                 <FormControlLabel
+                   control={
+                     <Checkbox
+                       checked={isSelected.room(residence.id, room.id)}
+                       onChange={() =>
+                         handleRoomSelection(residence.id, room.id)
+                       }
+                     />
+                   }
+                   label={room.name}
+                 />
+     
+                 {isSelected.room(residence.id, room.id) && (
+                   <Box sx={{ ml: 3 }}>
+                     <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                       Select Themes
+                     </Typography>
+     
+                     {room.themes?.map((theme) => (
+                       <Box key={theme.id}>
+                         <FormControlLabel
+                           control={
+                             <Checkbox
+                               checked={isSelected.theme(
+                                 residence.id,
+                                 room.id,
+                                 theme.id
+                               )}
+                               onChange={() =>
+                                 handleThemeSelection(
+                                   residence.id,
+                                   room.id,
+                                   theme.id
+                                 )
+                               }
+                             />
+                           }
+                           label={theme.name}
+                         />
+     
+                         {isSelected.theme(residence.id, room.id, theme.id) && (
+                           <Box sx={{ ml: 3 }}>
+                             <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                               Select Designs
+                             </Typography>
+     
+                             {theme.designs?.map((design) => (
+                               <FormControlLabel
+                                 key={design.id}
+                                 control={
+                                   <Checkbox
+                                     checked={isSelected.design(
+                                       residence.id,
+                                       room.id,
+                                       theme.id,
+                                       design.id
+                                     )}
+                                     onChange={() =>
+                                       handleDesignSelection(
+                                         residence.id,
+                                         room.id,
+                                         theme.id,
+                                         design.id
+                                       )
+                                     }
+                                   />
+                                 }
+                                 label={design.name}
+                               />
+                             ))}
+                           </Box>
+                         )}
+                       </Box>
+                     ))}
+                   </Box>
+                 )}
+               </Box>
+             ))}
+           </Box>
+         )}
+       </Box>
+     ))}
 
-          {isSelected.residence(residence.id) && (
-            <Box sx={{ ml: 3 }}>
-              {residence.roomTypes?.map((room) => (
-                <Box key={room.id} sx={{ mb: 1 }}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={isSelected.room(residence.id, room.id)}
-                        onChange={() =>
-                          handleRoomSelection(residence.id, room.id)
-                        }
-                      />
-                    }
-                    label={room.name}
-                  />
-
-                  {isSelected.room(residence.id, room.id) && (
-                    <Box sx={{ ml: 3 }}>
-                      {room.themes?.map((theme) => (
-                        <Box key={theme.id}>
-                          <FormControlLabel
-                            control={
-                              <Checkbox
-                                checked={isSelected.theme(
-                                  residence.id,
-                                  room.id,
-                                  theme.id
-                                )}
-                                onChange={() =>
-                                  handleThemeSelection(
-                                    residence.id,
-                                    room.id,
-                                    theme.id
-                                  )
-                                }
-                              />
-                            }
-                            label={theme.name}
-                          />
-
-                          {isSelected.theme(
-                            residence.id,
-                            room.id,
-                            theme.id
-                          ) && (
-                            <Box sx={{ ml: 3 }}>
-                              {theme.designs?.map((design) => (
-                                <FormControlLabel
-                                  key={design.id}
-                                  control={
-                                    <Checkbox
-                                      checked={isSelected.design(
-                                        residence.id,
-                                        room.id,
-                                        theme.id,
-                                        design.id
-                                      )}
-                                      onChange={() =>
-                                        handleDesignSelection(
-                                          residence.id,
-                                          room.id,
-                                          theme.id,
-                                          design.id
-                                        )
-                                      }
-                                    />
-                                  }
-                                  label={design.name}
-                                />
-                              ))}
-                            </Box>
-                          )}
-                        </Box>
-                      ))}
-                    </Box>
-                  )}
-                </Box>
-              ))}
-            </Box>
-          )}
-        </Box>
-      ))}
-
+      {/* Display errors related to selections if any */}
       {errors.selections && (
         <Typography color="error">{errors.selections}</Typography>
       )}
 
+      {/* Display API-related errors */}
       {apiError && (
         <Alert severity="error" sx={{ mt: 2 }}>
           {apiError}
         </Alert>
       )}
 
+      ---
+
+      {/* Action buttons */}
       <Box sx={{ display: "flex", gap: 2, mt: 4 }}>
         <ReusableButton onClick={handleSubmit}>Update</ReusableButton>
         <CancelButton href="/admin/projects">Cancel</CancelButton>

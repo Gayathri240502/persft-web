@@ -67,14 +67,12 @@ const EditShop = () => {
     subCategory: "",
   });
 
-  // Dropdown data
   const [categories, setCategories] = useState<Category[]>([]);
   const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
   const [countries, setCountries] = useState<Country[]>([]);
   const [states, setStates] = useState<State[]>([]);
   const [cities, setCities] = useState<City[]>([]);
 
-  // Loading states
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadingStates, setLoadingStates] = useState(false);
@@ -84,7 +82,6 @@ const EditShop = () => {
   useEffect(() => {
     const fetchShop = async () => {
       if (!shopId) return;
-      console.log("Fetching shop with ID:", shopId); // ✅ Debug
       try {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/shops/${shopId}`,
@@ -96,8 +93,6 @@ const EditShop = () => {
           }
         );
         const data = await response.json();
-        console.log("Fetched shop data:", data); // ✅ Debug
-
         const shop = data.shop ?? data;
 
         setFormData({
@@ -127,7 +122,6 @@ const EditShop = () => {
     fetchShop();
   }, [shopId, token]);
 
-  // Fetch categories and countries on load
   useEffect(() => {
     const fetchInitialDropdowns = async () => {
       try {
@@ -142,10 +136,6 @@ const EditShop = () => {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
-
-        if (!catRes.ok) throw new Error("Failed to fetch categories.");
-        if (!subCatRes.ok) throw new Error("Failed to fetch subcategories.");
-        if (!countryRes.ok) throw new Error("Failed to fetch countries.");
 
         const catData = await catRes.json();
         const subCatData = await subCatRes.json();
@@ -162,7 +152,6 @@ const EditShop = () => {
     fetchInitialDropdowns();
   }, [token]);
 
-  // Fetch states when country changes
   useEffect(() => {
     const fetchStates = async () => {
       if (!formData.country) {
@@ -178,7 +167,6 @@ const EditShop = () => {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        if (!res.ok) throw new Error("Failed to fetch states.");
         const data = await res.json();
         setStates(data.states || data || []);
       } catch (err: any) {
@@ -187,10 +175,10 @@ const EditShop = () => {
         setLoadingStates(false);
       }
     };
+
     fetchStates();
   }, [formData.country, token]);
 
-  // Fetch cities when state changes
   useEffect(() => {
     const fetchCities = async () => {
       if (!formData.state) {
@@ -206,7 +194,6 @@ const EditShop = () => {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        if (!res.ok) throw new Error("Failed to fetch cities.");
         const data = await res.json();
         setCities(data.cities || data || []);
       } catch (err: any) {
@@ -215,20 +202,17 @@ const EditShop = () => {
         setLoadingCities(false);
       }
     };
+
     fetchCities();
   }, [formData.state, token]);
 
-  // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle select changes
   const handleSelectChange = (e: SelectChangeEvent<string>) => {
     const { name, value } = e.target;
-
-    // Clear dependent dropdowns when parent changes
     if (name === "country") {
       setFormData((prev) => ({
         ...prev,
@@ -250,7 +234,6 @@ const EditShop = () => {
     }
   };
 
-  // Submit updated shop data
   const handleSubmit = async () => {
     if (!shopId) return;
     setError("");
@@ -345,23 +328,12 @@ const EditShop = () => {
             onChange={handleInputChange}
           />
         </Grid>
-
         <Grid item xs={12} sm={6}>
           <TextField
             label="Last Name"
             fullWidth
             name="lastName"
             value={formData.lastName}
-            onChange={handleInputChange}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Shop Name (Username)"
-            fullWidth
-            name="username"
-            value={formData.username}
             onChange={handleInputChange}
           />
         </Grid>
@@ -375,7 +347,6 @@ const EditShop = () => {
             onChange={handleInputChange}
           />
         </Grid>
-
         <Grid item xs={12} sm={6}>
           <TextField
             label="Phone"
@@ -385,7 +356,6 @@ const EditShop = () => {
             onChange={handleInputChange}
           />
         </Grid>
-
         <Grid item xs={12} sm={6}>
           <TextField
             label="Owner Name"
@@ -395,7 +365,6 @@ const EditShop = () => {
             onChange={handleInputChange}
           />
         </Grid>
-
         <Grid item xs={12}>
           <TextField
             label="Address"
@@ -405,37 +374,20 @@ const EditShop = () => {
             onChange={handleInputChange}
           />
         </Grid>
-
         <Grid item xs={12} sm={6}>
-          {renderSelect(
-            "Category",
-            "category",
-            formData.category,
-            categories,
-            false
-          )}
+          {renderSelect("Category", "category", formData.category, categories)}
         </Grid>
-
         <Grid item xs={12} sm={6}>
           {renderSelect(
             "SubCategory",
             "subCategory",
             formData.subCategory,
-            subCategories,
-            false
+            subCategories
           )}
         </Grid>
-
         <Grid item xs={12} sm={6}>
-          {renderSelect(
-            "Country",
-            "country",
-            formData.country,
-            countries,
-            false
-          )}
+          {renderSelect("Country", "country", formData.country, countries)}
         </Grid>
-
         <Grid item xs={12} sm={6}>
           {renderSelect(
             "State",
@@ -446,7 +398,6 @@ const EditShop = () => {
             !formData.country
           )}
         </Grid>
-
         <Grid item xs={12} sm={6}>
           {renderSelect(
             "City",

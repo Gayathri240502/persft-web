@@ -40,19 +40,27 @@ interface DropdownItem {
 }
 
 interface AttributeDefinition {
-  _id: string;
-  id?: string;
+  _id?: string;
+  id: string; // Based on your JSON structure, it uses 'id'
   name: string;
+  type: string; // Add type field
   description?: string;
-  type?: string;
+  options?: any[]; // For potential future use
+  order?: number;
+}
+
+interface SubCategoryWithAttributes {
+  id: string;
+  name: string;
+  attributes: AttributeDefinition[];
 }
 
 interface ProductAttributeValue {
-  attribute: string; // This should be the _id of the attribute definition
+  attribute: string; // This should be the id of the attribute definition
   value: string;
 }
 
-const AddEditProduct = () => {
+const EditProduct = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const productId = searchParams.get("id");
@@ -74,7 +82,8 @@ const AddEditProduct = () => {
     attributeValues: [] as ProductAttributeValue[],
   });
 
-  const [selectedFileName, setSelectedFileName] = useState<string>("No file selected");
+  const [selectedFileName, setSelectedFileName] =
+    useState<string>("No file selected");
 
   const [categories, setCategories] = useState<DropdownItem[]>([]);
   const [subCategories, setSubCategories] = useState<DropdownItem[]>([]);
@@ -88,18 +97,25 @@ const AddEditProduct = () => {
 
   const apiCall = async (endpoint: string, options: RequestInit = {}) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          ...options.headers,
-        },
-        ...options,
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}${endpoint}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            ...options.headers,
+          },
+          ...options,
+        }
+      );
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: response.statusText }));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: response.statusText }));
+        throw new Error(
+          errorData.message || `HTTP error! status: ${response.status}`
+        );
       }
 
       return await response.json();
@@ -110,50 +126,66 @@ const AddEditProduct = () => {
   };
 
   useEffect(() => {
+    if (!productId) {
+      setError("Product ID is required for editing");
+      setLoading(false);
+      return;
+    }
+
     const loadData = async () => {
       setLoading(true);
       try {
-        const [categoriesData, workGroupsData] = await Promise.all([
-          apiCall("/products/dropdowns/categories"),
-          apiCall("/products/dropdowns/work-groups"),
-        ]);
+        const [categoriesData, workGroupsData, productData] = await Promise.all(
+          [
+            apiCall("/products/dropdowns/categories"),
+            apiCall("/products/dropdowns/work-groups"),
+            apiCall(`/products/${productId}`),
+          ]
+        );
 
         setCategories(categoriesData);
         setWorkGroups(workGroupsData);
 
-        if (productId) {
-          const productData = await apiCall(`/products/${productId}`);
+        // Store the original attribute values to map later
+        const originalAttributeValues = productData.attributeValues || [];
 
-          // Extract only the IDs from nested objects for form state
-          setProduct({
-            ...productData,
-            price: productData.price.toString(),
-            category: productData.category?._id || "",
-            subCategory: productData.subCategory?._id || "",
-            workGroup: productData.workGroup?._id || "",
-            workTask: productData.workTask?._id || "",
-            // Map attributeValues to store only the attribute ID and value
-            attributeValues:
-              productData.attributeValues?.map((av: any) => ({
-                attribute: av.attribute?._id || av.attribute?.id || "",
-                value: av.value,
-              })) || [],
-          });
+        // Extract only the IDs from nested objects for form state
+        const productState = {
+          ...productData,
+          price: productData.price.toString(),
+          category: productData.category?._id || productData.category?.id || "",
+          subCategory:
+            productData.subCategory?._id || productData.subCategory?.id || "",
+          workGroup:
+            productData.workGroup?._id || productData.workGroup?.id || "",
+          workTask: productData.workTask?._id || productData.workTask?.id || "",
+          attributeValues: [], // We'll set this after loading attributes
+        };
 
-          // Load related dropdowns based on fetched product data
-          if (productData.category?._id) {
-            await loadSubCategories(productData.category._id);
-          }
-          if (productData.workGroup?._id) {
-            await loadWorkTasks(productData.workGroup._id);
-          }
-          if (productData.subCategory?._id) {
-            await loadAttributes(productData.subCategory._id, productData.attributeValues); // Pass existing attribute values
-          }
-          setSelectedFileName(productData.thumbnail ? "File uploaded" : "No file selected");
+        setProduct(productState);
+
+        // Load related dropdowns based on fetched product data
+        if (productData.category?._id || productData.category?.id) {
+          await loadSubCategories(
+            productData.category._id || productData.category.id
+          );
         }
+        if (productData.workGroup?._id || productData.workGroup?.id) {
+          await loadWorkTasks(
+            productData.workGroup._id || productData.workGroup.id
+          );
+        }
+        if (productData.subCategory?._id || productData.subCategory?.id) {
+          await loadAttributes(
+            productData.subCategory._id || productData.subCategory.id,
+            originalAttributeValues // Pass the original attribute values
+          );
+        }
+        setSelectedFileName(
+          productData.thumbnail ? "File uploaded" : "No file selected"
+        );
       } catch (err: any) {
-        setError(err.message || "Failed to load initial data or product data");
+        setError(err.message || "Failed to load product data");
       } finally {
         setLoading(false);
       }
@@ -169,8 +201,13 @@ const AddEditProduct = () => {
       setSubCategories([]);
       // Only clear subCategory and attributes if category is explicitly unset by user,
       // not during initial load where product.category might be empty temporarily.
-      if (!loading) { // Prevents clearing during initial data load
-        setProduct((prev) => ({ ...prev, subCategory: "", attributeValues: [] }));
+      if (!loading) {
+        // Prevents clearing during initial data load
+        setProduct((prev) => ({
+          ...prev,
+          subCategory: "",
+          attributeValues: [],
+        }));
       }
     }
   }, [product.category, loading]);
@@ -199,10 +236,11 @@ const AddEditProduct = () => {
     }
   }, [product.subCategory, loading]);
 
-
   const loadSubCategories = async (categoryId: string) => {
     try {
-      const data = await apiCall(`/products/dropdowns/subcategories/${categoryId}`);
+      const data = await apiCall(
+        `/products/dropdowns/subcategories/${categoryId}`
+      );
       setSubCategories(data);
     } catch (err: any) {
       setError(err.message || "Failed to load subcategories");
@@ -211,39 +249,96 @@ const AddEditProduct = () => {
 
   const loadWorkTasks = async (workGroupId: string) => {
     try {
-      const data = await apiCall(`/products/dropdowns/work-tasks/${workGroupId}`);
+      const data = await apiCall(
+        `/products/dropdowns/work-tasks/${workGroupId}`
+      );
       setWorkTasks(data);
     } catch (err: any) {
       setError(err.message || "Failed to load work tasks");
     }
   };
 
-  const loadAttributes = async (subCategoryId: string, existingAttributeValues: ProductAttributeValue[] = []) => {
+  const loadAttributes = async (
+    subCategoryId: string,
+    existingAttributeValues: any[] = []
+  ) => {
     try {
-      const data: AttributeDefinition[] = await apiCall(`/products/attributes/${subCategoryId}`);
-      setAttributes(data);
+      const data: SubCategoryWithAttributes[] = await apiCall(
+        `/products/attributes/${subCategoryId}`
+      );
 
-      setProduct((prev) => {
-        // Filter out attribute values that no longer have a corresponding attribute definition
-        const filteredAttributeValues = existingAttributeValues.filter((av) =>
-          data.some((attrDef) => (attrDef._id || attrDef.id) === av.attribute)
-        );
+      // Extract attributes from the nested structure
+      let extractedAttributes: AttributeDefinition[] = [];
 
-        // Add placeholders for attributes that are now required but not in the filtered list
-        data.forEach((attrDef) => {
-          const attrId = attrDef._id || attrDef.id;
-          if (!filteredAttributeValues.some((av) => av.attribute === attrId)) {
-            filteredAttributeValues.push({ attribute: attrId, value: "" });
+      if (Array.isArray(data) && data.length > 0) {
+        // The API returns an array of subcategories with their attributes
+        // We need to extract all attributes from all subcategories or find the matching one
+        data.forEach((subCategory) => {
+          if (subCategory.attributes && Array.isArray(subCategory.attributes)) {
+            // Add all attributes from this subcategory
+            extractedAttributes.push(...subCategory.attributes);
           }
         });
+      }
 
-        return { ...prev, attributeValues: filteredAttributeValues };
+      setAttributes(extractedAttributes);
+
+      // Map the existing attribute values to the new format
+      const mappedAttributeValues: ProductAttributeValue[] = [];
+
+      // Process existing attribute values from API response
+      if (existingAttributeValues && existingAttributeValues.length > 0) {
+        existingAttributeValues.forEach((av: any) => {
+          // Handle both nested object format and simple format
+          let attributeId: string;
+
+          if (typeof av.attribute === "object" && av.attribute !== null) {
+            // If attribute is an object with _id or id
+            attributeId = av.attribute._id || av.attribute.id || "";
+          } else if (typeof av.attribute === "string") {
+            // If attribute is already a string ID
+            attributeId = av.attribute;
+          } else {
+            attributeId = "";
+          }
+
+          // Only add if we can find a matching attribute definition
+          const matchingAttribute = extractedAttributes.find(
+            (attrDef) =>
+              attrDef.id === attributeId || attrDef._id === attributeId
+          );
+
+          if (matchingAttribute) {
+            mappedAttributeValues.push({
+              attribute: matchingAttribute.id, // Use the attribute definition's id
+              value: av.value || "",
+            });
+          }
+        });
+      }
+
+      // Add placeholders for any attributes that don't have values yet
+      extractedAttributes.forEach((attrDef) => {
+        const existingValue = mappedAttributeValues.find(
+          (av) => av.attribute === attrDef.id
+        );
+        if (!existingValue) {
+          mappedAttributeValues.push({
+            attribute: attrDef.id,
+            value: "",
+          });
+        }
       });
+
+      // Update the product state with the mapped attribute values
+      setProduct((prev) => ({
+        ...prev,
+        attributeValues: mappedAttributeValues,
+      }));
     } catch (err: any) {
       setError(err.message || "Failed to load attributes");
     }
   };
-
 
   const handleInputChange = (field: string, value: string) => {
     setProduct((prev) => ({
@@ -252,7 +347,9 @@ const AddEditProduct = () => {
     }));
   };
 
-  const handleThumbnailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleThumbnailChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFileName(file.name);
@@ -273,10 +370,15 @@ const AddEditProduct = () => {
     if (attributes.length > 0) {
       setProduct((prev) => ({
         ...prev,
-        attributeValues: [...prev.attributeValues, { attribute: "", value: "" }],
+        attributeValues: [
+          ...prev.attributeValues,
+          { attribute: "", value: "" },
+        ],
       }));
     } else {
-      setError("No attributes available to add. Please select a subcategory first.");
+      setError(
+        "No attributes available to add. Please select a subcategory first."
+      );
     }
   };
 
@@ -287,7 +389,11 @@ const AddEditProduct = () => {
     }));
   };
 
-  const updateAttributeEntry = (index: number, field: "attribute" | "value", newValue: string) => {
+  const updateAttributeEntry = (
+    index: number,
+    field: "attribute" | "value",
+    newValue: string
+  ) => {
     setProduct((prev) => {
       const newAttributeValues = [...prev.attributeValues];
       newAttributeValues[index] = {
@@ -331,8 +437,8 @@ const AddEditProduct = () => {
 
     // Validate attributes: ensure all attributes fetched for the selected subcategory have non-empty values
     for (const attributeDef of attributes) {
-      const attributeId = (attributeDef as any)._id || (attributeDef as any).id;
-      const attributeName = (attributeDef as any).name;
+      const attributeId = attributeDef.id;
+      const attributeName = attributeDef.name;
 
       const foundAttributeValue = product.attributeValues.find(
         (av) => av.attribute === attributeId
@@ -350,14 +456,15 @@ const AddEditProduct = () => {
     const selectedAttributeIds = new Set<string>();
     for (const attrVal of product.attributeValues) {
       if (attrVal.attribute && selectedAttributeIds.has(attrVal.attribute)) {
-        setError("Duplicate attribute selected. Please choose unique attributes.");
+        setError(
+          "Duplicate attribute selected. Please choose unique attributes."
+        );
         return false;
       }
       if (attrVal.attribute) {
         selectedAttributeIds.add(attrVal.attribute);
       }
     }
-
 
     setError(null);
     return true;
@@ -378,26 +485,26 @@ const AddEditProduct = () => {
 
       const body = JSON.stringify(productData);
 
-      const method = productId ? "PUT" : "POST";
-      const url = productId
-        ? `${process.env.NEXT_PUBLIC_API_URL}/products/${productId}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/products`;
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body,
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/products/${productId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body,
+        }
+      );
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
-        throw new Error(errorData.message || `Failed to ${productId ? "update" : "create"} product`);
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: "Unknown error" }));
+        throw new Error(errorData.message || "Failed to update product");
       }
 
-      router.push("/admin/products"); // Redirect after success
+      router.push("/admin/product-catalog/products"); // Redirect after success
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred");
     } finally {
@@ -405,9 +512,24 @@ const AddEditProduct = () => {
     }
   };
 
+  if (!productId) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error">
+          Product ID is required to edit a product.
+        </Alert>
+      </Box>
+    );
+  }
+
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="400px"
+      >
         <CircularProgress size={60} />
       </Box>
     );
@@ -416,7 +538,7 @@ const AddEditProduct = () => {
   return (
     <Box sx={{ p: 3 }} component="form" onSubmit={handleSubmit}>
       <Typography variant="h5" sx={{ mb: 2 }}>
-        {productId ? "Edit Product" : "Add Product"}
+        Edit Product
       </Typography>
 
       {error && (
@@ -495,7 +617,9 @@ const AddEditProduct = () => {
                 rows={3}
                 fullWidth
                 value={product.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
                 sx={{ mb: 2 }}
               />
             </Grid>
@@ -522,7 +646,12 @@ const AddEditProduct = () => {
                 }}
               >
                 Upload Thumbnail
-                <input type="file" hidden onChange={handleThumbnailChange} accept="image/*" />
+                <input
+                  type="file"
+                  hidden
+                  onChange={handleThumbnailChange}
+                  accept="image/*"
+                />
               </Button>
               <Typography variant="body2" sx={{ color: "#666" }}>
                 {selectedFileName}
@@ -558,10 +687,15 @@ const AddEditProduct = () => {
                 <Select
                   value={product.category}
                   label="Category *"
-                  onChange={(e) => handleInputChange("category", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("category", e.target.value)
+                  }
                 >
                   {categories.map((category: DropdownItem) => (
-                    <MenuItem key={category._id || category.id} value={category._id || category.id}>
+                    <MenuItem
+                      key={category._id || category.id}
+                      value={category._id || category.id}
+                    >
                       {category.name}
                     </MenuItem>
                   ))}
@@ -569,15 +703,24 @@ const AddEditProduct = () => {
               </FormControl>
             </Grid>
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth disabled={!product.category} sx={{ mb: 2 }}>
+              <FormControl
+                fullWidth
+                disabled={!product.category}
+                sx={{ mb: 2 }}
+              >
                 <InputLabel>Subcategory *</InputLabel>
                 <Select
                   value={product.subCategory}
                   label="Subcategory *"
-                  onChange={(e) => handleInputChange("subCategory", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("subCategory", e.target.value)
+                  }
                 >
                   {subCategories.map((subCategory: DropdownItem) => (
-                    <MenuItem key={subCategory._id || subCategory.id} value={subCategory._id || subCategory.id}>
+                    <MenuItem
+                      key={subCategory._id || subCategory.id}
+                      value={subCategory._id || subCategory.id}
+                    >
                       {subCategory.name}
                     </MenuItem>
                   ))}
@@ -590,10 +733,15 @@ const AddEditProduct = () => {
                 <Select
                   value={product.workGroup}
                   label="Work Group"
-                  onChange={(e) => handleInputChange("workGroup", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("workGroup", e.target.value)
+                  }
                 >
                   {workGroups.map((workGroup: DropdownItem) => (
-                    <MenuItem key={workGroup._id || workGroup.id} value={workGroup._id || workGroup.id}>
+                    <MenuItem
+                      key={workGroup._id || workGroup.id}
+                      value={workGroup._id || workGroup.id}
+                    >
                       {workGroup.name}
                     </MenuItem>
                   ))}
@@ -601,15 +749,24 @@ const AddEditProduct = () => {
               </FormControl>
             </Grid>
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth disabled={!product.workGroup} sx={{ mb: 2 }}>
+              <FormControl
+                fullWidth
+                disabled={!product.workGroup}
+                sx={{ mb: 2 }}
+              >
                 <InputLabel>Work Task</InputLabel>
                 <Select
                   value={product.workTask}
                   label="Work Task"
-                  onChange={(e) => handleInputChange("workTask", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("workTask", e.target.value)
+                  }
                 >
                   {workTasks.map((workTask: DropdownItem) => (
-                    <MenuItem key={workTask._id || workTask.id} value={workTask._id || workTask.id}>
+                    <MenuItem
+                      key={workTask._id || workTask.id}
+                      value={workTask._id || workTask.id}
+                    >
                       {workTask.name}
                     </MenuItem>
                   ))}
@@ -625,7 +782,14 @@ const AddEditProduct = () => {
       {product.subCategory && (
         <Card sx={{ mb: 3 }}>
           <CardContent>
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+              }}
+            >
               <Typography variant="h6" color="primary">
                 Product Attributes
               </Typography>
@@ -641,68 +805,100 @@ const AddEditProduct = () => {
 
             {product.attributeValues.length === 0 && attributes.length === 0 ? (
               <Box sx={{ textAlign: "center", py: 3 }}>
-                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic" }}>
-                  No attributes defined for this subcategory. Click "Add Custom Attribute" if needed.
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontStyle: "italic" }}
+                >
+                  No attributes defined for this subcategory. Click "Add Custom
+                  Attribute" if needed.
                 </Typography>
               </Box>
             ) : (
               <Grid container spacing={2}>
-                {product.attributeValues.map((attr: ProductAttributeValue, index: number) => (
-                  <Grid item xs={12} key={index}>
-                    <Box
-                      sx={{
-                        p: 2,
-                        border: "1px solid #e0e0e0",
-                        borderRadius: 2,
-                        backgroundColor: "#fafafa",
-                      }}
-                    >
-                      <Grid container spacing={2} sx={{ alignItems: "center" }}>
-                        <Grid item xs={12} md={4}>
-                          <FormControl fullWidth>
-                            <InputLabel>Select Attribute</InputLabel>
-                            <Select
-                              value={attr.attribute}
-                              label="Select Attribute"
-                              onChange={(e) => updateAttributeEntry(index, "attribute", e.target.value)}
-                            >
-                              {attributes.map((attribute: AttributeDefinition) => (
-                                <MenuItem
-                                  key={attribute._id || attribute.id}
-                                  value={attribute._id || attribute.id}
-                                >
-                                  {attribute.name}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                          <TextField
-                            fullWidth
-                            label="Attribute Value"
-                            value={attr.value}
-                            onChange={(e) => updateAttributeEntry(index, "value", e.target.value)}
-                            placeholder="Enter attribute value"
-                            variant="outlined"
-                          />
-                        </Grid>
-                        <Grid item xs={12} md={2}>
-                          <Button
-                            variant="outlined"
-                            color="error"
-                            onClick={() => removeAttributeEntry(index)}
-                            startIcon={<DeleteIcon />}
-                            fullWidth
-                            size="small"
+                {product.attributeValues.map(
+                  (attr: ProductAttributeValue, index: number) => {
+                    // Find the attribute definition to get the type
+                    const attributeDefinition = attributes.find(
+                      (a: AttributeDefinition) => a.id === attr.attribute
+                    );
+
+                    return (
+                      <Grid item xs={12} key={index}>
+                        <Box
+                          sx={{
+                            p: 2,
+                            border: "1px solid #e0e0e0",
+                            borderRadius: 2,
+                            backgroundColor: "#fafafa",
+                          }}
+                        >
+                          <Grid
+                            container
+                            spacing={2}
+                            sx={{ alignItems: "center" }}
                           >
-                            Remove
-                          </Button>
-                        </Grid>
+                            <Grid item xs={12} md={4}>
+                              <FormControl fullWidth>
+                                <InputLabel>Select Attribute</InputLabel>
+                                <Select
+                                  value={attr.attribute}
+                                  label="Select Attribute"
+                                  onChange={(e) =>
+                                    updateAttributeEntry(
+                                      index,
+                                      "attribute",
+                                      e.target.value
+                                    )
+                                  }
+                                >
+                                  {attributes.map(
+                                    (attribute: AttributeDefinition) => (
+                                      <MenuItem
+                                        key={attribute.id}
+                                        value={attribute.id}
+                                      >
+                                        {attribute.name}
+                                      </MenuItem>
+                                    )
+                                  )}
+                                </Select>
+                              </FormControl>
+                            </Grid>
+                            <Grid item xs={12} md={6}>
+                              <TextField
+                                fullWidth
+                                label="Attribute Value"
+                                value={attr.value}
+                                onChange={(e) =>
+                                  updateAttributeEntry(
+                                    index,
+                                    "value",
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="Enter attribute value"
+                                variant="outlined"
+                              />
+                            </Grid>
+                            <Grid item xs={12} md={2}>
+                              <Button
+                                variant="outlined"
+                                color="error"
+                                onClick={() => removeAttributeEntry(index)}
+                                startIcon={<DeleteIcon />}
+                                fullWidth
+                                size="small"
+                              >
+                                Remove
+                              </Button>
+                            </Grid>
+                          </Grid>
+                        </Box>
                       </Grid>
-                    </Box>
-                  </Grid>
-                ))}
+                    );
+                  }
+                )}
               </Grid>
             )}
           </CardContent>
@@ -717,19 +913,24 @@ const AddEditProduct = () => {
               Attribute Summary
             </Typography>
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-              {product.attributeValues.map((attr: ProductAttributeValue, index: number) => {
-                const attributeName =
-                  attributes.find((a: AttributeDefinition) => (a._id || a.id) === attr.attribute)?.name || "Unknown";
-                return (
-                  <Chip
-                    key={index}
-                    label={`${attributeName}: ${attr.value}`}
-                    variant="filled"
-                    color="primary"
-                    size="medium"
-                  />
-                );
-              })}
+              {product.attributeValues.map(
+                (attr: ProductAttributeValue, index: number) => {
+                  const attributeDefinition = attributes.find(
+                    (a: AttributeDefinition) => a.id === attr.attribute
+                  );
+                  const attributeName = attributeDefinition?.name || "Unknown";
+
+                  return (
+                    <Chip
+                      key={index}
+                      label={`${attributeName}: ${attr.value}`}
+                      variant="filled"
+                      color="primary"
+                      size="medium"
+                    />
+                  );
+                }
+              )}
             </Box>
           </CardContent>
         </Card>
@@ -738,18 +939,14 @@ const AddEditProduct = () => {
       {/* Action Buttons */}
       <Box sx={{ display: "flex", gap: 2 }}>
         <ReusableButton type="submit" disabled={submitLoading}>
-          {submitLoading ? (
-            <CircularProgress size={24} />
-          ) : productId ? (
-            "Update Product"
-          ) : (
-            "Add Product"
-          )}
+          {submitLoading ? <CircularProgress size={24} /> : "Update Product"}
         </ReusableButton>
-        <CancelButton href="/admin/products">Cancel</CancelButton>
+        <CancelButton href="/admin/product-catalog/products">
+          Cancel
+        </CancelButton>
       </Box>
     </Box>
   );
 };
 
-export default AddEditProduct;
+export default EditProduct;

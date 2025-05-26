@@ -76,7 +76,7 @@ export default function Navbar() {
       {/* Navbar */}
       <nav className="flex items-center justify-between px-4 py-3 mx-2 shadow-md overflow-hidden sticky top-0">
         <div className="text-xl font-bold flex items-center space-x-2">
-          <span className="text-blue-500">PerSft</span>
+          <span className="text-blue-500 ml-3">PerSft</span>
         </div>
 
         <div className="flex items-center space-x-4">

@@ -81,7 +81,8 @@ export default function AddProduct() {
   const [loadingAttributes, setLoadingAttributes] = useState(false);
 
   const [thumbnail, setThumbnail] = useState<string>("");
-  const [selectedFileName, setSelectedFileName] = useState<string>("No file selected");
+  const [selectedFileName, setSelectedFileName] =
+    useState<string>("No file selected");
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -96,12 +97,18 @@ export default function AddProduct() {
         setLoadingWorkGroups(true);
 
         const [categoriesRes, workGroupsRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/categories`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/work-groups`, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
+          fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/categories`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          ),
+          fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/products/dropdowns/work-groups`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          ),
         ]);
 
         const categoriesData = await categoriesRes.json();
@@ -199,10 +206,12 @@ export default function AddProduct() {
   }, [form.subCategory, token]);
 
   const handleChange = (field: keyof typeof form, value: string) => {
-    setForm(prev => ({ ...prev, [field]: value }));
+    setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleThumbnailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleThumbnailChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFileName(file.name);
@@ -210,7 +219,7 @@ export default function AddProduct() {
       reader.onloadend = () => {
         const base64String = reader.result as string;
         setThumbnail(base64String);
-        setForm(prev => ({ ...prev, thumbnail: base64String }));
+        setForm((prev) => ({ ...prev, thumbnail: base64String }));
       };
       reader.readAsDataURL(file);
     }
@@ -222,38 +231,44 @@ export default function AddProduct() {
     value: string
   ) => {
     const newAttributeValues = [...form.attributeValues];
-    newAttributeValues[index] = { ...newAttributeValues[index], [field]: value };
-    setForm(prev => ({ ...prev, attributeValues: newAttributeValues }));
+    newAttributeValues[index] = {
+      ...newAttributeValues[index],
+      [field]: value,
+    };
+    setForm((prev) => ({ ...prev, attributeValues: newAttributeValues }));
   };
 
-  const handleSelectChange = (field: keyof typeof form, event: SelectChangeEvent<string>) => {
+  const handleSelectChange = (
+    field: keyof typeof form,
+    event: SelectChangeEvent<string>
+  ) => {
     const value = event.target.value;
-
+    
     setForm(prev => {
       // Handle reset logic for dependent fields
       if (field === "category") {
         return {
           ...prev,
           category: value,
-          subCategory: "",  // Reset dependent field
-          attributeValues: [{ attribute: "", value: "" }] // Reset attributes
+          subCategory: "", // Reset dependent field
+          attributeValues: [{ attribute: "", value: "" }], // Reset attributes
         };
       } else if (field === "workGroup") {
         return {
           ...prev,
           workGroup: value,
-          workTask: ""  // Reset dependent field
+          workTask: "", // Reset dependent field
         };
       } else if (field === "subCategory") {
         return {
           ...prev,
           subCategory: value,
-          attributeValues: [{ attribute: "", value: "" }] // Reset attributes
+          attributeValues: [{ attribute: "", value: "" }], // Reset attributes
         };
       } else {
         return {
           ...prev,
-          [field]: value
+          [field]: value,
         };
       }
     });
@@ -266,32 +281,40 @@ export default function AddProduct() {
     options: { _id: string; name: string }[],
     loading: boolean,
     disabled = false,
-    onChange?: (field: keyof typeof form, event: SelectChangeEvent<string>) => void
+    onChange?: (
+      field: keyof typeof form,
+      event: SelectChangeEvent<string>
+    ) => void
   ) => (
     <FormControl fullWidth>
       <InputLabel>{label}</InputLabel>
       <Select
         value={value}
-        onChange={(e) => onChange ? onChange(field, e) : handleChange(field, e.target.value)}
+        onChange={(e) =>
+          onChange ? onChange(field, e) : handleChange(field, e.target.value)
+        }
         label={label}
         disabled={disabled || loading}
       >
         {loading ? (
-          <MenuItem disabled>
+          <MenuItem disabled key={`${label}-loading`}>
             <CircularProgress size={20} />
           </MenuItem>
         ) : options.length > 0 ? (
-          options.map((opt) => (
-            <MenuItem key={opt._id} value={opt._id}>
-              {opt.name}
+          options.map((opt, index) => (
+            <MenuItem
+              key={`${label}-${opt._id || `fallback-${index}`}`}
+              value={opt._id || ""}
+            >
+              {opt.name || "Unknown"}
             </MenuItem>
           ))
         ) : (
           <MenuItem disabled>
-            {label === "SubCategory" && !form.category ? "Select a category first" :
-              label === "Work Task" && !form.workGroup ? "Select a work group first" :
-              label === "Attribute" && !form.subCategory ? "Select a subcategory first" :
-              `No ${label.toLowerCase()}s found`}
+            {label === "SubCategory" && !form.category ? "Select a category first" : 
+             label === "Work Task" && !form.workGroup ? "Select a work group first" :
+             label === "Attribute" && !form.subCategory ? "Select a subcategory first" :
+             `No ${label.toLowerCase()}s found`}
           </MenuItem>
         )}
       </Select>
@@ -336,7 +359,7 @@ export default function AddProduct() {
         subCategory: form.subCategory,
         workGroup: form.workGroup,
         workTask: form.workTask,
-        attributeValues: form.attributeValues.map(av => ({
+        attributeValues: form.attributeValues.map((av) => ({
           attribute: av.attribute,
           value: av.value,
         })),
@@ -374,7 +397,7 @@ export default function AddProduct() {
     { id: "modelName", label: "Model Name", type: "text", multiline: false },
     { id: "coohomId", label: "Coohom ID", type: "text", multiline: false },
     { id: "description", label: "Description", type: "text", multiline: false },
-
+    
   ];
 
   return (
@@ -383,8 +406,16 @@ export default function AddProduct() {
         Add New Product
       </Typography>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      {success && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          {success}
+        </Alert>
+      )}
 
       <Grid container spacing={2}>
         {textFields.map((field) => (
@@ -393,17 +424,20 @@ export default function AddProduct() {
               fullWidth
               label={field.label}
               value={form[field.id as keyof typeof form]}
-              onChange={(e) => handleChange(field.id as keyof typeof form, e.target.value)}
+              onChange={(e) =>
+                handleChange(field.id as keyof typeof form, e.target.value)
+              }
               type={field.type}
               multiline={field.multiline}
               rows={field.multiline ? 4 : 1}
             />
           </Grid>
         ))}
-        </Grid>
-        <Divider sx={{ my: 4 }} />
-        <Grid container spacing={2}>
+      </Grid>
 
+      <Divider sx={{ my: 4 }} />
+
+      <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
           {renderSelect(
             "Category",
@@ -426,7 +460,7 @@ export default function AddProduct() {
             !form.category,
             handleSelectChange
           )}
-
+          
         </Grid>
 
         <Grid item xs={12} sm={6}>
@@ -457,62 +491,70 @@ export default function AddProduct() {
       <Divider sx={{ my: 4 }} />
 
       {form.attributeValues.map((attr, index) => (
-  <Grid container
-  spacing={2}
-  key={index}
-  alignItems="center"
-  justifyContent="space-between"
-  sx={{ mb: 1 }}>
-    <Grid item xs={12} sm={5}>
-      {renderSelect(
-        "Attribute",
-        attr.attribute,
-        "attributeValues",
-        attributes,
-        loadingAttributes,
-        !form.subCategory,
-        (_, e) => handleAttributeChange(index, "attribute", e.target.value)
-      )}
-    </Grid>
+        <Grid
+          container
+          spacing={2}
+          key={`attribute-${index}`}
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{ mb: 1 }}
+        >
+          <Grid item xs={12} sm={5}>
+            {renderSelect(
+              "Attribute",
+              attr.attribute,
+              "attributeValues",
+              attributes,
+              loadingAttributes,
+              !form.subCategory,
+              (_, e) =>
+                handleAttributeChange(index, "attribute", e.target.value)
+            )}
+          </Grid>
 
-    <Grid item xs={12} sm={5}>
-      <TextField
-        fullWidth
-        label="Attribute Value"
-        value={attr.value}
-        onChange={(e) => handleAttributeChange(index, "value", e.target.value)}
-        disabled={!attr.attribute}
-      />
-    </Grid>
+          <Grid item xs={12} sm={5}>
+            <TextField
+              fullWidth
+              label="Attribute Value"
+              value={attr.value}
+              onChange={(e) =>
+                handleAttributeChange(index, "value", e.target.value)
+              }
+              disabled={!attr.attribute}
+            />
+          </Grid>
 
-    <Grid item xs={12} sm={2}>
-      <IconButton
-        onClick={() => {
-          const newAttrs = [...form.attributeValues];
-          newAttrs.splice(index, 1);
-          setForm(prev => ({ ...prev, attributeValues: newAttrs }));
-        }}
-        disabled={form.attributeValues.length === 1}
-        color="error"
+          <Grid item xs={12} sm={2}>
+            <IconButton
+              onClick={() => {
+                const newAttrs = [...form.attributeValues];
+                newAttrs.splice(index, 1);
+                setForm((prev) => ({ ...prev, attributeValues: newAttrs }));
+              }}
+              disabled={form.attributeValues.length === 1}
+              color="error"
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Grid>
+        </Grid>
+      ))}
+
+      <Button
+        onClick={() =>
+          setForm((prev) => ({
+            ...prev,
+            attributeValues: [
+              ...prev.attributeValues,
+              { attribute: "", value: "" },
+            ],
+          }))
+        }
+        variant="outlined"
+        sx={{ mt: 2 }}
       >
-        <DeleteIcon />
-      </IconButton>
-    </Grid>
-  </Grid>
-))}
-
-<Button
-  onClick={() =>
-    setForm((prev) => ({
-      ...prev,
-      attributeValues: [...prev.attributeValues, { attribute: "", value: "" }],
-    }))
-  }
-  variant="outlined"
-  sx={{ mt: 2 }}
->
-  Add Attribute
-</Button>
+        Add Attribute
+      </Button>
 
       <Divider sx={{ my: 4 }} />
 
@@ -528,7 +570,12 @@ export default function AddProduct() {
           }}
         >
           Upload Thumbnail
-          <input type="file" hidden onChange={handleThumbnailChange} accept="image/jpeg,image/png" />
+          <input
+            type="file"
+            hidden
+            onChange={handleThumbnailChange}
+            accept="image/jpeg,image/png"
+          />
         </Button>
         <Typography variant="body2" sx={{ color: "#666" }}>
           {selectedFileName}
@@ -553,7 +600,9 @@ export default function AddProduct() {
 
       <Box sx={{ display: "flex", gap: 2 }}>
         <ReusableButton onClick={handleSubmit}>Submit</ReusableButton>
-        <CancelButton href="/admin/product-catalog/products">Cancel</CancelButton>
+        <CancelButton href="/admin/product-catalog/products">
+          Cancel
+        </CancelButton>
       </Box>
     </Box>
   );

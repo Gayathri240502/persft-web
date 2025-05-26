@@ -13,26 +13,36 @@ import {
   Button,
   Checkbox,
   FormControlLabel,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
+  OutlinedInput,
 } from "@mui/material";
 
 interface User {
   _id: string;
   firstName: string;
   lastName: string;
+  username: string;
   email: string;
   phone: string;
   enabled: boolean;
+  roles: string[];
 }
+
+const availableRoles = ["user", "admin"];
 
 const UserEditPage: React.FC = () => {
   const [user, setUser] = useState<User>({
     _id: "",
     firstName: "",
     lastName: "",
+    username: "",
     email: "",
     phone: "",
-    
     enabled: false,
+    roles: [],
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +70,10 @@ const UserEditPage: React.FC = () => {
           throw new Error("Failed to fetch user data");
         }
         const data: User = await response.json();
-        setUser(data);
+        setUser({
+          ...data,
+          roles: data.roles || [],
+        });
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -153,6 +166,14 @@ const UserEditPage: React.FC = () => {
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
+              label="Username"
+              value={user.username}
+              onChange={(e) => setUser({ ...user, username: e.target.value })}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
               label="First Name"
               value={user.firstName}
               onChange={(e) => setUser({ ...user, firstName: e.target.value })}
@@ -194,6 +215,32 @@ const UserEditPage: React.FC = () => {
               }
               label="Enabled"
             />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth>
+              <InputLabel id="roles-label">Roles</InputLabel>
+              <Select
+                labelId="roles-label"
+                multiple
+                value={user.roles}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setUser({
+                    ...user,
+                    roles: typeof value === "string" ? value.split(",") : value,
+                  });
+                }}
+                input={<OutlinedInput label="Roles" />}
+                renderValue={(selected) => (selected as string[]).join(", ")}
+              >
+                {availableRoles.map((role) => (
+                  <MenuItem key={role} value={role}>
+                    {role}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
         </Grid>
         <Box display="flex" justifyContent="flex-end" sx={{ marginTop: 4 }}>

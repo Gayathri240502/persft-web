@@ -52,7 +52,6 @@ export default async function RootLayout({
                   {children}
                 </LocalizationProviderWrapper>
               </main>
-              <Footer />
             </div>
           </div>
         </Providers>

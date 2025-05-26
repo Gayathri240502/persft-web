@@ -9,6 +9,8 @@ import {
   MenuItem,
   Divider,
   CircularProgress,
+  ListItemText,
+  Select,
   Alert,
 } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
@@ -16,7 +18,8 @@ import CancelButton from "@/app/components/CancelButton";
 import { useRouter } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
-const roles = ["Admin", "User"]; // Add roles as needed
+// Roles in lowercase for backend compatibility
+const roles = ["admin", "user"];
 
 // Define the type of your form state
 interface FormDataType {
@@ -47,6 +50,7 @@ const AddUser = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [roleMenuOpen, setRoleMenuOpen] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>
@@ -106,6 +110,7 @@ const AddUser = () => {
 
       router.push("/admin/users");
     } catch (err: any) {
+      console.error("Error creating user:", err.message);
       setError(err.message || "Something went wrong.");
     } finally {
       setLoading(false);
@@ -181,12 +186,24 @@ const AddUser = () => {
             label="Role"
             fullWidth
             value={formData.role}
-            onChange={handleRoleChange}
-            SelectProps={{ multiple: true }}
+            onChange={(e) => {
+              handleRoleChange(e);
+              setRoleMenuOpen(false); // Close dropdown on selection
+            }}
+            SelectProps={{
+              multiple: true,
+              open: roleMenuOpen,
+              onOpen: () => setRoleMenuOpen(true),
+              onClose: () => setRoleMenuOpen(false),
+              renderValue: (selected) =>
+                (selected as string[])
+                  .map((val) => val.charAt(0).toUpperCase() + val.slice(1))
+                  .join(", "),
+            }}
           >
             {roles.map((role, index) => (
               <MenuItem key={index} value={role}>
-                {role}
+                {role.charAt(0).toUpperCase() + role.slice(1)}
               </MenuItem>
             ))}
           </TextField>

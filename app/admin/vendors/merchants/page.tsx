@@ -55,7 +55,7 @@ const Merchant = () => {
   const [search, setSearch] = useState("");
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
-    pageSize: 10,
+    pageSize: 5,
   });
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

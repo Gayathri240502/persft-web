@@ -72,20 +72,20 @@ const Shop = () => {
 
     try {
       const queryParams = new URLSearchParams({
-        page: String(page + 1), // Backend is 1-based
+        page: String(page + 1), // Backend expects 1-based
         limit: String(pageSize),
         ...(search && { searchTerm: search }),
       });
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/shops?${queryParams.toString()}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/shops?${queryParams.toString()}`;
+      console.log("Fetching:", url);
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
@@ -95,9 +95,6 @@ const Shop = () => {
       }
 
       const result: ShopResponse = await response.json();
-
-      console.log("Fetched result:", result);
-      console.log("Pagination model:", paginationModel);
 
       if (Array.isArray(result.shops)) {
         const dataWithSN = result.shops.map((shop, index) => ({
@@ -277,10 +274,10 @@ const Shop = () => {
           columns={columns}
           rows={rows}
           rowCount={rowCount}
-          paginationMode="server"
           paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
+          onPaginationModelChange={(newModel) => setPaginationModel(newModel)}
           pageSizeOptions={[5, 10, 25, 100]}
+          paginationMode="server"
           disableColumnMenu={isSmallScreen}
           loading={loading}
           getRowId={(row) => row.id || row._id || row.keycloakId}

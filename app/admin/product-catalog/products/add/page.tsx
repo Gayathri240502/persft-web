@@ -243,8 +243,8 @@ export default function AddProduct() {
     event: SelectChangeEvent<string>
   ) => {
     const value = event.target.value;
-    
-    setForm(prev => {
+
+    setForm((prev) => {
       // Handle reset logic for dependent fields
       if (field === "category") {
         return {
@@ -311,10 +311,13 @@ export default function AddProduct() {
           ))
         ) : (
           <MenuItem disabled>
-            {label === "SubCategory" && !form.category ? "Select a category first" : 
-             label === "Work Task" && !form.workGroup ? "Select a work group first" :
-             label === "Attribute" && !form.subCategory ? "Select a subcategory first" :
-             `No ${label.toLowerCase()}s found`}
+            {label === "SubCategory" && !form.category
+              ? "Select a category first"
+              : label === "Work Task" && !form.workGroup
+                ? "Select a work group first"
+                : label === "Attribute" && !form.subCategory
+                  ? "Select a subcategory first"
+                  : `No ${label.toLowerCase()}s found`}
           </MenuItem>
         )}
       </Select>
@@ -397,7 +400,6 @@ export default function AddProduct() {
     { id: "modelName", label: "Model Name", type: "text", multiline: false },
     { id: "coohomId", label: "Coohom ID", type: "text", multiline: false },
     { id: "description", label: "Description", type: "text", multiline: false },
-    
   ];
 
   return (
@@ -460,7 +462,6 @@ export default function AddProduct() {
             !form.category,
             handleSelectChange
           )}
-          
         </Grid>
 
         <Grid item xs={12} sm={6}>

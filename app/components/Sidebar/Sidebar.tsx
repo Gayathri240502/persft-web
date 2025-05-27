@@ -305,7 +305,7 @@ export default function Sidebar() {
         ref={sidebarRef}
         className={`fixed top-0 left-0 h-screen bg-white shadow-xl z-50 transition-all duration-300 ease-in-out flex flex-col border-r border-gray-200 ${
           open ? "w-64" : "w-16"
-        } ${isMobile && !open ? "-translate-x-full" : "translate-x-0"}`}
+        } translate-x-0`}
       >
         {/* Toggle Button */}
         <button

@@ -40,24 +40,24 @@ import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 // --- Interfaces for type safety ---
 
 interface WorkTask {
-  _id?: string; // Optional: if tasks have their own ID in the DB
-  id: string; // ID from the API
+  _id?: string;
+  id: string;
   name: string;
   order: number;
 }
 
 interface WorkGroupWithTasks {
-  _id?: string; // Optional: if work groups have their own ID in the DB
-  id: string; // ID from the API
+  _id?: string;
+  id: string;
   name: string;
   tasks: WorkTask[];
 }
 
 interface FormDataWorkGroup {
-  workGroup: string; // Stores the ID of the selected work group
+  workGroup: string;
   order: number;
   workTasks: {
-    workTask: string; // Stores the ID of the selected work task
+    workTask: string;
     order: number;
   }[];
 }
@@ -74,7 +74,7 @@ const WorksManagement = () => {
   const [work, setWork] = useState<WorkData | null>(null);
   const [workGroupsData, setWorkGroupsData] = useState<WorkGroupWithTasks[]>(
     []
-  ); // This will store the full work groups with tasks
+  );
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>("");
@@ -110,10 +110,9 @@ const WorksManagement = () => {
           });
         } else {
           setWork(null);
-          setShowCreateForm(true); // If no work exists, show create form
+          setShowCreateForm(true);
         }
       } else {
-        // If API returns 404 or similar, treat as no work exists
         setWork(null);
         setShowCreateForm(true);
       }
@@ -148,20 +147,24 @@ const WorksManagement = () => {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      // Fetch both work and the full list of work groups/tasks concurrently
       await Promise.all([fetchWork(), fetchWorkGroupsAndTasks()]);
       setLoading(false);
     };
-    loadData();
-  }, [token]); // Dependency on token to re-fetch if it changes
 
-  // Helper function to get work group name by ID
+    if (token) {
+      loadData();
+    } else {
+      setLoading(false);
+      setError("Authentication token not found");
+    }
+  }, [token]);
+
+  // Helper functions
   const getWorkGroupName = (id: string) => {
     const group = workGroupsData.find((g) => g.id === id);
     return group ? group.name : "Unknown Group";
   };
 
-  // Helper function to get work task name by ID
   const getWorkTaskName = (id: string) => {
     for (const group of workGroupsData) {
       const task = group.tasks.find((t) => t.id === id);
@@ -172,7 +175,6 @@ const WorksManagement = () => {
     return "Unknown Task";
   };
 
-  // Get tasks for a specific work group
   const getTasksForWorkGroup = (workGroupId: string) => {
     const group = workGroupsData.find((g) => g.id === workGroupId);
     return group ? group.tasks : [];
@@ -199,7 +201,7 @@ const WorksManagement = () => {
         workGroups: [
           ...prev.workGroups,
           {
-            workGroup: "", // Initialize with empty string for selection
+            workGroup: "",
             order: maxOrder + 1,
             workTasks: [],
           },
@@ -227,13 +229,12 @@ const WorksManagement = () => {
       workGroups: prev.workGroups.map((wg, i) => {
         if (i === index) {
           const updatedWg = { ...wg, [field]: value };
-          // If work group is changed, clear all tasks
           if (field === "workGroup") {
             updatedWg.workTasks = [];
           }
-          // If order is being updated, ensure it's unique
           if (field === "order") {
-            const newOrder = typeof value === 'string' ? parseInt(value) : value; // Ensure number
+            const newOrder =
+              typeof value === "string" ? parseInt(value) : value;
             const usedOrders = prev.workGroups
               .filter((_, otherIndex) => otherIndex !== index)
               .map((wg) => wg.order);
@@ -266,7 +267,7 @@ const WorksManagement = () => {
             workTasks: [
               ...wg.workTasks,
               {
-                workTask: "", // Initialize with empty string for selection
+                workTask: "",
                 order: maxTaskOrder + 1,
               },
             ],
@@ -299,45 +300,39 @@ const WorksManagement = () => {
     field: "workTask" | "order",
     value: string | number
   ) => {
-   setFormData((prev) => ({
-  ...prev,
-  workGroups: prev.workGroups.map((wg, i) => {
-    if (i === groupIndex) {
-      return {
-        ...wg,
-        workTasks: wg.workTasks.map((wt, ti) => {
-          if (ti === taskIndex) {
-            if (field === "order") {
-              // Ensure order is a number
-              const newOrder = typeof value === "string" ? parseInt(value) : value;
-
-              // Collect used order numbers except the current task
-              const usedOrders = wg.workTasks
-                .filter((_, otherIndex) => otherIndex !== taskIndex)
-                .map((wt) => wt.order);
-
-              // Increment order if duplicate found
-              let finalOrder = newOrder;
-              while (usedOrders.includes(finalOrder)) {
-                finalOrder++;
+    setFormData((prev) => ({
+      ...prev,
+      workGroups: prev.workGroups.map((wg, i) => {
+        if (i === groupIndex) {
+          return {
+            ...wg,
+            workTasks: wg.workTasks.map((wt, ti) => {
+              if (ti === taskIndex) {
+                if (field === "order") {
+                  const newOrder =
+                    typeof value === "string" ? parseInt(value) : value;
+                  const usedOrders = wg.workTasks
+                    .filter((_, otherIndex) => otherIndex !== taskIndex)
+                    .map((wt) => wt.order);
+                  let finalOrder = newOrder;
+                  while (usedOrders.includes(finalOrder)) {
+                    finalOrder++;
+                  }
+                  return { ...wt, [field]: finalOrder };
+                } else if (field === "workTask") {
+                  return { ...wt, [field]: value.toString() };
+                } else {
+                  return { ...wt, [field]: value };
+                }
               }
-
-              return { ...wt, [field]: finalOrder };
-            } else if (field === "workTask") {
-              // Ensure workTask is always a string
-              return { ...wt, [field]: value.toString() };
-            } else {
-              return { ...wt, [field]: value };
-            }
-          }
-          return wt;
-        }),
-      };
-    }
-    return wg;
-  }),
-}));
-
+              return wt;
+            }),
+          };
+        }
+        return wg;
+      }),
+    }));
+  };
 
   // Create work
   const createWork = async () => {
@@ -356,9 +351,11 @@ const WorksManagement = () => {
       if (response.ok) {
         setSuccess("Work created successfully!");
         setShowCreateForm(false);
-        await fetchWork(); // Re-fetch to display the newly created work
+        await fetchWork();
       } else {
-        const errorData = await response.json().catch(() => ({ message: "Failed to create work" }));
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: "Failed to create work" }));
         setError(errorData.message || "Failed to create work");
       }
     } catch (err) {
@@ -385,9 +382,11 @@ const WorksManagement = () => {
       if (response.ok) {
         setSuccess("Work updated successfully!");
         setIsEditing(false);
-        await fetchWork(); // Re-fetch to display updated work
+        await fetchWork();
       } else {
-        const errorData = await response.json().catch(() => ({ message: "Failed to update work" }));
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: "Failed to update work" }));
         setError(errorData.message || "Failed to update work");
       }
     } catch (err) {
@@ -413,10 +412,12 @@ const WorksManagement = () => {
       if (response.ok) {
         setSuccess("Work deleted successfully!");
         setWork(null);
-        setShowCreateForm(true); // Show create form after deletion
+        setShowCreateForm(true);
         setDeleteConfirm(false);
       } else {
-        const errorData = await response.json().catch(() => ({ message: "Failed to delete work" }));
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: "Failed to delete work" }));
         setError(errorData.message || "Failed to delete work");
       }
     } catch (err) {
@@ -474,7 +475,7 @@ const WorksManagement = () => {
         </Alert>
       )}
 
-      {/* Delete Button (only visible if work exists and not in edit/create mode) */}
+      {/* Delete Button */}
       {work && !isEditing && !showCreateForm && (
         <Box sx={{ mb: 2 }}>
           <Button
@@ -488,7 +489,7 @@ const WorksManagement = () => {
         </Box>
       )}
 
-      {/* Display Work Data (only if work exists and not in edit/create mode) */}
+      {/* Display Work Data */}
       {work && !isEditing && !showCreateForm && (
         <Paper sx={{ p: 3, mb: 3 }}>
           <Box
@@ -503,7 +504,7 @@ const WorksManagement = () => {
               startIcon={<EditIcon />}
               onClick={() => {
                 setIsEditing(true);
-                resetForm(); // Populate form with current work data
+                resetForm();
               }}
             >
               Update
@@ -514,14 +515,13 @@ const WorksManagement = () => {
             {work.description}
           </Typography>
 
-          <Divider sx={{ my: 2} }/>
+          <Divider sx={{ my: 2 }} />
 
           <Typography variant="h6" gutterBottom>
             Work Groups & Tasks
           </Typography>
 
           {work.workGroups && work.workGroups.length > 0 ? (
-            // Sort work groups by their 'order' property
             work.workGroups
               .sort((a, b) => a.order - b.order)
               .map((wg, index) => (
@@ -540,7 +540,6 @@ const WorksManagement = () => {
                         Tasks:
                       </Typography>
                       {wg.workTasks && wg.workTasks.length > 0 ? (
-                        // Sort tasks within each work group by their 'order' property
                         wg.workTasks
                           .sort((a, b) => a.order - b.order)
                           .map((wt, taskIndex) => (
@@ -687,7 +686,7 @@ const WorksManagement = () => {
                         size="small"
                         startIcon={<AddIcon />}
                         onClick={() => addTaskToWorkGroup(groupIndex)}
-                        disabled={!wg.workGroup} // Disable if no work group selected
+                        disabled={!wg.workGroup}
                       >
                         Add Task
                       </Button>
@@ -714,7 +713,7 @@ const WorksManagement = () => {
                                 e.target.value as string
                               )
                             }
-                            disabled={!wg.workGroup} // Disable if no work group selected
+                            disabled={!wg.workGroup}
                           >
                             {getTasksForWorkGroup(wg.workGroup).map((task) => (
                               <MenuItem key={task.id} value={task.id}>
@@ -804,6 +803,5 @@ const WorksManagement = () => {
     </Box>
   );
 };
-}
 
 export default WorksManagement;

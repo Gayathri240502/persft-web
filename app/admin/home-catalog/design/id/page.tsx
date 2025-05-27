@@ -249,7 +249,7 @@ const DesignTypeDetails = () => {
             <img
               src={`data:image/jpeg;base64,${designDetails.thumbnailUrl}`}
               alt="Thumbnail"
-              style={{ width: "50%", maxHeight: 200 }}
+              style={{ width: 150, maxHeight: 150 }}
             />
           ) : (
             <Typography>No thumbnail available</Typography>

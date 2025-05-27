@@ -88,11 +88,12 @@ const EditProject = () => {
     thumbnailPreview: "",
     selections: [],
   });
-  const [originalThumbnail, setOriginalThumbnail] = useState("");
+  // const [originalThumbnail, setOriginalThumbnail] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState<string | null>(null);
   const [selectedFileName, setSelectedFileName] = useState("No file selected");
   const [isLoading, setIsLoading] = useState(true);
+  const [thumbnail, setThumbnail] = useState<string>("at");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -161,8 +162,11 @@ const EditProject = () => {
           selections: processedSelections,
         });
 
+        setThumbnail(projectData.thumbnail || "");
+        setSelectedFileName("Existing Thumbnail");
+
         // Store the original thumbnail URL separately
-        setOriginalThumbnail(projectData.thumbnailUrl || "");
+        // setOriginalThumbnail(projectData.thumbnailUrl || "");
       } catch (err) {
         console.error("Fetch error:", err);
         setApiError("Failed to load project data");
@@ -181,25 +185,18 @@ const EditProject = () => {
   };
 
   // Handles thumbnail file selection and preview generation
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFileName(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        const base64String = result.split(",")[1]; // Extract base64 part
-        setFormData((prev) => ({
-          ...prev,
-          thumbnail: file,
-          thumbnailBase64: base64String,
-          thumbnailPreview: result,
-        }));
-      };
-      reader.readAsDataURL(file); // Read file as Data URL for preview
-    }
-  };
-
+ const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+     const file = e.target.files?.[0];
+     if (file) {
+       setSelectedFileName(file.name);
+       const reader = new FileReader();
+       reader.onloadend = () => {
+         setThumbnail(reader.result as string);
+       };
+       reader.readAsDataURL(file);
+     }
+   };
+    
   // Handles selection/deselection of a residence type
   const handleResidenceSelection = (residenceId: string) => {
     setFormData((prev) => {
@@ -459,38 +456,41 @@ const EditProject = () => {
         sx={{ mb: 3 }}
       />
 
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-        <Button
-          variant="outlined"
-          component="label"
-          startIcon={<UploadFileIcon />}
-        >
-          Upload Thumbnail
-          <input type="file" hidden onChange={handleThumbnailChange} />
-        </Button>
-        <Typography variant="body2">
-          {formData.thumbnail ? selectedFileName : "Using existing thumbnail"}
-        </Typography>
-      </Box>
-      <Typography variant="caption" sx={{ color: "#999" }}>
-        Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
-      </Typography>
-      {(formData.thumbnailPreview || originalThumbnail) && (
-        <Box sx={{ mt: 2 }}>
-          <img
-            src={formData.thumbnailPreview || originalThumbnail}
-            alt="Thumbnail Preview"
-            style={{ width: 200, borderRadius: 8 }}
-          />
-        </Box>
-      )}
-      {errors.thumbnail && (
-        <Typography color="error" sx={{ mt: 1 }}>
-          {errors.thumbnail}
-        </Typography>
-      )}
+      <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<UploadFileIcon />}
+              sx={{
+                color: "#05344c",
+                borderColor: "#05344c",
+                "&:hover": { backgroundColor: "#f0f4f8" },
+              }}
+            >
+              Upload Thumbnail
+              <input type="file" hidden onChange={handleThumbnailChange} />
+            </Button>
+            <Typography variant="body2" sx={{ color: "#666" }}>
+              {selectedFileName}
+            </Typography>
+          </Box>
 
-      ---
+           <Typography variant="caption" sx={{ color: "#999" }}>
+                    Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+                    </Typography>
+
+          {thumbnail && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2">Preview:</Typography>
+              <img
+                src={thumbnail}
+                alt="Thumbnail Preview"
+                style={{ width: 200, borderRadius: 8 }}
+              />
+            </Box>
+          )}
+
+
 
      <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
        Selections
@@ -618,7 +618,7 @@ const EditProject = () => {
         </Alert>
       )}
 
-      ---
+      
 
       {/* Action buttons */}
       <Box sx={{ display: "flex", gap: 2, mt: 4 }}>

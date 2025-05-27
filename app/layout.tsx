@@ -6,7 +6,7 @@ import Sidebar from "./components/Sidebar/Sidebar";
 import { getSession } from "./auth";
 import Navbar from "./components/navbar/navbar";
 import LocalizationProviderWrapper from "../app/components/providers/LocalizationProviderWrapper";
-import Footer from "./components/navbar/Footer";
+// import Footer from "./components/navbar/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

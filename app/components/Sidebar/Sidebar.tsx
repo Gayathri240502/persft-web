@@ -473,7 +473,7 @@ export default function Sidebar() {
         {open && (
           <div className="border-t border-gray-200 p-4 bg-gray-50 flex-shrink-0">
             <div className="text-xs text-gray-500 text-center">
-              Admin Panel v1.0
+              Admin Panel v1.1
             </div>
           </div>
         )}

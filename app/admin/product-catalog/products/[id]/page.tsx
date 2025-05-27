@@ -144,7 +144,9 @@ const ProductDetailsPage: React.FC = () => {
           <Box>
             <IconButton
               color="primary"
-              onClick={() => router.push(`/admin/products/edit?id=${id}`)}
+              onClick={() =>
+                router.push(`/admin/product-catalog/products/edit?id=${id}`)
+              }
             >
               <Edit />
             </IconButton>

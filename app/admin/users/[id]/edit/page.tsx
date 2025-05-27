@@ -31,7 +31,7 @@ interface User {
   roles: string[];
 }
 
-const availableRoles = ["user", "admin"];
+const availableRoles = ["admin", "merchant", "customer", "kisok"];
 
 const UserEditPage: React.FC = () => {
   const [user, setUser] = useState<User>({

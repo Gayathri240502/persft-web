@@ -31,7 +31,7 @@ const EditDesignType = () => {
   const [themes, setThemes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-   const [thumbnail, setThumbnail] = useState<string>("at");
+  const [thumbnail, setThumbnail] = useState<string>("at");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -57,7 +57,8 @@ const EditDesignType = () => {
   const [apiError, setApiError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/;
+  const urlRegex =
+    /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/;
   const mongoIdRegex = /^[0-9a-fA-F]{24}$/;
   const allowedFileTypes = ["image/jpeg", "image/png", "image/jpg"];
   const maxFileSize = 60 * 1024; // 60kb
@@ -103,34 +104,38 @@ const EditDesignType = () => {
     return isValid;
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: any) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const handleSelectChange = (field, value) => {
+  const handleSelectChange = (field: any, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
-  const fileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === "string") {
-          resolve({
-            fullUrl: reader.result,
-            base64: reader.result.split(",")[1],
-          });
-        } else reject("Failed to convert file");
-      };
-      reader.onerror = (err) => reject(err);
-      reader.readAsDataURL(file);
-    });
-  };
+ type FileBase64Result = {
+  fullUrl: string;
+  base64: string;
+};
 
-  const handleFileChange = async (e) => {
+const fileToBase64 = (file: File): Promise<FileBase64Result> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      resolve({
+        fullUrl: URL.createObjectURL(file),
+        base64,
+      });
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
+  const handleFileChange = async (e:any) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -162,8 +167,12 @@ const EditDesignType = () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const [designRes, resRes, roomRes, themeRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/designs/${designId}`, { headers }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/residence-types`, { headers }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/designs/${designId}`, {
+          headers,
+        }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/residence-types`, {
+          headers,
+        }),
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/room-types`, { headers }),
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/themes`, { headers }),
       ]);
@@ -217,17 +226,22 @@ const EditDesignType = () => {
             theme: formData.theme,
           },
         ],
-        ...(formData.thumbnailBase64 && { thumbnail: formData.thumbnailBase64 }),
+        ...(formData.thumbnailBase64 && {
+          thumbnail: formData.thumbnailBase64,
+        }),
       };
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/designs/${designId}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/designs/${designId}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (!response.ok) throw new Error("Failed to update design");
       setSuccess(true);
@@ -302,18 +316,17 @@ const EditDesignType = () => {
               accept=".jpg,.jpeg,.png"
             />
           </Button>
-          <Typography variant="body2" sx={{ color: "#666" }}>
+          {/* <Typography variant="body2" sx={{ color: "#666" }}>
             {formData.thumbnail?.name ||
               (formData.thumbnailPreview
                 ? "Using existing image"
                 : "No file selected")}
-          </Typography>
+          </Typography> */}
 
           {formData.thumbnailPreview && (
             <Button
               variant="text"
               color="error"
-              onClick={handleRemoveImage}
               size="small"
             >
               Remove
@@ -360,15 +373,15 @@ const EditDesignType = () => {
         </FormHelperText>
 
         {thumbnail && (
-                    <Box sx={{ mb: 3 }}>
-                      <Typography variant="subtitle2">Preview:</Typography>
-                      <img
-                        src={thumbnail}
-                        alt="Thumbnail Preview"
-                        style={{ width: 200, borderRadius: 8 }}
-                      />
-                    </Box>
-                  )}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2">Preview:</Typography>
+            <img
+              src={thumbnail}
+              alt="Thumbnail Preview"
+              style={{ width: 200, borderRadius: 8 }}
+            />
+          </Box>
+        )}
       </Box>
 
       <Grid container spacing={3}>

@@ -24,7 +24,7 @@ const EditResidenceType = () => {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [thumbnail, setThumbnail] = useState<string>("");
+  const [thumbnail, setThumbnail] = useState<string>("at");
   const [selectedFileName, setSelectedFileName] = useState("No file selected");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

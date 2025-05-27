@@ -113,7 +113,7 @@ const EditThemeType = () => {
   const validateForm = () => {
     if (!name) return setError("Name is required"), false;
     if (!description) return setError("Description is required"), false;
-    if (!thumbnail) return setError("Thumbnail is required"), false;
+    // if (!thumbnail) return setError("Thumbnail is required"), false;
     if (selectedRooms.length === 0)
       return setError("Select at least one room type"), false;
     setError(null);

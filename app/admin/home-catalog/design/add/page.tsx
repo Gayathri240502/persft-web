@@ -114,10 +114,10 @@ const AddDesignType = () => {
     }
 
     // Thumbnail validation
-    if (!formData.thumbnail || !formData.thumbnailBase64) {
-      newErrors.thumbnail = "Thumbnail is required";
-      isValid = false;
-    }
+    // if (!formData.thumbnail || !formData.thumbnailBase64) {
+    //   newErrors.thumbnail = "Thumbnail is required";
+    //   isValid = false;
+    // }
 
     // Combinations validation
     if (formData.combinations.length === 0) {

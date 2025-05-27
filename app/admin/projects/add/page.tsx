@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, } from "react";
 import {
   Box,
   Typography,
@@ -14,6 +14,7 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useRouter } from 'next/navigation';
 
 interface SelectionOption {
   id: string;
@@ -64,6 +65,7 @@ const CreateProject = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState<string | null>(null);
   const [selectedFileName, setSelectedFileName] = useState("No file selected");
+   const router = useRouter();
 
   useEffect(() => {
     const fetchSelectionOptions = async () => {
@@ -250,9 +252,9 @@ const CreateProject = () => {
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
     }
-    if (!formData.thumbnailBase64) {
-      newErrors.thumbnail = "Thumbnail is required";
-    }
+    // if (!formData.thumbnailBase64) {
+    //   newErrors.thumbnail = "Thumbnail is required";
+    // }
 
     if (formData.selections.length === 0) {
       newErrors.selections = "Select at least one residence";
@@ -298,6 +300,7 @@ const CreateProject = () => {
         throw new Error(result.message || "Failed to create project");
 
       alert("Project created successfully!");
+      router.push("/admin/projects"); // Redirect to projects list
       setFormData({
         name: "",
         description: "",

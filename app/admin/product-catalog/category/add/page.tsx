@@ -44,8 +44,8 @@ const AddCategory = () => {
     };
 
   const validateForm = () => {
-    if (!name || !description || !thumbnail) {
-      setError("Name, description, and thumbnail are required.");
+    if (!name || !description ) {
+      setError("Name and description are required.");
       return false;
     }
     setError(null);

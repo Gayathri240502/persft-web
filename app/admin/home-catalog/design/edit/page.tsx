@@ -95,10 +95,10 @@ const EditDesignType = () => {
       isValid = false;
     }
 
-    if (!formData.thumbnail && !formData.thumbnailPreview) {
-      newErrors.thumbnail = "Please upload a thumbnail image";
-      isValid = false;
-    }
+    // if (!formData.thumbnail && !formData.thumbnailPreview) {
+    //   newErrors.thumbnail = "Please upload a thumbnail image";
+    //   isValid = false;
+    // }
 
     setErrors(newErrors);
     return isValid;
@@ -245,7 +245,7 @@ const fileToBase64 = (file: File): Promise<FileBase64Result> => {
 
       if (!response.ok) throw new Error("Failed to update design");
       setSuccess(true);
-      router.push("/designs");
+      router.push("/admin/home-catalog/designs");
     } catch (err) {
       setApiError("Failed to submit form");
     }
@@ -340,28 +340,21 @@ const fileToBase64 = (file: File): Promise<FileBase64Result> => {
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
               Image Preview:
             </Typography>
-            <Box
-              sx={{
-                width: 150,
-                height: 150,
-                border: "1px solid #ddd",
-                borderRadius: 1,
-                overflow: "hidden",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <img
-                src={formData.thumbnailPreview}
-                alt="Thumbnail preview"
-                style={{
-                  maxWidth: "100%",
-                  maxHeight: "100%",
-                  objectFit: "contain",
-                }}
-              />
-            </Box>
+           <Box
+  sx={{
+    width: 150,
+    height: 150,
+    border: "1px solid #ddd",
+    borderRadius: 2,
+    overflow: "hidden",
+  }}
+>
+  <img
+    src={formData.thumbnailPreview}
+    alt="Thumbnail Preview"
+    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+  />
+</Box>
           </Box>
         )}
 

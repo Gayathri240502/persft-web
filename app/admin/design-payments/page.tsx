@@ -135,7 +135,7 @@ const DesignPayments = () => {
     {
       field: "_id",
       headerName: "ID",
-      flex: 1,
+      flex: 2,
       renderCell: (params) => (
         <Typography variant="body2" sx={{ color: theme.palette.primary.main }}>
           <a href={`/admin/design-payments/${params.row._id}`}>
@@ -162,8 +162,8 @@ const DesignPayments = () => {
           ? params.row.project.name
           : "Unknown Project",
     },
-    { field: "validUntil", headerName: "Valid Until", flex: 1 },
-    { field: "createdAt", headerName: "Created At", flex: 1 },
+    // { field: "validUntil", headerName: "Valid Until", flex: 1 },
+    // { field: "createdAt", headerName: "Created At", flex: 1 },
   ];
 
   return (
@@ -217,7 +217,7 @@ const DesignPayments = () => {
         </Box>
       ) : (
         <StyledDataGrid
-          minWidth={1500}
+          // minWidth={1500}
           rows={payments}
           columns={columns}
           rowCount={rowCount}

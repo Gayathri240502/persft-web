@@ -757,7 +757,7 @@ const AddProduct = () => {
         <ReusableButton type="submit" disabled={submitLoading}>
           {submitLoading ? <CircularProgress size={24} /> : "Submit"}
         </ReusableButton>
-        <CancelButton href="/admin/products">Cancel</CancelButton>
+        <CancelButton href="/admin/product-catalog/products">Cancel</CancelButton>
       </Box>
     </Box>
   );

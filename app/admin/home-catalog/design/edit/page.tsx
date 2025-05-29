@@ -115,27 +115,27 @@ const EditDesignType = () => {
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
- type FileBase64Result = {
-  fullUrl: string;
-  base64: string;
-};
+  type FileBase64Result = {
+    fullUrl: string;
+    base64: string;
+  };
 
-const fileToBase64 = (file: File): Promise<FileBase64Result> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result as string;
-      resolve({
-        fullUrl: URL.createObjectURL(file),
-        base64,
-      });
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-};
+  const fileToBase64 = (file: File): Promise<FileBase64Result> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        resolve({
+          fullUrl: URL.createObjectURL(file),
+          base64,
+        });
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
 
-  const handleFileChange = async (e:any) => {
+  const handleFileChange = async (e: any) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -324,11 +324,7 @@ const fileToBase64 = (file: File): Promise<FileBase64Result> => {
           </Typography> */}
 
           {formData.thumbnailPreview && (
-            <Button
-              variant="text"
-              color="error"
-              size="small"
-            >
+            <Button variant="text" color="error" size="small">
               Remove
             </Button>
           )}

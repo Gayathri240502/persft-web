@@ -233,7 +233,8 @@ const WorksManagement = () => {
           }
           // If order is being updated, ensure it's unique
           if (field === "order") {
-            const newOrder = typeof value === 'string' ? parseInt(value) : value; // Ensure number
+            const newOrder =
+              typeof value === "string" ? parseInt(value) : value; // Ensure number
             const usedOrders = prev.workGroups
               .filter((_, otherIndex) => otherIndex !== index)
               .map((wg) => wg.order);
@@ -299,511 +300,532 @@ const WorksManagement = () => {
     field: "workTask" | "order",
     value: string | number
   ) => {
-   setFormData((prev) => ({
-  ...prev,
-  workGroups: prev.workGroups.map((wg, i) => {
-    if (i === groupIndex) {
-      return {
-        ...wg,
-        workTasks: wg.workTasks.map((wt, ti) => {
-          if (ti === taskIndex) {
-            if (field === "order") {
-              // Ensure order is a number
-              const newOrder = typeof value === "string" ? parseInt(value) : value;
+    setFormData((prev) => ({
+      ...prev,
+      workGroups: prev.workGroups.map((wg, i) => {
+        if (i === groupIndex) {
+          return {
+            ...wg,
+            workTasks: wg.workTasks.map((wt, ti) => {
+              if (ti === taskIndex) {
+                if (field === "order") {
+                  // Ensure order is a number
+                  const newOrder =
+                    typeof value === "string" ? parseInt(value) : value;
 
-              // Collect used order numbers except the current task
-              const usedOrders = wg.workTasks
-                .filter((_, otherIndex) => otherIndex !== taskIndex)
-                .map((wt) => wt.order);
+                  // Collect used order numbers except the current task
+                  const usedOrders = wg.workTasks
+                    .filter((_, otherIndex) => otherIndex !== taskIndex)
+                    .map((wt) => wt.order);
 
-              // Increment order if duplicate found
-              let finalOrder = newOrder;
-              while (usedOrders.includes(finalOrder)) {
-                finalOrder++;
+                  // Increment order if duplicate found
+                  let finalOrder = newOrder;
+                  while (usedOrders.includes(finalOrder)) {
+                    finalOrder++;
+                  }
+
+                  return { ...wt, [field]: finalOrder };
+                } else if (field === "workTask") {
+                  // Ensure workTask is always a string
+                  return { ...wt, [field]: value.toString() };
+                } else {
+                  return { ...wt, [field]: value };
+                }
               }
+              return wt;
+            }),
+          };
+        }
+        return wg;
+      }),
+    }));
 
-              return { ...wt, [field]: finalOrder };
-            } else if (field === "workTask") {
-              // Ensure workTask is always a string
-              return { ...wt, [field]: value.toString() };
-            } else {
-              return { ...wt, [field]: value };
-            }
+    // Create work
+    const createWork = async () => {
+      setSaving(true);
+      setError("");
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/works`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
           }
-          return wt;
-        }),
-      };
-    }
-    return wg;
-  }),
-}));
+        );
 
-
-  // Create work
-  const createWork = async () => {
-    setSaving(true);
-    setError("");
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/works`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        setSuccess("Work created successfully!");
-        setShowCreateForm(false);
-        await fetchWork(); // Re-fetch to display the newly created work
-      } else {
-        const errorData = await response.json().catch(() => ({ message: "Failed to create work" }));
-        setError(errorData.message || "Failed to create work");
+        if (response.ok) {
+          setSuccess("Work created successfully!");
+          setShowCreateForm(false);
+          await fetchWork(); // Re-fetch to display the newly created work
+        } else {
+          const errorData = await response
+            .json()
+            .catch(() => ({ message: "Failed to create work" }));
+          setError(errorData.message || "Failed to create work");
+        }
+      } catch (err) {
+        setError("Failed to create work");
+        console.error("Error creating work:", err);
       }
-    } catch (err) {
-      setError("Failed to create work");
-      console.error("Error creating work:", err);
-    }
-    setSaving(false);
-  };
+      setSaving(false);
+    };
 
-  // Update work
-  const updateWork = async () => {
-    setSaving(true);
-    setError("");
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/works`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+    // Update work
+    const updateWork = async () => {
+      setSaving(true);
+      setError("");
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/works`,
+          {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+          }
+        );
 
-      if (response.ok) {
-        setSuccess("Work updated successfully!");
-        setIsEditing(false);
-        await fetchWork(); // Re-fetch to display updated work
-      } else {
-        const errorData = await response.json().catch(() => ({ message: "Failed to update work" }));
-        setError(errorData.message || "Failed to update work");
+        if (response.ok) {
+          setSuccess("Work updated successfully!");
+          setIsEditing(false);
+          await fetchWork(); // Re-fetch to display updated work
+        } else {
+          const errorData = await response
+            .json()
+            .catch(() => ({ message: "Failed to update work" }));
+          setError(errorData.message || "Failed to update work");
+        }
+      } catch (err) {
+        setError("Failed to update work");
+        console.error("Error updating work:", err);
       }
-    } catch (err) {
-      setError("Failed to update work");
-      console.error("Error updating work:", err);
-    }
-    setSaving(false);
-  };
+      setSaving(false);
+    };
 
-  // Delete work
-  const deleteWork = async () => {
-    setSaving(true);
-    setError("");
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/works`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+    // Delete work
+    const deleteWork = async () => {
+      setSaving(true);
+      setError("");
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/works`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
-      if (response.ok) {
-        setSuccess("Work deleted successfully!");
-        setWork(null);
-        setShowCreateForm(true); // Show create form after deletion
-        setDeleteConfirm(false);
-      } else {
-        const errorData = await response.json().catch(() => ({ message: "Failed to delete work" }));
-        setError(errorData.message || "Failed to delete work");
+        if (response.ok) {
+          setSuccess("Work deleted successfully!");
+          setWork(null);
+          setShowCreateForm(true); // Show create form after deletion
+          setDeleteConfirm(false);
+        } else {
+          const errorData = await response
+            .json()
+            .catch(() => ({ message: "Failed to delete work" }));
+          setError(errorData.message || "Failed to delete work");
+        }
+      } catch (err) {
+        setError("Failed to delete work");
+        console.error("Error deleting work:", err);
       }
-    } catch (err) {
-      setError("Failed to delete work");
-      console.error("Error deleting work:", err);
-    }
-    setSaving(false);
-  };
+      setSaving(false);
+    };
 
-  // Reset form to initial state or existing work data
-  const resetForm = () => {
-    if (work) {
-      setFormData({
-        name: work.name || "",
-        description: work.description || "",
-        workGroups: work.workGroups || [],
-      });
-    } else {
-      setFormData({
-        name: "",
-        description: "",
-        workGroups: [],
-      });
-    }
-  };
+    // Reset form to initial state or existing work data
+    const resetForm = () => {
+      if (work) {
+        setFormData({
+          name: work.name || "",
+          description: work.description || "",
+          workGroups: work.workGroups || [],
+        });
+      } else {
+        setFormData({
+          name: "",
+          description: "",
+          workGroups: [],
+        });
+      }
+    };
 
-  if (loading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="400px"
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  return (
-    <Box sx={{ maxWidth: 1200, margin: "0 auto", padding: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        Works Management
-      </Typography>
-
-      {/* Alerts */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
-          {error}
-        </Alert>
-      )}
-      {success && (
-        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess("")}>
-          {success}
-        </Alert>
-      )}
-
-      {/* Delete Button (only visible if work exists and not in edit/create mode) */}
-      {work && !isEditing && !showCreateForm && (
-        <Box sx={{ mb: 2 }}>
-          <Button
-            variant="outlined"
-            color="error"
-            startIcon={<DeleteIcon />}
-            onClick={() => setDeleteConfirm(true)}
-          >
-            Delete Work
-          </Button>
+    if (loading) {
+      return (
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="400px"
+        >
+          <CircularProgress />
         </Box>
-      )}
+      );
+    }
 
-      {/* Display Work Data (only if work exists and not in edit/create mode) */}
-      {work && !isEditing && !showCreateForm && (
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            mb={2}
+    return (
+      <Box sx={{ maxWidth: 1200, margin: "0 auto", padding: 3 }}>
+        <Typography variant="h4" gutterBottom>
+          Works Management
+        </Typography>
+
+        {/* Alerts */}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
+            {error}
+          </Alert>
+        )}
+        {success && (
+          <Alert
+            severity="success"
+            sx={{ mb: 2 }}
+            onClose={() => setSuccess("")}
           >
-            <Typography variant="h5">{work.name}</Typography>
+            {success}
+          </Alert>
+        )}
+
+        {/* Delete Button (only visible if work exists and not in edit/create mode) */}
+        {work && !isEditing && !showCreateForm && (
+          <Box sx={{ mb: 2 }}>
             <Button
-              variant="contained"
-              startIcon={<EditIcon />}
-              onClick={() => {
-                setIsEditing(true);
-                resetForm(); // Populate form with current work data
-              }}
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={() => setDeleteConfirm(true)}
             >
-              Update
+              Delete Work
             </Button>
           </Box>
+        )}
 
-          <Typography variant="body1" color="text.secondary" gutterBottom>
-            {work.description}
-          </Typography>
-
-          <Divider sx={{ my: 2} }/>
-
-          <Typography variant="h6" gutterBottom>
-            Work Groups & Tasks
-          </Typography>
-
-          {work.workGroups && work.workGroups.length > 0 ? (
-            // Sort work groups by their 'order' property
-            work.workGroups
-              .sort((a, b) => a.order - b.order)
-              .map((wg, index) => (
-                <Accordion key={index} sx={{ mb: 1 }}>
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Box display="flex" alignItems="center">
-                      <DragIcon sx={{ mr: 1, color: "text.secondary" }} />
-                      <Typography variant="subtitle1">
-                        {getWorkGroupName(wg.workGroup)} (Order: {wg.order})
-                      </Typography>
-                    </Box>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Box sx={{ pl: 2 }}>
-                      <Typography variant="subtitle2" gutterBottom>
-                        Tasks:
-                      </Typography>
-                      {wg.workTasks && wg.workTasks.length > 0 ? (
-                        // Sort tasks within each work group by their 'order' property
-                        wg.workTasks
-                          .sort((a, b) => a.order - b.order)
-                          .map((wt, taskIndex) => (
-                            <Chip
-                              key={taskIndex}
-                              label={`${getWorkTaskName(wt.workTask)} (Order: ${wt.order})`}
-                              sx={{ m: 0.5 }}
-                              variant="outlined"
-                            />
-                          ))
-                      ) : (
-                        <Typography variant="body2" color="text.secondary">
-                          No tasks assigned
-                        </Typography>
-                      )}
-                    </Box>
-                  </AccordionDetails>
-                </Accordion>
-              ))
-          ) : (
-            <Typography color="text.secondary">
-              No work groups assigned
-            </Typography>
-          )}
-        </Paper>
-      )}
-
-      {/* Create/Edit Form */}
-      {(showCreateForm || isEditing) && (
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            {showCreateForm ? "Create New Work" : "Update Work"}
-          </Typography>
-
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Work Name"
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                required
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Description"
-                multiline
-                rows={3}
-                value={formData.description}
-                onChange={(e) =>
-                  handleInputChange("description", e.target.value)
-                }
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Box
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={2}
+        {/* Display Work Data (only if work exists and not in edit/create mode) */}
+        {work && !isEditing && !showCreateForm && (
+          <Paper sx={{ p: 3, mb: 3 }}>
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+              mb={2}
+            >
+              <Typography variant="h5">{work.name}</Typography>
+              <Button
+                variant="contained"
+                startIcon={<EditIcon />}
+                onClick={() => {
+                  setIsEditing(true);
+                  resetForm(); // Populate form with current work data
+                }}
               >
-                <Typography variant="h6">Work Groups</Typography>
-                <Button
-                  variant="outlined"
-                  startIcon={<AddIcon />}
-                  onClick={addWorkGroup}
+                Update
+              </Button>
+            </Box>
+
+            <Typography variant="body1" color="text.secondary" gutterBottom>
+              {work.description}
+            </Typography>
+
+            <Divider sx={{ my: 2 }} />
+
+            <Typography variant="h6" gutterBottom>
+              Work Groups & Tasks
+            </Typography>
+
+            {work.workGroups && work.workGroups.length > 0 ? (
+              // Sort work groups by their 'order' property
+              work.workGroups
+                .sort((a, b) => a.order - b.order)
+                .map((wg, index) => (
+                  <Accordion key={index} sx={{ mb: 1 }}>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <Box display="flex" alignItems="center">
+                        <DragIcon sx={{ mr: 1, color: "text.secondary" }} />
+                        <Typography variant="subtitle1">
+                          {getWorkGroupName(wg.workGroup)} (Order: {wg.order})
+                        </Typography>
+                      </Box>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Box sx={{ pl: 2 }}>
+                        <Typography variant="subtitle2" gutterBottom>
+                          Tasks:
+                        </Typography>
+                        {wg.workTasks && wg.workTasks.length > 0 ? (
+                          // Sort tasks within each work group by their 'order' property
+                          wg.workTasks
+                            .sort((a, b) => a.order - b.order)
+                            .map((wt, taskIndex) => (
+                              <Chip
+                                key={taskIndex}
+                                label={`${getWorkTaskName(wt.workTask)} (Order: ${wt.order})`}
+                                sx={{ m: 0.5 }}
+                                variant="outlined"
+                              />
+                            ))
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">
+                            No tasks assigned
+                          </Typography>
+                        )}
+                      </Box>
+                    </AccordionDetails>
+                  </Accordion>
+                ))
+            ) : (
+              <Typography color="text.secondary">
+                No work groups assigned
+              </Typography>
+            )}
+          </Paper>
+        )}
+
+        {/* Create/Edit Form */}
+        {(showCreateForm || isEditing) && (
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              {showCreateForm ? "Create New Work" : "Update Work"}
+            </Typography>
+
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Work Name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                  required
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Description"
+                  multiline
+                  rows={3}
+                  value={formData.description}
+                  onChange={(e) =>
+                    handleInputChange("description", e.target.value)
+                  }
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  mb={2}
                 >
-                  Add Work Group
-                </Button>
-              </Box>
-
-              {formData.workGroups.map((wg, groupIndex) => (
-                <Card key={groupIndex} sx={{ mb: 2, p: 2 }}>
-                  <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    mb={2}
+                  <Typography variant="h6">Work Groups</Typography>
+                  <Button
+                    variant="outlined"
+                    startIcon={<AddIcon />}
+                    onClick={addWorkGroup}
                   >
-                    <Typography variant="subtitle1">
-                      Work Group {groupIndex + 1}
-                    </Typography>
-                    <IconButton
-                      color="error"
-                      onClick={() => removeWorkGroup(groupIndex)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Box>
+                    Add Work Group
+                  </Button>
+                </Box>
 
-                  <Grid container spacing={2}>
-                    <Grid item xs={8}>
-                      <FormControl fullWidth>
-                        <InputLabel>Select Work Group</InputLabel>
-                        <Select
-                          value={wg.workGroup}
-                          label="Select Work Group"
-                          onChange={(e) =>
-                            updateWorkGroup(
-                              groupIndex,
-                              "workGroup",
-                              e.target.value as string
-                            )
-                          }
-                        >
-                          {workGroupsData.map((group) => (
-                            <MenuItem key={group.id} value={group.id}>
-                              {group.name}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                    <Grid item xs={4}>
-                      <TextField
-                        fullWidth
-                        label="Order"
-                        type="number"
-                        value={wg.order}
-                        onChange={(e) =>
-                          updateWorkGroup(
-                            groupIndex,
-                            "order",
-                            parseInt(e.target.value)
-                          )
-                        }
-                      />
-                    </Grid>
-                  </Grid>
-
-                  <Box mt={2}>
+                {formData.workGroups.map((wg, groupIndex) => (
+                  <Card key={groupIndex} sx={{ mb: 2, p: 2 }}>
                     <Box
                       display="flex"
                       justifyContent="space-between"
                       alignItems="center"
-                      mb={1}
+                      mb={2}
                     >
-                      <Typography variant="subtitle2">Tasks</Typography>
-                      <Button
-                        size="small"
-                        startIcon={<AddIcon />}
-                        onClick={() => addTaskToWorkGroup(groupIndex)}
-                        disabled={!wg.workGroup} // Disable if no work group selected
+                      <Typography variant="subtitle1">
+                        Work Group {groupIndex + 1}
+                      </Typography>
+                      <IconButton
+                        color="error"
+                        onClick={() => removeWorkGroup(groupIndex)}
                       >
-                        Add Task
-                      </Button>
+                        <DeleteIcon />
+                      </IconButton>
                     </Box>
 
-                    {wg.workTasks.map((wt, taskIndex) => (
-                      <Box
-                        key={taskIndex}
-                        display="flex"
-                        gap={1}
-                        mb={1}
-                        alignItems="center"
-                      >
-                        <FormControl sx={{ minWidth: 200, flex: 1 }}>
-                          <InputLabel>Select Task</InputLabel>
+                    <Grid container spacing={2}>
+                      <Grid item xs={8}>
+                        <FormControl fullWidth>
+                          <InputLabel>Select Work Group</InputLabel>
                           <Select
-                            value={wt.workTask}
-                            label="Select Task"
+                            value={wg.workGroup}
+                            label="Select Work Group"
                             onChange={(e) =>
-                              updateTaskInWorkGroup(
+                              updateWorkGroup(
                                 groupIndex,
-                                taskIndex,
-                                "workTask",
+                                "workGroup",
                                 e.target.value as string
                               )
                             }
-                            disabled={!wg.workGroup} // Disable if no work group selected
                           >
-                            {getTasksForWorkGroup(wg.workGroup).map((task) => (
-                              <MenuItem key={task.id} value={task.id}>
-                                {task.name}
+                            {workGroupsData.map((group) => (
+                              <MenuItem key={group.id} value={group.id}>
+                                {group.name}
                               </MenuItem>
                             ))}
                           </Select>
                         </FormControl>
+                      </Grid>
+                      <Grid item xs={4}>
                         <TextField
+                          fullWidth
                           label="Order"
                           type="number"
-                          value={wt.order}
+                          value={wg.order}
                           onChange={(e) =>
-                            updateTaskInWorkGroup(
+                            updateWorkGroup(
                               groupIndex,
-                              taskIndex,
                               "order",
                               parseInt(e.target.value)
                             )
                           }
-                          sx={{ width: 80 }}
                         />
-                        <IconButton
-                          color="error"
-                          onClick={() =>
-                            removeTaskFromWorkGroup(groupIndex, taskIndex)
-                          }
+                      </Grid>
+                    </Grid>
+
+                    <Box mt={2}>
+                      <Box
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        mb={1}
+                      >
+                        <Typography variant="subtitle2">Tasks</Typography>
+                        <Button
+                          size="small"
+                          startIcon={<AddIcon />}
+                          onClick={() => addTaskToWorkGroup(groupIndex)}
+                          disabled={!wg.workGroup} // Disable if no work group selected
                         >
-                          <DeleteIcon />
-                        </IconButton>
+                          Add Task
+                        </Button>
                       </Box>
-                    ))}
-                  </Box>
-                </Card>
-              ))}
+
+                      {wg.workTasks.map((wt, taskIndex) => (
+                        <Box
+                          key={taskIndex}
+                          display="flex"
+                          gap={1}
+                          mb={1}
+                          alignItems="center"
+                        >
+                          <FormControl sx={{ minWidth: 200, flex: 1 }}>
+                            <InputLabel>Select Task</InputLabel>
+                            <Select
+                              value={wt.workTask}
+                              label="Select Task"
+                              onChange={(e) =>
+                                updateTaskInWorkGroup(
+                                  groupIndex,
+                                  taskIndex,
+                                  "workTask",
+                                  e.target.value as string
+                                )
+                              }
+                              disabled={!wg.workGroup} // Disable if no work group selected
+                            >
+                              {getTasksForWorkGroup(wg.workGroup).map(
+                                (task) => (
+                                  <MenuItem key={task.id} value={task.id}>
+                                    {task.name}
+                                  </MenuItem>
+                                )
+                              )}
+                            </Select>
+                          </FormControl>
+                          <TextField
+                            label="Order"
+                            type="number"
+                            value={wt.order}
+                            onChange={(e) =>
+                              updateTaskInWorkGroup(
+                                groupIndex,
+                                taskIndex,
+                                "order",
+                                parseInt(e.target.value)
+                              )
+                            }
+                            sx={{ width: 80 }}
+                          />
+                          <IconButton
+                            color="error"
+                            onClick={() =>
+                              removeTaskFromWorkGroup(groupIndex, taskIndex)
+                            }
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Box>
+                      ))}
+                    </Box>
+                  </Card>
+                ))}
+              </Grid>
             </Grid>
-          </Grid>
 
-          <Box display="flex" gap={2} mt={3}>
-            <Button
-              variant="contained"
-              startIcon={<SaveIcon />}
-              onClick={showCreateForm ? createWork : updateWork}
-              disabled={saving || !formData.name.trim()}
-            >
-              {saving
-                ? "Saving..."
-                : showCreateForm
-                  ? "Create Work"
-                  : "Update Work"}
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<CancelIcon />}
-              onClick={() => {
-                if (showCreateForm) {
-                  setShowCreateForm(false);
-                  resetForm();
-                } else {
-                  setIsEditing(false);
-                  resetForm();
-                }
-              }}
-            >
-              Cancel
-            </Button>
-          </Box>
-        </Paper>
-      )}
+            <Box display="flex" gap={2} mt={3}>
+              <Button
+                variant="contained"
+                startIcon={<SaveIcon />}
+                onClick={showCreateForm ? createWork : updateWork}
+                disabled={saving || !formData.name.trim()}
+              >
+                {saving
+                  ? "Saving..."
+                  : showCreateForm
+                    ? "Create Work"
+                    : "Update Work"}
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<CancelIcon />}
+                onClick={() => {
+                  if (showCreateForm) {
+                    setShowCreateForm(false);
+                    resetForm();
+                  } else {
+                    setIsEditing(false);
+                    resetForm();
+                  }
+                }}
+              >
+                Cancel
+              </Button>
+            </Box>
+          </Paper>
+        )}
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteConfirm} onClose={() => setDeleteConfirm(false)}>
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete this work? This action cannot be
-            undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteConfirm(false)}>Cancel</Button>
-          <Button color="error" onClick={deleteWork} disabled={saving}>
-            {saving ? "Deleting..." : "Delete"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
-  );
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteConfirm} onClose={() => setDeleteConfirm(false)}>
+          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogContent>
+            <Typography>
+              Are you sure you want to delete this work? This action cannot be
+              undone.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteConfirm(false)}>Cancel</Button>
+            <Button color="error" onClick={deleteWork} disabled={saving}>
+              {saving ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    );
+  };
 };
-}
 
 export default WorksManagement;

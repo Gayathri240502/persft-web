@@ -76,7 +76,7 @@ const ProductDetailsPage: React.FC = () => {
       if (!response.ok) throw new Error("Failed to delete product");
 
       setDeleteDialogOpen(false);
-      router.push("/admin/products");
+      router.push("/admin/product-catalog/products");
     } catch (err: any) {
       setError(err.message);
     }

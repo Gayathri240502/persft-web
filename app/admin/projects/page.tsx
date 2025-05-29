@@ -15,7 +15,11 @@ import {
   DialogTitle,
   Button,
 } from "@mui/material";
-import { GridColDef, GridPaginationModel,  GridRenderCellParams, } from "@mui/x-data-grid";
+import {
+  GridColDef,
+  GridPaginationModel,
+  GridRenderCellParams,
+} from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
@@ -27,6 +31,7 @@ interface Project {
   _id: string;
   name: string;
   description: string;
+  thumbnail?: string;
   archive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -125,7 +130,7 @@ const Projects = () => {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectToDelete.id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectToDelete._id}`,
         {
           method: "DELETE",
           headers: {
@@ -154,29 +159,29 @@ const Projects = () => {
     { field: "name", headerName: "Name", flex: 1 },
     { field: "description", headerName: "Description", flex: 2 },
     {
-  field: "thumbnail",
-  headerName: "Thumbnail",
-  flex: 1,
-  renderCell: (params: GridRenderCellParams) => {
-    const base64String = params.value;
-    return base64String ? (
-      <img
-        src={`data:image/jpeg;base64,${base64String}`}
-        alt="Thumbnail"
-        style={{
-          width: 40,
-          height: 40,
-          objectFit: "cover",
-          borderRadius: 4,
-        }}
-      />
-    ) : (
-      <span style={{ fontStyle: "italic", color: "#999" }}>
-        No Thumbnail
-      </span>
-    );
-  },
-},
+      field: "thumbnail",
+      headerName: "Thumbnail",
+      flex: 1,
+      renderCell: (params: GridRenderCellParams) => {
+        const base64String = params.value;
+        return base64String ? (
+          <img
+            src={`data:image/jpeg;base64,${base64String}`}
+            alt="Thumbnail"
+            style={{
+              width: 40,
+              height: 40,
+              objectFit: "cover",
+              borderRadius: 4,
+            }}
+          />
+        ) : (
+          <span style={{ fontStyle: "italic", color: "#999" }}>
+            No Thumbnail
+          </span>
+        );
+      },
+    },
     {
       field: "action",
       headerName: "Actions",
@@ -202,7 +207,7 @@ const Projects = () => {
           <IconButton
             color="error"
             size="small"
-            onClick={() => handleOpenDeleteDialog(params.row.id)}
+            onClick={() => handleOpenDeleteDialog(params.row)}
           >
             <Delete fontSize="small" />
           </IconButton>

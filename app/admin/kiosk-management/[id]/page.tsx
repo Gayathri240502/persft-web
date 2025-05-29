@@ -178,6 +178,12 @@ const KioskDetailsPage: React.FC = () => {
             <Typography><strong>ID:</strong> {kiosk._id}</Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
+            <Typography><strong>First Name:</strong> {kiosk.firstName}</Typography>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Typography><strong>Last Name:</strong> {kiosk.lastName}</Typography>
+          </Grid>
+          <Grid item xs={12} sm={6}>
             <Typography><strong>Username:</strong> {kiosk.username}</Typography>
           </Grid>
           <Grid item xs={12} sm={6}>

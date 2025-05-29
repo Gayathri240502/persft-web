@@ -182,6 +182,12 @@ const ShopDetailsPage: React.FC = () => {
             <strong>ID:</strong> {shop._id}
           </Typography>
           <Typography>
+            <strong>First Name:</strong> {shop.firstName}
+          </Typography>
+          <Typography>
+            <strong>Last name:</strong> {shop.lastName}
+          </Typography>
+          <Typography>
             <strong>Username:</strong> {shop.username}
           </Typography>
           <Typography>

@@ -254,124 +254,6 @@ const AddProduct = () => {
     field: "attribute" | "value",
     newValue: string
   ) => {
-<<<<<<< HEAD
-    const newAttributeValues = [...form.attributeValues];
-    newAttributeValues[index] = {
-      ...newAttributeValues[index],
-      [field]: value,
-    };
-    setForm((prev) => ({ ...prev, attributeValues: newAttributeValues }));
-  };
-
-  const handleSelectChange = (
-    field: keyof typeof form,
-    event: SelectChangeEvent<string>
-  ) => {
-    const value = event.target.value;
-
-    setForm((prev) => {
-      // Handle reset logic for dependent fields
-      if (field === "category") {
-        return {
-          ...prev,
-          category: value,
-          subCategory: "", // Reset dependent field
-          attributeValues: [{ attribute: "", value: "" }], // Reset attributes
-        };
-      } else if (field === "workGroup") {
-        return {
-          ...prev,
-          workGroup: value,
-          workTask: "", // Reset dependent field
-        };
-      } else if (field === "subCategory") {
-        return {
-          ...prev,
-          subCategory: value,
-          attributeValues: [{ attribute: "", value: "" }], // Reset attributes
-        };
-      } else {
-        return {
-          ...prev,
-          [field]: value,
-        };
-      }
-    });
-  };
-
-  const renderSelect = (
-    label: string,
-    value: string,
-    field: keyof typeof form,
-    options: { _id: string; name: string }[],
-    loading: boolean,
-    disabled = false,
-    onChange?: (
-      field: keyof typeof form,
-      event: SelectChangeEvent<string>
-    ) => void
-  ) => (
-    <FormControl fullWidth>
-      <InputLabel>{label}</InputLabel>
-      <Select
-        value={value}
-        onChange={(e) =>
-          onChange ? onChange(field, e) : handleChange(field, e.target.value)
-        }
-        label={label}
-        disabled={disabled || loading}
-      >
-        {loading ? (
-          <MenuItem disabled key={`${label}-loading`}>
-            <CircularProgress size={20} />
-          </MenuItem>
-        ) : options.length > 0 ? (
-          options.map((opt, index) => (
-            <MenuItem
-              key={`${label}-${opt._id || `fallback-${index}`}`}
-              value={opt._id || ""}
-            >
-              {opt.name || "Unknown"}
-            </MenuItem>
-          ))
-        ) : (
-          <MenuItem disabled>
-            {label === "SubCategory" && !form.category
-              ? "Select a category first"
-              : label === "Work Task" && !form.workGroup
-                ? "Select a work group first"
-                : label === "Attribute" && !form.subCategory
-                  ? "Select a subcategory first"
-                  : `No ${label.toLowerCase()}s found`}
-          </MenuItem>
-        )}
-      </Select>
-    </FormControl>
-  );
-
-  const handleSubmit = async () => {
-    setError("");
-    setSuccess("");
-
-    // Validation
-    if (
-      !form.name ||
-      !form.sku ||
-      !form.price ||
-      !form.brand ||
-      !form.modelName ||
-      !form.coohomId ||
-      !form.description ||
-      !form.category ||
-      !form.subCategory ||
-      !form.workGroup ||
-      !form.workTask ||
-      !form.attributeValues[0]?.attribute ||
-      !form.attributeValues[0]?.value
-    ) {
-      setError("Please fill all required fields.");
-      return;
-=======
     setProduct((prev) => {
       const newAttributeValues = [...prev.attributeValues];
       newAttributeValues[index] = {
@@ -406,7 +288,6 @@ const AddProduct = () => {
     if (!product.subCategory) {
       setError("Subcategory is required");
       return false;
->>>>>>> 2367290d9a8a66fae6f186b9d9a65bd6645aafa9
     }
 
     if (isNaN(parseFloat(product.price)) || parseFloat(product.price) <= 0) {
@@ -476,18 +357,6 @@ const AddProduct = () => {
     }
   };
 
-<<<<<<< HEAD
-  // Define field array with unique keys
-  const textFields = [
-    { id: "name", label: "Name", type: "text", multiline: false },
-    { id: "sku", label: "SKU", type: "text", multiline: false },
-    { id: "price", label: "Price", type: "number", multiline: false },
-    { id: "brand", label: "Brand", type: "text", multiline: false },
-    { id: "modelName", label: "Model Name", type: "text", multiline: false },
-    { id: "coohomId", label: "Coohom ID", type: "text", multiline: false },
-    { id: "description", label: "Description", type: "text", multiline: false },
-  ];
-=======
   if (loading) {
     return (
       <Box
@@ -500,7 +369,6 @@ const AddProduct = () => {
       </Box>
     );
   }
->>>>>>> 2367290d9a8a66fae6f186b9d9a65bd6645aafa9
 
   return (
     <Box sx={{ p: 3 }} component="form" onSubmit={handleSubmit}>
@@ -594,81 +462,6 @@ const AddProduct = () => {
         </CardContent>
       </Card>
 
-<<<<<<< HEAD
-      <Divider sx={{ my: 4 }} />
-
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
-          {renderSelect(
-            "Category",
-            form.category,
-            "category",
-            categories,
-            loadingCategories,
-            false,
-            handleSelectChange
-          )}
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          {renderSelect(
-            "SubCategory",
-            form.subCategory,
-            "subCategory",
-            subCategories,
-            loadingSubCategories,
-            !form.category,
-            handleSelectChange
-          )}
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          {renderSelect(
-            "Work Group",
-            form.workGroup,
-            "workGroup",
-            workGroups,
-            loadingWorkGroups,
-            false,
-            handleSelectChange
-          )}
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          {renderSelect(
-            "Work Task",
-            form.workTask,
-            "workTask",
-            workTasks,
-            loadingWorkTasks,
-            !form.workGroup,
-            handleSelectChange
-          )}
-        </Grid>
-      </Grid>
-
-      <Divider sx={{ my: 4 }} />
-
-      {form.attributeValues.map((attr, index) => (
-        <Grid
-          container
-          spacing={2}
-          key={`attribute-${index}`}
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{ mb: 1 }}
-        >
-          <Grid item xs={12} sm={5}>
-            {renderSelect(
-              "Attribute",
-              attr.attribute,
-              "attributeValues",
-              attributes,
-              loadingAttributes,
-              !form.subCategory,
-              (_, e) =>
-                handleAttributeChange(index, "attribute", e.target.value)
-=======
       {/* Thumbnail Upload */}
       {/* <Card sx={{ mb: 3 }}>
         <CardContent>
@@ -711,7 +504,6 @@ const AddProduct = () => {
                   style={{ width: 200, borderRadius: 8 }}
                 />
               </Box>
->>>>>>> 2367290d9a8a66fae6f186b9d9a65bd6645aafa9
             )}
           </Box>
         </CardContent>
@@ -965,7 +757,7 @@ const AddProduct = () => {
         <ReusableButton type="submit" disabled={submitLoading}>
           {submitLoading ? <CircularProgress size={24} /> : "Submit"}
         </ReusableButton>
-        <CancelButton href="/admin/products">Cancel</CancelButton>
+        <CancelButton href="/admin/product-catalog/products">Cancel</CancelButton>
       </Box>
     </Box>
   );

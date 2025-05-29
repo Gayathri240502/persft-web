@@ -32,6 +32,7 @@ const EditDesignType = () => {
   const [loading, setLoading] = useState(true);
 
   const [thumbnail, setThumbnail] = useState<string>("at");
+   const [selectedFileName, setSelectedFileName] = useState("No file selected");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -95,10 +96,10 @@ const EditDesignType = () => {
       isValid = false;
     }
 
-    if (!formData.thumbnail && !formData.thumbnailPreview) {
-      newErrors.thumbnail = "Please upload a thumbnail image";
-      isValid = false;
-    }
+    // if (!formData.thumbnail && !formData.thumbnailPreview) {
+    //   newErrors.thumbnail = "Please upload a thumbnail image";
+    //   isValid = false;
+    // }
 
     setErrors(newErrors);
     return isValid;
@@ -163,6 +164,18 @@ const EditDesignType = () => {
     }
   };
 
+   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        setSelectedFileName(file.name);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setThumbnail(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
   const fetchData = async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
@@ -200,6 +213,7 @@ const EditDesignType = () => {
       setRooms(roomsData.roomTypes);
       setThemes(themesData.themes);
       setThumbnail(designData.thumbnail || "");
+      setSelectedFileName("Existing Thumbnail");
     } catch (err) {
       setApiError("Error fetching data");
     } finally {
@@ -245,7 +259,7 @@ const EditDesignType = () => {
 
       if (!response.ok) throw new Error("Failed to update design");
       setSuccess(true);
-      router.push("/designs");
+      router.push("/admin/home-catalog/designs");
     } catch (err) {
       setApiError("Failed to submit form");
     }
@@ -294,91 +308,39 @@ const EditDesignType = () => {
         onChange={handleInputChange}
       />
 
-      <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-          <Button
-            variant="outlined"
-            component="label"
-            startIcon={<UploadFileIcon />}
-            sx={{
-              color: "#05344c",
-              borderColor: errors.thumbnail ? "error.main" : "#05344c",
-              "&:hover": { backgroundColor: "#f0f4f8" },
-            }}
-          >
-            {formData.thumbnailPreview
-              ? "Change Thumbnail"
-              : "Upload Thumbnail"}
-            <input
-              type="file"
-              hidden
-              onChange={handleFileChange}
-              accept=".jpg,.jpeg,.png"
-            />
-          </Button>
-          {/* <Typography variant="body2" sx={{ color: "#666" }}>
-            {formData.thumbnail?.name ||
-              (formData.thumbnailPreview
-                ? "Using existing image"
-                : "No file selected")}
-          </Typography> */}
-
-          {formData.thumbnailPreview && (
-            <Button variant="text" color="error" size="small">
-              Remove
-            </Button>
-          )}
-        </Box>
-
-        {/* Image Preview */}
-        {formData.thumbnailPreview && (
-          <Box sx={{ mt: 2, mb: 2 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Image Preview:
-            </Typography>
-            <Box
+       <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<UploadFileIcon />}
               sx={{
-                width: 150,
-                height: 150,
-                border: "1px solid #ddd",
-                borderRadius: 1,
-                overflow: "hidden",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                color: "#05344c",
+                borderColor: "#05344c",
+                "&:hover": { backgroundColor: "#f0f4f8" },
               }}
             >
+              Upload Thumbnail
+              <input type="file" hidden onChange={handleThumbnailChange} />
+            </Button>
+            <Typography variant="body2" sx={{ color: "#666" }}>
+              {selectedFileName}
+            </Typography>
+          </Box>
+
+          <Typography variant="caption" sx={{ color: "#999" }}>
+            Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+          </Typography>
+
+          {thumbnail && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2">Preview:</Typography>
               <img
-                src={formData.thumbnailPreview}
-                alt="Thumbnail preview"
-                style={{
-                  maxWidth: "100%",
-                  maxHeight: "100%",
-                  objectFit: "contain",
-                }}
+                src={thumbnail}
+                alt="Thumbnail Preview"
+                style={{ width: 200, borderRadius: 8 }}
               />
             </Box>
-          </Box>
-        )}
-
-        {errors.thumbnail && (
-          <FormHelperText error>{errors.thumbnail}</FormHelperText>
-        )}
-        <FormHelperText>
-          Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
-        </FormHelperText>
-
-        {thumbnail && (
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle2">Preview:</Typography>
-            <img
-              src={thumbnail}
-              alt="Thumbnail Preview"
-              style={{ width: 200, borderRadius: 8 }}
-            />
-          </Box>
-        )}
-      </Box>
+          )}
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={4}>

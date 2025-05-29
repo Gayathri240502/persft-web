@@ -126,8 +126,8 @@ const AddTheme = () => {
     if (
       !formData.name ||
       !formData.description ||
-      formData.roomTypes.length === 0 ||
-      !formData.thumbnail
+      formData.roomTypes.length === 0 
+      
     ) {
       setError("All fields including thumbnail are required");
       return false;

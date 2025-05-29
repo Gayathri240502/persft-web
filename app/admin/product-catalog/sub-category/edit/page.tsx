@@ -124,7 +124,7 @@ const EditSubCategory = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name || !description || !thumbnail || !category) {
+    if (!name || !category) {
       setError("All fields are required.");
       return;
     }

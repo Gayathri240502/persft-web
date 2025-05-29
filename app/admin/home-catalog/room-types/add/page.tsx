@@ -127,18 +127,17 @@ const AddRoomType = () => {
     }
   };
 
-  const validateForm = () => {
-    if (
-      !formData.name ||
-      !formData.description ||
-      formData.residenceTypes.length === 0 ||
-      !thumbnail // ✅ ensure thumbnail is present
-    ) {
-      setError("All fields are required including a thumbnail.");
-      return false;
-    }
-    return true;
-  };
+ const validateForm = () => {
+  if (
+    !formData.name ||
+    !formData.description ||
+    formData.residenceTypes.length === 0
+  ) {
+    setError("All fields are required except thumbnail.");
+    return false;
+  }
+  return true;
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

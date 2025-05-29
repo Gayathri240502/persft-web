@@ -51,10 +51,10 @@ const AddResidenceType = () => {
       setError("Description is required");
       return false;
     }
-    if (!thumbnail) {
-      setError("Thumbnail is required");
-      return false;
-    }
+    // if (!thumbnail) {
+    //   setError("Thumbnail is required");
+    //   return false;
+    // }
     setError(null);
     return true;
   };

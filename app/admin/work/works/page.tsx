@@ -40,24 +40,24 @@ import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 // --- Interfaces for type safety ---
 
 interface WorkTask {
-  _id?: string; // Optional: if tasks have their own ID in the DB
-  id: string; // ID from the API
+  _id?: string;
+  id: string;
   name: string;
   order: number;
 }
 
 interface WorkGroupWithTasks {
-  _id?: string; // Optional: if work groups have their own ID in the DB
-  id: string; // ID from the API
+  _id?: string;
+  id: string;
   name: string;
   tasks: WorkTask[];
 }
 
 interface FormDataWorkGroup {
-  workGroup: string; // Stores the ID of the selected work group
+  workGroup: string;
   order: number;
   workTasks: {
-    workTask: string; // Stores the ID of the selected work task
+    workTask: string;
     order: number;
   }[];
 }
@@ -74,7 +74,7 @@ const WorksManagement = () => {
   const [work, setWork] = useState<WorkData | null>(null);
   const [workGroupsData, setWorkGroupsData] = useState<WorkGroupWithTasks[]>(
     []
-  ); // This will store the full work groups with tasks
+  );
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>("");
@@ -110,10 +110,9 @@ const WorksManagement = () => {
           });
         } else {
           setWork(null);
-          setShowCreateForm(true); // If no work exists, show create form
+          setShowCreateForm(true);
         }
       } else {
-        // If API returns 404 or similar, treat as no work exists
         setWork(null);
         setShowCreateForm(true);
       }
@@ -148,20 +147,24 @@ const WorksManagement = () => {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      // Fetch both work and the full list of work groups/tasks concurrently
       await Promise.all([fetchWork(), fetchWorkGroupsAndTasks()]);
       setLoading(false);
     };
-    loadData();
-  }, [token]); // Dependency on token to re-fetch if it changes
 
-  // Helper function to get work group name by ID
+    if (token) {
+      loadData();
+    } else {
+      setLoading(false);
+      setError("Authentication token not found");
+    }
+  }, [token]);
+
+  // Helper functions
   const getWorkGroupName = (id: string) => {
     const group = workGroupsData.find((g) => g.id === id);
     return group ? group.name : "Unknown Group";
   };
 
-  // Helper function to get work task name by ID
   const getWorkTaskName = (id: string) => {
     for (const group of workGroupsData) {
       const task = group.tasks.find((t) => t.id === id);
@@ -172,7 +175,6 @@ const WorksManagement = () => {
     return "Unknown Task";
   };
 
-  // Get tasks for a specific work group
   const getTasksForWorkGroup = (workGroupId: string) => {
     const group = workGroupsData.find((g) => g.id === workGroupId);
     return group ? group.tasks : [];
@@ -199,7 +201,7 @@ const WorksManagement = () => {
         workGroups: [
           ...prev.workGroups,
           {
-            workGroup: "", // Initialize with empty string for selection
+            workGroup: "",
             order: maxOrder + 1,
             workTasks: [],
           },
@@ -227,14 +229,12 @@ const WorksManagement = () => {
       workGroups: prev.workGroups.map((wg, i) => {
         if (i === index) {
           const updatedWg = { ...wg, [field]: value };
-          // If work group is changed, clear all tasks
           if (field === "workGroup") {
             updatedWg.workTasks = [];
           }
-          // If order is being updated, ensure it's unique
           if (field === "order") {
             const newOrder =
-              typeof value === "string" ? parseInt(value) : value; // Ensure number
+              typeof value === "string" ? parseInt(value) : value;
             const usedOrders = prev.workGroups
               .filter((_, otherIndex) => otherIndex !== index)
               .map((wg) => wg.order);
@@ -267,7 +267,7 @@ const WorksManagement = () => {
             workTasks: [
               ...wg.workTasks,
               {
-                workTask: "", // Initialize with empty string for selection
+                workTask: "",
                 order: maxTaskOrder + 1,
               },
             ],
@@ -309,24 +309,17 @@ const WorksManagement = () => {
             workTasks: wg.workTasks.map((wt, ti) => {
               if (ti === taskIndex) {
                 if (field === "order") {
-                  // Ensure order is a number
                   const newOrder =
                     typeof value === "string" ? parseInt(value) : value;
-
-                  // Collect used order numbers except the current task
                   const usedOrders = wg.workTasks
                     .filter((_, otherIndex) => otherIndex !== taskIndex)
                     .map((wt) => wt.order);
-
-                  // Increment order if duplicate found
                   let finalOrder = newOrder;
                   while (usedOrders.includes(finalOrder)) {
                     finalOrder++;
                   }
-
                   return { ...wt, [field]: finalOrder };
                 } else if (field === "workTask") {
-                  // Ensure workTask is always a string
                   return { ...wt, [field]: value.toString() };
                 } else {
                   return { ...wt, [field]: value };
@@ -339,37 +332,31 @@ const WorksManagement = () => {
         return wg;
       }),
     }));
+  };
 
-    // Create work
-    const createWork = async () => {
-      setSaving(true);
-      setError("");
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/works`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(formData),
-          }
-        );
+  // Create work
+  const createWork = async () => {
+    setSaving(true);
+    setError("");
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/works`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
-        if (response.ok) {
-          setSuccess("Work created successfully!");
-          setShowCreateForm(false);
-          await fetchWork(); // Re-fetch to display the newly created work
-        } else {
-          const errorData = await response
-            .json()
-            .catch(() => ({ message: "Failed to create work" }));
-          setError(errorData.message || "Failed to create work");
-        }
-      } catch (err) {
-        setError("Failed to create work");
-        console.error("Error creating work:", err);
+      if (response.ok) {
+        setSuccess("Work created successfully!");
+        setShowCreateForm(false);
+        await fetchWork();
+      } else {
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: "Failed to create work" }));
+        setError(errorData.message || "Failed to create work");
       }
       setSaving(false);
     };
@@ -391,19 +378,15 @@ const WorksManagement = () => {
           }
         );
 
-        if (response.ok) {
-          setSuccess("Work updated successfully!");
-          setIsEditing(false);
-          await fetchWork(); // Re-fetch to display updated work
-        } else {
-          const errorData = await response
-            .json()
-            .catch(() => ({ message: "Failed to update work" }));
-          setError(errorData.message || "Failed to update work");
-        }
-      } catch (err) {
-        setError("Failed to update work");
-        console.error("Error updating work:", err);
+      if (response.ok) {
+        setSuccess("Work updated successfully!");
+        setIsEditing(false);
+        await fetchWork();
+      } else {
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: "Failed to update work" }));
+        setError(errorData.message || "Failed to update work");
       }
       setSaving(false);
     };
@@ -424,20 +407,16 @@ const WorksManagement = () => {
           }
         );
 
-        if (response.ok) {
-          setSuccess("Work deleted successfully!");
-          setWork(null);
-          setShowCreateForm(true); // Show create form after deletion
-          setDeleteConfirm(false);
-        } else {
-          const errorData = await response
-            .json()
-            .catch(() => ({ message: "Failed to delete work" }));
-          setError(errorData.message || "Failed to delete work");
-        }
-      } catch (err) {
-        setError("Failed to delete work");
-        console.error("Error deleting work:", err);
+      if (response.ok) {
+        setSuccess("Work deleted successfully!");
+        setWork(null);
+        setShowCreateForm(true);
+        setDeleteConfirm(false);
+      } else {
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: "Failed to delete work" }));
+        setError(errorData.message || "Failed to delete work");
       }
       setSaving(false);
     };
@@ -459,36 +438,60 @@ const WorksManagement = () => {
       }
     };
 
-    if (loading) {
-      return (
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          minHeight="400px"
-        >
-          <CircularProgress />
+  if (loading) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="400px"
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ maxWidth: 1200, margin: "0 auto", padding: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Works Management
+      </Typography>
+
+      {/* Alerts */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
+          {error}
+        </Alert>
+      )}
+      {success && (
+        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess("")}>
+          {success}
+        </Alert>
+      )}
+
+      {/* Delete Button */}
+      {work && !isEditing && !showCreateForm && (
+        <Box sx={{ mb: 2 }}>
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<DeleteIcon />}
+            onClick={() => setDeleteConfirm(true)}
+          >
+            Delete Work
+          </Button>
         </Box>
       );
     }
 
-    return (
-      <Box sx={{ maxWidth: 1200, margin: "0 auto", padding: 3 }}>
-        <Typography variant="h4" gutterBottom>
-          Works Management
-        </Typography>
-
-        {/* Alerts */}
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
-            {error}
-          </Alert>
-        )}
-        {success && (
-          <Alert
-            severity="success"
-            sx={{ mb: 2 }}
-            onClose={() => setSuccess("")}
+      {/* Display Work Data */}
+      {work && !isEditing && !showCreateForm && (
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={2}
           >
             {success}
           </Alert>
@@ -498,33 +501,111 @@ const WorksManagement = () => {
         {work && !isEditing && !showCreateForm && (
           <Box sx={{ mb: 2 }}>
             <Button
-              variant="outlined"
-              color="error"
-              startIcon={<DeleteIcon />}
-              onClick={() => setDeleteConfirm(true)}
+              variant="contained"
+              startIcon={<EditIcon />}
+              onClick={() => {
+                setIsEditing(true);
+                resetForm();
+              }}
             >
               Delete Work
             </Button>
           </Box>
         )}
 
-        {/* Display Work Data (only if work exists and not in edit/create mode) */}
-        {work && !isEditing && !showCreateForm && (
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Box
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              mb={2}
-            >
-              <Typography variant="h5">{work.name}</Typography>
-              <Button
-                variant="contained"
-                startIcon={<EditIcon />}
-                onClick={() => {
-                  setIsEditing(true);
-                  resetForm(); // Populate form with current work data
-                }}
+          <Typography variant="body1" color="text.secondary" gutterBottom>
+            {work.description}
+          </Typography>
+
+          <Divider sx={{ my: 2 }} />
+
+          <Typography variant="h6" gutterBottom>
+            Work Groups & Tasks
+          </Typography>
+
+          {work.workGroups && work.workGroups.length > 0 ? (
+            work.workGroups
+              .sort((a, b) => a.order - b.order)
+              .map((wg, index) => (
+                <Accordion key={index} sx={{ mb: 1 }}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Box display="flex" alignItems="center">
+                      <DragIcon sx={{ mr: 1, color: "text.secondary" }} />
+                      <Typography variant="subtitle1">
+                        {getWorkGroupName(wg.workGroup)} (Order: {wg.order})
+                      </Typography>
+                    </Box>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Box sx={{ pl: 2 }}>
+                      <Typography variant="subtitle2" gutterBottom>
+                        Tasks:
+                      </Typography>
+                      {wg.workTasks && wg.workTasks.length > 0 ? (
+                        wg.workTasks
+                          .sort((a, b) => a.order - b.order)
+                          .map((wt, taskIndex) => (
+                            <Chip
+                              key={taskIndex}
+                              label={`${getWorkTaskName(wt.workTask)} (Order: ${wt.order})`}
+                              sx={{ m: 0.5 }}
+                              variant="outlined"
+                            />
+                          ))
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          No tasks assigned
+                        </Typography>
+                      )}
+                    </Box>
+                  </AccordionDetails>
+                </Accordion>
+              ))
+          ) : (
+            <Typography color="text.secondary">
+              No work groups assigned
+            </Typography>
+          )}
+        </Paper>
+      )}
+
+      {/* Create/Edit Form */}
+      {(showCreateForm || isEditing) && (
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            {showCreateForm ? "Create New Work" : "Update Work"}
+          </Typography>
+
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Work Name"
+                value={formData.name}
+                onChange={(e) => handleInputChange("name", e.target.value)}
+                required
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Description"
+                multiline
+                rows={3}
+                value={formData.description}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                mb={2}
               >
                 Update
               </Button>
@@ -644,12 +725,12 @@ const WorksManagement = () => {
                       alignItems="center"
                       mb={2}
                     >
-                      <Typography variant="subtitle1">
-                        Work Group {groupIndex + 1}
-                      </Typography>
-                      <IconButton
-                        color="error"
-                        onClick={() => removeWorkGroup(groupIndex)}
+                      <Typography variant="subtitle2">Tasks</Typography>
+                      <Button
+                        size="small"
+                        startIcon={<AddIcon />}
+                        onClick={() => addTaskToWorkGroup(groupIndex)}
+                        disabled={!wg.workGroup}
                       >
                         <DeleteIcon />
                       </IconButton>
@@ -669,6 +750,7 @@ const WorksManagement = () => {
                                 e.target.value as string
                               )
                             }
+                            disabled={!wg.workGroup}
                           >
                             {workGroupsData.map((group) => (
                               <MenuItem key={group.id} value={group.id}>

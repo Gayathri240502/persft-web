@@ -627,7 +627,7 @@ const EditProduct = () => {
         </CardContent>
       </Card>
 
-      {/* Thumbnail Upload */}
+      {/* Thumbnail Upload
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom color="primary">
@@ -672,7 +672,7 @@ const EditProduct = () => {
             )}
           </Box>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Categories and Classification */}
       <Card sx={{ mb: 3 }}>
@@ -810,8 +810,8 @@ const EditProduct = () => {
                   color="text.secondary"
                   sx={{ fontStyle: "italic" }}
                 >
-                  No attributes defined for this subcategory. Click "Add Custom
-                  Attribute" if needed.
+                  No attributes defined for this subcategory. Click Add Custom
+                  Attribute if needed.
                 </Typography>
               </Box>
             ) : (

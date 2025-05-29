@@ -227,7 +227,7 @@ const Shop = () => {
         </Box>
       ),
     },
-  ];
+  ]
 
   return (
     <Box sx={{ p: isSmallScreen ? 2 : 3 }}>

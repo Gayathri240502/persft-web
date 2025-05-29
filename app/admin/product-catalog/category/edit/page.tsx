@@ -84,7 +84,7 @@ const EditCategory = () => {
   const validateForm = () => {
     if (!name) return setError("Name is required"), false;
     if (!description) return setError("Description is required"), false;
-    if (!thumbnail) return setError("Thumbnail is required"), false;
+    // if (!thumbnail) return setError("Thumbnail is required"), false;
     setError(null);
     return true;
   };

@@ -147,7 +147,7 @@ const EditRoomType = () => {
   const validateForm = () => {
     if (!name) return setError("Name is required"), false;
     if (!description) return setError("Description is required"), false;
-    if (!thumbnail) return setError("Thumbnail is required"), false;
+    // if (!thumbnail) return setError("Thumbnail is required"), false;
     if (selectedResidences.length === 0)
       return setError("Select at least one residence type"), false;
     setError(null);

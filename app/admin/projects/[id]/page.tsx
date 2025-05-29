@@ -82,7 +82,7 @@ const ProjectDetailsPage: React.FC = () => {
       if (!response.ok) throw new Error("Failed to delete project");
 
       setDeleteDialogOpen(false);
-      router.push("/admin/home-catalog/projects");
+      router.push("/admin/projects");
     } catch (err: any) {
       setError(err.message);
     }

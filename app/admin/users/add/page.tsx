@@ -19,7 +19,7 @@ import { useRouter } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 // Roles in lowercase for backend compatibility
-const roles = ["admin", "merchant", "customer", "kisok"];
+// const roles = ["admin", "merchant", "customer", "kisok"];
 
 // Define the type of your form state
 interface FormDataType {
@@ -30,7 +30,7 @@ interface FormDataType {
   phone: string;
   password: string;
   enabled: boolean;
-  role: string[];
+  role: ["admin"];
 }
 
 const AddUser = () => {
@@ -45,7 +45,7 @@ const AddUser = () => {
     phone: "",
     password: "",
     enabled: true,
-    role: [],
+    role: ["admin"], // Default role set to "admin"
   });
 
   const [loading, setLoading] = useState(false);
@@ -62,14 +62,14 @@ const AddUser = () => {
     }));
   };
 
-  const handleRoleChange = (
-    e: React.ChangeEvent<{ name?: string; value: unknown }>
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      role: e.target.value as string[],
-    }));
-  };
+  // const handleRoleChange = (
+  //   e: React.ChangeEvent<{ name?: string; value: unknown }>
+  // ) => {
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     role: e.target.value as string[],
+  //   }));
+  // };
 
   const handleSubmit = async () => {
     const requiredFields = [
@@ -180,7 +180,7 @@ const AddUser = () => {
           />
         </Grid>
 
-        <Grid item xs={12}>
+        {/* <Grid item xs={12}>
           <TextField
             select
             label="Role"
@@ -207,7 +207,7 @@ const AddUser = () => {
               </MenuItem>
             ))}
           </TextField>
-        </Grid>
+        </Grid> */}
 
         <Grid item xs={12}>
           <TextField

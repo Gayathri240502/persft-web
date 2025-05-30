@@ -165,12 +165,12 @@ const DesignTypeDetails = () => {
         mb={2}
       >
         <Button
-        startIcon={<ArrowBack />}
-        onClick={() => router.back()}
-        sx={{ marginBottom: 2 }}
-      >
-        Back
-      </Button>
+          startIcon={<ArrowBack />}
+          onClick={() => router.back()}
+          sx={{ marginBottom: 2 }}
+        >
+          Back       
+        </Button>
 
         <Box>
           <IconButton

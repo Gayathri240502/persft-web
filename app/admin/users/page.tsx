@@ -268,9 +268,7 @@ const UserManagement = () => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button  onClick={handleDeleteCancel}>
-            Cancel
-          </Button>
+          <Button onClick={handleDeleteCancel}>Cancel</Button>
           <Button
             color="error"
             onClick={handleDeleteConfirm}

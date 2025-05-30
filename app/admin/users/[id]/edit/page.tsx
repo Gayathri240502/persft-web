@@ -28,10 +28,10 @@ interface User {
   email: string;
   phone: string;
   enabled: boolean;
-  roles: string[];
+  // roles: string[];
 }
 
-const availableRoles = ["admin", "merchant", "customer", "kisok"];
+// const availableRoles = ["admin", "merchant", "customer", "kisok"];
 
 const UserEditPage: React.FC = () => {
   const [user, setUser] = useState<User>({
@@ -42,7 +42,7 @@ const UserEditPage: React.FC = () => {
     email: "",
     phone: "",
     enabled: false,
-    roles: [],
+    // roles: [],
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,7 +72,7 @@ const UserEditPage: React.FC = () => {
         const data: User = await response.json();
         setUser({
           ...data,
-          roles: data.roles || [],
+          // roles: data.roles || [],
         });
       } catch (err: any) {
         setError(err.message);
@@ -168,7 +168,8 @@ const UserEditPage: React.FC = () => {
               fullWidth
               label="Username"
               value={user.username}
-              onChange={(e) => setUser({ ...user, username: e.target.value })}
+              disabled
+              // onChange={(e) => setUser({ ...user, username: e.target.value })}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -217,7 +218,7 @@ const UserEditPage: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          {/* <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
               <InputLabel id="roles-label">Roles</InputLabel>
               <Select
@@ -241,7 +242,7 @@ const UserEditPage: React.FC = () => {
                 ))}
               </Select>
             </FormControl>
-          </Grid>
+          </Grid>*/}
         </Grid>
         <Box display="flex" justifyContent="flex-end" sx={{ marginTop: 4 }}>
           <Button variant="contained" color="primary" onClick={handleSave}>

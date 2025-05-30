@@ -46,6 +46,7 @@ const AddDesignType = () => {
   const [rooms, setRooms] = useState<any[]>([]);
   const [themes, setThemes] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [existingThumbnail, setExistingThumbnail] = useState<string>(""); // Track existing thumbnail from backend
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -84,6 +85,15 @@ const AddDesignType = () => {
   // Allowed file types
   const allowedFileTypes = ["image/jpeg", "image/png", "image/jpg"];
   const maxFileSize = 60 * 1024; // 60kb
+
+  // Helper function to convert base64 to data URL if it's not already
+  const formatBase64ForDisplay = (base64String: string): string => {
+    if (base64String.startsWith("data:image/")) {
+      return base64String;
+    }
+    // Assume it's a JPEG if no type specified
+    return `data:image/jpeg;base64,${base64String}`;
+  };
 
   const validateForm = () => {
     const newErrors = {
@@ -126,7 +136,8 @@ const AddDesignType = () => {
     } else {
       for (const combo of formData.combinations) {
         if (!combo.residenceType) {
-          newErrors.combinations = "Residence Type is required for all combinations";
+          newErrors.combinations =
+            "Residence Type is required for all combinations";
           isValid = false;
           break;
         }
@@ -255,6 +266,8 @@ const AddDesignType = () => {
           thumbnailPreview: fullUrl,
         });
         setErrors({ ...errors, thumbnail: "" });
+        // Clear existing thumbnail when new file is uploaded
+        setExistingThumbnail("");
       } catch (err) {
         setErrors({
           ...errors,
@@ -272,6 +285,8 @@ const AddDesignType = () => {
       thumbnailPreview: "",
     });
     setErrors({ ...errors, thumbnail: "" });
+    // Also clear existing thumbnail
+    setExistingThumbnail("");
   };
 
   const fetchData = async () => {
@@ -307,8 +322,60 @@ const AddDesignType = () => {
     }
   };
 
+  // Function to fetch existing design data if this is an edit page
+  const fetchExistingDesign = async (designId: string) => {
+    try {
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      };
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/designs/${designId}`,
+        {
+          headers,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch design data");
+      }
+
+      const designData = await response.json();
+
+      // Set form data with existing design data
+      setFormData({
+        name: designData.name || "",
+        description: designData.description || "",
+        coohomUrl: designData.coohomUrl || "",
+        thumbnail: null,
+        thumbnailBase64: designData.thumbnail || "",
+        thumbnailPreview: "",
+        combinations: designData.combinations || [
+          {
+            residenceType: "",
+            roomType: "",
+            theme: "",
+          },
+        ],
+      });
+
+      // Set existing thumbnail for display
+      if (designData.thumbnail) {
+        setExistingThumbnail(designData.thumbnail);
+      }
+    } catch (err: any) {
+      setApiError(err.message || "Error fetching design data");
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    // If you need to fetch existing design data, uncomment and use:
+    // const designId = router.query.id; // or however you get the design ID
+    // if (designId) {
+    //   fetchExistingDesign(designId);
+    // }
   }, []);
 
   const handleSubmit = async () => {
@@ -321,12 +388,15 @@ const AddDesignType = () => {
     setApiError("");
 
     try {
+      // Use new thumbnail if uploaded, otherwise keep existing thumbnail
+      const thumbnailToSend = formData.thumbnailBase64 || existingThumbnail;
+
       const designPayload = {
         name: formData.name,
         description: formData.description,
         coohomUrl: formData.coohomUrl,
-        thumbnail: formData.thumbnailBase64,
-        combinations: formData.combinations.map(combo => ({
+        thumbnail: thumbnailToSend,
+        combinations: formData.combinations.map((combo) => ({
           residenceType: combo.residenceType,
           roomType: combo.roomType,
           theme: combo.theme,
@@ -345,9 +415,7 @@ const AddDesignType = () => {
       const responseBody = await res.json();
 
       if (!res.ok) {
-        throw new Error(
-          responseBody.message || "Failed to create design type"
-        );
+        throw new Error(responseBody.message || "Failed to create design type");
       }
 
       setSuccess(true);
@@ -358,6 +426,31 @@ const AddDesignType = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Get the thumbnail to display - priority: new upload > existing thumbnail
+  const getThumbnailForDisplay = (): string => {
+    if (formData.thumbnailPreview) {
+      return formData.thumbnailPreview;
+    }
+    if (existingThumbnail) {
+      return formatBase64ForDisplay(existingThumbnail);
+    }
+    return "";
+  };
+
+  const hasAnyThumbnail = (): boolean => {
+    return !!(formData.thumbnailPreview || existingThumbnail);
+  };
+
+  const getThumbnailDisplayName = (): string => {
+    if (formData.thumbnail?.name) {
+      return formData.thumbnail.name;
+    }
+    if (existingThumbnail) {
+      return "Existing thumbnail";
+    }
+    return "No file selected";
   };
 
   return (
@@ -413,7 +506,7 @@ const AddDesignType = () => {
               "&:hover": { backgroundColor: "#f0f4f8" },
             }}
           >
-            Upload Thumbnail
+            {hasAnyThumbnail() ? "Update Thumbnail" : "Upload Thumbnail"}
             <input
               type="file"
               hidden
@@ -422,10 +515,10 @@ const AddDesignType = () => {
             />
           </Button>
           <Typography variant="body2" sx={{ color: "#666" }}>
-            {formData.thumbnail?.name || "No file selected"}
+            {getThumbnailDisplayName()}
           </Typography>
 
-          {formData.thumbnailPreview && (
+          {hasAnyThumbnail() && (
             <Button
               variant="text"
               color="error"
@@ -437,7 +530,7 @@ const AddDesignType = () => {
           )}
         </Box>
 
-        {formData.thumbnailPreview && (
+        {hasAnyThumbnail() && (
           <Box sx={{ mt: 2, mb: 2 }}>
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
               Image Preview:
@@ -455,7 +548,7 @@ const AddDesignType = () => {
               }}
             >
               <img
-                src={formData.thumbnailPreview}
+                src={getThumbnailForDisplay()}
                 alt="Thumbnail preview"
                 style={{
                   maxWidth: "100%",

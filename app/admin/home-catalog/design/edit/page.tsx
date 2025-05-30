@@ -31,9 +31,6 @@ const EditDesignType = () => {
   const [themes, setThemes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [thumbnail, setThumbnail] = useState<string>("at");
-   const [selectedFileName, setSelectedFileName] = useState("No file selected");
-
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -96,11 +93,6 @@ const EditDesignType = () => {
       isValid = false;
     }
 
-    // if (!formData.thumbnail && !formData.thumbnailPreview) {
-    //   newErrors.thumbnail = "Please upload a thumbnail image";
-    //   isValid = false;
-    // }
-
     setErrors(newErrors);
     return isValid;
   };
@@ -116,65 +108,76 @@ const EditDesignType = () => {
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
-  type FileBase64Result = {
-    fullUrl: string;
-    base64: string;
+  // Convert base64 string to displayable image URL
+  const convertBase64ToImageUrl = (base64String: string) => {
+    if (!base64String) return "";
+
+    // If it's already a data URL, return as is
+    if (base64String.startsWith("data:image/")) {
+      return base64String;
+    }
+
+    // If it's just the base64 part, add the data URL prefix
+    // Assume JPEG format if not specified (you can modify this based on your needs)
+    return `data:image/jpeg;base64,${base64String}`;
   };
 
-  const fileToBase64 = (file: File): Promise<FileBase64Result> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const base64 = reader.result as string;
-        resolve({
-          fullUrl: URL.createObjectURL(file),
-          base64,
-        });
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const handleFileChange = async (e: any) => {
+  const handleThumbnailChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validate file type
     if (!allowedFileTypes.includes(file.type)) {
-      setErrors((prev) => ({ ...prev, thumbnail: "Invalid file type" }));
+      setErrors((prev) => ({
+        ...prev,
+        thumbnail: "Invalid file type. Please upload JPG, JPEG, or PNG.",
+      }));
       return;
     }
 
+    // Validate file size
     if (file.size > maxFileSize) {
-      setErrors((prev) => ({ ...prev, thumbnail: "File size exceeds 60KB" }));
+      setErrors((prev) => ({
+        ...prev,
+        thumbnail: "File size exceeds 60KB limit.",
+      }));
       return;
     }
 
     try {
-      const { fullUrl, base64 } = await fileToBase64(file);
-      setFormData((prev) => ({
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64Result = reader.result as string;
+
+        setFormData((prev) => ({
+          ...prev,
+          thumbnail: file,
+          thumbnailBase64: base64Result,
+          thumbnailPreview: base64Result,
+        }));
+
+        // Clear any previous errors
+        setErrors((prev) => ({ ...prev, thumbnail: "" }));
+      };
+
+      reader.onerror = () => {
+        setErrors((prev) => ({
+          ...prev,
+          thumbnail: "Failed to process image. Please try again.",
+        }));
+      };
+
+      reader.readAsDataURL(file);
+    } catch (error) {
+      setErrors((prev) => ({
         ...prev,
-        thumbnail: file,
-        thumbnailBase64: base64,
-        thumbnailPreview: fullUrl,
+        thumbnail: "Failed to process image. Please try again.",
       }));
-      setErrors((prev) => ({ ...prev, thumbnail: "" }));
-    } catch {
-      setErrors((prev) => ({ ...prev, thumbnail: "Failed to process image" }));
     }
   };
-
-   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        setSelectedFileName(file.name);
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setThumbnail(reader.result as string);
-        };
-        reader.readAsDataURL(file);
-      }
-    };
 
   const fetchData = async () => {
     try {
@@ -197,13 +200,18 @@ const EditDesignType = () => {
 
       const combination = designData.combinations?.[0] || {};
 
+      // Convert backend base64 to displayable format
+      const thumbnailPreview = designData.thumbnail
+        ? convertBase64ToImageUrl(designData.thumbnail)
+        : designData.thumbnailUrl || "";
+
       setFormData({
         name: designData.name || "",
         description: designData.description || "",
         coohomUrl: designData.coohomUrl || "",
         thumbnail: null,
-        thumbnailBase64: "",
-        thumbnailPreview: designData.thumbnailUrl || "",
+        thumbnailBase64: designData.thumbnail || "",
+        thumbnailPreview: thumbnailPreview,
         residenceType: combination.residenceType?._id || "",
         roomType: combination.roomType?._id || "",
         theme: combination.theme?._id || "",
@@ -212,8 +220,6 @@ const EditDesignType = () => {
       setResidences(residencesData.residenceTypes);
       setRooms(roomsData.roomTypes);
       setThemes(themesData.themes);
-      setThumbnail(designData.thumbnail || "");
-      setSelectedFileName("Existing Thumbnail");
     } catch (err) {
       setApiError("Error fetching data");
     } finally {
@@ -259,7 +265,7 @@ const EditDesignType = () => {
 
       if (!response.ok) throw new Error("Failed to update design");
       setSuccess(true);
-      router.push("/admin/home-catalog/designs");
+      router.push("/admin/home-catalog/design");
     } catch (err) {
       setApiError("Failed to submit form");
     }
@@ -308,39 +314,74 @@ const EditDesignType = () => {
         onChange={handleInputChange}
       />
 
-       <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
-            <Button
-              variant="outlined"
-              component="label"
-              startIcon={<UploadFileIcon />}
-              sx={{
-                color: "#05344c",
-                borderColor: "#05344c",
-                "&:hover": { backgroundColor: "#f0f4f8" },
-              }}
-            >
-              Upload Thumbnail
-              <input type="file" hidden onChange={handleThumbnailChange} />
-            </Button>
-            <Typography variant="body2" sx={{ color: "#666" }}>
-              {selectedFileName}
-            </Typography>
-          </Box>
-
-          <Typography variant="caption" sx={{ color: "#999" }}>
-            Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+      {/* Thumbnail Upload Section */}
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
+          <Button
+            variant="outlined"
+            component="label"
+            startIcon={<UploadFileIcon />}
+            sx={{
+              color: "#05344c",
+              borderColor: "#05344c",
+              "&:hover": { backgroundColor: "#f0f4f8" },
+            }}
+          >
+            Upload Thumbnail
+            <input
+              type="file"
+              hidden
+              accept="image/jpeg,image/jpg,image/png"
+              onChange={handleThumbnailChange}
+            />
+          </Button>
+          <Typography variant="body2" sx={{ color: "#666" }}>
+            {formData.thumbnail
+              ? formData.thumbnail.name
+              : "No new file selected"}
           </Typography>
+        </Box>
 
-          {thumbnail && (
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2">Preview:</Typography>
-              <img
-                src={thumbnail}
-                alt="Thumbnail Preview"
-                style={{ width: 200, borderRadius: 8 }}
-              />
-            </Box>
-          )}
+        <Typography
+          variant="caption"
+          sx={{ color: "#999", display: "block", mb: 2 }}
+        >
+          Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+        </Typography>
+
+        {errors.thumbnail && (
+          <Typography
+            variant="caption"
+            sx={{ color: "error.main", display: "block", mb: 2 }}
+          >
+            {errors.thumbnail}
+          </Typography>
+        )}
+
+        {/* Thumbnail Preview */}
+        {formData.thumbnailPreview && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              Current Thumbnail:
+            </Typography>
+            <img
+              src={formData.thumbnailPreview}
+              alt="Thumbnail Preview"
+              style={{
+                width: 200,
+                height: "auto",
+                borderRadius: 8,
+                border: "1px solid #ddd",
+                objectFit: "cover",
+              }}
+              onError={(e) => {
+                console.error("Error loading thumbnail preview");
+                // You can set a fallback image here if needed
+              }}
+            />
+          </Box>
+        )}
+      </Box>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={4}>

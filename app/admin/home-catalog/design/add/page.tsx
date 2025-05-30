@@ -388,8 +388,18 @@ const AddDesignType = () => {
     setApiError("");
 
     try {
-      // Use new thumbnail if uploaded, otherwise keep existing thumbnail
-      const thumbnailToSend = formData.thumbnailBase64 || existingThumbnail;
+      // Prepare thumbnail with data URL prefix
+      let thumbnailToSend = "";
+      
+      if (formData.thumbnailPreview) {
+        // New thumbnail uploaded - use the full data URL (already has data:image/...;base64, prefix)
+        thumbnailToSend = formData.thumbnailPreview;
+      } else if (existingThumbnail) {
+        // Use existing thumbnail - ensure it has the proper format
+        thumbnailToSend = existingThumbnail.startsWith("data:image/") 
+          ? existingThumbnail 
+          : `data:image/jpeg;base64,${existingThumbnail}`;
+      }
 
       const designPayload = {
         name: formData.name,

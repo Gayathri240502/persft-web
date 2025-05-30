@@ -402,7 +402,7 @@ const EditKiosk = () => {
         </Grid>
         <Grid item xs={12}>
           <Typography variant="h6" sx={{ mb: 1 }}>
-            Residence Mapping
+            Project Mapping
           </Typography>
           <FormGroup>
             {loadingProjects ? (

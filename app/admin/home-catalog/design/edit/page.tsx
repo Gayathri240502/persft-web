@@ -20,6 +20,18 @@ import CancelButton from "@/app/components/CancelButton";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { useSearchParams, useRouter } from "next/navigation";
 
+type FormDataType = {
+  name: string;
+  description: string;
+  coohomUrl: string;
+  thumbnail: File | null; // <-- changed here
+  thumbnailBase64: string;
+  thumbnailPreview: string;
+  residenceType: string;
+  roomType: string;
+  theme: string;
+};
+
 const EditDesignType = () => {
   const { token } = getTokenAndRole();
   const searchParams = useSearchParams();
@@ -31,17 +43,17 @@ const EditDesignType = () => {
   const [themes, setThemes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    coohomUrl: "",
-    thumbnail: null,
-    thumbnailBase64: "",
-    thumbnailPreview: "",
-    residenceType: "",
-    roomType: "",
-    theme: "",
-  });
+  const [formData, setFormData] = useState<FormDataType>({
+  name: '',
+  description: '',
+  coohomUrl: '',
+  thumbnail: null,
+  thumbnailBase64: '',
+  thumbnailPreview: '',
+  residenceType: '',
+  roomType: '',
+  theme: '',
+});
 
   const [errors, setErrors] = useState({
     name: "",

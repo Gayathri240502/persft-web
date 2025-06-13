@@ -166,7 +166,7 @@ const DesignType = () => {
       flex: 1,
       renderCell: (params) => (
         <img
-          src={`data:image/jpeg;base64,${params.row.thumbnail}`}
+          src={`${params.row.thumbnail}`}
           alt="Thumbnail"
           style={{ width: 40, height: 40 }}
         />

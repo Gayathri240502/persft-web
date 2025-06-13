@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -199,86 +200,89 @@ const UserManagement = () => {
   ];
 
   return (
-    <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-      <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-        Users
-      </Typography>
+    <>
+      <Navbar label="Users" />
+      <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
+        {/* <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
+          Users
+        </Typography> */}
 
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          mb: 2,
-          gap: isSmallScreen ? 2 : 1,
-        }}
-      >
-        <TextField
-          label="Search"
-          variant="outlined"
-          size="small"
-          fullWidth={isSmallScreen}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <ReusableButton onClick={() => router.push("/admin/users/add")}>
-          ADD
-        </ReusableButton>
-      </Box>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            mb: 2,
+            gap: isSmallScreen ? 2 : 1,
+          }}
+        >
+          <TextField
+            label="Search"
+            variant="outlined"
+            size="small"
+            fullWidth={isSmallScreen}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <ReusableButton onClick={() => router.push("/admin/users/add")}>
+            ADD
+          </ReusableButton>
+        </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      <Box sx={{ width: "100%" }}>
-        {loading && (
-          <Box
-            sx={{
-              position: "absolute",
-              top: "40%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              zIndex: 1,
-            }}
-          >
-            <CircularProgress />
-          </Box>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
         )}
-        <StyledDataGrid
-          columns={columns}
-          rows={users}
-          rowCount={rowCount}
-          paginationMode="server"
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25, 100]}
-          autoHeight
-          disableColumnMenu={isSmallScreen}
-          loading={loading}
-        />
-      </Box>
 
-      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-        <DialogTitle>Delete User</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this user? This action cannot be
-            undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel}>Cancel</Button>
-          <Button
-            color="error"
-            onClick={handleDeleteConfirm}
-            disabled={loading}
-          >
-            {loading ? <CircularProgress size={20} /> : "Delete"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        <Box sx={{ width: "100%" }}>
+          {loading && (
+            <Box
+              sx={{
+                position: "absolute",
+                top: "40%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                zIndex: 1,
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          )}
+          <StyledDataGrid
+            columns={columns}
+            rows={users}
+            rowCount={rowCount}
+            paginationMode="server"
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            pageSizeOptions={[5, 10, 25, 100]}
+            autoHeight
+            disableColumnMenu={isSmallScreen}
+            loading={loading}
+          />
+        </Box>
+
+        <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+          <DialogTitle>Delete User</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this user? This action cannot be
+              undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDeleteCancel}>Cancel</Button>
+            <Button
+              color="error"
+              onClick={handleDeleteConfirm}
+              disabled={loading}
+            >
+              {loading ? <CircularProgress size={20} /> : "Delete"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </>
   );
 };
 

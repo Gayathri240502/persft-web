@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -197,90 +198,94 @@ const Attributes = () => {
   ];
 
   return (
-    <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-      <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-        Attributes
-      </Typography>
+    <>
+      <Navbar label="Attributes" />
 
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          mb: 2,
-          gap: isSmallScreen ? 2 : 1,
-        }}
-      >
-        <TextField
-          label="Search"
-          variant="outlined"
-          size="small"
-          fullWidth={isSmallScreen}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <ReusableButton
-          onClick={() => router.push("/admin/attribute-catalog/attributes/add")}
+      <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
+        {/* <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
+          Attributes
+        </Typography> */}
+
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            mb: 2,
+            gap: isSmallScreen ? 2 : 1,
+          }}
         >
-          ADD
-        </ReusableButton>
-      </Box>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      <Box sx={{ width: "100%", position: "relative" }}>
-        {loading && (
-          <Box
-            sx={{
-              position: "absolute",
-              top: "40%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              zIndex: 1,
-            }}
+          <TextField
+            label="Search"
+            variant="outlined"
+            size="small"
+            fullWidth={isSmallScreen}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <ReusableButton
+            onClick={() =>
+              router.push("/admin/attribute-catalog/attributes/add")
+            }
           >
-            <CircularProgress />
-          </Box>
+            ADD
+          </ReusableButton>
+        </Box>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
         )}
-        <StyledDataGrid
-          columns={columns}
-          rows={attributes}
-          rowCount={rowCount}
-          paginationMode="server"
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25, 100]}
-          autoHeight
-          disableColumnMenu={isSmallScreen}
-          loading={loading}
-        />
-      </Box>
 
-      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-        <DialogTitle>Delete Attribute</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this attribute? This action cannot
-            be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button  onClick={handleDeleteCancel}>
-            Cancel
-          </Button>
-          <Button
-            color="error"
-            onClick={handleDeleteConfirm}
-            disabled={loading}
-          >
-            {loading ? <CircularProgress size={20} /> : "Delete"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        <Box sx={{ width: "100%", position: "relative" }}>
+          {loading && (
+            <Box
+              sx={{
+                position: "absolute",
+                top: "40%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                zIndex: 1,
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          )}
+          <StyledDataGrid
+            columns={columns}
+            rows={attributes}
+            rowCount={rowCount}
+            paginationMode="server"
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            pageSizeOptions={[5, 10, 25, 100]}
+            autoHeight
+            disableColumnMenu={isSmallScreen}
+            loading={loading}
+          />
+        </Box>
+
+        <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+          <DialogTitle>Delete Attribute</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this attribute? This action cannot
+              be undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDeleteCancel}>Cancel</Button>
+            <Button
+              color="error"
+              onClick={handleDeleteConfirm}
+              disabled={loading}
+            >
+              {loading ? <CircularProgress size={20} /> : "Delete"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </>
   );
 };
 

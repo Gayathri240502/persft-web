@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -228,87 +229,90 @@ const AttributeGroups = () => {
   ];
 
   return (
-    <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-      <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-        Attribute Groups
-      </Typography>
+    <>
+      <Navbar label="Attribute Groups" />
+      <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
+        {/* <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
+          Attribute Groups
+        </Typography> */}
 
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          mb: 2,
-          gap: isSmallScreen ? 2 : 1,
-        }}
-      >
-        <TextField
-          label="Search"
-          variant="outlined"
-          size="small"
-          fullWidth={isSmallScreen}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <ReusableButton
-          onClick={() =>
-            router.push("/admin/attribute-catalog/attributes-groups/add")
-          }
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            mb: 2,
+            gap: isSmallScreen ? 2 : 1,
+          }}
         >
-          ADD
-        </ReusableButton>
-      </Box>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      <Box sx={{ height: 500, width: "100%", position: "relative" }}>
-        {loading && (
-          <Box
-            sx={{
-              position: "absolute",
-              top: "40%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              zIndex: 1,
-            }}
+          <TextField
+            label="Search"
+            variant="outlined"
+            size="small"
+            fullWidth={isSmallScreen}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <ReusableButton
+            onClick={() =>
+              router.push("/admin/attribute-catalog/attributes-groups/add")
+            }
           >
-            <CircularProgress />
-          </Box>
-        )}
-        <StyledDataGrid
-          columns={Columns}
-          rows={attributeGroups}
-          rowCount={rowCount}
-          pagination
-          paginationMode="server"
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25, 100]}
-          autoHeight
-          disableColumnMenu={isSmallScreen}
-          loading={loading}
-        />
-      </Box>
+            ADD
+          </ReusableButton>
+        </Box>
 
-      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-        <DialogTitle>Delete</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this attribute group? This action
-            cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
-          <Button onClick={handleDelete} color="error" autoFocus>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        <Box sx={{ height: 500, width: "100%", position: "relative" }}>
+          {loading && (
+            <Box
+              sx={{
+                position: "absolute",
+                top: "40%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                zIndex: 1,
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          )}
+          <StyledDataGrid
+            columns={Columns}
+            rows={attributeGroups}
+            rowCount={rowCount}
+            pagination
+            paginationMode="server"
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            pageSizeOptions={[5, 10, 25, 100]}
+            autoHeight
+            disableColumnMenu={isSmallScreen}
+            loading={loading}
+          />
+        </Box>
+
+        <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+          <DialogTitle>Delete</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this attribute group? This action
+              cannot be undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
+            <Button onClick={handleDelete} color="error" autoFocus>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </>
   );
 };
 

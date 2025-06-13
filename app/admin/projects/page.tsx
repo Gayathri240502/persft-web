@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -217,76 +218,79 @@ const Projects = () => {
   ];
 
   return (
-    <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-      <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-        Projects
-      </Typography>
+    <>
+      <Navbar label="Projects" />
+      <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
+        {/* <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
+          Projects
+        </Typography> */}
 
-      {/* Search and Add Button Row */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          mb: 2,
-          gap: isSmallScreen ? 2 : 1,
-        }}
-      >
-        <TextField
-          label="Search"
-          variant="outlined"
-          size="small"
-          fullWidth={isSmallScreen}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <ReusableButton onClick={() => router.push("/admin/projects/add")}>
-          ADD
-        </ReusableButton>
-      </Box>
-
-      {/* Loading and Error State */}
-      {loading ? (
-        <Box display="flex" justifyContent="center" py={5}>
-          <CircularProgress />
-        </Box>
-      ) : error ? (
-        <Typography color="error" textAlign="center">
-          {error}
-        </Typography>
-      ) : (
-        <Box sx={{ width: "100%" }}>
-          <StyledDataGrid
-            rows={projects}
-            columns={columns}
-            pagination
-            rowCount={rowCount}
-            paginationMode="server"
-            paginationModel={paginationModel}
-            onPaginationModelChange={setPaginationModel}
-            pageSizeOptions={[5, 10, 25, 100]}
-            autoHeight
-            disableColumnMenu={isSmallScreen}
+        {/* Search and Add Button Row */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            mb: 2,
+            gap: isSmallScreen ? 2 : 1,
+          }}
+        >
+          <TextField
+            label="Search"
+            variant="outlined"
+            size="small"
+            fullWidth={isSmallScreen}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
+          <ReusableButton onClick={() => router.push("/admin/projects/add")}>
+            ADD
+          </ReusableButton>
         </Box>
-      )}
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-        <DialogTitle>Delete Project</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this project? This action cannot be
-            undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel}>Cancel</Button>
-          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        {/* Loading and Error State */}
+        {loading ? (
+          <Box display="flex" justifyContent="center" py={5}>
+            <CircularProgress />
+          </Box>
+        ) : error ? (
+          <Typography color="error" textAlign="center">
+            {error}
+          </Typography>
+        ) : (
+          <Box sx={{ width: "100%" }}>
+            <StyledDataGrid
+              rows={projects}
+              columns={columns}
+              pagination
+              rowCount={rowCount}
+              paginationMode="server"
+              paginationModel={paginationModel}
+              onPaginationModelChange={setPaginationModel}
+              pageSizeOptions={[5, 10, 25, 100]}
+              autoHeight
+              disableColumnMenu={isSmallScreen}
+            />
+          </Box>
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+          <DialogTitle>Delete Project</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this project? This action cannot
+              be undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDeleteCancel}>Cancel</Button>
+            <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </>
   );
 };
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -271,76 +272,79 @@ const ThemesPage = () => {
   ];
 
   return (
-    <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-      <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-        Themes
-      </Typography>
+    <>
+      <Navbar label="Themes" />
+      <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
+        {/* <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
+          Themes
+        </Typography> */}
 
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          mb: 2,
-          gap: isSmallScreen ? 2 : 1,
-        }}
-      >
-        <TextField
-          label="Search"
-          variant="outlined"
-          size="small"
-          fullWidth={isSmallScreen}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <ReusableButton onClick={() => router.push("themes/add")}>
-          ADD
-        </ReusableButton>
-      </Box>
-
-      {loading && (
-        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
-          <CircularProgress />
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            mb: 2,
+            gap: isSmallScreen ? 2 : 1,
+          }}
+        >
+          <TextField
+            label="Search"
+            variant="outlined"
+            size="small"
+            fullWidth={isSmallScreen}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <ReusableButton onClick={() => router.push("themes/add")}>
+            ADD
+          </ReusableButton>
         </Box>
-      )}
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+        {loading && (
+          <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+            <CircularProgress />
+          </Box>
+        )}
 
-      <Box>
-        <StyledDataGrid
-          rows={filteredThemes}
-          columns={columns}
-          rowCount={rowCount}
-          pagination
-          paginationMode="server"
-          paginationModel={paginationModel}
-          onPaginationModelChange={(model: GridPaginationModel) =>
-            setPaginationModel(model)
-          }
-          pageSizeOptions={[5, 10, 25, 100]}
-          disableColumnMenu={isSmallScreen}
-        />
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        <Box>
+          <StyledDataGrid
+            rows={filteredThemes}
+            columns={columns}
+            rowCount={rowCount}
+            pagination
+            paginationMode="server"
+            paginationModel={paginationModel}
+            onPaginationModelChange={(model: GridPaginationModel) =>
+              setPaginationModel(model)
+            }
+            pageSizeOptions={[5, 10, 25, 100]}
+            disableColumnMenu={isSmallScreen}
+          />
+        </Box>
+
+        <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+          <DialogTitle>Delete Theme</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to archive this theme? This action cannot be
+              undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDeleteCancel}>Cancel</Button>
+            <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
-
-      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-        <DialogTitle>Delete Theme</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to archive this theme? This action cannot be
-            undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel}>Cancel</Button>
-          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+    </>
   );
 };
 

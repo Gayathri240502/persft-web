@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -244,79 +245,82 @@ const RoomTypes = () => {
   ];
 
   return (
-    <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-      <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-        Room Types
-      </Typography>
+    <>
+      <Navbar label="Room Types" />
+      <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
+        {/* <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
+          Room Types
+        </Typography> */}
 
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          mb: 2,
-          gap: isSmallScreen ? 2 : 1,
-        }}
-      >
-        <TextField
-          label="Search"
-          variant="outlined"
-          size="small"
-          fullWidth={isSmallScreen}
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPaginationModel({ ...paginationModel, page: 0 });
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            mb: 2,
+            gap: isSmallScreen ? 2 : 1,
           }}
-        />
-        <ReusableButton
-          onClick={() => router.push("/admin/home-catalog/room-types/add")}
         >
-          ADD
-        </ReusableButton>
-      </Box>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
-          <CircularProgress />
+          <TextField
+            label="Search"
+            variant="outlined"
+            size="small"
+            fullWidth={isSmallScreen}
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPaginationModel({ ...paginationModel, page: 0 });
+            }}
+          />
+          <ReusableButton
+            onClick={() => router.push("/admin/home-catalog/room-types/add")}
+          >
+            ADD
+          </ReusableButton>
         </Box>
-      ) : (
-        <StyledDataGrid
-          rows={roomTypes}
-          columns={columns}
-          rowCount={rowCount}
-          pagination
-          paginationMode="server"
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25, 100]}
-          autoHeight
-          disableColumnMenu={isSmallScreen}
-          loading={loading}
-        />
-      )}
 
-      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-        <DialogTitle>Delete Room Type</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this room type? This action cannot
-            be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel}>Cancel</Button>
-          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        {loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <StyledDataGrid
+            rows={roomTypes}
+            columns={columns}
+            rowCount={rowCount}
+            pagination
+            paginationMode="server"
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            pageSizeOptions={[5, 10, 25, 100]}
+            autoHeight
+            disableColumnMenu={isSmallScreen}
+            loading={loading}
+          />
+        )}
+
+        <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+          <DialogTitle>Delete Room Type</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this room type? This action cannot
+              be undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDeleteCancel}>Cancel</Button>
+            <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </>
   );
 };
 

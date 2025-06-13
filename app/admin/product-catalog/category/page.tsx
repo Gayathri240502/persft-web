@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -150,13 +151,23 @@ const Category = () => {
       field: "thumbnail",
       headerName: "Thumbnail",
       flex: 1,
-      renderCell: (params) => (
-        <img
-          src={params.row.thumbnail}
-          alt="Thumbnail"
-          style={{ width: 40, height: 40 }}
-        />
-      ),
+      renderCell: (params) =>
+        params.row.thumbnail ? (
+          <img
+            src={params.row.thumbnail}
+            alt="Thumbnail"
+            style={{
+              width: 40,
+              height: 40,
+              objectFit: "cover",
+              borderRadius: 4,
+            }}
+          />
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            N/A
+          </Typography>
+        ),
     },
     {
       field: "action",
@@ -200,81 +211,84 @@ const Category = () => {
   ];
 
   return (
-    <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-      <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
+    <>
+      <Navbar label="Category" />
+      <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
+        {/* <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
         Category
-      </Typography>
+      </Typography> */}
 
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          mb: 2,
-          gap: isSmallScreen ? 2 : 1,
-        }}
-      >
-        <TextField
-          label="Search"
-          variant="outlined"
-          size="small"
-          fullWidth={isSmallScreen}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <ReusableButton
-          onClick={() => {
-            router.push("/admin/product-catalog/category/add");
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            mb: 2,
+            gap: isSmallScreen ? 2 : 1,
           }}
         >
-          ADD
-        </ReusableButton>
-      </Box>
-
-      {loading && (
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-          <CircularProgress size={20} sx={{ mr: 1 }} />
-          <Typography variant="body2">Loading categories...</Typography>
+          <TextField
+            label="Search"
+            variant="outlined"
+            size="small"
+            fullWidth={isSmallScreen}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <ReusableButton
+            onClick={() => {
+              router.push("/admin/product-catalog/category/add");
+            }}
+          >
+            ADD
+          </ReusableButton>
         </Box>
-      )}
 
-      {error && (
-        <Typography variant="body2" color="error" sx={{ mb: 2 }}>
-          {error}
-        </Typography>
-      )}
+        {loading && (
+          <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+            <CircularProgress size={20} sx={{ mr: 1 }} />
+            <Typography variant="body2">Loading categories...</Typography>
+          </Box>
+        )}
 
-      <Box sx={{ width: "100%" }}>
-        <StyledDataGrid
-          rows={category}
-          columns={columns}
-          rowCount={rowCount}
-          loading={loading}
-          pagination
-          paginationMode="server"
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25, 100]}
-          autoHeight
-          disableColumnMenu={isSmallScreen}
-        />
+        {error && (
+          <Typography variant="body2" color="error" sx={{ mb: 2 }}>
+            {error}
+          </Typography>
+        )}
+
+        <Box sx={{ width: "100%" }}>
+          <StyledDataGrid
+            rows={category}
+            columns={columns}
+            rowCount={rowCount}
+            loading={loading}
+            pagination
+            paginationMode="server"
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            pageSizeOptions={[5, 10, 25, 100]}
+            autoHeight
+            disableColumnMenu={isSmallScreen}
+          />
+        </Box>
+
+        <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+          <DialogTitle>Delete</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this category? This action cannot
+              be undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDeleteCancel}>Cancel</Button>
+            <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
-
-      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-        <DialogTitle>Delete</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this category? This action cannot be
-            undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel}>Cancel</Button>
-          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+    </>
   );
 };
 

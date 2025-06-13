@@ -4,7 +4,6 @@ import "./globals.css";
 import Providers from "./Provider";
 import Sidebar from "./components/Sidebar/Sidebar";
 import { getSession } from "./auth";
-import Navbar from "./components/navbar/navbar";
 import LocalizationProviderWrapper from "../app/components/providers/LocalizationProviderWrapper";
 // import Footer from "./components/navbar/Footer";
 
@@ -44,15 +43,11 @@ export default async function RootLayout({
           <div className="flex min-h-screen w-screen">
             <Sidebar />
 
-            <div className="flex flex-col flex-1 overflow-hidden">
-              <Navbar />
-
-              <main className="flex-1 p-4 overflow-auto">
-                <LocalizationProviderWrapper>
-                  {children}
-                </LocalizationProviderWrapper>
-              </main>
-            </div>
+            <main className="flex-1 p-4 overflow-auto">
+              <LocalizationProviderWrapper>
+                {children}
+              </LocalizationProviderWrapper>
+            </main>
           </div>
         </Providers>
       </body>

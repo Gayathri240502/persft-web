@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -195,70 +196,78 @@ const KioskManagement = () => {
   ];
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" mb={2}>
-        Kiosk Management
-      </Typography>
+    <>
+      <Navbar label="Kiosk Management" />
+      <Box sx={{ p: 3 }}>
+        {/* <Typography variant="h5" mb={2}>
+          Kiosk Management
+        </Typography> */}
 
-      <Box
-        sx={{ display: "flex", justifyContent: "space-between", mb: 2, gap: 2 }}
-      >
-        <TextField
-          label="Search"
-          size="small"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          sx={{ width: 300 }}
-        />
-        <ReusableButton
-          onClick={() => router.push("/admin/kiosk-management/add")}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            mb: 2,
+            gap: 2,
+          }}
         >
-          ADD
-        </ReusableButton>
-      </Box>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
-          <CircularProgress />
+          <TextField
+            label="Search"
+            size="small"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            sx={{ width: 300 }}
+          />
+          <ReusableButton
+            onClick={() => router.push("/admin/kiosk-management/add")}
+          >
+            ADD
+          </ReusableButton>
         </Box>
-      ) : (
-        <StyledDataGrid
-          minWidth={1500}
-          rows={kiosks}
-          columns={columns}
-          rowCount={rowCount}
-          pagination
-          paginationMode="server"
-          loading={loading}
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25, 100]}
-          autoHeight
-        />
-      )}
 
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Confirm Deletion</DialogTitle>
-        <DialogContent>
-          <Typography>Are you sure you want to delete this kiosk?</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDeleteKiosk} color="error">
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        {loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <StyledDataGrid
+            minWidth={1500}
+            rows={kiosks}
+            columns={columns}
+            rowCount={rowCount}
+            pagination
+            paginationMode="server"
+            loading={loading}
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            pageSizeOptions={[5, 10, 25, 100]}
+            autoHeight
+          />
+        )}
+
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+        >
+          <DialogTitle>Confirm Deletion</DialogTitle>
+          <DialogContent>
+            <Typography>Are you sure you want to delete this kiosk?</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleDeleteKiosk} color="error">
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </>
   );
 };
 

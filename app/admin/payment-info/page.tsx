@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -217,122 +218,127 @@ const PaymentInfoPage: React.FC = () => {
   ];
 
   return (
-    <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-      <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-        Payment Info
-      </Typography>
+    <>
+      <Navbar label="Payment Info" />
+      <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
+        {/* <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
+          Payment Info
+        </Typography> */}
 
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          mb: 2,
-          gap: 2,
-          flexDirection: isSmallScreen ? "column" : "row",
-        }}
-      >
-        <TextField
-          label="Search"
-          variant="outlined"
-          size="small"
-          value={search}
-          fullWidth={isSmallScreen}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPaginationModel({ ...paginationModel, page: 0 });
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            mb: 2,
+            gap: 2,
+            flexDirection: isSmallScreen ? "column" : "row",
           }}
-        />
-        <ReusableButton onClick={handleAddClick}>ADD</ReusableButton>
-      </Box>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
-          <CircularProgress />
+        >
+          <TextField
+            label="Search"
+            variant="outlined"
+            size="small"
+            value={search}
+            fullWidth={isSmallScreen}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPaginationModel({ ...paginationModel, page: 0 });
+            }}
+          />
+          <ReusableButton onClick={handleAddClick}>ADD</ReusableButton>
         </Box>
-      ) : (
-        <StyledDataGrid
-          rows={rows}
-          columns={columns}
-          rowCount={rowCount}
-          loading={loading}
-          pagination
-          paginationMode="server"
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25, 100]}
-          disableColumnMenu={isSmallScreen}
-          autoHeight
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        {loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <StyledDataGrid
+            rows={rows}
+            columns={columns}
+            rowCount={rowCount}
+            loading={loading}
+            pagination
+            paginationMode="server"
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            pageSizeOptions={[5, 10, 25, 100]}
+            disableColumnMenu={isSmallScreen}
+            autoHeight
+          />
+        )}
+
+        <Dialog
+          open={addDialogOpen}
+          onClose={() => setAddDialogOpen(false)}
+          fullWidth
+          maxWidth="sm"
+        >
+          <DialogTitle>
+            {formData.id ? "Edit Payment Info" : "Add Payment Info"}
+          </DialogTitle>
+          <DialogContent
+            sx={{
+              mt: 2,
+              px: 2,
+              py: 1,
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              overflow: "visible",
+            }}
+          >
+            <TextField
+              label="Design Amount"
+              type="number"
+              fullWidth
+              variant="outlined"
+              value={formData.designAmount}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  designAmount: parseFloat(e.target.value),
+                })
+              }
+            />
+            <TextField
+              label="Partial Amount"
+              type="number"
+              fullWidth
+              variant="outlined"
+              value={formData.partialAmount}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  partialAmount: parseFloat(e.target.value),
+                })
+              }
+            />
+          </DialogContent>
+          <DialogActions>
+            <CancelButton onClick={() => setAddDialogOpen(false)}>
+              Cancel
+            </CancelButton>
+            <ReusableButton variant="contained" onClick={handleSubmit}>
+              {formData.id ? "Update" : "Add"}
+            </ReusableButton>
+          </DialogActions>
+        </Dialog>
+
+        <Snackbar
+          open={!!successMsg}
+          autoHideDuration={3000}
+          onClose={() => setSuccessMsg(null)}
+          message={successMsg}
         />
-      )}
-
-      <Dialog
-        open={addDialogOpen}
-        onClose={() => setAddDialogOpen(false)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>
-          {formData.id ? "Edit Payment Info" : "Add Payment Info"}
-        </DialogTitle>
-        <DialogContent
-  sx={{
-    mt: 2,
-    px: 2,
-    py: 1,
-    display: "flex",
-    flexDirection: "column",
-    gap: 2,
-    overflow: "visible",
-  }}
->
-  <TextField
-    label="Design Amount"
-    type="number"
-    fullWidth
-    variant="outlined"
-    value={formData.designAmount}
-    onChange={(e) =>
-      setFormData({
-        ...formData,
-        designAmount: parseFloat(e.target.value),
-      })
-    }
-  />
-  <TextField
-    label="Partial Amount"
-    type="number"
-    fullWidth
-    variant="outlined"
-    value={formData.partialAmount}
-    onChange={(e) =>
-      setFormData({
-        ...formData,
-        partialAmount: parseFloat(e.target.value),
-      })
-    }
-  />
-</DialogContent>
-        <DialogActions>
-          <CancelButton onClick={() => setAddDialogOpen(false)}>Cancel</CancelButton>
-          <ReusableButton variant="contained" onClick={handleSubmit}>
-            {formData.id ? "Update" : "Add"}
-          </ReusableButton>
-        </DialogActions>
-      </Dialog>
-
-      <Snackbar
-        open={!!successMsg}
-        autoHideDuration={3000}
-        onClose={() => setSuccessMsg(null)}
-        message={successMsg}
-      />
-    </Box>
+      </Box>
+    </>
   );
 };
 

@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -167,68 +168,71 @@ const DesignPayments = () => {
   ];
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>
-        Design Payments
-      </Typography>
+    <>
+      <Navbar label="Design Payments" />
+      <Box sx={{ p: 3 }}>
+        {/* <Typography variant="h5" gutterBottom>
+          Design Payments
+        </Typography> */}
 
-      {/* Filters */}
-      <Box
-        sx={{
-          display: "flex",
-          gap: 2,
-          flexWrap: "wrap",
-          mb: 2,
-          alignItems: "center",
-        }}
-      >
-        <FormControl sx={{ minWidth: 150 }} required>
-          <InputLabel id="isValid-label">Validity</InputLabel>
-          <Select
-            labelId="isValid-label"
-            label="Validity"
-            value={isValid}
-            onChange={(e) => setIsValid(e.target.value)}
-          >
-            <MenuItem value="">-- Select --</MenuItem>
-            <MenuItem value="true">Active</MenuItem>
-            <MenuItem value="false">Inactive</MenuItem>
-          </Select>
-        </FormControl>
+        {/* Filters */}
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            flexWrap: "wrap",
+            mb: 2,
+            alignItems: "center",
+          }}
+        >
+          <FormControl sx={{ minWidth: 150 }} required>
+            <InputLabel id="isValid-label">Validity</InputLabel>
+            <Select
+              labelId="isValid-label"
+              label="Validity"
+              value={isValid}
+              onChange={(e) => setIsValid(e.target.value)}
+            >
+              <MenuItem value="">-- Select --</MenuItem>
+              <MenuItem value="true">Active</MenuItem>
+              <MenuItem value="false">Inactive</MenuItem>
+            </Select>
+          </FormControl>
 
-        <TextField
-          label="Search Customer or Project ID"
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          placeholder="Search by Customer ID or Project ID"
-          sx={{ minWidth: 300 }}
-        />
-      </Box>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-          <CircularProgress />
+          <TextField
+            label="Search Customer or Project ID"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            placeholder="Search by Customer ID or Project ID"
+            sx={{ minWidth: 300 }}
+          />
         </Box>
-      ) : (
-        <StyledDataGrid
-          // minWidth={1500}
-          rows={payments}
-          columns={columns}
-          rowCount={rowCount}
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          paginationMode="server"
-          autoHeight
-          disableRowSelectionOnClick
-        />
-      )}
-    </Box>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        {loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <StyledDataGrid
+            // minWidth={1500}
+            rows={payments}
+            columns={columns}
+            rowCount={rowCount}
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            paginationMode="server"
+            autoHeight
+            disableRowSelectionOnClick
+          />
+        )}
+      </Box>
+    </>
   );
 };
 

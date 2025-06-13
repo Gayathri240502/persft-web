@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -227,79 +228,84 @@ const Shop = () => {
         </Box>
       ),
     },
-  ]
+  ];
 
   return (
-    <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-      <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-        Shops
-      </Typography>
+    <>
+      <Navbar label="Shops" />
+      <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
+        {/* <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
+          Shops
+        </Typography> */}
 
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-        <TextField
-          label="Search"
-          variant="outlined"
-          size="small"
-          fullWidth={isSmallScreen}
-          value={search}
-          onChange={handleSearchChange}
-          placeholder="Search shops..."
-        />
-        <ReusableButton onClick={() => router.push("/admin/vendors/shops/add")}>
-          ADD
-        </ReusableButton>
-      </Box>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      <Box sx={{ position: "relative", minHeight: "400px" }}>
-        {loading && (
-          <Box
-            sx={{
-              position: "absolute",
-              top: "40%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              zIndex: 1,
-            }}
+        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+          <TextField
+            label="Search"
+            variant="outlined"
+            size="small"
+            fullWidth={isSmallScreen}
+            value={search}
+            onChange={handleSearchChange}
+            placeholder="Search shops..."
+          />
+          <ReusableButton
+            onClick={() => router.push("/admin/vendors/shops/add")}
           >
-            <CircularProgress />
-          </Box>
-        )}
-        <StyledDataGrid
-          columns={columns}
-          rows={rows}
-          rowCount={rowCount}
-          paginationModel={paginationModel}
-          onPaginationModelChange={(newModel) => setPaginationModel(newModel)}
-          pageSizeOptions={[5, 10, 25, 100]}
-          paginationMode="server"
-          disableColumnMenu={isSmallScreen}
-          loading={loading}
-          getRowId={(row) => row.id || row._id || row.keycloakId}
-        />
-      </Box>
+            ADD
+          </ReusableButton>
+        </Box>
 
-      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-        <DialogTitle>Delete Shop</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this Shop? This action cannot be
-            undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel}>Cancel</Button>
-          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        <Box sx={{ position: "relative", minHeight: "400px" }}>
+          {loading && (
+            <Box
+              sx={{
+                position: "absolute",
+                top: "40%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                zIndex: 1,
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          )}
+          <StyledDataGrid
+            columns={columns}
+            rows={rows}
+            rowCount={rowCount}
+            paginationModel={paginationModel}
+            onPaginationModelChange={(newModel) => setPaginationModel(newModel)}
+            pageSizeOptions={[5, 10, 25, 100]}
+            paginationMode="server"
+            disableColumnMenu={isSmallScreen}
+            loading={loading}
+            getRowId={(row) => row.id || row._id || row.keycloakId}
+          />
+        </Box>
+
+        <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+          <DialogTitle>Delete Shop</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this Shop? This action cannot be
+              undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDeleteCancel}>Cancel</Button>
+            <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </>
   );
 };
 

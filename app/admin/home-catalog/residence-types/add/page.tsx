@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -99,82 +100,86 @@ const AddResidenceType = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }} component="form" onSubmit={handleSubmit}>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Add Residence Type
-      </Typography>
+    <>
+      <Navbar label="Add Residence Types" />
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+      <Box sx={{ p: 3 }} component="form" onSubmit={handleSubmit}>
+        <Typography variant="h5" sx={{ mb: 2 }}>
+          Add Residence Type
+        </Typography>
 
-      <TextField
-        label="Name"
-        fullWidth
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        sx={{ mb: 3 }}
-      />
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
-      <TextField
-        label="Description"
-        multiline
-        rows={3}
-        fullWidth
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        sx={{ mb: 3 }}
-      />
+        <TextField
+          label="Name"
+          fullWidth
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          sx={{ mb: 3 }}
+        />
 
-<Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-  {/* Upload Section */}
-  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-    <Button
-      variant="outlined"
-      component="label"
-      startIcon={<UploadFileIcon />}
-      sx={{
-        color: "#05344c",
-        borderColor: "#05344c",
-        "&:hover": { backgroundColor: "#f0f4f8" },
-      }}
-    >
-      Upload Thumbnail
-      <input type="file" hidden onChange={handleThumbnailChange} />
-    </Button>
-    <Typography variant="body2" sx={{ color: "#666" }}>
-      {selectedFileName}
-    </Typography>
-  </Box>
+        <TextField
+          label="Description"
+          multiline
+          rows={3}
+          fullWidth
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          sx={{ mb: 3 }}
+        />
 
-  {/* Help Text */}
-  <Typography variant="caption" sx={{ color: "#999" }}>
-  Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
-  </Typography>
-  {thumbnail && (
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="subtitle2">Preview:</Typography>
-                <img
-                  src={thumbnail}
-                  alt="Thumbnail Preview"
-                  style={{ width: 200, borderRadius: 8 }}
-                />
-              </Box>
-            )}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {/* Upload Section */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<UploadFileIcon />}
+              sx={{
+                color: "#05344c",
+                borderColor: "#05344c",
+                "&:hover": { backgroundColor: "#f0f4f8" },
+              }}
+            >
+              Upload Thumbnail
+              <input type="file" hidden onChange={handleThumbnailChange} />
+            </Button>
+            <Typography variant="body2" sx={{ color: "#666" }}>
+              {selectedFileName}
+            </Typography>
+          </Box>
 
-  {/* Buttons */}
-  <Box sx={{ display: "flex", gap: 2 }}>
-    <ReusableButton type="submit" disabled={loading}>
-      {loading ? <CircularProgress size={24} /> : "Submit"}
-    </ReusableButton>
-    <CancelButton href="/admin/home-catalog/residence-types">
-      Cancel
-    </CancelButton>
-  </Box>
-</Box>
-    </Box>
+          {/* Help Text */}
+          <Typography variant="caption" sx={{ color: "#999" }}>
+            Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+          </Typography>
+          {thumbnail && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2">Preview:</Typography>
+              <img
+                src={thumbnail}
+                alt="Thumbnail Preview"
+                style={{ width: 200, borderRadius: 8 }}
+              />
+            </Box>
+          )}
+
+          {/* Buttons */}
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <ReusableButton type="submit" disabled={loading}>
+              {loading ? <CircularProgress size={24} /> : "Submit"}
+            </ReusableButton>
+            <CancelButton href="/admin/home-catalog/residence-types">
+              Cancel
+            </CancelButton>
+          </Box>
+        </Box>
+      </Box>
+    </>
   );
 };
 

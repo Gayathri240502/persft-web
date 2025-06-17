@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
@@ -40,6 +40,24 @@ interface Attribute {
   archive: boolean;
 }
 
+// Industry standard debounce hook with proper cleanup and dependencies
+const useDebounce = <T,>(value: T, delay: number): T => {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    // Cleanup function to prevent memory leaks
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
 const Attributes = () => {
   const router = useRouter();
   const theme = useTheme();
@@ -61,6 +79,7 @@ const Attributes = () => {
   );
 
   const { token } = getTokenAndRole();
+  const debouncedSearch = useDebounce(search, 300);
 
   const fetchAttributes = async () => {
     const { page, pageSize } = paginationModel;
@@ -72,8 +91,11 @@ const Attributes = () => {
       const queryParams = new URLSearchParams({
         page: String(page + 1),
         limit: String(pageSize),
-        searchTerm: search,
       });
+
+      if (debouncedSearch.trim()) {
+        queryParams.append("searchTerm", debouncedSearch.trim());
+      }
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/attributes?${queryParams.toString()}`,
@@ -111,7 +133,7 @@ const Attributes = () => {
 
   useEffect(() => {
     fetchAttributes();
-  }, [paginationModel, search]);
+  }, [paginationModel, , debouncedSearch]);
 
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
@@ -147,6 +169,23 @@ const Attributes = () => {
       setLoading(false);
     }
   };
+  [paginationModel, debouncedSearch, token];
+
+  // Effect to reset pagination when search changes
+  useEffect(() => {
+    // Reset to first page when search term changes
+    if (debouncedSearch !== search) {
+      setPaginationModel((prev) => ({ ...prev, page: 0 }));
+    }
+  }, [debouncedSearch, search]);
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+  }, []);
+
+  const handleAdd = useCallback(() => {
+    router.push("/admin/home-catalog/design/add");
+  }, [router]);
 
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", flex: 0.4 },
@@ -213,23 +252,7 @@ const Attributes = () => {
             mb: 2,
             gap: isSmallScreen ? 2 : 1,
           }}
-        >
-          <TextField
-            label="Search"
-            variant="outlined"
-            size="small"
-            fullWidth={isSmallScreen}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <ReusableButton
-            onClick={() =>
-              router.push("/admin/attribute-catalog/attributes/add")
-            }
-          >
-            ADD
-          </ReusableButton>
-        </Box>
+        ></Box>
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -262,6 +285,14 @@ const Attributes = () => {
             autoHeight
             disableColumnMenu={isSmallScreen}
             loading={loading}
+            onAdd={handleAdd}
+            onSearch={handleSearchChange}
+            searchPlaceholder="Search Attributes..."
+            addButtonText="Add Attributes"
+            getRowId={(row) => row.id}
+            // Add these props for better UX
+            disableRowSelectionOnClick
+            hideFooterSelectedRowCount
           />
         </Box>
 

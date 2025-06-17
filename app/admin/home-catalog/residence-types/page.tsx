@@ -1,11 +1,7 @@
 "use client";
 
-<<<<<<< HEAD
-import React, { useEffect, useState } from "react";
-import Navbar from "@/app/components/navbar/navbar";
-=======
 import React, { useEffect, useState, useCallback, useMemo } from "react";
->>>>>>> 2f97a874418fefcf20bd33b1880d74afecac95a3
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -304,142 +300,62 @@ const ResidenceTypePage = () => {
   );
 
   return (
-<<<<<<< HEAD
     <>
       <Navbar label="Residence Types" />
+
       <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-        {/* <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-          Residence Types
-        </Typography> */}
-
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-
-            mb: 2,
-            gap: isSmallScreen ? 2 : 1,
-          }}
-        >
-          <TextField
-            label="Search"
-            variant="outlined"
-            size="small"
-            fullWidth={isSmallScreen}
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPaginationModel((prev) => ({ ...prev, page: 0 }));
-            }}
-          />
-          <ReusableButton
-            onClick={() =>
-              router.push("/admin/home-catalog/residence-types/add")
-            }
-          >
-            ADD
-          </ReusableButton>
-        </Box>
-
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
             {error}
           </Alert>
         )}
 
-        {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <Box sx={{ width: "100%" }}>
-            <Box sx={{ width: "100%" }}>
-              <StyledDataGrid
-                rows={residenceTypes}
-                columns={columns}
-                rowCount={rowCount}
-                loading={loading}
-                pagination
-                paginationMode="server"
-                paginationModel={paginationModel}
-                onPaginationModelChange={setPaginationModel}
-                pageSizeOptions={[5, 10, 25, 100]}
-                autoHeight={false}
-              />
-            </Box>
-          </Box>
-        )}
-        <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-          <DialogTitle>Delete</DialogTitle>
+        <StyledDataGrid
+          rows={residenceTypes}
+          columns={columns}
+          rowCount={rowCount}
+          loading={loading}
+          pagination
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={handlePaginationChange}
+          pageSizeOptions={[5, 10, 25, 50, 100]}
+          autoHeight
+          disableRowSelectionOnClick
+          onAdd={handleAdd}
+          onSearch={handleSearchChange}
+          getRowId={(row) => row.id}
+        />
+
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={handleDeleteCancel}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Confirm Delete</DialogTitle>
           <DialogContent>
             <DialogContentText>
               Are you sure you want to delete this residence type? This action
-              cannot be undone.
+              cannot be undone and may affect related data.
             </DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleDeleteCancel}>Cancel</Button>
-            <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+            <Button onClick={handleDeleteCancel} color="inherit">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeleteConfirm}
+              color="error"
+              variant="contained"
+              autoFocus
+            >
               Delete
             </Button>
           </DialogActions>
         </Dialog>
       </Box>
     </>
-=======
-    <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
-      <StyledDataGrid
-        rows={residenceTypes}
-        columns={columns}
-        rowCount={rowCount}
-        loading={loading}
-        pagination
-        paginationMode="server"
-        paginationModel={paginationModel}
-        onPaginationModelChange={handlePaginationChange}
-        pageSizeOptions={[5, 10, 25, 50, 100]}
-        autoHeight
-        disableRowSelectionOnClick
-        onAdd={handleAdd}
-        onSearch={handleSearchChange}
-        getRowId={(row) => row.id}
-      />
-
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={handleDeleteCancel}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this residence type? This action
-            cannot be undone and may affect related data.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel} color="inherit">
-            Cancel
-          </Button>
-          <Button
-            onClick={handleDeleteConfirm}
-            color="error"
-            variant="contained"
-            autoFocus
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
->>>>>>> 2f97a874418fefcf20bd33b1880d74afecac95a3
   );
 };
 

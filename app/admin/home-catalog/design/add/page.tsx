@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -390,14 +391,14 @@ const AddDesignType = () => {
     try {
       // Prepare thumbnail with data URL prefix
       let thumbnailToSend = "";
-      
+
       if (formData.thumbnailPreview) {
         // New thumbnail uploaded - use the full data URL (already has data:image/...;base64, prefix)
         thumbnailToSend = formData.thumbnailPreview;
       } else if (existingThumbnail) {
         // Use existing thumbnail - ensure it has the proper format
-        thumbnailToSend = existingThumbnail.startsWith("data:image/") 
-          ? existingThumbnail 
+        thumbnailToSend = existingThumbnail.startsWith("data:image/")
+          ? existingThumbnail
           : `data:image/jpeg;base64,${existingThumbnail}`;
       }
 
@@ -464,253 +465,256 @@ const AddDesignType = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" sx={{ mb: 3 }}>
-        Add Design Type
-      </Typography>
+    <>
+      <Navbar label="Add Design Types" />
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h5" sx={{ mb: 3 }}>
+          Add Design Type
+        </Typography>
 
-      <TextField
-        label="Name"
-        name="name"
-        fullWidth
-        sx={{ mb: 3 }}
-        value={formData.name}
-        onChange={handleInputChange}
-        error={!!errors.name}
-        helperText={errors.name}
-        required
-      />
+        <TextField
+          label="Name"
+          name="name"
+          fullWidth
+          sx={{ mb: 3 }}
+          value={formData.name}
+          onChange={handleInputChange}
+          error={!!errors.name}
+          helperText={errors.name}
+          required
+        />
 
-      <TextField
-        label="Coohom URL"
-        name="coohomUrl"
-        fullWidth
-        sx={{ mb: 3 }}
-        value={formData.coohomUrl}
-        onChange={handleInputChange}
-        error={!!errors.coohomUrl}
-        helperText={errors.coohomUrl}
-        required
-      />
+        <TextField
+          label="Coohom URL"
+          name="coohomUrl"
+          fullWidth
+          sx={{ mb: 3 }}
+          value={formData.coohomUrl}
+          onChange={handleInputChange}
+          error={!!errors.coohomUrl}
+          helperText={errors.coohomUrl}
+          required
+        />
 
-      <TextField
-        label="Description"
-        name="description"
-        multiline
-        rows={3}
-        fullWidth
-        sx={{ mb: 3 }}
-        value={formData.description}
-        onChange={handleInputChange}
-      />
+        <TextField
+          label="Description"
+          name="description"
+          multiline
+          rows={3}
+          fullWidth
+          sx={{ mb: 3 }}
+          value={formData.description}
+          onChange={handleInputChange}
+        />
 
-      <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-          <Button
-            variant="outlined"
-            component="label"
-            startIcon={<UploadFileIcon />}
-            sx={{
-              color: "#05344c",
-              borderColor: errors.thumbnail ? "error.main" : "#05344c",
-              "&:hover": { backgroundColor: "#f0f4f8" },
-            }}
-          >
-            {hasAnyThumbnail() ? "Update Thumbnail" : "Upload Thumbnail"}
-            <input
-              type="file"
-              hidden
-              onChange={handleFileChange}
-              accept=".jpg,.jpeg,.png"
-            />
-          </Button>
-          <Typography variant="body2" sx={{ color: "#666" }}>
-            {getThumbnailDisplayName()}
-          </Typography>
+        <Box sx={{ mb: 3 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<UploadFileIcon />}
+              sx={{
+                color: "#05344c",
+                borderColor: errors.thumbnail ? "error.main" : "#05344c",
+                "&:hover": { backgroundColor: "#f0f4f8" },
+              }}
+            >
+              {hasAnyThumbnail() ? "Update Thumbnail" : "Upload Thumbnail"}
+              <input
+                type="file"
+                hidden
+                onChange={handleFileChange}
+                accept=".jpg,.jpeg,.png"
+              />
+            </Button>
+            <Typography variant="body2" sx={{ color: "#666" }}>
+              {getThumbnailDisplayName()}
+            </Typography>
+
+            {hasAnyThumbnail() && (
+              <Button
+                variant="text"
+                color="error"
+                onClick={handleRemoveImage}
+                size="small"
+              >
+                Remove
+              </Button>
+            )}
+          </Box>
 
           {hasAnyThumbnail() && (
-            <Button
-              variant="text"
-              color="error"
-              onClick={handleRemoveImage}
-              size="small"
-            >
-              Remove
-            </Button>
-          )}
-        </Box>
-
-        {hasAnyThumbnail() && (
-          <Box sx={{ mt: 2, mb: 2 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Image Preview:
-            </Typography>
-            <Box
-              sx={{
-                width: 150,
-                height: 150,
-                border: "1px solid #ddd",
-                borderRadius: 1,
-                overflow: "hidden",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <img
-                src={getThumbnailForDisplay()}
-                alt="Thumbnail preview"
-                style={{
-                  maxWidth: "100%",
-                  maxHeight: "100%",
-                  objectFit: "contain",
+            <Box sx={{ mt: 2, mb: 2 }}>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                Image Preview:
+              </Typography>
+              <Box
+                sx={{
+                  width: 150,
+                  height: 150,
+                  border: "1px solid #ddd",
+                  borderRadius: 1,
+                  overflow: "hidden",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
-              />
+              >
+                <img
+                  src={getThumbnailForDisplay()}
+                  alt="Thumbnail preview"
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                    objectFit: "contain",
+                  }}
+                />
+              </Box>
             </Box>
-          </Box>
-        )}
-
-        {errors.thumbnail && (
-          <FormHelperText error>{errors.thumbnail}</FormHelperText>
-        )}
-        <FormHelperText>
-          Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
-        </FormHelperText>
-      </Box>
-
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        Design Combinations
-      </Typography>
-
-      {errors.combinations && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {errors.combinations}
-        </Alert>
-      )}
-
-      {formData.combinations.map((combo, index) => (
-        <Box
-          key={index}
-          sx={{
-            mb: 3,
-            p: 3,
-            border: "1px solid #eee",
-            borderRadius: 1,
-            position: "relative",
-          }}
-        >
-          {formData.combinations.length > 1 && (
-            <IconButton
-              onClick={() => removeCombination(index)}
-              sx={{
-                position: "absolute",
-                right: 8,
-                top: 8,
-                color: "error.main",
-              }}
-            >
-              <DeleteIcon />
-            </IconButton>
           )}
 
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={4}>
-              <FormControl fullWidth>
-                <InputLabel required>Residence Type</InputLabel>
-                <Select
-                  value={combo.residenceType}
-                  onChange={(e) =>
-                    handleCombinationChange(
-                      index,
-                      "residenceType",
-                      e.target.value as string
-                    )
-                  }
-                  label="Residence Type *"
-                >
-                  {residences.map((res) => (
-                    <MenuItem key={res._id} value={res._id}>
-                      {res.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} md={4}>
-              <FormControl fullWidth>
-                <InputLabel required>Room Type</InputLabel>
-                <Select
-                  value={combo.roomType}
-                  onChange={(e) =>
-                    handleCombinationChange(
-                      index,
-                      "roomType",
-                      e.target.value as string
-                    )
-                  }
-                  label="Room Type *"
-                  disabled={!combo.residenceType}
-                >
-                  {rooms.map((room) => (
-                    <MenuItem key={room._id} value={room._id}>
-                      {room.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} md={4}>
-              <FormControl fullWidth>
-                <InputLabel required>Theme</InputLabel>
-                <Select
-                  value={combo.theme}
-                  onChange={(e) =>
-                    handleCombinationChange(
-                      index,
-                      "theme",
-                      e.target.value as string
-                    )
-                  }
-                  label="Theme *"
-                  disabled={!combo.roomType}
-                >
-                  {themes.map((theme) => (
-                    <MenuItem key={theme._id} value={theme._id}>
-                      {theme.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
+          {errors.thumbnail && (
+            <FormHelperText error>{errors.thumbnail}</FormHelperText>
+          )}
+          <FormHelperText>
+            Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+          </FormHelperText>
         </Box>
-      ))}
 
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 3 }}>
-        <Button
-          variant="contained"
-          onClick={addCombination}
-          sx={{ textTransform: "none" }}
-        >
-          Add Another Combination
-        </Button>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          Design Combinations
+        </Typography>
+
+        {errors.combinations && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {errors.combinations}
+          </Alert>
+        )}
+
+        {formData.combinations.map((combo, index) => (
+          <Box
+            key={index}
+            sx={{
+              mb: 3,
+              p: 3,
+              border: "1px solid #eee",
+              borderRadius: 1,
+              position: "relative",
+            }}
+          >
+            {formData.combinations.length > 1 && (
+              <IconButton
+                onClick={() => removeCombination(index)}
+                sx={{
+                  position: "absolute",
+                  right: 8,
+                  top: 8,
+                  color: "error.main",
+                }}
+              >
+                <DeleteIcon />
+              </IconButton>
+            )}
+
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={4}>
+                <FormControl fullWidth>
+                  <InputLabel required>Residence Type</InputLabel>
+                  <Select
+                    value={combo.residenceType}
+                    onChange={(e) =>
+                      handleCombinationChange(
+                        index,
+                        "residenceType",
+                        e.target.value as string
+                      )
+                    }
+                    label="Residence Type *"
+                  >
+                    {residences.map((res) => (
+                      <MenuItem key={res._id} value={res._id}>
+                        {res.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <FormControl fullWidth>
+                  <InputLabel required>Room Type</InputLabel>
+                  <Select
+                    value={combo.roomType}
+                    onChange={(e) =>
+                      handleCombinationChange(
+                        index,
+                        "roomType",
+                        e.target.value as string
+                      )
+                    }
+                    label="Room Type *"
+                    disabled={!combo.residenceType}
+                  >
+                    {rooms.map((room) => (
+                      <MenuItem key={room._id} value={room._id}>
+                        {room.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <FormControl fullWidth>
+                  <InputLabel required>Theme</InputLabel>
+                  <Select
+                    value={combo.theme}
+                    onChange={(e) =>
+                      handleCombinationChange(
+                        index,
+                        "theme",
+                        e.target.value as string
+                      )
+                    }
+                    label="Theme *"
+                    disabled={!combo.roomType}
+                  >
+                    {themes.map((theme) => (
+                      <MenuItem key={theme._id} value={theme._id}>
+                        {theme.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </Box>
+        ))}
+
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 3 }}>
+          <Button
+            variant="contained"
+            onClick={addCombination}
+            sx={{ textTransform: "none" }}
+          >
+            Add Another Combination
+          </Button>
+        </Box>
+
+        {apiError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {apiError}
+          </Alert>
+        )}
+
+        <Box sx={{ mt: 4, display: "flex", gap: 2 }}>
+          <ReusableButton onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? "Submitting..." : "Submit"}
+          </ReusableButton>
+          <CancelButton href="/admin/home-catalog/design">Cancel</CancelButton>
+        </Box>
       </Box>
-
-      {apiError && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {apiError}
-        </Alert>
-      )}
-
-      <Box sx={{ mt: 4, display: "flex", gap: 2 }}>
-        <ReusableButton onClick={handleSubmit} disabled={isSubmitting}>
-          {isSubmitting ? "Submitting..." : "Submit"}
-        </ReusableButton>
-        <CancelButton href="/admin/home-catalog/design">Cancel</CancelButton>
-      </Box>
-    </Box>
+    </>
   );
 };
 

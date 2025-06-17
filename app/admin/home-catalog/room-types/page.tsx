@@ -46,6 +46,23 @@ interface RoomType {
   sn?: number;
 }
 
+// Custom hook for debouncing search input
+const useDebounce = (value: string, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
 // Component
 const RoomTypes = () => {
   const router = useRouter();
@@ -66,6 +83,8 @@ const RoomTypes = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
 
+  const debouncedSearch = useDebounce(search, 300);
+
   const fetchRoomTypes = async () => {
     setLoading(true);
     setError(null);
@@ -74,11 +93,10 @@ const RoomTypes = () => {
       // API expects 1-based index for page
       const page = paginationModel.page + 1;
       const limit = paginationModel.pageSize;
-      const sortField = "createdAt"; // adjust as needed
+      const sortField = "createdAt";
       const sortOrder = "desc";
 
-      // Fix the URL template string syntax and properly encode the search term
-      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/room-types?page=${page}&limit=${limit}&sortField=${sortField}&sortOrder=${sortOrder}&searchTerm=${encodeURIComponent(search)}`;
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/room-types?page=${page}&limit=${limit}&sortField=${sortField}&sortOrder=${sortOrder}&searchTerm=${encodeURIComponent(debouncedSearch)}`;
 
       const response = await fetch(apiUrl, {
         headers: {
@@ -109,7 +127,6 @@ const RoomTypes = () => {
 
       setRoomTypes(fetchedRoomTypes);
       setRowCount(result.total || 0);
-      console.log(result.total);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
@@ -117,9 +134,30 @@ const RoomTypes = () => {
     }
   };
 
+  // Fetch data when debounced search changes
   useEffect(() => {
     fetchRoomTypes();
-  }, [paginationModel.page, paginationModel.pageSize, search]);
+  }, [paginationModel.page, paginationModel.pageSize, debouncedSearch]);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    if (debouncedSearch !== search) return; // Avoid resetting during debounce
+
+    setPaginationModel((prev) => ({
+      ...prev,
+      page: 0,
+    }));
+  }, [debouncedSearch]);
+
+  // Handle search change from StyledDataGrid
+  const handleSearchChange = (searchValue: string) => {
+    setSearch(searchValue);
+  };
+
+  // Handle add button click
+  const handleAdd = () => {
+    router.push("/admin/home-catalog/room-types/add");
+  };
 
   const handleDeleteClick = (id: string) => {
     setSelectedDeleteId(id);
@@ -248,61 +286,30 @@ const RoomTypes = () => {
     <>
       <Navbar label="Room Types" />
       <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-        {/* <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-          Room Types
-        </Typography> */}
-
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            mb: 2,
-            gap: isSmallScreen ? 2 : 1,
-          }}
-        >
-          <TextField
-            label="Search"
-            variant="outlined"
-            size="small"
-            fullWidth={isSmallScreen}
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPaginationModel({ ...paginationModel, page: 0 });
-            }}
-          />
-          <ReusableButton
-            onClick={() => router.push("/admin/home-catalog/room-types/add")}
-          >
-            ADD
-          </ReusableButton>
-        </Box>
-
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
 
-        {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <StyledDataGrid
-            rows={roomTypes}
-            columns={columns}
-            rowCount={rowCount}
-            pagination
-            paginationMode="server"
-            paginationModel={paginationModel}
-            onPaginationModelChange={setPaginationModel}
-            pageSizeOptions={[5, 10, 25, 100]}
-            autoHeight
-            disableColumnMenu={isSmallScreen}
-            loading={loading}
-          />
-        )}
+        <StyledDataGrid
+          rows={roomTypes}
+          columns={columns}
+          rowCount={rowCount}
+          pagination
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          pageSizeOptions={[5, 10, 25, 100]}
+          autoHeight
+          disableColumnMenu={isSmallScreen}
+          loading={loading}
+          onAdd={handleAdd}
+          onSearch={handleSearchChange}
+          searchPlaceholder="Search room types..."
+          addButtonText="Add Room Type"
+          getRowId={(row) => row.id}
+        />
 
         <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
           <DialogTitle>Delete Room Type</DialogTitle>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -126,8 +127,7 @@ const AddTheme = () => {
     if (
       !formData.name ||
       !formData.description ||
-      formData.roomTypes.length === 0 
-      
+      formData.roomTypes.length === 0
     ) {
       setError("All fields including thumbnail are required");
       return false;
@@ -165,9 +165,7 @@ const AddTheme = () => {
       router.push("/admin/home-catalog/themes");
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "An error occurred while creating"
+        err instanceof Error ? err.message : "An error occurred while creating"
       );
     } finally {
       setLoading(false);
@@ -175,102 +173,105 @@ const AddTheme = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Add New Theme
-      </Typography>
-
-      <TextField
-        label="Name"
-        name="name"
-        value={formData.name}
-        onChange={handleInputChange}
-        fullWidth
-        sx={{ mb: 3 }}
-      />
-
-      <TextField
-        label="Description"
-        name="description"
-        value={formData.description}
-        onChange={handleInputChange}
-        multiline
-        rows={3}
-        fullWidth
-        sx={{ mb: 3 }}
-      />
-
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-        <Button
-          variant="outlined"
-          component="label"
-          startIcon={<UploadFileIcon />}
-          sx={{
-            color: "#05344c",
-            borderColor: "#05344c",
-            "&:hover": { backgroundColor: "#f0f4f8" },
-          }}
-        >
-          Upload Thumbnail
-          <input type="file" hidden onChange={handleThumbnailChange} />
-        </Button>
-        <Typography variant="body2" sx={{ color: "#666" }}>
-          {selectedFileName}
+    <>
+      <Navbar label="Add New Theme" />
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h5" sx={{ mb: 2 }}>
+          Add New Theme
         </Typography>
-      </Box>
-      <Typography variant="caption" sx={{ color: "#999" }}>
-        Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
-      </Typography>
 
-      {formData.thumbnail && (
-        <Box sx={{ mt: 2, mb: 3 }}>
-          <Typography variant="subtitle2">Preview:</Typography>
-          <img
-            src={formData.thumbnail}
-            alt="Thumbnail Preview"
-            style={{ width: 200, borderRadius: 8 }}
-          />
+        <TextField
+          label="Name"
+          name="name"
+          value={formData.name}
+          onChange={handleInputChange}
+          fullWidth
+          sx={{ mb: 3 }}
+        />
+
+        <TextField
+          label="Description"
+          name="description"
+          value={formData.description}
+          onChange={handleInputChange}
+          multiline
+          rows={3}
+          fullWidth
+          sx={{ mb: 3 }}
+        />
+
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Button
+            variant="outlined"
+            component="label"
+            startIcon={<UploadFileIcon />}
+            sx={{
+              color: "#05344c",
+              borderColor: "#05344c",
+              "&:hover": { backgroundColor: "#f0f4f8" },
+            }}
+          >
+            Upload Thumbnail
+            <input type="file" hidden onChange={handleThumbnailChange} />
+          </Button>
+          <Typography variant="body2" sx={{ color: "#666" }}>
+            {selectedFileName}
+          </Typography>
         </Box>
-      )}
-
-      <Typography variant="h6" sx={{ mb: 1 }}>
-        Map Room Types
-      </Typography>
-      <FormGroup sx={{ mb: 3 }}>
-        {loadingRoomTypes ? (
-          <Typography>Loading room types...</Typography>
-        ) : roomTypeList.length > 0 ? (
-          roomTypeList.map((room) => (
-            <FormControlLabel
-              key={room._id}
-              control={
-                <Checkbox
-                  value={room._id}
-                  checked={formData.roomTypes.includes(room._id)}
-                  onChange={handleCheckboxChange}
-                />
-              }
-              label={room.name}
-            />
-          ))
-        ) : (
-          <Typography>No room types available</Typography>
-        )}
-      </FormGroup>
-
-      {error && (
-        <Typography sx={{ mb: 2, color: "error.main", fontWeight: "bold" }}>
-          {error}
+        <Typography variant="caption" sx={{ color: "#999" }}>
+          Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
         </Typography>
-      )}
 
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton onClick={handleSubmit} disabled={loading}>
-          {loading ? "Submitting..." : "Submit"}
-        </ReusableButton>
-        <CancelButton href="/admin/home-catalog/themes">Cancel</CancelButton>
+        {formData.thumbnail && (
+          <Box sx={{ mt: 2, mb: 3 }}>
+            <Typography variant="subtitle2">Preview:</Typography>
+            <img
+              src={formData.thumbnail}
+              alt="Thumbnail Preview"
+              style={{ width: 200, borderRadius: 8 }}
+            />
+          </Box>
+        )}
+
+        <Typography variant="h6" sx={{ mb: 1 }}>
+          Map Room Types
+        </Typography>
+        <FormGroup sx={{ mb: 3 }}>
+          {loadingRoomTypes ? (
+            <Typography>Loading room types...</Typography>
+          ) : roomTypeList.length > 0 ? (
+            roomTypeList.map((room) => (
+              <FormControlLabel
+                key={room._id}
+                control={
+                  <Checkbox
+                    value={room._id}
+                    checked={formData.roomTypes.includes(room._id)}
+                    onChange={handleCheckboxChange}
+                  />
+                }
+                label={room.name}
+              />
+            ))
+          ) : (
+            <Typography>No room types available</Typography>
+          )}
+        </FormGroup>
+
+        {error && (
+          <Typography sx={{ mb: 2, color: "error.main", fontWeight: "bold" }}>
+            {error}
+          </Typography>
+        )}
+
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <ReusableButton onClick={handleSubmit} disabled={loading}>
+            {loading ? "Submitting..." : "Submit"}
+          </ReusableButton>
+          <CancelButton href="/admin/home-catalog/themes">Cancel</CancelButton>
+        </Box>
       </Box>
-    </Box>
+    </>
   );
 };
 

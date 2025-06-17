@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   DataGrid,
   GridToolbarContainer,
@@ -31,6 +31,7 @@ interface CustomToolbarProps {
   searchPlaceholder?: string;
   showAddButton?: boolean;
   addButtonText?: string;
+  initialSearchValue?: string;
 }
 
 const CustomToolbar = ({
@@ -39,9 +40,15 @@ const CustomToolbar = ({
   searchPlaceholder = "Search...",
   showAddButton = true,
   addButtonText = "Add",
+  initialSearchValue = "",
 }: CustomToolbarProps) => {
   const theme = useTheme();
-  const [searchValue, setSearchValue] = useState("");
+  const [searchValue, setSearchValue] = useState(initialSearchValue);
+
+  // Update internal state when external search value changes
+  useEffect(() => {
+    setSearchValue(initialSearchValue);
+  }, [initialSearchValue]);
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -149,6 +156,7 @@ interface StyledDataGridProps
   searchPlaceholder?: string;
   showAddButton?: boolean;
   addButtonText?: string;
+  searchValue?: string; // Add this to sync search value
 }
 
 const StyledDataGrid = ({
@@ -158,6 +166,7 @@ const StyledDataGrid = ({
   searchPlaceholder,
   showAddButton,
   addButtonText,
+  searchValue = "",
   sx,
   ...props
 }: StyledDataGridProps) => {
@@ -186,6 +195,7 @@ const StyledDataGrid = ({
             searchPlaceholder,
             showAddButton,
             addButtonText,
+            initialSearchValue: searchValue,
           },
         }}
         sx={{

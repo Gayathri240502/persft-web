@@ -41,6 +41,22 @@ interface ThemeType {
   sn?: number;
 }
 
+const useDebounce = (value: string, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
 const ThemesPage = () => {
   const router = useRouter();
   const theme = useTheme();
@@ -61,6 +77,7 @@ const ThemesPage = () => {
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
 
   const { token } = getTokenAndRole();
+  const debouncedSearch = useDebounce(search, 300);
 
   const fetchThemes = async () => {
     setLoading(true);
@@ -73,7 +90,7 @@ const ThemesPage = () => {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/themes?page=${page}&limit=${limit}&sortField=${sortField}&sortOrder=${sortOrder}&searchTerm=${encodeURIComponent(search)}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/themes?page=${page}&limit=${limit}&sortField=${sortField}&sortOrder=${sortOrder}&searchTerm=${encodeURIComponent(debouncedSearch)}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -146,6 +163,30 @@ const ThemesPage = () => {
     } finally {
       handleDeleteCancel();
     }
+  };
+
+  // Fetch data when debounced search changes
+  useEffect(() => {
+    fetchThemes();
+  }, [paginationModel.page, paginationModel.pageSize, debouncedSearch]);
+
+  useEffect(() => {
+    if (debouncedSearch !== search) return; // Avoid resetting during debounce
+
+    setPaginationModel((prev) => ({
+      ...prev,
+      page: 0,
+    }));
+  }, [debouncedSearch]);
+
+  // Handle search change from StyledDataGrid
+  const handleSearchChange = (searchValue: string) => {
+    setSearch(searchValue);
+  };
+
+  // Handle add button click
+  const handleAdd = () => {
+    router.push("/admin/home-catalog/themes/add");
   };
 
   const filteredThemes = themes.filter((theme) =>
@@ -286,19 +327,7 @@ const ThemesPage = () => {
             mb: 2,
             gap: isSmallScreen ? 2 : 1,
           }}
-        >
-          <TextField
-            label="Search"
-            variant="outlined"
-            size="small"
-            fullWidth={isSmallScreen}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <ReusableButton onClick={() => router.push("themes/add")}>
-            ADD
-          </ReusableButton>
-        </Box>
+        ></Box>
 
         {loading && (
           <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
@@ -325,6 +354,11 @@ const ThemesPage = () => {
             }
             pageSizeOptions={[5, 10, 25, 100]}
             disableColumnMenu={isSmallScreen}
+            onAdd={handleAdd}
+            onSearch={handleSearchChange}
+            searchPlaceholder="Search themes..."
+            addButtonText="Add Themes"
+            getRowId={(row) => row.id}
           />
         </Box>
 

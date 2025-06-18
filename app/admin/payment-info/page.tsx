@@ -225,7 +225,7 @@ const PaymentInfoPage: React.FC = () => {
           Payment Info
         </Typography> */}
 
-        <Box
+        {/* <Box
           sx={{
             display: "flex",
             justifyContent: "space-between",
@@ -246,7 +246,7 @@ const PaymentInfoPage: React.FC = () => {
             }}
           />
           <ReusableButton onClick={handleAddClick}>ADD</ReusableButton>
-        </Box>
+        </Box> */}
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -271,6 +271,8 @@ const PaymentInfoPage: React.FC = () => {
             pageSizeOptions={[5, 10, 25, 100]}
             disableColumnMenu={isSmallScreen}
             autoHeight
+            onAdd={handleAddClick}
+            onSearch={() => {}}
           />
         )}
 

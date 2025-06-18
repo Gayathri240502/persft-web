@@ -19,6 +19,7 @@ import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { useRouter } from "next/navigation"; // <-- import useRouter
+import Navbar from "@/app/components/navbar/navbar";
 
 interface Category {
   _id: string;
@@ -257,6 +258,10 @@ const AddShop = () => {
   );
 
   return (
+
+     <>
+     <Navbar label="Add New Shop" />
+     
     <Box sx={{ p: 4 }}>
       <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
         Add New Shop
@@ -344,6 +349,7 @@ const AddShop = () => {
         <CancelButton href="/admin/vendors/shops">Cancel</CancelButton>
       </Box>
     </Box>
+    </>
   );
 };
 

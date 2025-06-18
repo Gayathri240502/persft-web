@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -19,7 +20,6 @@ import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { useRouter } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
-import Navbar from "@/app/components/navbar/navbar";
 
 const AddMerchant = () => {
   const router = useRouter();
@@ -141,164 +141,166 @@ const AddMerchant = () => {
   };
 
   return (
-
     <>
-    <Navbar label=" Add Merchant Details" />
-    
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-        Add Merchant Details
-      </Typography>
+      <Navbar label=" Add Merchant Details" />
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+      <Box sx={{ p: 4 }}>
+        <Typography variant="h5" sx={{ mb: 3 }}>
+          Add Merchant Details
+        </Typography>
 
-      <form onSubmit={handleSubmit}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="First Name"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleInputChange}
-              fullWidth
-            />
-          </Grid>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="Last Name"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleInputChange}
-              fullWidth
-            />
-          </Grid>
+        <form onSubmit={handleSubmit}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="First Name"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleInputChange}
+                fullWidth
+              />
+            </Grid>
 
-          <Grid item xs={12}>
-            <TextField
-              label="Username"
-              name="username"
-              value={formData.username}
-              onChange={handleInputChange}
-              fullWidth
-            />
-          </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Last Name"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleInputChange}
+                fullWidth
+              />
+            </Grid>
 
-          <Grid item xs={12}>
-            <TextField
-              label="Email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              fullWidth
-            />
-          </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Username"
+                name="username"
+                value={formData.username}
+                onChange={handleInputChange}
+                fullWidth
+              />
+            </Grid>
 
-          <Grid item xs={12}>
-            <TextField
-              label="Phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleInputChange}
-              fullWidth
-            />
-          </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                fullWidth
+              />
+            </Grid>
 
-          <Grid item xs={12}>
-            <TextField
-              label="Password"
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              fullWidth
-              type="password"
-            />
-          </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Phone"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                fullWidth
+              />
+            </Grid>
 
-          <Grid item xs={12}>
-            <TextField
-              label="Business Name"
-              name="businessName"
-              value={formData.businessName}
-              onChange={handleInputChange}
-              fullWidth
-            />
-          </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                fullWidth
+                type="password"
+              />
+            </Grid>
 
-          <Grid item xs={12}>
-            <TextField
-              label="Address"
-              name="address"
-              value={formData.address}
-              onChange={handleInputChange}
-              fullWidth
-            />
-          </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Business Name"
+                name="businessName"
+                value={formData.businessName}
+                onChange={handleInputChange}
+                fullWidth
+              />
+            </Grid>
 
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel>Category</InputLabel>
-              <Select
-                value={formData.category}
-                onChange={handleSelectChange}
-                name="category"
-                label="Category"
-              >
-                {categories.length > 0 ? (
-                  categories.map((category) => (
-                    <MenuItem key={category._id} value={category._id}>
-                      {category.name}
+            <Grid item xs={12}>
+              <TextField
+                label="Address"
+                name="address"
+                value={formData.address}
+                onChange={handleInputChange}
+                fullWidth
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Category</InputLabel>
+                <Select
+                  value={formData.category}
+                  onChange={handleSelectChange}
+                  name="category"
+                  label="Category"
+                >
+                  {categories.length > 0 ? (
+                    categories.map((category) => (
+                      <MenuItem key={category._id} value={category._id}>
+                        {category.name}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem disabled>No categories available</MenuItem>
+                  )}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>SubCategory</InputLabel>
+                <Select
+                  value={formData.subCategory}
+                  onChange={handleSelectChange}
+                  name="subCategory"
+                  label="SubCategory"
+                  disabled={!formData.category}
+                >
+                  {subCategoriesLoading ? (
+                    <MenuItem disabled>
+                      <CircularProgress size={24} />
                     </MenuItem>
-                  ))
-                ) : (
-                  <MenuItem disabled>No categories available</MenuItem>
-                )}
-              </Select>
-            </FormControl>
+                  ) : subCategories.length > 0 ? (
+                    subCategories.map((subCategory) => (
+                      <MenuItem key={subCategory._id} value={subCategory._id}>
+                        {subCategory.name}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem disabled>No subcategories available</MenuItem>
+                  )}
+                </Select>
+              </FormControl>
+            </Grid>
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel>SubCategory</InputLabel>
-              <Select
-                value={formData.subCategory}
-                onChange={handleSelectChange}
-                name="subCategory"
-                label="SubCategory"
-                disabled={!formData.category}
-              >
-                {subCategoriesLoading ? (
-                  <MenuItem disabled>
-                    <CircularProgress size={24} />
-                  </MenuItem>
-                ) : subCategories.length > 0 ? (
-                  subCategories.map((subCategory) => (
-                    <MenuItem key={subCategory._id} value={subCategory._id}>
-                      {subCategory.name}
-                    </MenuItem>
-                  ))
-                ) : (
-                  <MenuItem disabled>No subcategories available</MenuItem>
-                )}
-              </Select>
-            </FormControl>
-          </Grid>
-        </Grid>
+          <Divider sx={{ my: 4 }} />
 
-        <Divider sx={{ my: 4 }} />
-
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <ReusableButton type="submit" loading={loading}>
-            Submit
-          </ReusableButton>
-          <CancelButton href="/admin/vendors/merchants"> Cancel </CancelButton>
-        </Box>
-      </form>
-    </Box>
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <ReusableButton type="submit" loading={loading}>
+              Submit
+            </ReusableButton>
+            <CancelButton href="/admin/vendors/merchants">
+              {" "}
+              Cancel{" "}
+            </CancelButton>
+          </Box>
+        </form>
+      </Box>
     </>
   );
 };

@@ -1,11 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useCallback,
+  useState,
+  useMemo,
+  useRef,
+} from "react";
 import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
-  TextField,
   useMediaQuery,
   IconButton,
   CircularProgress,
@@ -20,7 +25,6 @@ import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
-import ReusableButton from "@/app/components/Button";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
@@ -35,12 +39,28 @@ interface WorkGroup {
   sn?: number;
 }
 
+const useDebounce = (value: string, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setDebouncedValue(value), delay);
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
 const WorkGroups = () => {
   const theme = useTheme();
   const router = useRouter();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
     pageSize: 10,
@@ -53,9 +73,24 @@ const WorkGroups = () => {
   const [workGroupToDelete, setWorkGroupToDelete] = useState<WorkGroup | null>(
     null
   );
+
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   const { token } = getTokenAndRole();
 
-  const fetchWorkGroups = async () => {
+  useEffect(() => {
+    setPaginationModel((prev) => ({
+      ...prev,
+      page: 0,
+    }));
+  }, [debouncedSearch]);
+
+  const fetchWorkGroups = useCallback(async () => {
     const { page, pageSize } = paginationModel;
     setLoading(true);
     setError("");
@@ -64,8 +99,12 @@ const WorkGroups = () => {
       const queryParams = new URLSearchParams({
         page: String(page + 1),
         limit: String(pageSize),
-        searchTerm: search,
+        _ts: Date.now().toString(),
       });
+
+      if (debouncedSearch.trim()) {
+        queryParams.append("search", debouncedSearch.trim());
+      }
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/work-groups?${queryParams}`,
@@ -82,89 +121,59 @@ const WorkGroups = () => {
       }
 
       const result = await response.json();
+      console.log("API Result:", result);
 
-      if (Array.isArray(result.workGroups)) {
-        const formatted = result.workGroups.map(
-          (item: WorkGroup, index: number) => ({
-            ...item,
-            id: item._id,
-            sn: page * pageSize + index + 1,
-          })
-        );
+      if (mountedRef.current) {
+        if (Array.isArray(result.workGroups)) {
+          const formatted = result.workGroups.map(
+            (item: WorkGroup, index: number) => ({
+              ...item,
+              id: item._id,
+              sn: page * pageSize + index + 1,
+            })
+          );
 
-        setWorkGroups(formatted);
-        setRowCount(result.total || 0);
-      } else {
-        setWorkGroups([]);
-        setRowCount(0);
+          setWorkGroups(formatted);
+          setRowCount(result.total || 0);
+        } else {
+          setWorkGroups([]);
+          setRowCount(0);
+        }
       }
     } catch (err: any) {
       console.error("Error fetching work groups:", err);
-      setError(err.message || "Something went wrong.");
+      if (mountedRef.current) {
+        setError(err.message || "Something went wrong.");
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
-  };
+  }, [paginationModel, debouncedSearch, token]);
 
   useEffect(() => {
-    fetchWorkGroups();
-  }, [paginationModel, search]);
+    if (token) fetchWorkGroups();
+  }, [fetchWorkGroups, token]);
 
-  const columns: GridColDef[] = [
-    { field: "sn", headerName: "SN", flex: 0.5 },
-    { field: "name", headerName: "Name", flex: 1 },
-    { field: "description", headerName: "Description", flex: 2 },
+  const handleAdd = useCallback(() => {
+    router.push("/admin/work/work-group/add");
+  }, [router]);
 
-    {
-      field: "action",
-      headerName: "Actions",
-      flex: 1,
-      renderCell: (params) => (
-        <Box>
-          <IconButton
-            color="primary"
-            size="small"
-            onClick={() =>
-              router.push(`/admin/work/work-group/${params.row._id}`)
-            }
-          >
-            <Visibility />
-          </IconButton>
-          <IconButton
-            color="primary"
-            size="small"
-            onClick={() =>
-              router.push(`/admin/work/work-group/edit?id=${params.row._id}`)
-            }
-          >
-            <Edit fontSize="small" />
-          </IconButton>
+  const handleSearch = useCallback((value: string) => {
+    setSearch(value);
+  }, []);
 
-          <IconButton
-            color="error"
-            size="small"
-            onClick={() => handleOpenDeleteDialog(params.row)}
-          >
-            <Delete fontSize="small" />
-          </IconButton>
-        </Box>
-      ),
-    },
-  ];
-
-  const handleOpenDeleteDialog = (workGroup: WorkGroup) => {
+  const handleOpenDeleteDialog = useCallback((workGroup: WorkGroup) => {
     setWorkGroupToDelete(workGroup);
     setDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const handleDeleteCancel = () => {
+  const handleDeleteCancel = useCallback(() => {
     setDeleteDialogOpen(false);
     setWorkGroupToDelete(null);
-  };
+  }, []);
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = useCallback(async () => {
     if (!workGroupToDelete) return;
-
     setLoading(true);
     setError("");
 
@@ -186,7 +195,7 @@ const WorkGroups = () => {
         );
       }
 
-      fetchWorkGroups();
+      await fetchWorkGroups();
       handleDeleteCancel();
     } catch (err: any) {
       console.error("Error deleting work group:", err);
@@ -194,42 +203,56 @@ const WorkGroups = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [workGroupToDelete, token, fetchWorkGroups, handleDeleteCancel]);
+
+  const columns: GridColDef[] = useMemo(
+    () => [
+      { field: "sn", headerName: "SN", flex: 0.5 },
+      { field: "name", headerName: "Name", flex: 1 },
+      { field: "description", headerName: "Description", flex: 2 },
+      {
+        field: "action",
+        headerName: "Actions",
+        flex: 1,
+        renderCell: (params) => (
+          <Box>
+            <IconButton
+              color="primary"
+              size="small"
+              onClick={() =>
+                router.push(`/admin/work/work-group/${params.row._id}`)
+              }
+            >
+              <Visibility />
+            </IconButton>
+            <IconButton
+              color="primary"
+              size="small"
+              onClick={() =>
+                router.push(`/admin/work/work-group/edit?id=${params.row._id}`)
+              }
+            >
+              <Edit fontSize="small" />
+            </IconButton>
+            <IconButton
+              color="error"
+              size="small"
+              onClick={() => handleOpenDeleteDialog(params.row)}
+            >
+              <Delete fontSize="small" />
+            </IconButton>
+          </Box>
+        ),
+      },
+    ],
+    [router, handleOpenDeleteDialog]
+  );
 
   return (
     <>
       <Navbar label="Work Groups" />
       <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-        {/* <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-          Work Groups
-        </Typography> */}
-
-        {/* Search and Add Button Row */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            mb: 2,
-            gap: isSmallScreen ? 2 : 1,
-          }}
-        >
-          <TextField
-            label="Search"
-            variant="outlined"
-            size="small"
-            fullWidth={isSmallScreen}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <ReusableButton
-            onClick={() => router.push("/admin/work/work-group/add")}
-          >
-            ADD
-          </ReusableButton>
-        </Box>
-
-        {/* Loading and Error State */}
-        {loading ? (
+        {loading && workGroups.length === 0 ? (
           <Box display="flex" justifyContent="center" py={5}>
             <CircularProgress />
           </Box>
@@ -250,11 +273,17 @@ const WorkGroups = () => {
               pageSizeOptions={[5, 10, 25, 100]}
               autoHeight
               disableColumnMenu={isSmallScreen}
+              getRowId={(row) => row.id}
+              searchValue={search}
+              onAdd={handleAdd}
+              onSearch={handleSearch}
+              searchPlaceholder="Search Work Groups..."
+              addButtonText="Add Work Group"
+              loading={loading}
             />
           </Box>
         )}
 
-        {/* Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
           <DialogTitle>Delete Work Group</DialogTitle>
           <DialogContent>

@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
@@ -21,7 +21,6 @@ import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
-import ReusableButton from "@/app/components/Button";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
@@ -41,6 +40,7 @@ interface Merchant {
   subCategory: string;
   categoryName: string;
   subCategoryName: string;
+  keycloakId?: string;
 }
 
 interface MerchantResponse {
@@ -54,6 +54,7 @@ const Merchant = () => {
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
     pageSize: 5,
@@ -61,12 +62,23 @@ const Merchant = () => {
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
-
   const [rowCount, setRowCount] = useState(0);
   const [rows, setRows] = useState<Merchant[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { token } = getTokenAndRole();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    fetchMerchants();
+  }, [paginationModel.page, paginationModel.pageSize, debouncedSearch]);
 
   const fetchMerchants = async () => {
     const { page, pageSize } = paginationModel;
@@ -76,12 +88,10 @@ const Merchant = () => {
       setError("");
 
       const queryParams = new URLSearchParams({
-        page: String(page + 1), // DataGrid is 0-based, API is 1-based
+        page: String(page + 1),
         limit: String(pageSize),
-        searchTerm: search,
+        search: debouncedSearch,
       });
-
-      console.log("Fetching merchants → page:", page + 1, "limit:", pageSize);
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/merchants?${queryParams}`,
@@ -98,14 +108,12 @@ const Merchant = () => {
       }
 
       const result: MerchantResponse = await response.json();
-      console.log("API response:", result);
 
-      if (!Array.isArray(result.merchants)) {
-        throw new Error("Invalid data format: merchants not found");
-      }
-
-      if (typeof result.total !== "number") {
-        throw new Error("Invalid data format: total count missing");
+      if (
+        !Array.isArray(result.merchants) ||
+        typeof result.total !== "number"
+      ) {
+        throw new Error("Invalid response structure");
       }
 
       const dataWithSN = result.merchants.map((merchant, index) => ({
@@ -117,16 +125,20 @@ const Merchant = () => {
       setRows(dataWithSN);
       setRowCount(result.total);
     } catch (err: any) {
-      console.error("Error fetching merchants:", err);
+      console.error("Fetch error:", err);
       setError(err.message || "Something went wrong.");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchMerchants();
-  }, [paginationModel, search]);
+  const handleSearchChange = (searchValue: string) => {
+    setSearch(searchValue);
+  };
+
+  const handleAdd = () => {
+    router.push("/admin/vendors/merchants/add");
+  };
 
   const handleDeleteClick = (id: string) => {
     setSelectedDeleteId(id);
@@ -137,14 +149,6 @@ const Merchant = () => {
     setDeleteDialogOpen(false);
     setSelectedDeleteId(null);
   };
-
-   const handleAdd = useCallback(() => {
-      router.push("/admin/vendors/merchants/add");
-    }, [router]);
-
-    const handleSearchChange = useCallback((value: string) => {
-        setSearch(value);
-      }, []);
 
   const handleDeleteConfirm = async () => {
     if (!selectedDeleteId) return;
@@ -161,7 +165,7 @@ const Merchant = () => {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to delete residence type");
+        throw new Error("Failed to delete merchant");
       }
 
       fetchMerchants();
@@ -179,7 +183,6 @@ const Merchant = () => {
     { field: "email", headerName: "Email", flex: 1 },
     { field: "phone", headerName: "Phone", flex: 1 },
     { field: "businessName", headerName: "Business Name", flex: 1 },
-
     {
       field: "enabled",
       headerName: "Status",
@@ -194,7 +197,6 @@ const Merchant = () => {
         />
       ),
     },
-
     {
       field: "action",
       headerName: "Action",
@@ -237,32 +239,6 @@ const Merchant = () => {
     <>
       <Navbar label="Merchants" />
       <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-        {/* <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-          Merchants
-        </Typography> */}
-
-        {/* <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            mb: 2,
-          }}
-        >
-          <TextField
-            label="Search"
-            variant="outlined"
-            size="small"
-            fullWidth={isSmallScreen}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <ReusableButton
-            onClick={() => router.push("/admin/vendors/merchants/add")}
-          >
-            ADD
-          </ReusableButton>
-        </Box> */}
-
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
@@ -283,6 +259,7 @@ const Merchant = () => {
               <CircularProgress />
             </Box>
           )}
+
           <StyledDataGrid
             columns={columns}
             rows={rows}
@@ -292,18 +269,23 @@ const Merchant = () => {
             onPaginationModelChange={setPaginationModel}
             pageSizeOptions={[5, 10, 25, 100]}
             autoHeight
-            disableColumnMenu={isSmallScreen}
             loading={loading}
+            disableColumnMenu={isSmallScreen}
+            getRowId={(row) => row.id}
+            // Make sure StyledDataGrid handles these or remove if not supported
             onAdd={handleAdd}
             onSearch={handleSearchChange}
+            searchPlaceholder="Search Merchants..."
+            addButtonText="Add Merchant"
           />
         </Box>
+
         <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
           <DialogTitle>Delete</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              Are you sure you want to delete this residence type? This action
-              cannot be undone.
+              Are you sure you want to delete this merchant? This action cannot
+              be undone.
             </DialogContentText>
           </DialogContent>
           <DialogActions>

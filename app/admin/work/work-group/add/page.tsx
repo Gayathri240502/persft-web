@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -75,44 +76,47 @@ const WorkGroup = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      {/* Heading */}
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Work Group
-      </Typography>
+    <>
+      <Navbar label=" Add Work Group" />
+      <Box sx={{ p: 3 }}>
+        {/* Heading */}
+        <Typography variant="h5" sx={{ mb: 2 }}>
+          Add Work Group
+        </Typography>
 
-      {/* Name Field */}
-      <TextField
-        label="Name"
-        fullWidth
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        sx={{ mb: 3 }}
-      />
+        {/* Name Field */}
+        <TextField
+          label="Name"
+          fullWidth
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          sx={{ mb: 3 }}
+        />
 
-      {/* Description Field */}
-      <TextField
-        label="Description"
-        multiline
-        rows={3}
-        fullWidth
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        sx={{ mb: 3 }}
-      />
+        {/* Description Field */}
+        <TextField
+          label="Description"
+          multiline
+          rows={3}
+          fullWidth
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          sx={{ mb: 3 }}
+        />
 
-      {/* Error and Success Messages */}
-      {error && <Alert severity="error">{error}</Alert>}
-      {success && <Alert severity="success">{success}</Alert>}
+        {/* Error and Success Messages */}
+        {error && <Alert severity="error">{error}</Alert>}
+        {success && <Alert severity="success">{success}</Alert>}
 
-      {/* Submit and Cancel Buttons */}
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton onClick={handleSubmit} disabled={loading}>
-          {loading ? <CircularProgress size={24} /> : "Submit"}
-        </ReusableButton>
-        <CancelButton href="/admin/work/work-group">Cancel</CancelButton>
+        {/* Submit and Cancel Buttons */}
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <ReusableButton onClick={handleSubmit} disabled={loading}>
+            {loading ? <CircularProgress size={24} /> : "Submit"}
+          </ReusableButton>
+          <CancelButton href="/admin/work/work-group">Cancel</CancelButton>
+        </Box>
       </Box>
-    </Box>
+    </>
   );
 };
 

@@ -473,7 +473,7 @@ export default function Sidebar() {
         {open && (
           <div className="border-t border-gray-200 p-4 bg-gray-50 flex-shrink-0">
             <div className="text-xs text-gray-500 text-center">
-              Admin Panel v1.3
+              Admin Panel v1.5
             </div>
           </div>
         )}
@@ -482,7 +482,7 @@ export default function Sidebar() {
       {/* Spacer for main content - only on desktop */}
       <div
         className={`hidden lg:block transition-all duration-300 ${
-          open ? "w-64" : "w-12"
+          open ? "w-64" : "w-16"
         }`}
         aria-hidden="true"
       />

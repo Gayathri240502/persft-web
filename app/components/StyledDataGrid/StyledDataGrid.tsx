@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useCallback } from "react";
 import {
   DataGrid,
   GridToolbarContainer,
@@ -23,59 +23,40 @@ import {
   Add as AddIcon,
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
-import type { GridToolbarProps } from "@mui/x-data-grid";
 import ReusableButton from "../Button";
 
-// ======================
-// Custom Toolbar
-// ======================
-
-interface CustomToolbarProps extends GridToolbarProps {
+interface CustomToolbarProps {
   onAdd?: () => void;
   onSearch?: (value: string) => void;
   searchPlaceholder?: string;
   showAddButton?: boolean;
   addButtonText?: string;
-  initialSearchValue?: string;
 }
 
-const CustomToolbar: React.FC<CustomToolbarProps> = ({
+const CustomToolbar = ({
   onAdd,
   onSearch,
   searchPlaceholder = "Search...",
   showAddButton = true,
   addButtonText = "Add",
-  initialSearchValue = "",
-}) => {
+}: CustomToolbarProps) => {
   const theme = useTheme();
-  const [localSearchValue, setLocalSearchValue] = useState(initialSearchValue);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [searchValue, setSearchValue] = useState("");
 
-  // Update local value when prop changes
-  useEffect(() => {
-    setLocalSearchValue(initialSearchValue);
-  }, [initialSearchValue]);
-
-  // Handle input change without debounce - let parent handle debouncing
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
-      setLocalSearchValue(value);
+      setSearchValue(value);
       onSearch?.(value);
     },
     [onSearch]
   );
 
   const handleClearSearch = useCallback(() => {
-    setLocalSearchValue("");
+    setSearchValue("");
     onSearch?.("");
-    // Focus back to input after clearing
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 0);
   }, [onSearch]);
 
-  // Prevent form submission on Enter key
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -86,29 +67,28 @@ const CustomToolbar: React.FC<CustomToolbarProps> = ({
     <GridToolbarContainer
       sx={{
         p: 2,
-        gap: 2,
+        margin: "5px",
         display: "flex",
-        flexWrap: "wrap",
         justifyContent: "space-between",
         alignItems: "center",
+        flexWrap: "wrap",
+        gap: 4,
         borderBottom: `1px solid ${theme.palette.divider}`,
       }}
     >
       <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
         <TextField
-          ref={inputRef}
           size="small"
-          value={localSearchValue}
           placeholder={searchPlaceholder}
+          value={searchValue}
           onChange={handleSearchChange}
           onKeyDown={handleKeyDown}
           sx={{
-            minWidth: 300,
+            minWidth: 350,
             maxWidth: 400,
-            "& .MuiInputBase-input": {
-              // Ensure input maintains focus
-              "&:focus": {
-                outline: "none",
+            "& .MuiOutlinedInput-root": {
+              "&:hover fieldset": {
+                borderColor: theme.palette.primary.main,
               },
             },
           }}
@@ -118,19 +98,20 @@ const CustomToolbar: React.FC<CustomToolbarProps> = ({
                 <SearchIcon color="action" fontSize="small" />
               </InputAdornment>
             ),
-            endAdornment: localSearchValue ? (
+            endAdornment: searchValue && (
               <InputAdornment position="end">
                 <Tooltip title="Clear search">
                   <IconButton
-                    onClick={handleClearSearch}
                     size="small"
-                    tabIndex={-1} // Prevent focus stealing
+                    onClick={handleClearSearch}
+                    edge="end"
+                    sx={{ mr: -0.5 }}
                   >
                     <ClearIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
               </InputAdornment>
-            ) : null,
+            ),
           }}
         />
       </Box>
@@ -145,9 +126,12 @@ const CustomToolbar: React.FC<CustomToolbarProps> = ({
         {showAddButton && onAdd && (
           <ReusableButton
             variant="contained"
-            startIcon={<AddIcon />}
             onClick={onAdd}
-            sx={{ whiteSpace: "nowrap" }}
+            startIcon={<AddIcon />}
+            sx={{
+              whiteSpace: "nowrap",
+              minWidth: "auto",
+            }}
           >
             {addButtonText}
           </ReusableButton>
@@ -157,10 +141,6 @@ const CustomToolbar: React.FC<CustomToolbarProps> = ({
   );
 };
 
-// ======================
-// Styled DataGrid
-// ======================
-
 interface StyledDataGridProps
   extends Omit<DataGridProps, "components" | "componentsProps"> {
   minWidth?: number | string;
@@ -169,41 +149,19 @@ interface StyledDataGridProps
   searchPlaceholder?: string;
   showAddButton?: boolean;
   addButtonText?: string;
-  searchValue?: string;
 }
 
-const StyledDataGrid: React.FC<StyledDataGridProps> = ({
+const StyledDataGrid = ({
   minWidth = 1000,
   onAdd,
   onSearch,
   searchPlaceholder,
-  showAddButton = true,
+  showAddButton,
   addButtonText,
-  searchValue = "",
   sx,
   ...props
-}) => {
+}: StyledDataGridProps) => {
   const theme = useTheme();
-
-  // Memoize toolbar props to prevent unnecessary re-renders
-  const toolbarProps = React.useMemo(
-    () => ({
-      onAdd,
-      onSearch,
-      searchPlaceholder,
-      showAddButton,
-      addButtonText,
-      initialSearchValue: searchValue,
-    }),
-    [
-      onAdd,
-      onSearch,
-      searchPlaceholder,
-      showAddButton,
-      addButtonText,
-      searchValue,
-    ]
-  );
 
   return (
     <Box
@@ -218,14 +176,17 @@ const StyledDataGrid: React.FC<StyledDataGridProps> = ({
     >
       <DataGrid
         {...props}
-        autoHeight
-        disableColumnMenu={false}
-        disableRowSelectionOnClick
-        checkboxSelection={false}
-        density="standard"
-        slots={{ toolbar: CustomToolbar }}
+        slots={{
+          toolbar: CustomToolbar,
+        }}
         slotProps={{
-          toolbar: toolbarProps,
+          toolbar: {
+            onAdd,
+            onSearch,
+            searchPlaceholder,
+            showAddButton,
+            addButtonText,
+          },
         }}
         sx={{
           "& .MuiDataGrid-columnHeader": {
@@ -264,6 +225,9 @@ const StyledDataGrid: React.FC<StyledDataGridProps> = ({
             borderTop: `1px solid ${theme.palette.divider}`,
             backgroundColor: theme.palette.grey[50],
           },
+          "& .MuiDataGrid-toolbarContainer": {
+            padding: 0,
+          },
           "& .MuiDataGrid-overlay": {
             backgroundColor: theme.palette.background.paper,
           },
@@ -272,6 +236,12 @@ const StyledDataGrid: React.FC<StyledDataGridProps> = ({
           },
           ...sx,
         }}
+        disableColumnMenu={false}
+        disableRowSelectionOnClick
+        autoHeight
+        checkboxSelection={false}
+        disableColumnResize={false}
+        density="standard"
       />
     </Box>
   );

@@ -19,6 +19,7 @@ import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { useRouter } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import Navbar from "@/app/components/navbar/navbar";
 
 const AddMerchant = () => {
   const router = useRouter();
@@ -140,6 +141,10 @@ const AddMerchant = () => {
   };
 
   return (
+
+    <>
+    <Navbar label=" Add Merchant Details" />
+    
     <Box sx={{ p: 4 }}>
       <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
         Add Merchant Details
@@ -294,6 +299,7 @@ const AddMerchant = () => {
         </Box>
       </form>
     </Box>
+    </>
   );
 };
 

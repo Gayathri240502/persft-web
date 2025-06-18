@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
@@ -122,10 +122,9 @@ const Shop = () => {
     fetchShops();
   }, [paginationModel.page, paginationModel.pageSize, search]);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
-    setPaginationModel((prev) => ({ ...prev, page: 0 }));
-  };
+  const handleSearchChange = useCallback((value: string) => {
+      setSearch(value);
+    }, []);
 
   const handleDeleteClick = (id: string) => {
     setSelectedDeleteId(id);
@@ -136,6 +135,10 @@ const Shop = () => {
     setDeleteDialogOpen(false);
     setSelectedDeleteId(null);
   };
+
+   const handleAdd = useCallback(() => {
+      router.push("/admin/vendors/shops/add");
+    }, [router]);
 
   const handleDeleteConfirm = async () => {
     if (!selectedDeleteId) return;
@@ -238,7 +241,7 @@ const Shop = () => {
           Shops
         </Typography> */}
 
-        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+        {/* <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
           <TextField
             label="Search"
             variant="outlined"
@@ -253,7 +256,7 @@ const Shop = () => {
           >
             ADD
           </ReusableButton>
-        </Box>
+        </Box> */}
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -286,6 +289,8 @@ const Shop = () => {
             disableColumnMenu={isSmallScreen}
             loading={loading}
             getRowId={(row) => row.id || row._id || row.keycloakId}
+            onAdd={handleAdd}
+            onSearch={handleSearchChange}
           />
         </Box>
 

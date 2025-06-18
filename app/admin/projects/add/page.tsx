@@ -15,6 +15,7 @@ import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { useRouter } from 'next/navigation';
+import Navbar from "@/app/components/navbar/navbar";
 
 interface SelectionOption {
   id: string;
@@ -321,6 +322,9 @@ const CreateProject = () => {
   };
 
   return (
+    <>
+
+    <Navbar label="Create Project"/>
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" sx={{ mb: 3 }}>
         Create Project
@@ -502,6 +506,7 @@ const CreateProject = () => {
         <CancelButton href="/admin/projects">Cancel</CancelButton>
       </Box>
     </Box>
+    </>
   );
 };
 

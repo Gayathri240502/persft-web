@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
@@ -138,6 +138,14 @@ const Merchant = () => {
     setSelectedDeleteId(null);
   };
 
+   const handleAdd = useCallback(() => {
+      router.push("/admin/vendors/merchants/add");
+    }, [router]);
+
+    const handleSearchChange = useCallback((value: string) => {
+        setSearch(value);
+      }, []);
+
   const handleDeleteConfirm = async () => {
     if (!selectedDeleteId) return;
 
@@ -233,7 +241,7 @@ const Merchant = () => {
           Merchants
         </Typography> */}
 
-        <Box
+        {/* <Box
           sx={{
             display: "flex",
             justifyContent: "space-between",
@@ -253,7 +261,7 @@ const Merchant = () => {
           >
             ADD
           </ReusableButton>
-        </Box>
+        </Box> */}
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -286,6 +294,8 @@ const Merchant = () => {
             autoHeight
             disableColumnMenu={isSmallScreen}
             loading={loading}
+            onAdd={handleAdd}
+            onSearch={handleSearchChange}
           />
         </Box>
         <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>

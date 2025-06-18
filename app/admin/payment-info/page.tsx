@@ -272,7 +272,6 @@ const PaymentInfoPage: React.FC = () => {
             disableColumnMenu={isSmallScreen}
             autoHeight
             onAdd={handleAddClick}
-            onSearch={() => {}}
           />
         )}
 

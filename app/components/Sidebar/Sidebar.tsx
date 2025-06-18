@@ -316,9 +316,9 @@ export default function Sidebar() {
           aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
         >
           {open ? (
-            <ChevronLeftCircle size={18} className="text-gray-600" />
+            <ChevronLeftCircle size={15} className="text-gray-600" />
           ) : (
-            <MenuIcon size={18} className="text-gray-600" />
+            <MenuIcon size={15} className="text-gray-600" />
           )}
         </button>
 
@@ -473,7 +473,7 @@ export default function Sidebar() {
         {open && (
           <div className="border-t border-gray-200 p-4 bg-gray-50 flex-shrink-0">
             <div className="text-xs text-gray-500 text-center">
-              Admin Panel v1.2
+              Admin Panel v1.3
             </div>
           </div>
         )}

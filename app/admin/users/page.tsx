@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
@@ -141,6 +141,14 @@ const UserManagement = () => {
     }
   };
 
+  const handleAdd = useCallback(() => {
+      router.push("/admin/users/add");
+    }, [router]);
+
+    const handleSearchChange = useCallback((value: string) => {
+        setSearch(value);
+      }, []);
+
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", flex: 0.3 },
     { field: "firstName", headerName: "First Name", flex: 1 },
@@ -207,7 +215,7 @@ const UserManagement = () => {
           Users
         </Typography> */}
 
-        <Box
+        {/* <Box
           sx={{
             display: "flex",
             justifyContent: "space-between",
@@ -226,7 +234,7 @@ const UserManagement = () => {
           <ReusableButton onClick={() => router.push("/admin/users/add")}>
             ADD
           </ReusableButton>
-        </Box>
+        </Box> */}
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -259,6 +267,8 @@ const UserManagement = () => {
             autoHeight
             disableColumnMenu={isSmallScreen}
             loading={loading}
+            onAdd={handleAdd}
+            onSearch={handleSearchChange}
           />
         </Box>
 

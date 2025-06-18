@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
@@ -150,6 +150,14 @@ const WorkTasksPage = () => {
     }
   };
 
+  const handleAdd = useCallback(() => {
+      router.push("/admin/work/work-task/add");
+    }, [router]);
+
+    const handleSearchChange = useCallback((value: string) => {
+        setSearch(value);
+      }, []);
+
   const columns: GridColDef<WorkTask>[] = [
     { field: "sn", headerName: "SN", flex: 0.5 },
     { field: "name", headerName: "Name", flex: 1 },
@@ -230,7 +238,7 @@ const WorkTasksPage = () => {
         Work Tasks
       </Typography> */}
 
-        <Box
+        {/* <Box
           sx={{
             display: "flex",
             justifyContent: "space-between",
@@ -251,7 +259,7 @@ const WorkTasksPage = () => {
           >
             ADD
           </ReusableButton>
-        </Box>
+        </Box> */}
 
         {error && (
           <Typography color="error" sx={{ mb: 2 }}>
@@ -272,6 +280,8 @@ const WorkTasksPage = () => {
             loading={loading}
             autoHeight
             disableColumnMenu={isSmallScreen}
+            onAdd={handleAdd}
+            onSearch={handleSearchChange}
           />
         </Box>
 

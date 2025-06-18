@@ -12,6 +12,7 @@ import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { useRouter } from "next/navigation";
+import Navbar from "@/app/components/navbar/navbar";
 
 const WorkTaskForm = () => {
   const { token } = getTokenAndRole();
@@ -103,6 +104,11 @@ const WorkTaskForm = () => {
   };
 
   return (
+
+    <>
+    <Navbar label="Create Work Task"/>
+
+
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" sx={{ mb: 2 }}>
         Create Work Task
@@ -194,6 +200,7 @@ const WorkTaskForm = () => {
         <CancelButton href="/admin/work/work-task">Cancel</CancelButton>
       </Box>
     </Box>
+     </>
   );
 };
 

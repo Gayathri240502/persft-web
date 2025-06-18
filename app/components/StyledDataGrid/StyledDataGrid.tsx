@@ -23,13 +23,14 @@ import {
   Add as AddIcon,
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
+import type { GridToolbarProps } from "@mui/x-data-grid";
 import ReusableButton from "../Button";
 
 // ======================
 // Custom Toolbar
 // ======================
 
-interface CustomToolbarProps {
+interface CustomToolbarProps extends GridToolbarProps {
   onAdd?: () => void;
   onSearch?: (value: string) => void;
   searchPlaceholder?: string;

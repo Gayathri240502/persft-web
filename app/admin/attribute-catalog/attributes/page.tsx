@@ -40,7 +40,6 @@ interface Attribute {
   archive: boolean;
 }
 
-// Industry standard debounce hook with proper cleanup and dependencies
 const useDebounce = <T,>(value: T, delay: number): T => {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
@@ -184,7 +183,7 @@ const Attributes = () => {
   }, []);
 
   const handleAdd = useCallback(() => {
-    router.push("/admin/home-catalog/design/add");
+    router.push("/admin/attribute-catalog/attributes/add");
   }, [router]);
 
   const columns: GridColDef[] = [

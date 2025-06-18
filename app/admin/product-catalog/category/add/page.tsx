@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -27,24 +28,23 @@ const AddCategory = () => {
   const router = useRouter();
   const { token } = getTokenAndRole();
 
-
   const handleThumbnailChange = async (
-      e: React.ChangeEvent<HTMLInputElement>
-    ) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        setSelectedFileName(file.name);
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64String = reader.result as string;
-          setThumbnail(base64String);
-        };
-        reader.readAsDataURL(file);
-      }
-    };
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFileName(file.name);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setThumbnail(base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const validateForm = () => {
-    if (!name || !description ) {
+    if (!name || !description) {
       setError("Name and description are required.");
       return false;
     }
@@ -110,90 +110,92 @@ const AddCategory = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Add New Category
-      </Typography>
+    <>
+      <Navbar label="Add New Category" />
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h5" sx={{ mb: 2 }}>
+          Add New Category
+        </Typography>
 
-      {/* Error/Success Alerts */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-      {success && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          {success}
-        </Alert>
-      )}
+        {/* Error/Success Alerts */}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        {success && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {success}
+          </Alert>
+        )}
 
-      {/* Name Field */}
-      <TextField
-        label="Name"
-        fullWidth
-        sx={{ mb: 3 }}
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
+        {/* Name Field */}
+        <TextField
+          label="Name"
+          fullWidth
+          sx={{ mb: 3 }}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
 
-      {/* Description Field */}
-      <TextField
-        label="Description"
-        multiline
-        rows={3}
-        fullWidth
-        sx={{ mb: 3 }}
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-      />
+        {/* Description Field */}
+        <TextField
+          label="Description"
+          multiline
+          rows={3}
+          fullWidth
+          sx={{ mb: 3 }}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
 
-      {/* Thumbnail Upload */}
-      <Box sx={{ mb: 3 }}>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-    <Button
-      variant="outlined"
-      component="label"
-      startIcon={<UploadFileIcon />}
-      sx={{
-        color: "#05344c",
-        borderColor: "#05344c",
-        "&:hover": { backgroundColor: "#f0f4f8" },
-      }}
-    >
-      Upload Thumbnail
-      <input type="file" hidden onChange={handleThumbnailChange} />
-    </Button>
-    <Typography variant="body2" sx={{ color: "#666" }}>
-      {selectedFileName}
-    </Typography>
-  </Box>
-      </Box>
-      {/* Help Text */}
+        {/* Thumbnail Upload */}
+        <Box sx={{ mb: 3 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<UploadFileIcon />}
+              sx={{
+                color: "#05344c",
+                borderColor: "#05344c",
+                "&:hover": { backgroundColor: "#f0f4f8" },
+              }}
+            >
+              Upload Thumbnail
+              <input type="file" hidden onChange={handleThumbnailChange} />
+            </Button>
+            <Typography variant="body2" sx={{ color: "#666" }}>
+              {selectedFileName}
+            </Typography>
+          </Box>
+        </Box>
+        {/* Help Text */}
         <Typography variant="caption" sx={{ color: "#999" }}>
-        Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+          Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
         </Typography>
         {thumbnail && (
-                    <Box sx={{ mb: 3 }}>
-                      <Typography variant="subtitle2">Preview:</Typography>
-                      <img
-                        src={thumbnail}
-                        alt="Thumbnail Preview"
-                        style={{ width: 200, borderRadius: 8 }}
-                      />
-                    </Box>
-                  )}
-       
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2">Preview:</Typography>
+            <img
+              src={thumbnail}
+              alt="Thumbnail Preview"
+              style={{ width: 200, borderRadius: 8 }}
+            />
+          </Box>
+        )}
 
-      {/* Action Buttons */}
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton onClick={handleSubmit} disabled={loading}>
-          {loading ? <CircularProgress size={24} /> : "Submit"}
-        </ReusableButton>
-        <CancelButton href="/admin/product-catalog/category">
-          Cancel
-        </CancelButton>
+        {/* Action Buttons */}
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <ReusableButton onClick={handleSubmit} disabled={loading}>
+            {loading ? <CircularProgress size={24} /> : "Submit"}
+          </ReusableButton>
+          <CancelButton href="/admin/product-catalog/category">
+            Cancel
+          </CancelButton>
+        </Box>
       </Box>
-    </Box>
+    </>
   );
 };
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -276,88 +277,98 @@ const AddKiosk = () => {
   );
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" sx={{ mb: 3 }}>
-        Add New Kiosk
-      </Typography>
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
-          {renderTextField("First Name", "firstName")}
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderTextField("Last Name", "lastName")}
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderTextField("Username", "username")}
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderTextField("Email", "email")}
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderTextField("Phone", "phone", )}
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderTextField("Password", "password")}
-        </Grid>
-        <Grid item xs={12}>
-          {renderTextField("Description", "description")}
-        </Grid>
-        <Grid item xs={12}>
-          {renderTextField("Address", "address")}
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderSelect(
-            "Country",
-            form.country,
-            "country",
-            countries,
-            loadingCountries
-          )}
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderSelect(
-            "State",
-            form.state,
-            "state",
-            states,
-            false,
-            !form.country
-          )}
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderSelect("City", form.city, "city", cities, false, !form.state)}
-        </Grid>
-        <Grid item xs={12}>
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            Projects
-          </Typography>
-          <FormGroup>
-            {loadingProjects ? (
-              <Typography>Loading projects...</Typography>
-            ) : (
-              projects.map((proj) => (
-                <FormControlLabel
-                  key={proj._id}
-                  control={
-                    <Checkbox
-                      checked={form.projects.includes(proj._id)}
-                      onChange={() => handleCheckboxChange(proj._id)}
-                    />
-                  }
-                  label={proj.name}
-                />
-              ))
+    <>
+      <Navbar label="Add New Kiosk" />
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h5" sx={{ mb: 3 }}>
+          Add New Kiosk
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            {renderTextField("First Name", "firstName")}
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {renderTextField("Last Name", "lastName")}
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {renderTextField("Username", "username")}
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {renderTextField("Email", "email")}
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {renderTextField("Phone", "phone")}
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {renderTextField("Password", "password")}
+          </Grid>
+          <Grid item xs={12}>
+            {renderTextField("Description", "description")}
+          </Grid>
+          <Grid item xs={12}>
+            {renderTextField("Address", "address")}
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {renderSelect(
+              "Country",
+              form.country,
+              "country",
+              countries,
+              loadingCountries
             )}
-          </FormGroup>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {renderSelect(
+              "State",
+              form.state,
+              "state",
+              states,
+              false,
+              !form.country
+            )}
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {renderSelect(
+              "City",
+              form.city,
+              "city",
+              cities,
+              false,
+              !form.state
+            )}
+          </Grid>
+          <Grid item xs={12}>
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              Projects
+            </Typography>
+            <FormGroup>
+              {loadingProjects ? (
+                <Typography>Loading projects...</Typography>
+              ) : (
+                projects.map((proj) => (
+                  <FormControlLabel
+                    key={proj._id}
+                    control={
+                      <Checkbox
+                        checked={form.projects.includes(proj._id)}
+                        onChange={() => handleCheckboxChange(proj._id)}
+                      />
+                    }
+                    label={proj.name}
+                  />
+                ))
+              )}
+            </FormGroup>
+          </Grid>
         </Grid>
-      </Grid>
-      <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
-        <ReusableButton onClick={handleSubmit} disabled={loading}>
-          {loading ? <CircularProgress size={20} /> : "Submit"}
-        </ReusableButton>
-        <CancelButton href="/admin/kiosk-management">Cancel</CancelButton>
+        <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
+          <ReusableButton onClick={handleSubmit} disabled={loading}>
+            {loading ? <CircularProgress size={20} /> : "Submit"}
+          </ReusableButton>
+          <CancelButton href="/admin/kiosk-management">Cancel</CancelButton>
+        </Box>
       </Box>
-    </Box>
+    </>
   );
 };
 

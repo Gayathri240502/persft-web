@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
@@ -47,6 +47,23 @@ interface SubCategoryType {
   sn?: number;
 }
 
+const useDebounce = <T,>(value: T, delay: number): T => {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    // Cleanup function to prevent memory leaks
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
 const SubCategory = () => {
   const router = useRouter();
   const theme = useTheme();
@@ -67,8 +84,9 @@ const SubCategory = () => {
   );
 
   const { token } = getTokenAndRole();
+  const debouncedSearch = useDebounce(search, 300);
 
-  const fetchSubCategories = async () => {
+  const fetchSubCategories = useCallback(async () => {
     setLoading(true);
     setError(null);
     const { page, pageSize } = paginationModel;
@@ -77,8 +95,11 @@ const SubCategory = () => {
       const queryParams = new URLSearchParams({
         page: String(page + 1),
         limit: String(pageSize),
-        searchTerm: search,
       });
+
+      if (debouncedSearch.trim()) {
+        queryParams.set("searchTerm", debouncedSearch.trim());
+      }
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/sub-categories?${queryParams}`,
@@ -118,11 +139,11 @@ const SubCategory = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [paginationModel, debouncedSearch, token]);
 
   useEffect(() => {
     fetchSubCategories();
-  }, [paginationModel, search]);
+  }, [fetchSubCategories]);
 
   const handleDeleteConfirm = async () => {
     if (selectedCategoryId) {
@@ -150,6 +171,14 @@ const SubCategory = () => {
       }
     }
   };
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+  }, []);
+
+  const handleAdd = useCallback(() => {
+    router.push("/admin/product-catalog/sub-category/add");
+  }, [router]);
 
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
@@ -287,23 +316,7 @@ const SubCategory = () => {
             mb: 2,
             gap: isSmallScreen ? 2 : 1,
           }}
-        >
-          <TextField
-            label="Search"
-            variant="outlined"
-            size="small"
-            fullWidth={isSmallScreen}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <ReusableButton
-            onClick={() =>
-              router.push("/admin/product-catalog/sub-category/add")
-            }
-          >
-            ADD
-          </ReusableButton>
-        </Box>
+        ></Box>
 
         {loading && (
           <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
@@ -328,6 +341,14 @@ const SubCategory = () => {
             paginationMode="server"
             autoHeight
             disableColumnMenu={isSmallScreen}
+            onAdd={handleAdd}
+            onSearch={handleSearchChange}
+            searchPlaceholder="Search Sub Category..."
+            addButtonText="Add Sub Category"
+            getRowId={(row) => row.id}
+            // Add these props for better UX
+            disableRowSelectionOnClick
+            hideFooterSelectedRowCount
           />
         </Box>
 

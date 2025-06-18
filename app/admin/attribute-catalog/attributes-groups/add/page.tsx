@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -111,64 +112,67 @@ const AddAttributeGroups = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Add New Attribute Group
-      </Typography>
+    <>
+      <Navbar label="Add New Attribute Group" />
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h5" sx={{ mb: 2 }}>
+          Add New Attribute Group
+        </Typography>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
-      <TextField
-        label="Group Name"
-        fullWidth
-        sx={{ mb: 3 }}
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
+        <TextField
+          label="Group Name"
+          fullWidth
+          sx={{ mb: 3 }}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
 
-      <TextField
-        label="Description"
-        multiline
-        rows={3}
-        fullWidth
-        sx={{ mb: 3 }}
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-      />
+        <TextField
+          label="Description"
+          multiline
+          rows={3}
+          fullWidth
+          sx={{ mb: 3 }}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
 
-      <Typography variant="h6" sx={{ mb: 1 }}>
-        Select Attributes
-      </Typography>
-      <FormControl component="fieldset" sx={{ mb: 3 }}>
-        <FormGroup>
-          {attributes.map((attr) => (
-            <FormControlLabel
-              key={attr._id}
-              control={
-                <Checkbox
-                  checked={!!selectedAttributes[attr._id]}
-                  onChange={() => handleCheckboxChange(attr._id)}
-                />
-              }
-              label={attr.name}
-            />
-          ))}
-        </FormGroup>
-      </FormControl>
+        <Typography variant="h6" sx={{ mb: 1 }}>
+          Select Attributes
+        </Typography>
+        <FormControl component="fieldset" sx={{ mb: 3 }}>
+          <FormGroup>
+            {attributes.map((attr) => (
+              <FormControlLabel
+                key={attr._id}
+                control={
+                  <Checkbox
+                    checked={!!selectedAttributes[attr._id]}
+                    onChange={() => handleCheckboxChange(attr._id)}
+                  />
+                }
+                label={attr.name}
+              />
+            ))}
+          </FormGroup>
+        </FormControl>
 
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton onClick={handleSubmit} disabled={loading}>
-          {loading ? <CircularProgress size={20} /> : "Submit"}
-        </ReusableButton>
-        <CancelButton href="/admin/attribute-catalog/attributes-groups">
-          Cancel
-        </CancelButton>
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <ReusableButton onClick={handleSubmit} disabled={loading}>
+            {loading ? <CircularProgress size={20} /> : "Submit"}
+          </ReusableButton>
+          <CancelButton href="/admin/attribute-catalog/attributes-groups">
+            Cancel
+          </CancelButton>
+        </Box>
       </Box>
-    </Box>
+    </>
   );
 };
 

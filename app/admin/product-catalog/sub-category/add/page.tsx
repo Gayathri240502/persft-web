@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -174,115 +175,118 @@ const AddSubCategory = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Add New Sub Category
-      </Typography>
+    <>
+      <Navbar label=" Add New Sub Category" />
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h5" sx={{ mb: 2 }}>
+          Add New Sub Category
+        </Typography>
 
-      <FormControl fullWidth sx={{ mb: 3 }}>
-        <InputLabel id="category-select-label">Category</InputLabel>
-        <Select
-          labelId="category-select-label"
-          value={formData.category}
-          onChange={handleCategoryChange}
-          label="Category"
-        >
-          {categories.map((cat) => (
-            <MenuItem key={cat._id} value={cat._id}>
-              {cat.name}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-
-      <TextField
-        label="Name"
-        name="name"
-        value={formData.name}
-        onChange={handleInputChange}
-        fullWidth
-        sx={{ mb: 3 }}
-      />
-
-      <TextField
-        label="Description"
-        name="description"
-        value={formData.description}
-        onChange={handleInputChange}
-        multiline
-        rows={3}
-        fullWidth
-        sx={{ mb: 3 }}
-      />
-
-      <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Button
-            variant="outlined"
-            component="label"
-            startIcon={<UploadFileIcon />}
-            sx={{
-              color: "#05344c",
-              borderColor: "#05344c",
-              "&:hover": { backgroundColor: "#f0f4f8" },
-            }}
+        <FormControl fullWidth sx={{ mb: 3 }}>
+          <InputLabel id="category-select-label">Category</InputLabel>
+          <Select
+            labelId="category-select-label"
+            value={formData.category}
+            onChange={handleCategoryChange}
+            label="Category"
           >
-            Upload Thumbnail
-            <input type="file" hidden onChange={handleThumbnailChange} />
-          </Button>
-          <Typography variant="body2" sx={{ color: "#666" }}>
-            {selectedFileName}
-          </Typography>
-        </Box>
-      </Box>
-      {/* Help Text */}
-      <Typography variant="caption" sx={{ color: "#999" }}>
-        Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
-      </Typography>
-      {thumbnail && (
+            {categories.map((cat) => (
+              <MenuItem key={cat._id} value={cat._id}>
+                {cat.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <TextField
+          label="Name"
+          name="name"
+          value={formData.name}
+          onChange={handleInputChange}
+          fullWidth
+          sx={{ mb: 3 }}
+        />
+
+        <TextField
+          label="Description"
+          name="description"
+          value={formData.description}
+          onChange={handleInputChange}
+          multiline
+          rows={3}
+          fullWidth
+          sx={{ mb: 3 }}
+        />
+
         <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2">Preview:</Typography>
-          <img
-            src={thumbnail}
-            alt="Thumbnail Preview"
-            style={{ width: 200, borderRadius: 8 }}
-          />
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<UploadFileIcon />}
+              sx={{
+                color: "#05344c",
+                borderColor: "#05344c",
+                "&:hover": { backgroundColor: "#f0f4f8" },
+              }}
+            >
+              Upload Thumbnail
+              <input type="file" hidden onChange={handleThumbnailChange} />
+            </Button>
+            <Typography variant="body2" sx={{ color: "#666" }}>
+              {selectedFileName}
+            </Typography>
+          </Box>
         </Box>
-      )}
-
-      <Typography variant="h6" sx={{ mb: 1 }}>
-        Attribute Groups
-      </Typography>
-      <Grid container spacing={1} sx={{ mb: 3 }}>
-        {attributeGroups.map((group) => (
-          <Grid item xs={12} sm={6} key={group._id}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  value={group._id}
-                  checked={formData.attributeGroups.includes(group._id)}
-                  onChange={handleCheckboxChange}
-                />
-              }
-              label={group.name}
+        {/* Help Text */}
+        <Typography variant="caption" sx={{ color: "#999" }}>
+          Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+        </Typography>
+        {thumbnail && (
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2">Preview:</Typography>
+            <img
+              src={thumbnail}
+              alt="Thumbnail Preview"
+              style={{ width: 200, borderRadius: 8 }}
             />
-          </Grid>
-        ))}
-      </Grid>
+          </Box>
+        )}
 
-      {error && (
-        <Typography sx={{ color: "error.main", mb: 2 }}>{error}</Typography>
-      )}
+        <Typography variant="h6" sx={{ mb: 1 }}>
+          Attribute Groups
+        </Typography>
+        <Grid container spacing={1} sx={{ mb: 3 }}>
+          {attributeGroups.map((group) => (
+            <Grid item xs={12} sm={6} key={group._id}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    value={group._id}
+                    checked={formData.attributeGroups.includes(group._id)}
+                    onChange={handleCheckboxChange}
+                  />
+                }
+                label={group.name}
+              />
+            </Grid>
+          ))}
+        </Grid>
 
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton onClick={handleSubmit} disabled={loading}>
-          {loading ? "Submitting..." : "Submit"}
-        </ReusableButton>
-        <CancelButton href="/admin/product-catalog/sub-category">
-          Cancel
-        </CancelButton>
+        {error && (
+          <Typography sx={{ color: "error.main", mb: 2 }}>{error}</Typography>
+        )}
+
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <ReusableButton onClick={handleSubmit} disabled={loading}>
+            {loading ? "Submitting..." : "Submit"}
+          </ReusableButton>
+          <CancelButton href="/admin/product-catalog/sub-category">
+            Cancel
+          </CancelButton>
+        </Box>
       </Box>
-    </Box>
+    </>
   );
 };
 

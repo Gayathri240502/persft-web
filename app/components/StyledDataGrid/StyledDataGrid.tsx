@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import {
   DataGrid,
   GridToolbarContainer,
@@ -31,70 +31,62 @@ interface CustomToolbarProps {
   searchPlaceholder?: string;
   showAddButton?: boolean;
   addButtonText?: string;
-  initialSearchValue?: string;
+  searchValue?: string; // Current search value from parent
 }
 
-const CustomToolbar = ({
-  onAdd,
-  onSearch,
-  searchPlaceholder = "Search...",
-  showAddButton = true,
-  addButtonText = "Add",
-  initialSearchValue = "",
-}: CustomToolbarProps) => {
-  const theme = useTheme();
-  const [searchValue, setSearchValue] = useState(initialSearchValue);
+const CustomToolbar = React.memo(
+  ({
+    onAdd,
+    onSearch,
+    searchPlaceholder = "Search...",
+    showAddButton = true,
+    addButtonText = "Add",
+    searchValue = "",
+  }: CustomToolbarProps) => {
+    const theme = useTheme();
+    const [localSearchValue, setLocalSearchValue] = useState(searchValue);
 
-  // Update internal state when external search value changes
-  useEffect(() => {
-    setSearchValue(initialSearchValue);
-  }, [initialSearchValue]);
+    // Sync local state with parent state
+    useEffect(() => {
+      setLocalSearchValue(searchValue);
+    }, [searchValue]);
 
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      setSearchValue(value);
-      onSearch?.(value);
-    },
-    [onSearch]
-  );
+    const handleSearchChange = useCallback(
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setLocalSearchValue(value);
+        onSearch?.(value);
+      },
+      [onSearch]
+    );
 
-  const handleClearSearch = useCallback(() => {
-    setSearchValue("");
-    onSearch?.("");
-  }, [onSearch]);
+    const handleClearSearch = useCallback(() => {
+      setLocalSearchValue("");
+      onSearch?.("");
+    }, [onSearch]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-    }
-  }, []);
+    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+      }
+    }, []);
 
-  return (
-    <GridToolbarContainer
-      sx={{
-        p: 2,
-        margin: "5px",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        flexWrap: "wrap",
-        gap: 4,
-        borderBottom: `1px solid ${theme.palette.divider}`,
-      }}
-    >
-      <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+    const memoizedTextField = useMemo(
+      () => (
         <TextField
           size="small"
           placeholder={searchPlaceholder}
-          value={searchValue}
+          value={localSearchValue}
           onChange={handleSearchChange}
           onKeyDown={handleKeyDown}
           sx={{
-            minWidth: 350,
-            maxWidth: 400,
+            minWidth: 300,
+            maxWidth: 450,
             "& .MuiOutlinedInput-root": {
               "&:hover fieldset": {
+                borderColor: theme.palette.primary.main,
+              },
+              "&.Mui-focused fieldset": {
                 borderColor: theme.palette.primary.main,
               },
             },
@@ -105,7 +97,7 @@ const CustomToolbar = ({
                 <SearchIcon color="action" fontSize="small" />
               </InputAdornment>
             ),
-            endAdornment: searchValue && (
+            endAdornment: localSearchValue && (
               <InputAdornment position="end">
                 <Tooltip title="Clear search">
                   <IconButton
@@ -113,6 +105,7 @@ const CustomToolbar = ({
                     onClick={handleClearSearch}
                     edge="end"
                     sx={{ mr: -0.5 }}
+                    aria-label="Clear search"
                   >
                     <ClearIcon fontSize="small" />
                   </IconButton>
@@ -121,140 +114,239 @@ const CustomToolbar = ({
             ),
           }}
         />
-      </Box>
+      ),
+      [
+        searchPlaceholder,
+        localSearchValue,
+        handleSearchChange,
+        handleKeyDown,
+        handleClearSearch,
+        theme.palette.primary.main,
+      ]
+    );
 
-      <Box
-        sx={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}
+    return (
+      <GridToolbarContainer
+        sx={{
+          p: 2,
+          margin: "5px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 2,
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          minHeight: 60,
+        }}
       >
-        <GridToolbarColumnsButton />
-        <GridToolbarFilterButton />
-        <GridToolbarDensitySelector />
-        <GridToolbarExport />
-        {showAddButton && onAdd && (
-          <ReusableButton
-            variant="contained"
-            onClick={onAdd}
-            startIcon={<AddIcon />}
-            sx={{
-              whiteSpace: "nowrap",
-              minWidth: "auto",
-            }}
-          >
-            {addButtonText}
-          </ReusableButton>
-        )}
-      </Box>
-    </GridToolbarContainer>
-  );
-};
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
+          {memoizedTextField}
+        </Box>
+
+        <Box
+          sx={{
+            display: "flex",
+            gap: 1,
+            alignItems: "center",
+            flexWrap: "wrap",
+            minHeight: 36, // Ensure consistent height
+          }}
+        >
+          <GridToolbarColumnsButton size="small" />
+          <GridToolbarFilterButton size="small" />
+          <GridToolbarDensitySelector size="small" />
+          <GridToolbarExport size="small" />
+          {showAddButton && onAdd && (
+            <ReusableButton
+              variant="contained"
+              onClick={onAdd}
+              startIcon={<AddIcon />}
+              size="small"
+              sx={{
+                whiteSpace: "nowrap",
+                minWidth: "auto",
+                height: 32, // Match other toolbar buttons
+              }}
+            >
+              {addButtonText}
+            </ReusableButton>
+          )}
+        </Box>
+      </GridToolbarContainer>
+    );
+  }
+);
+
+CustomToolbar.displayName = "CustomToolbar";
 
 interface StyledDataGridProps
-  extends Omit<DataGridProps, "components" | "componentsProps"> {
+  extends Omit<
+    DataGridProps,
+    "components" | "componentsProps" | "slots" | "slotProps"
+  > {
   minWidth?: number | string;
   onAdd?: () => void;
   onSearch?: (value: string) => void;
   searchPlaceholder?: string;
   showAddButton?: boolean;
   addButtonText?: string;
-  searchValue?: string; // Add this to sync search value
+  searchValue?: string;
 }
 
-const StyledDataGrid = ({
-  minWidth = 1000,
-  onAdd,
-  onSearch,
-  searchPlaceholder,
-  showAddButton,
-  addButtonText,
-  searchValue = "",
-  sx,
-  ...props
-}: StyledDataGridProps) => {
-  const theme = useTheme();
+const StyledDataGrid = React.memo(
+  ({
+    minWidth = 1000,
+    onAdd,
+    onSearch,
+    searchPlaceholder,
+    showAddButton = true,
+    addButtonText,
+    searchValue = "",
+    sx,
+    ...props
+  }: StyledDataGridProps) => {
+    const theme = useTheme();
 
-  return (
-    <Box
-      sx={{
-        width: "100%",
-        minWidth,
-        height: "auto",
+    // Memoize slot props to prevent unnecessary re-renders
+    const toolbarProps = useMemo(
+      () => ({
+        onAdd,
+        onSearch,
+        searchPlaceholder,
+        showAddButton,
+        addButtonText,
+        searchValue,
+      }),
+      [
+        onAdd,
+        onSearch,
+        searchPlaceholder,
+        showAddButton,
+        addButtonText,
+        searchValue,
+      ]
+    );
+
+    // Memoize the styles object
+    const dataGridStyles = useMemo(
+      () => ({
         "& .MuiDataGrid-root": {
           border: `2px solid ${theme.palette.divider}`,
+          borderRadius: theme.shape.borderRadius,
         },
-      }}
-    >
-      <DataGrid
-        {...props}
-        slots={{
-          toolbar: CustomToolbar,
-        }}
-        slotProps={{
-          toolbar: {
-            onAdd,
-            onSearch,
-            searchPlaceholder,
-            showAddButton,
-            addButtonText,
-            initialSearchValue: searchValue,
+        "& .MuiDataGrid-columnHeader": {
+          fontSize: "0.95rem",
+          fontWeight: 600,
+          backgroundColor: theme.palette.grey[50],
+          color: theme.palette.text.primary,
+          borderBottom: `2px solid ${theme.palette.divider}`,
+        },
+        "& .MuiDataGrid-columnHeaderTitle": {
+          fontWeight: 600,
+        },
+        "& .MuiDataGrid-row": {
+          "&:nth-of-type(even)": {
+            backgroundColor: theme.palette.background.default,
           },
-        }}
-        sx={{
-          "& .MuiDataGrid-columnHeader": {
-            fontSize: "0.95rem",
-            fontWeight: 600,
-            backgroundColor: theme.palette.grey[50],
-            color: theme.palette.text.primary,
-            borderBottom: `2px solid ${theme.palette.divider}`,
-          },
-          "& .MuiDataGrid-columnHeaderTitle": {
-            fontWeight: 600,
-          },
-          "& .MuiDataGrid-row": {
-            "&:nth-of-type(even)": {
-              backgroundColor: theme.palette.background.default,
-            },
-            "&:nth-of-type(odd)": {
-              backgroundColor: theme.palette.background.paper,
-            },
-            "&:hover": {
-              backgroundColor: theme.palette.action.hover,
-            },
-            "&.Mui-selected": {
-              backgroundColor: theme.palette.action.selected,
-              "&:hover": {
-                backgroundColor: theme.palette.action.selected,
-              },
-            },
-          },
-          "& .MuiDataGrid-cell": {
-            borderBottom: `1px solid ${theme.palette.divider}`,
-            display: "flex",
-            alignItems: "center",
-          },
-          "& .MuiDataGrid-footerContainer": {
-            borderTop: `1px solid ${theme.palette.divider}`,
-            backgroundColor: theme.palette.grey[50],
-          },
-          "& .MuiDataGrid-toolbarContainer": {
-            padding: 0,
-          },
-          "& .MuiDataGrid-overlay": {
+          "&:nth-of-type(odd)": {
             backgroundColor: theme.palette.background.paper,
           },
-          "& .MuiCircularProgress-root": {
-            color: theme.palette.primary.main,
+          "&:hover": {
+            backgroundColor: theme.palette.action.hover,
           },
-          ...sx,
+          "&.Mui-selected": {
+            backgroundColor: theme.palette.action.selected,
+            "&:hover": {
+              backgroundColor: theme.palette.action.selected,
+            },
+          },
+        },
+        "& .MuiDataGrid-cell": {
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          display: "flex",
+          alignItems: "center",
+        },
+        "& .MuiDataGrid-footerContainer": {
+          borderTop: `2px solid ${theme.palette.divider}`,
+          backgroundColor: theme.palette.grey[50],
+        },
+        "& .MuiDataGrid-toolbarContainer": {
+          padding: 0,
+        },
+        "& .MuiDataGrid-overlay": {
+          backgroundColor: theme.palette.background.paper,
+        },
+        "& .MuiCircularProgress-root": {
+          color: theme.palette.primary.main,
+        },
+        "& .MuiDataGrid-virtualScroller": {
+          // Ensure proper scrolling behavior
+          overflowX: "auto",
+        },
+        "& .MuiDataGrid-columnHeaders": {
+          borderBottom: `2px solid ${theme.palette.divider}`,
+        },
+        // Loading overlay styles
+        "& .MuiDataGrid-loadingOverlay": {
+          backgroundColor: "rgba(255, 255, 255, 0.8)",
+          backdropFilter: "blur(2px)",
+        },
+        // No rows overlay styles
+        "& .MuiDataGrid-noRowsOverlay": {
+          backgroundColor: theme.palette.background.paper,
+        },
+        ...sx,
+      }),
+      [theme, sx]
+    );
+
+    return (
+      <Box
+        sx={{
+          width: "100%",
+          minWidth,
+          height: "auto",
+          display: "flex",
+          flexDirection: "column",
         }}
-        disableColumnMenu={false}
-        disableRowSelectionOnClick
-        autoHeight
-        checkboxSelection={false}
-        disableColumnResize={false}
-        density="standard"
-      />
-    </Box>
-  );
-};
+      >
+        <DataGrid
+          {...props}
+          slots={{
+            toolbar: CustomToolbar,
+          }}
+          slotProps={{
+            toolbar: toolbarProps,
+            loadingOverlay: {
+              variant: "circular-progress",
+              noRowsVariant: "skeleton",
+            },
+          }}
+          sx={dataGridStyles}
+          disableColumnMenu={false}
+          disableRowSelectionOnClick
+          autoHeight
+          checkboxSelection={false}
+          disableColumnResize={false}
+          density="standard"
+          // Performance optimizations
+          rowBuffer={10}
+          columnBuffer={2}
+          // Accessibility improvements
+          aria-label="Products data grid"
+        />
+      </Box>
+    );
+  }
+);
+
+StyledDataGrid.displayName = "StyledDataGrid";
 
 export default StyledDataGrid;

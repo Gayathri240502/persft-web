@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
@@ -38,6 +38,24 @@ interface AttributeGroup {
   sn?: number;
 }
 
+// Industry standard debounce hook with proper cleanup and dependencies
+const useDebounce = <T,>(value: T, delay: number): T => {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    // Cleanup function to prevent memory leaks
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
 const AttributeGroups = () => {
   const router = useRouter();
   const theme = useTheme();
@@ -45,10 +63,13 @@ const AttributeGroups = () => {
   const { token } = getTokenAndRole();
 
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
+
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
     pageSize: 10,
   });
+
   const [rowCount, setRowCount] = useState(0);
   const [attributeGroups, setAttributeGroups] = useState<AttributeGroup[]>([]);
   const [loading, setLoading] = useState(false);
@@ -66,8 +87,11 @@ const AttributeGroups = () => {
       const queryParams = new URLSearchParams({
         page: String(page + 1),
         limit: String(pageSize),
-        searchTerm: search,
       });
+
+      if (debouncedSearch.trim()) {
+        queryParams.append("searchTerm", debouncedSearch.trim());
+      }
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/attribute-groups?${queryParams}`,
@@ -107,10 +131,19 @@ const AttributeGroups = () => {
       setLoading(false);
     }
   };
+  [paginationModel, debouncedSearch, token];
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+  }, []);
+
+  const handleAdd = useCallback(() => {
+    router.push("/admin/attribute-catalog/attributes-groups/add");
+  }, [router]);
 
   useEffect(() => {
     fetchAttributeGroups();
-  }, [paginationModel, search]);
+  }, [paginationModel, debouncedSearch]);
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -243,23 +276,7 @@ const AttributeGroups = () => {
             mb: 2,
             gap: isSmallScreen ? 2 : 1,
           }}
-        >
-          <TextField
-            label="Search"
-            variant="outlined"
-            size="small"
-            fullWidth={isSmallScreen}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <ReusableButton
-            onClick={() =>
-              router.push("/admin/attribute-catalog/attributes-groups/add")
-            }
-          >
-            ADD
-          </ReusableButton>
-        </Box>
+        ></Box>
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -293,6 +310,14 @@ const AttributeGroups = () => {
             autoHeight
             disableColumnMenu={isSmallScreen}
             loading={loading}
+            onAdd={handleAdd}
+            onSearch={handleSearchChange}
+            searchPlaceholder="Search Attribute Groups..."
+            addButtonText="Add Attributes Groups"
+            getRowId={(row) => row.id}
+            // Add these props for better UX
+            disableRowSelectionOnClick
+            hideFooterSelectedRowCount
           />
         </Box>
 

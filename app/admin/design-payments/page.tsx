@@ -226,6 +226,7 @@ const DesignPayments = () => {
             rowCount={rowCount}
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
+            pageSizeOptions={[5, 10, 25, 50, 100]}
             paginationMode="server"
             autoHeight
             disableRowSelectionOnClick

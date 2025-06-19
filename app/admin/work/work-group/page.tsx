@@ -274,7 +274,7 @@ const WorkGroups = () => {
               autoHeight
               disableColumnMenu={isSmallScreen}
               getRowId={(row) => row.id}
-              searchValue={search}
+              // searchValue={search}
               onAdd={handleAdd}
               onSearch={handleSearch}
               searchPlaceholder="Search Work Groups..."

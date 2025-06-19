@@ -275,7 +275,7 @@ const Projects = () => {
               autoHeight
               disableColumnMenu={isSmallScreen}
               getRowId={(row) => row.id}
-              searchValue={search}
+              // searchValue={search}
               onAdd={handleAdd}
               onSearch={handleSearch}
               searchPlaceholder="Search Projects..."

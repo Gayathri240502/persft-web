@@ -8,7 +8,8 @@ import {
   GridToolbarFilterButton,
   GridToolbarDensitySelector,
   GridToolbarExport,
-  DataGridProps,
+  type GridToolbarProps,
+  type DataGridProps,
 } from "@mui/x-data-grid";
 import {
   Box,
@@ -25,7 +26,7 @@ import {
 import { useTheme } from "@mui/material/styles";
 import ReusableButton from "../Button";
 
-interface CustomToolbarProps {
+interface CustomToolbarProps extends Partial<GridToolbarProps> {
   onAdd?: () => void;
   onSearch?: (value: string) => void;
   searchPlaceholder?: string;
@@ -116,9 +117,7 @@ const CustomToolbar = ({
         />
       </Box>
 
-      <Box
-        sx={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}
-      >
+      <Box sx={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
         <GridToolbarColumnsButton />
         <GridToolbarFilterButton />
         <GridToolbarDensitySelector />
@@ -141,8 +140,7 @@ const CustomToolbar = ({
   );
 };
 
-interface StyledDataGridProps
-  extends Omit<DataGridProps, "components" | "componentsProps"> {
+interface StyledDataGridProps extends Omit<DataGridProps, "slots" | "slotProps"> {
   minWidth?: number | string;
   onAdd?: () => void;
   onSearch?: (value: string) => void;
@@ -151,16 +149,15 @@ interface StyledDataGridProps
   addButtonText?: string;
 }
 
-const StyledDataGrid = ({
+const StyledDataGrid: React.FC<StyledDataGridProps> = ({
   minWidth = 1000,
   onAdd,
   onSearch,
   searchPlaceholder,
   showAddButton,
   addButtonText,
-  sx,
   ...props
-}: StyledDataGridProps) => {
+}) => {
   const theme = useTheme();
 
   return (
@@ -176,6 +173,11 @@ const StyledDataGrid = ({
     >
       <DataGrid
         {...props}
+        autoHeight
+        disableColumnMenu={false}
+        disableRowSelectionOnClick
+        checkboxSelection={false}
+        density="standard"
         slots={{
           toolbar: CustomToolbar,
         }}
@@ -186,7 +188,7 @@ const StyledDataGrid = ({
             searchPlaceholder,
             showAddButton,
             addButtonText,
-          },
+          }as any,
         }}
         sx={{
           "& .MuiDataGrid-columnHeader": {
@@ -234,14 +236,7 @@ const StyledDataGrid = ({
           "& .MuiCircularProgress-root": {
             color: theme.palette.primary.main,
           },
-          ...sx,
         }}
-        disableColumnMenu={false}
-        disableRowSelectionOnClick
-        autoHeight
-        checkboxSelection={false}
-        disableColumnResize={false}
-        density="standard"
       />
     </Box>
   );

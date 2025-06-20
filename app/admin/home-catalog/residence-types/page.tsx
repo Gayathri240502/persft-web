@@ -30,7 +30,7 @@ import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface ResidenceType {
   id: string;
-  sn: number;
+
   name: string;
   description: string;
   thumbnail: string;
@@ -109,6 +109,7 @@ const ResidenceTypePage = () => {
       }
 
       const result = await response.json();
+      console.log("Fetched residence types:", result);
 
       const typesWithId = (result.residenceTypes || []).map(
         (item: any, index: number) => ({

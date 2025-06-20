@@ -13,7 +13,7 @@ import {
   Alert,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import { GridColDef, GridPaginationModel, DataGrid } from "@mui/x-data-grid";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
@@ -219,18 +219,19 @@ const DesignPayments = () => {
             <CircularProgress />
           </Box>
         ) : (
-          <StyledDataGrid
-            // minWidth={1500}
-            rows={payments}
-            columns={columns}
-            rowCount={rowCount}
-            paginationModel={paginationModel}
-            onPaginationModelChange={setPaginationModel}
-            pageSizeOptions={[5, 10, 25, 50, 100]}
-            paginationMode="server"
-            autoHeight
-            disableRowSelectionOnClick
-          />
+          <Box sx={{ minWidth: 1500 }}>
+            <DataGrid
+              rows={payments}
+              columns={columns}
+              rowCount={rowCount}
+              paginationModel={paginationModel}
+              onPaginationModelChange={setPaginationModel}
+              pageSizeOptions={[5, 10, 25, 50, 100]}
+              paginationMode="server"
+              autoHeight
+              disableRowSelectionOnClick
+            />
+          </Box>
         )}
       </Box>
     </>

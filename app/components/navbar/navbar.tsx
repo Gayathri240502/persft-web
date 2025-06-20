@@ -222,28 +222,6 @@ export default function Navbar({ label }: NavbarProps) {
 
                 <Divider sx={{ my: 1 }} />
 
-                {/* Menu Items */}
-                <MenuItem
-                  onClick={handleMenuClose}
-                  className="hover:bg-gray-50"
-                >
-                  <PersonIcon fontSize="small" className="mr-3 text-gray-600" />
-                  <span className="text-sm">Profile</span>
-                </MenuItem>
-
-                <MenuItem
-                  onClick={handleMenuClose}
-                  className="hover:bg-gray-50"
-                >
-                  <SettingsIcon
-                    fontSize="small"
-                    className="mr-3 text-gray-600"
-                  />
-                  <span className="text-sm">Settings</span>
-                </MenuItem>
-
-                <Divider sx={{ my: 1 }} />
-
                 <MenuItem
                   onClick={handleLogout}
                   className="text-red-600 hover:bg-red-50 hover:text-red-700"

@@ -6,7 +6,6 @@ import {
   Box,
   Typography,
   TextField,
-  IconButton,
   CircularProgress,
   Alert,
   Dialog,
@@ -16,23 +15,17 @@ import {
   Button,
   Snackbar,
   useMediaQuery,
+  Card,
+  CardContent,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import {
-  GridColDef,
-  GridPaginationModel,
-  GridRenderCellParams,
-} from "@mui/x-data-grid";
-import { Edit } from "@mui/icons-material";
 
 import ReusableButton from "@/app/components/Button";
-import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import CancelButton from "@/app/components/CancelButton";
 
 interface PaymentInfo {
   id: string;
-  sn: number;
   designAmount: number;
   partialAmount: number;
 }
@@ -42,28 +35,18 @@ const PaymentInfoPage: React.FC = () => {
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const { token } = getTokenAndRole();
 
-  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-    page: 0,
-    pageSize: 10,
-  });
-
-  const [allRows, setAllRows] = useState<PaymentInfo[]>([]);
-  const [rows, setRows] = useState<PaymentInfo[]>([]);
-  const [rowCount, setRowCount] = useState(0);
-
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [paymentInfo, setPaymentInfo] = useState<PaymentInfo | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
-    id: "",
     designAmount: 1000,
     partialAmount: 50,
   });
 
-  const fetchPaymentInfos = async () => {
+  const fetchPaymentInfo = async () => {
     setLoading(true);
     setError(null);
 
@@ -75,21 +58,21 @@ const PaymentInfoPage: React.FC = () => {
         },
       });
 
-      if (!res.ok) throw new Error(`Fetch failed with status ${res.status}`);
+      if (!res.ok) {
+        if (res.status === 404) {
+          // No payment info exists yet
+          setPaymentInfo(null);
+          return;
+        }
+        throw new Error(`Fetch failed with status ${res.status}`);
+      }
 
       const item = await res.json();
-
-      const items: PaymentInfo[] = [
-        {
-          id: item._id,
-          sn: 1,
-          designAmount: item.designAmount,
-          partialAmount: item.partialAmount,
-        },
-      ];
-
-      setAllRows(items);
-      setRowCount(items.length);
+      setPaymentInfo({
+        id: item._id,
+        designAmount: item.designAmount,
+        partialAmount: item.partialAmount,
+      });
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "An unknown error occurred"
@@ -100,24 +83,11 @@ const PaymentInfoPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchPaymentInfos();
+    fetchPaymentInfo();
   }, []);
 
-  useEffect(() => {
-    const filtered = allRows.filter(
-      (row) =>
-        row.designAmount.toString().includes(search) ||
-        row.partialAmount.toString().includes(search)
-    );
-    const start = paginationModel.page * paginationModel.pageSize;
-    const paginated = filtered.slice(start, start + paginationModel.pageSize);
-
-    setRows(paginated);
-    setRowCount(filtered.length);
-  }, [search, paginationModel, allRows]);
-
   const handleSubmit = async () => {
-    const method = formData.id ? "PATCH" : "POST";
+    const method = paymentInfo ? "PATCH" : "POST";
     const url = `${process.env.NEXT_PUBLIC_API_URL}/pay-info`;
 
     const requestBody: {
@@ -129,12 +99,8 @@ const PaymentInfoPage: React.FC = () => {
       partialAmount: formData.partialAmount,
     };
 
-    if (method === "PATCH") {
-      if (!formData.id) {
-        setError("ID is required for updating.");
-        return;
-      }
-      requestBody.id = formData.id;
+    if (method === "PATCH" && paymentInfo) {
+      requestBody.id = paymentInfo.id;
     }
 
     try {
@@ -160,94 +126,39 @@ const PaymentInfoPage: React.FC = () => {
       setSuccessMsg(
         `Payment info ${method === "POST" ? "added" : "updated"} successfully`
       );
-      setAddDialogOpen(false);
-      fetchPaymentInfos();
+      setDialogOpen(false);
+      fetchPaymentInfo();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Submission failed");
     }
   };
 
-  const handleEditClick = (params: GridRenderCellParams) => {
-    setFormData({
-      id: params.row.id,
-      designAmount: params.row.designAmount,
-      partialAmount: params.row.partialAmount,
-    });
-    setAddDialogOpen(true);
+  const handleOpenDialog = () => {
+    if (paymentInfo) {
+      // Pre-fill form with existing data for update
+      setFormData({
+        designAmount: paymentInfo.designAmount,
+        partialAmount: paymentInfo.partialAmount,
+      });
+    } else {
+      // Reset form for new entry
+      setFormData({
+        designAmount: 1000,
+        partialAmount: 50,
+      });
+    }
+    setDialogOpen(true);
   };
 
-  const handleAddClick = () => {
-    setFormData({ id: "", designAmount: 1000, partialAmount: 50 });
-    setAddDialogOpen(true);
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setError(null);
   };
-
-  const columns: GridColDef[] = [
-    { field: "sn", headerName: "SN", width: 80 },
-    {
-      field: "designAmount",
-      headerName: "Design Amount",
-      flex: 1,
-      renderCell: (params: GridRenderCellParams) => (
-        <Typography>{params.row.designAmount}</Typography>
-      ),
-    },
-    {
-      field: "partialAmount",
-      headerName: "Partial Amount",
-      flex: 1,
-      renderCell: (params: GridRenderCellParams) => (
-        <Typography>{params.row.partialAmount}</Typography>
-      ),
-    },
-    {
-      field: "action",
-      headerName: "Actions",
-      flex: 1,
-      renderCell: (params: GridRenderCellParams) => (
-        <Box>
-          <IconButton
-            onClick={() => handleEditClick(params)}
-            size="small"
-            color="primary"
-          >
-            <Edit fontSize="small" />
-          </IconButton>
-        </Box>
-      ),
-    },
-  ];
 
   return (
     <>
       <Navbar label="Payment Info" />
       <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-        {/* <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-          Payment Info
-        </Typography> */}
-
-        {/* <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            mb: 2,
-            gap: 2,
-            flexDirection: isSmallScreen ? "column" : "row",
-          }}
-        >
-          <TextField
-            label="Search"
-            variant="outlined"
-            size="small"
-            value={search}
-            fullWidth={isSmallScreen}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPaginationModel({ ...paginationModel, page: 0 });
-            }}
-          />
-          <ReusableButton onClick={handleAddClick}>ADD</ReusableButton>
-        </Box> */}
-
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
@@ -259,30 +170,53 @@ const PaymentInfoPage: React.FC = () => {
             <CircularProgress />
           </Box>
         ) : (
-          <StyledDataGrid
-            rows={rows}
-            columns={columns}
-            rowCount={rowCount}
-            loading={loading}
-            pagination
-            paginationMode="server"
-            paginationModel={paginationModel}
-            onPaginationModelChange={setPaginationModel}
-            pageSizeOptions={[5, 10, 25, 100]}
-            disableColumnMenu={isSmallScreen}
-            autoHeight
-            onAdd={handleAddClick}
-          />
+          <Box>
+            {paymentInfo ? (
+              // Show existing payment info with update button
+              <Card sx={{ mb: 3 }}>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Current Payment Information
+                  </Typography>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body1" sx={{ mb: 1 }}>
+                      <strong>Design Amount:</strong> {paymentInfo.designAmount}
+                    </Typography>
+                    <Typography variant="body1" sx={{ mb: 2 }}>
+                      <strong>Partial Amount:</strong>{" "}
+                      {paymentInfo.partialAmount}%
+                    </Typography>
+                  </Box>
+                  <ReusableButton onClick={handleOpenDialog}>
+                    Update Payment Info
+                  </ReusableButton>
+                </CardContent>
+              </Card>
+            ) : (
+              // Show add button when no payment info exists
+              <Box sx={{ textAlign: "center", py: 4 }}>
+                <Typography
+                  variant="h6"
+                  sx={{ mb: 2, color: "text.secondary" }}
+                >
+                  No payment information configured
+                </Typography>
+                <ReusableButton onClick={handleOpenDialog}>
+                  Add Payment Info
+                </ReusableButton>
+              </Box>
+            )}
+          </Box>
         )}
 
         <Dialog
-          open={addDialogOpen}
-          onClose={() => setAddDialogOpen(false)}
+          open={dialogOpen}
+          onClose={handleCloseDialog}
           fullWidth
           maxWidth="sm"
         >
           <DialogTitle>
-            {formData.id ? "Edit Payment Info" : "Add Payment Info"}
+            {paymentInfo ? "Update Payment Info" : "Add Payment Info"}
           </DialogTitle>
           <DialogContent
             sx={{
@@ -300,34 +234,34 @@ const PaymentInfoPage: React.FC = () => {
               type="number"
               fullWidth
               variant="outlined"
-              value={formData.designAmount}
-              onChange={(e) =>
+              value={formData.designAmount === 0 ? "" : formData.designAmount}
+              onChange={(e) => {
+                const value = e.target.value;
                 setFormData({
                   ...formData,
-                  designAmount: parseFloat(e.target.value),
-                })
-              }
+                  designAmount: value === "" ? 0 : parseFloat(value),
+                });
+              }}
             />
             <TextField
-              label="Partial Amount"
+              label="Partial Amount (%)"
               type="number"
               fullWidth
               variant="outlined"
-              value={formData.partialAmount}
-              onChange={(e) =>
+              value={formData.partialAmount === 0 ? "" : formData.partialAmount}
+              onChange={(e) => {
+                const value = e.target.value;
                 setFormData({
                   ...formData,
-                  partialAmount: parseFloat(e.target.value),
-                })
-              }
+                  partialAmount: value === "" ? 0 : parseFloat(value),
+                });
+              }}
             />
           </DialogContent>
           <DialogActions>
-            <CancelButton onClick={() => setAddDialogOpen(false)}>
-              Cancel
-            </CancelButton>
+            <CancelButton onClick={handleCloseDialog}>Cancel</CancelButton>
             <ReusableButton variant="contained" onClick={handleSubmit}>
-              {formData.id ? "Update" : "Add"}
+              {paymentInfo ? "Update" : "Add"}
             </ReusableButton>
           </DialogActions>
         </Dialog>

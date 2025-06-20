@@ -117,7 +117,9 @@ const CustomToolbar = ({
         />
       </Box>
 
-      <Box sx={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
+      <Box
+        sx={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}
+      >
         <GridToolbarColumnsButton />
         <GridToolbarFilterButton />
         <GridToolbarDensitySelector />
@@ -140,7 +142,8 @@ const CustomToolbar = ({
   );
 };
 
-interface StyledDataGridProps extends Omit<DataGridProps, "slots" | "slotProps"> {
+interface StyledDataGridProps
+  extends Omit<DataGridProps, "slots" | "slotProps"> {
   minWidth?: number | string;
   onAdd?: () => void;
   onSearch?: (value: string) => void;
@@ -189,9 +192,8 @@ const StyledDataGrid: React.FC<StyledDataGridProps> = ({
             searchPlaceholder,
             showAddButton,
             addButtonText,
-          }as any,
+          } as any,
         }}
-        
         sx={{
           "& .MuiDataGrid-columnHeader": {
             fontSize: "0.95rem",

@@ -1,12 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
-  TextField,
-  CircularProgress,
   Alert,
   IconButton,
   Dialog,
@@ -16,7 +14,6 @@ import {
   Button,
 } from "@mui/material";
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
-import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
 
@@ -52,79 +49,92 @@ const useDebounce = (value: string, delay: number) => {
 
 const KioskManagement = () => {
   const router = useRouter();
-  const theme = useTheme();
   const { token } = getTokenAndRole();
 
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [kiosks, setKiosks] = useState<Kiosk[]>([]);
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-    page: 0,
-    pageSize: 10,
-  });
   const [rowCount, setRowCount] = useState(0);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedKiosk, setSelectedKiosk] = useState<Kiosk | null>(null);
-
-  const debouncedSearch = useDebounce(search, 300);
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
+    pageSize: 5,
+  });
 
   useEffect(() => {
-    if (search !== debouncedSearch) {
-      setPaginationModel((prev) => ({ ...prev, page: 0 }));
-    }
-  }, [debouncedSearch, search]);
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
+  }, [debouncedSearch]);
 
-  const fetchKiosks = async () => {
-    if (!token) return;
-    setLoading(true);
-    setError(null);
+  const fetchKiosks = useCallback(
+    async (currentPaginationModel: GridPaginationModel, searchTerm: string) => {
+      if (!token) return;
 
-    try {
-      const { page, pageSize } = paginationModel;
-      const queryParams = new URLSearchParams({
-        page: String(page + 1),
-        limit: String(pageSize),
-        ...(debouncedSearch.trim() && { searchTerm: debouncedSearch.trim() }),
-      });
+      setLoading(true);
+      setError(null);
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/kiosks?${queryParams}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+      try {
+        const { page, pageSize } = currentPaginationModel;
+        const queryParams = new URLSearchParams({
+          page: String(page + 1), // Convert 0-based to 1-based for API
+          limit: String(pageSize),
+          ...(searchTerm.trim() && { searchTerm: searchTerm.trim() }),
+        });
+
+        console.log("Fetching with params:", {
+          page: page + 1,
+          limit: pageSize,
+          searchTerm: searchTerm.trim(),
+        });
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/kiosks?${queryParams}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error(`API Error: ${res.status} ${res.statusText}`);
         }
-      );
 
-      if (!res.ok) {
-        throw new Error(`API Error: ${res.status} ${res.statusText}`);
+        const result = await res.json();
+        console.log("API Response:", result);
+
+        // Map data with correct serial numbers
+        const mappedData =
+          result.kiosks?.map((item: Kiosk, index: number) => ({
+            ...item,
+            id: item._id,
+            sn: page * pageSize + index + 1, // Calculate serial number based on current page
+          })) || [];
+
+        setKiosks(mappedData);
+        setRowCount(result.total || 0);
+      } catch (err: any) {
+        console.error("Fetch error:", err);
+        setError(
+          err instanceof Error ? err.message : "Unknown error occurred."
+        );
+      } finally {
+        setLoading(false);
       }
+    },
+    [token]
+  );
 
-      const result = await res.json();
-      const mappedData =
-        result.kiosks?.map((item: Kiosk, index: number) => ({
-          ...item,
-          id: item._id,
-          sn: page * pageSize + index + 1,
-        })) || [];
-
-      setKiosks(mappedData);
-      setRowCount(result.total || 0);
-    } catch (err: any) {
-      console.error("Fetch error:", err);
-      setError(err instanceof Error ? err.message : "Unknown error occurred.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Fetch data when pagination model or search changes
   useEffect(() => {
-    fetchKiosks();
-  }, [paginationModel, debouncedSearch]);
+    fetchKiosks(paginationModel, debouncedSearch);
+  }, [paginationModel, debouncedSearch, fetchKiosks]);
 
   const handlePaginationChange = (newModel: GridPaginationModel) => {
+    console.log("Pagination changed:", newModel);
     setPaginationModel(newModel);
   };
 
@@ -143,7 +153,7 @@ const KioskManagement = () => {
 
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/kiosks/${selectedKiosk._id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/kiosks/${selectedKiosk.keycloakId}`,
         {
           method: "DELETE",
           headers: {
@@ -157,7 +167,8 @@ const KioskManagement = () => {
         throw new Error(`Failed to delete: ${res.status} ${res.statusText}`);
       }
 
-      await fetchKiosks();
+      // Refresh current page after deletion
+      await fetchKiosks(paginationModel, debouncedSearch);
       handleDeleteCancel();
     } catch (err: any) {
       console.error("Delete error:", err);
@@ -242,15 +253,6 @@ const KioskManagement = () => {
     <>
       <Navbar label="Kiosk Management" />
       <Box sx={{ p: 3 }}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            mb: 2,
-            gap: 2,
-          }}
-        ></Box>
-
         {error && (
           <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
             {error}
@@ -274,7 +276,6 @@ const KioskManagement = () => {
           onAdd={handleAdd}
           onSearch={handleSearch}
           searchPlaceholder="Search kiosks..."
-          
         />
 
         <Dialog

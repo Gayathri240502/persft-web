@@ -53,7 +53,6 @@ const useDebounce = <T,>(value: T, delay: number): T => {
       setDebouncedValue(value);
     }, delay);
 
-    // Cleanup function to prevent memory leaks
     return () => {
       clearTimeout(handler);
     };

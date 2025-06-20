@@ -111,7 +111,7 @@ const AddCategory = () => {
 
   return (
     <>
-      <Navbar label="Add New Category" />
+      <Navbar label="Category" />
       <Box sx={{ p: 3 }}>
         <Typography variant="h5" sx={{ mb: 2 }}>
           Add New Category

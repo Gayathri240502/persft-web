@@ -266,7 +266,7 @@ const Products = () => {
             onAdd={handleAdd}
             onSearch={handleSearchChange}
             searchPlaceholder="Search Products..."
-            addButtonText="Add Product"
+            addButtonText="Add"
             getRowId={(row) => row.id}
           />
         </Box>

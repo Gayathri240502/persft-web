@@ -292,7 +292,7 @@ const Category = () => {
             onAdd={handleAdd}
             onSearch={handleSearchChange}
             searchPlaceholder="Search Categories..."
-            addButtonText="Add Category"
+            addButtonText="Add"
             getRowId={(row) => row.id}
           />
         </Box>

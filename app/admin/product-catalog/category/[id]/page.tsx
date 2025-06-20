@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -134,92 +135,102 @@ const CategoryDetailsPage: React.FC = () => {
   }
 
   return (
-    <Box p={4}>
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => router.back()}
-        sx={{ marginBottom: 2 }}
-      >
-        Back
-      </Button>
+    <>
+      <Navbar label="Category" />
+      <Box p={4}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => router.back()}
+          sx={{ marginBottom: 2 }}
+        >
+          Back
+        </Button>
 
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box>
-            <Typography variant="h4">{category.name}</Typography>
-            {/* <Typography color="text.secondary">
+        <Paper elevation={3} sx={{ p: 4 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Box>
+              <Typography variant="h4">{category.name}</Typography>
+              {/* <Typography color="text.secondary">
               {category.archive ? "Archived" : "Active"}
             </Typography> */}
+            </Box>
+            <Box>
+              <IconButton
+                color="primary"
+                onClick={() =>
+                  router.push(`/admin/product-catalog/category/edit?id=${id}`)
+                }
+              >
+                <Edit />
+              </IconButton>
+              <IconButton
+                color="error"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Delete />
+              </IconButton>
+            </Box>
           </Box>
-          <Box>
-            <IconButton
-              color="primary"
-              onClick={() =>
-                router.push(`/admin/product-catalog/category/edit?id=${id}`)
-              }
-            >
-              <Edit />
-            </IconButton>
-            <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
-              <Delete />
-            </IconButton>
+
+          <Box mt={3}>
+            <Typography>
+              <strong>ID:</strong> {category._id}
+            </Typography>
+            <Typography>
+              <strong>Description:</strong> {category.description}
+            </Typography>
+            <Typography>
+              <strong>Created At:</strong>{" "}
+              {new Date(category.createdAt).toLocaleString()}
+            </Typography>
+            <Typography>
+              <strong>Updated At:</strong>{" "}
+              {new Date(category.updatedAt).toLocaleString()}
+            </Typography>
           </Box>
-        </Box>
 
-        <Box mt={3}>
-          <Typography>
-            <strong>ID:</strong> {category._id}
-          </Typography>
-          <Typography>
-            <strong>Description:</strong> {category.description}
-          </Typography>
-          <Typography>
-            <strong>Created At:</strong>{" "}
-            {new Date(category.createdAt).toLocaleString()}
-          </Typography>
-          <Typography>
-            <strong>Updated At:</strong>{" "}
-            {new Date(category.updatedAt).toLocaleString()}
-          </Typography>
-        </Box>
+          <Box mt={4}>
+            <Typography variant="h6" gutterBottom>
+              Thumbnail
+            </Typography>
+            {category.thumbnail ? (
+              <Box
+                component="img"
+                src={category.thumbnail}
+                alt="Thumbnail"
+                sx={{ maxWidth: 100 }}
+              />
+            ) : (
+              <Typography>No thumbnail available</Typography>
+            )}
+          </Box>
+        </Paper>
 
-        <Box mt={4}>
-          <Typography variant="h6" gutterBottom>
-            Thumbnail
-          </Typography>
-          {category.thumbnail ? (
-            <Box
-              component="img"
-              src={category.thumbnail}
-              alt="Thumbnail"
-              sx={{ maxWidth: 100 }}
-            />
-          ) : (
-            <Typography>No thumbnail available</Typography>
-          )}
-        </Box>
-      </Paper>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this category? This action cannot be
-            undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={handleDelete}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+        >
+          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this category? This action cannot
+              be undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button color="error" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </>
   );
 };
 

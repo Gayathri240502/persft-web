@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -536,98 +537,104 @@ const EditProduct = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }} component="form" onSubmit={handleSubmit}>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Edit Product
-      </Typography>
+    <>
+      <Navbar label="Products" />
+      <Box sx={{ p: 3 }} component="form" onSubmit={handleSubmit}>
+        <Typography variant="h5" sx={{ mb: 2 }}>
+          Edit Product
+        </Typography>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
-      {/* Basic Information */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom color="primary">
-            Basic Information
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Product Name *"
-                fullWidth
-                value={product.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                sx={{ mb: 2 }}
-              />
+        {/* Basic Information */}
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom color="primary">
+              Basic Information
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  label="Product Name *"
+                  fullWidth
+                  value={product.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  label="SKU *"
+                  fullWidth
+                  value={product.sku}
+                  onChange={(e) => handleInputChange("sku", e.target.value)}
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  label="Price *"
+                  type="number"
+                  fullWidth
+                  value={product.price}
+                  onChange={(e) => handleInputChange("price", e.target.value)}
+                  inputProps={{ min: 0, step: 0.01 }}
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  label="Brand *"
+                  fullWidth
+                  value={product.brand}
+                  onChange={(e) => handleInputChange("brand", e.target.value)}
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  label="Model Name"
+                  fullWidth
+                  value={product.modelName}
+                  onChange={(e) =>
+                    handleInputChange("modelName", e.target.value)
+                  }
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  label="Coohom ID"
+                  fullWidth
+                  value={product.coohomId}
+                  onChange={(e) =>
+                    handleInputChange("coohomId", e.target.value)
+                  }
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Description"
+                  multiline
+                  rows={3}
+                  fullWidth
+                  value={product.description}
+                  onChange={(e) =>
+                    handleInputChange("description", e.target.value)
+                  }
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="SKU *"
-                fullWidth
-                value={product.sku}
-                onChange={(e) => handleInputChange("sku", e.target.value)}
-                sx={{ mb: 2 }}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                label="Price *"
-                type="number"
-                fullWidth
-                value={product.price}
-                onChange={(e) => handleInputChange("price", e.target.value)}
-                inputProps={{ min: 0, step: 0.01 }}
-                sx={{ mb: 2 }}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                label="Brand *"
-                fullWidth
-                value={product.brand}
-                onChange={(e) => handleInputChange("brand", e.target.value)}
-                sx={{ mb: 2 }}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                label="Model Name"
-                fullWidth
-                value={product.modelName}
-                onChange={(e) => handleInputChange("modelName", e.target.value)}
-                sx={{ mb: 2 }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Coohom ID"
-                fullWidth
-                value={product.coohomId}
-                onChange={(e) => handleInputChange("coohomId", e.target.value)}
-                sx={{ mb: 2 }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Description"
-                multiline
-                rows={3}
-                fullWidth
-                value={product.description}
-                onChange={(e) =>
-                  handleInputChange("description", e.target.value)
-                }
-                sx={{ mb: 2 }}
-              />
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Thumbnail Upload
+        {/* Thumbnail Upload
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom color="primary">
@@ -674,278 +681,281 @@ const EditProduct = () => {
         </CardContent>
       </Card> */}
 
-      {/* Categories and Classification */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom color="primary">
-            Categories & Classification
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Category *</InputLabel>
-                <Select
-                  value={product.category}
-                  label="Category *"
-                  onChange={(e) =>
-                    handleInputChange("category", e.target.value)
-                  }
-                >
-                  {categories.map((category: DropdownItem) => (
-                    <MenuItem
-                      key={category._id || category.id}
-                      value={category._id || category.id}
-                    >
-                      {category.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FormControl
-                fullWidth
-                disabled={!product.category}
-                sx={{ mb: 2 }}
-              >
-                <InputLabel>Subcategory *</InputLabel>
-                <Select
-                  value={product.subCategory}
-                  label="Subcategory *"
-                  onChange={(e) =>
-                    handleInputChange("subCategory", e.target.value)
-                  }
-                >
-                  {subCategories.map((subCategory: DropdownItem) => (
-                    <MenuItem
-                      key={subCategory._id || subCategory.id}
-                      value={subCategory._id || subCategory.id}
-                    >
-                      {subCategory.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Work Group</InputLabel>
-                <Select
-                  value={product.workGroup}
-                  label="Work Group"
-                  onChange={(e) =>
-                    handleInputChange("workGroup", e.target.value)
-                  }
-                >
-                  {workGroups.map((workGroup: DropdownItem) => (
-                    <MenuItem
-                      key={workGroup._id || workGroup.id}
-                      value={workGroup._id || workGroup.id}
-                    >
-                      {workGroup.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FormControl
-                fullWidth
-                disabled={!product.workGroup}
-                sx={{ mb: 2 }}
-              >
-                <InputLabel>Work Task</InputLabel>
-                <Select
-                  value={product.workTask}
-                  label="Work Task"
-                  onChange={(e) =>
-                    handleInputChange("workTask", e.target.value)
-                  }
-                >
-                  {workTasks.map((workTask: DropdownItem) => (
-                    <MenuItem
-                      key={workTask._id || workTask.id}
-                      value={workTask._id || workTask.id}
-                    >
-                      {workTask.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
-
-      {/* Attributes */}
-      {/* Show the attribute section only if subCategory is selected and attributes are loaded */}
-      {product.subCategory && (
+        {/* Categories and Classification */}
         <Card sx={{ mb: 3 }}>
           <CardContent>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 2,
-              }}
-            >
-              <Typography variant="h6" color="primary">
-                Product Attributes
-              </Typography>
-              <Button
-                variant="outlined"
-                startIcon={<AddIcon />}
-                onClick={addNewAttributeEntry}
-                size="small"
-              >
-                Add Custom Attribute
-              </Button>
-            </Box>
-
-            {product.attributeValues.length === 0 && attributes.length === 0 ? (
-              <Box sx={{ textAlign: "center", py: 3 }}>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ fontStyle: "italic" }}
+            <Typography variant="h6" gutterBottom color="primary">
+              Categories & Classification
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel>Category *</InputLabel>
+                  <Select
+                    value={product.category}
+                    label="Category *"
+                    onChange={(e) =>
+                      handleInputChange("category", e.target.value)
+                    }
+                  >
+                    {categories.map((category: DropdownItem) => (
+                      <MenuItem
+                        key={category._id || category.id}
+                        value={category._id || category.id}
+                      >
+                        {category.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControl
+                  fullWidth
+                  disabled={!product.category}
+                  sx={{ mb: 2 }}
                 >
-                  No attributes defined for this subcategory. Click Add Custom
-                  Attribute if needed.
-                </Typography>
-              </Box>
-            ) : (
-              <Grid container spacing={2}>
-                {product.attributeValues.map(
-                  (attr: ProductAttributeValue, index: number) => {
-                    // Find the attribute definition to get the type
-                    const attributeDefinition = attributes.find(
-                      (a: AttributeDefinition) => a.id === attr.attribute
-                    );
+                  <InputLabel>Subcategory *</InputLabel>
+                  <Select
+                    value={product.subCategory}
+                    label="Subcategory *"
+                    onChange={(e) =>
+                      handleInputChange("subCategory", e.target.value)
+                    }
+                  >
+                    {subCategories.map((subCategory: DropdownItem) => (
+                      <MenuItem
+                        key={subCategory._id || subCategory.id}
+                        value={subCategory._id || subCategory.id}
+                      >
+                        {subCategory.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel>Work Group</InputLabel>
+                  <Select
+                    value={product.workGroup}
+                    label="Work Group"
+                    onChange={(e) =>
+                      handleInputChange("workGroup", e.target.value)
+                    }
+                  >
+                    {workGroups.map((workGroup: DropdownItem) => (
+                      <MenuItem
+                        key={workGroup._id || workGroup.id}
+                        value={workGroup._id || workGroup.id}
+                      >
+                        {workGroup.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControl
+                  fullWidth
+                  disabled={!product.workGroup}
+                  sx={{ mb: 2 }}
+                >
+                  <InputLabel>Work Task</InputLabel>
+                  <Select
+                    value={product.workTask}
+                    label="Work Task"
+                    onChange={(e) =>
+                      handleInputChange("workTask", e.target.value)
+                    }
+                  >
+                    {workTasks.map((workTask: DropdownItem) => (
+                      <MenuItem
+                        key={workTask._id || workTask.id}
+                        value={workTask._id || workTask.id}
+                      >
+                        {workTask.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
 
-                    return (
-                      <Grid item xs={12} key={index}>
-                        <Box
-                          sx={{
-                            p: 2,
-                            border: "1px solid #e0e0e0",
-                            borderRadius: 2,
-                            backgroundColor: "#fafafa",
-                          }}
-                        >
-                          <Grid
-                            container
-                            spacing={2}
-                            sx={{ alignItems: "center" }}
+        {/* Attributes */}
+        {/* Show the attribute section only if subCategory is selected and attributes are loaded */}
+        {product.subCategory && (
+          <Card sx={{ mb: 3 }}>
+            <CardContent>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 2,
+                }}
+              >
+                <Typography variant="h6" color="primary">
+                  Product Attributes
+                </Typography>
+                <Button
+                  variant="outlined"
+                  startIcon={<AddIcon />}
+                  onClick={addNewAttributeEntry}
+                  size="small"
+                >
+                  Add Custom Attribute
+                </Button>
+              </Box>
+
+              {product.attributeValues.length === 0 &&
+              attributes.length === 0 ? (
+                <Box sx={{ textAlign: "center", py: 3 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontStyle: "italic" }}
+                  >
+                    No attributes defined for this subcategory. Click Add Custom
+                    Attribute if needed.
+                  </Typography>
+                </Box>
+              ) : (
+                <Grid container spacing={2}>
+                  {product.attributeValues.map(
+                    (attr: ProductAttributeValue, index: number) => {
+                      // Find the attribute definition to get the type
+                      const attributeDefinition = attributes.find(
+                        (a: AttributeDefinition) => a.id === attr.attribute
+                      );
+
+                      return (
+                        <Grid item xs={12} key={index}>
+                          <Box
+                            sx={{
+                              p: 2,
+                              border: "1px solid #e0e0e0",
+                              borderRadius: 2,
+                              backgroundColor: "#fafafa",
+                            }}
                           >
-                            <Grid item xs={12} md={4}>
-                              <FormControl fullWidth>
-                                <InputLabel>Select Attribute</InputLabel>
-                                <Select
-                                  value={attr.attribute}
-                                  label="Select Attribute"
+                            <Grid
+                              container
+                              spacing={2}
+                              sx={{ alignItems: "center" }}
+                            >
+                              <Grid item xs={12} md={4}>
+                                <FormControl fullWidth>
+                                  <InputLabel>Select Attribute</InputLabel>
+                                  <Select
+                                    value={attr.attribute}
+                                    label="Select Attribute"
+                                    onChange={(e) =>
+                                      updateAttributeEntry(
+                                        index,
+                                        "attribute",
+                                        e.target.value
+                                      )
+                                    }
+                                  >
+                                    {attributes.map(
+                                      (attribute: AttributeDefinition) => (
+                                        <MenuItem
+                                          key={attribute.id}
+                                          value={attribute.id}
+                                        >
+                                          {attribute.name}
+                                        </MenuItem>
+                                      )
+                                    )}
+                                  </Select>
+                                </FormControl>
+                              </Grid>
+                              <Grid item xs={12} md={6}>
+                                <TextField
+                                  fullWidth
+                                  label="Attribute Value"
+                                  value={attr.value}
                                   onChange={(e) =>
                                     updateAttributeEntry(
                                       index,
-                                      "attribute",
+                                      "value",
                                       e.target.value
                                     )
                                   }
+                                  placeholder="Enter attribute value"
+                                  variant="outlined"
+                                />
+                              </Grid>
+                              <Grid item xs={12} md={2}>
+                                <Button
+                                  variant="outlined"
+                                  color="error"
+                                  onClick={() => removeAttributeEntry(index)}
+                                  startIcon={<DeleteIcon />}
+                                  fullWidth
+                                  size="small"
                                 >
-                                  {attributes.map(
-                                    (attribute: AttributeDefinition) => (
-                                      <MenuItem
-                                        key={attribute.id}
-                                        value={attribute.id}
-                                      >
-                                        {attribute.name}
-                                      </MenuItem>
-                                    )
-                                  )}
-                                </Select>
-                              </FormControl>
+                                  Remove
+                                </Button>
+                              </Grid>
                             </Grid>
-                            <Grid item xs={12} md={6}>
-                              <TextField
-                                fullWidth
-                                label="Attribute Value"
-                                value={attr.value}
-                                onChange={(e) =>
-                                  updateAttributeEntry(
-                                    index,
-                                    "value",
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="Enter attribute value"
-                                variant="outlined"
-                              />
-                            </Grid>
-                            <Grid item xs={12} md={2}>
-                              <Button
-                                variant="outlined"
-                                color="error"
-                                onClick={() => removeAttributeEntry(index)}
-                                startIcon={<DeleteIcon />}
-                                fullWidth
-                                size="small"
-                              >
-                                Remove
-                              </Button>
-                            </Grid>
-                          </Grid>
-                        </Box>
-                      </Grid>
+                          </Box>
+                        </Grid>
+                      );
+                    }
+                  )}
+                </Grid>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Current Attribute Values Display */}
+        {product.attributeValues.length > 0 && (
+          <Card sx={{ mb: 3, bgcolor: "grey.50" }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Attribute Summary
+              </Typography>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                {product.attributeValues.map(
+                  (attr: ProductAttributeValue, index: number) => {
+                    const attributeDefinition = attributes.find(
+                      (a: AttributeDefinition) => a.id === attr.attribute
+                    );
+                    const attributeName =
+                      attributeDefinition?.name || "Unknown";
+
+                    return (
+                      <Chip
+                        key={index}
+                        label={`${attributeName}: ${attr.value}`}
+                        variant="filled"
+                        color="primary"
+                        size="medium"
+                      />
                     );
                   }
                 )}
-              </Grid>
-            )}
-          </CardContent>
-        </Card>
-      )}
+              </Box>
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Current Attribute Values Display */}
-      {product.attributeValues.length > 0 && (
-        <Card sx={{ mb: 3, bgcolor: "grey.50" }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Attribute Summary
-            </Typography>
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-              {product.attributeValues.map(
-                (attr: ProductAttributeValue, index: number) => {
-                  const attributeDefinition = attributes.find(
-                    (a: AttributeDefinition) => a.id === attr.attribute
-                  );
-                  const attributeName = attributeDefinition?.name || "Unknown";
-
-                  return (
-                    <Chip
-                      key={index}
-                      label={`${attributeName}: ${attr.value}`}
-                      variant="filled"
-                      color="primary"
-                      size="medium"
-                    />
-                  );
-                }
-              )}
-            </Box>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Action Buttons */}
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton type="submit" disabled={submitLoading}>
-          {submitLoading ? <CircularProgress size={24} /> : "Update Product"}
-        </ReusableButton>
-        <CancelButton href="/admin/product-catalog/products">
-          Cancel
-        </CancelButton>
+        {/* Action Buttons */}
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <ReusableButton type="submit" disabled={submitLoading}>
+            {submitLoading ? <CircularProgress size={24} /> : "Update Product"}
+          </ReusableButton>
+          <CancelButton href="/admin/product-catalog/products">
+            Cancel
+          </CancelButton>
+        </Box>
       </Box>
-    </Box>
+    </>
   );
 };
 

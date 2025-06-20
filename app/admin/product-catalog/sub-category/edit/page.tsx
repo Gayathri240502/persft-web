@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -36,7 +37,9 @@ const EditSubCategory = () => {
   const [name, setName] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [thumbnail, setThumbnail] = useState<string>("");
-  const [selectedAttributeGroups, setSelectedAttributeGroups] = useState<string[]>([]);
+  const [selectedAttributeGroups, setSelectedAttributeGroups] = useState<
+    string[]
+  >([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,17 +48,24 @@ const EditSubCategory = () => {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [categoriesRes, attributeGroupsRes, subCategoryRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/sub-categories/categories-selection`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/sub-categories/attribute-groups-selection`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/sub-categories/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
+        const [categoriesRes, attributeGroupsRes, subCategoryRes] =
+          await Promise.all([
+            fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/sub-categories/categories-selection`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            ),
+            fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/sub-categories/attribute-groups-selection`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            ),
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/sub-categories/${id}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+          ]);
 
         if (!categoriesRes.ok || !attributeGroupsRes.ok || !subCategoryRes.ok) {
           throw new Error("Failed to fetch one or more data sources");
@@ -65,14 +75,18 @@ const EditSubCategory = () => {
         const attributeGroupsData = await attributeGroupsRes.json();
         const subCategoryData = await subCategoryRes.json();
 
-        const cats = (categoriesData?.data ?? categoriesData).map((cat: any) => ({
-          id: cat._id ?? cat.id,
-          name: cat.name,
-        }));
-        const attrs = (attributeGroupsData?.data ?? attributeGroupsData).map((attr: any) => ({
-          id: attr._id ?? attr.id,
-          name: attr.name,
-        }));
+        const cats = (categoriesData?.data ?? categoriesData).map(
+          (cat: any) => ({
+            id: cat._id ?? cat.id,
+            name: cat.name,
+          })
+        );
+        const attrs = (attributeGroupsData?.data ?? attributeGroupsData).map(
+          (attr: any) => ({
+            id: attr._id ?? attr.id,
+            name: attr.name,
+          })
+        );
 
         setCategories(cats);
         setAttributeGroups(attrs);
@@ -86,7 +100,7 @@ const EditSubCategory = () => {
         setCategory(sub.category?._id ?? sub.category ?? "");
 
         const attrIds = (sub.attributeGroups ?? []).map((ag: any) =>
-          typeof ag === "object" ? ag._id ?? ag.id : ag
+          typeof ag === "object" ? (ag._id ?? ag.id) : ag
         );
         setSelectedAttributeGroups(attrIds.filter(isValidObjectId));
       } catch (err) {
@@ -101,7 +115,9 @@ const EditSubCategory = () => {
 
   const handleAttributeGroupToggle = (groupId: string) => {
     setSelectedAttributeGroups((prev) =>
-      prev.includes(groupId) ? prev.filter((id) => id !== groupId) : [...prev, groupId]
+      prev.includes(groupId)
+        ? prev.filter((id) => id !== groupId)
+        : [...prev, groupId]
     );
   };
 
@@ -129,26 +145,30 @@ const EditSubCategory = () => {
       return;
     }
 
-    const validAttributeGroupIds = selectedAttributeGroups.filter(isValidObjectId);
+    const validAttributeGroupIds =
+      selectedAttributeGroups.filter(isValidObjectId);
 
     setLoading(true);
     setError(null);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sub-categories/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name,
-          description,
-          thumbnail,
-          category,
-          attributeGroups: validAttributeGroupIds,
-        }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/sub-categories/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name,
+            description,
+            thumbnail,
+            category,
+            attributeGroups: validAttributeGroupIds,
+          }),
+        }
+      );
 
       if (!res.ok) {
         const result = await res.json();
@@ -172,106 +192,128 @@ const EditSubCategory = () => {
   }
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ p: 3 }}>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Edit Sub Category
-      </Typography>
+    <>
+      <Navbar label=" Sub Category" />
+      <Box component="form" onSubmit={handleSubmit} sx={{ p: 3 }}>
+        <Typography variant="h5" sx={{ mb: 2 }}>
+          Edit Sub Category
+        </Typography>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
-      <FormControl fullWidth sx={{ mb: 3 }}>
-        <InputLabel>Category</InputLabel>
-        <Select value={category} label="Category" onChange={(e) => setCategory(e.target.value)}>
-          <MenuItem value="">
-            <em>Select a category</em>
-          </MenuItem>
-          {categories.map((cat) => (
-            <MenuItem key={cat.id} value={cat.id}>
-              {cat.name}
+        <FormControl fullWidth sx={{ mb: 3 }}>
+          <InputLabel>Category</InputLabel>
+          <Select
+            value={category}
+            label="Category"
+            onChange={(e) => setCategory(e.target.value)}
+          >
+            <MenuItem value="">
+              <em>Select a category</em>
             </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-
-      <TextField
-        label="Name"
-        fullWidth
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        sx={{ mb: 3 }}
-      />
-
-      <TextField
-        label="Description"
-        multiline
-        rows={3}
-        fullWidth
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        sx={{ mb: 3 }}
-      />
-
-      <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
-        <Button
-          variant="outlined"
-          component="label"
-          startIcon={<UploadFileIcon />}
-          sx={{
-            color: "#05344c",
-            borderColor: "#05344c",
-            "&:hover": { backgroundColor: "#f0f4f8" },
-          }}
-        >
-          Upload Thumbnail
-          <input type="file" hidden accept="image/*" onChange={handleThumbnailChange} />
-        </Button>
-        <Typography variant="body2">{selectedFileName}</Typography>
-      </Box>
-
-      <Typography variant="caption" sx={{ color: "#999" }}>
-        Accepted formats: JPG, JPEG, PNG. Max size: 60KB.
-      </Typography>
-
-      {thumbnail && (
-        <Box sx={{ mt: 2, mb: 3 }}>
-          <Typography variant="subtitle2">Preview:</Typography>
-          <img src={thumbnail} alt="Thumbnail Preview" style={{ width: 200, borderRadius: 8 }} />
-        </Box>
-      )}
-
-      <Grid container spacing={2}>
-        <Grid item xs={12}>
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            Attribute Groups
-          </Typography>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            {attributeGroups.map((group) => (
-              <FormControlLabel
-                key={group.id}
-                control={
-                  <Checkbox
-                    checked={selectedAttributeGroups.includes(group.id)}
-                    onChange={() => handleAttributeGroupToggle(group.id)}
-                  />
-                }
-                label={group.name}
-              />
+            {categories.map((cat) => (
+              <MenuItem key={cat.id} value={cat.id}>
+                {cat.name}
+              </MenuItem>
             ))}
-          </Box>
-        </Grid>
-      </Grid>
+          </Select>
+        </FormControl>
 
-      <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
-        <ReusableButton type="submit" disabled={loading}>
-          {loading ? <CircularProgress size={24} color="inherit" /> : "Update"}
-        </ReusableButton>
-        <CancelButton href="/admin/product-catalog/sub-category">Cancel</CancelButton>
+        <TextField
+          label="Name"
+          fullWidth
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          sx={{ mb: 3 }}
+        />
+
+        <TextField
+          label="Description"
+          multiline
+          rows={3}
+          fullWidth
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          sx={{ mb: 3 }}
+        />
+
+        <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
+          <Button
+            variant="outlined"
+            component="label"
+            startIcon={<UploadFileIcon />}
+            sx={{
+              color: "#05344c",
+              borderColor: "#05344c",
+              "&:hover": { backgroundColor: "#f0f4f8" },
+            }}
+          >
+            Upload Thumbnail
+            <input
+              type="file"
+              hidden
+              accept="image/*"
+              onChange={handleThumbnailChange}
+            />
+          </Button>
+          <Typography variant="body2">{selectedFileName}</Typography>
+        </Box>
+
+        <Typography variant="caption" sx={{ color: "#999" }}>
+          Accepted formats: JPG, JPEG, PNG. Max size: 60KB.
+        </Typography>
+
+        {thumbnail && (
+          <Box sx={{ mt: 2, mb: 3 }}>
+            <Typography variant="subtitle2">Preview:</Typography>
+            <img
+              src={thumbnail}
+              alt="Thumbnail Preview"
+              style={{ width: 200, borderRadius: 8 }}
+            />
+          </Box>
+        )}
+
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              Attribute Groups
+            </Typography>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              {attributeGroups.map((group) => (
+                <FormControlLabel
+                  key={group.id}
+                  control={
+                    <Checkbox
+                      checked={selectedAttributeGroups.includes(group.id)}
+                      onChange={() => handleAttributeGroupToggle(group.id)}
+                    />
+                  }
+                  label={group.name}
+                />
+              ))}
+            </Box>
+          </Grid>
+        </Grid>
+
+        <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
+          <ReusableButton type="submit" disabled={loading}>
+            {loading ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              "Update"
+            )}
+          </ReusableButton>
+          <CancelButton href="/admin/product-catalog/sub-category">
+            Cancel
+          </CancelButton>
+        </Box>
       </Box>
-    </Box>
+    </>
   );
 };
 

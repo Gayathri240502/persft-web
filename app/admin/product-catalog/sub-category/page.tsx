@@ -344,7 +344,7 @@ const SubCategory = () => {
             onAdd={handleAdd}
             onSearch={handleSearchChange}
             searchPlaceholder="Search Sub Category..."
-            addButtonText="Add Sub Category"
+            addButtonText="Add"
             getRowId={(row) => row.id}
             // Add these props for better UX
             disableRowSelectionOnClick

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -125,90 +126,93 @@ const EditCategory = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }} component="form" onSubmit={handleSubmit}>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Edit Category
-      </Typography>
+    <>
+      <Navbar label="Category" />
+      <Box sx={{ p: 3 }} component="form" onSubmit={handleSubmit}>
+        <Typography variant="h5" sx={{ mb: 2 }}>
+          Edit Category
+        </Typography>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
-      {initialLoading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <>
-          <TextField
-            label="Name"
-            fullWidth
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            sx={{ mb: 3 }}
-          />
-
-          <TextField
-            label="Description"
-            multiline
-            rows={3}
-            fullWidth
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            sx={{ mb: 3 }}
-          />
-
-          <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
-            <Button
-              variant="outlined"
-              component="label"
-              startIcon={<UploadFileIcon />}
-              sx={{
-                color: "#05344c",
-                borderColor: "#05344c",
-                "&:hover": { backgroundColor: "#f0f4f8" },
-              }}
-            >
-              Upload Thumbnail
-              <input type="file" hidden onChange={handleThumbnailChange} />
-            </Button>
-            <Typography variant="body2" sx={{ color: "#666" }}>
-              {selectedFileName}
-            </Typography>
+        {initialLoading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
+            <CircularProgress />
           </Box>
+        ) : (
+          <>
+            <TextField
+              label="Name"
+              fullWidth
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              sx={{ mb: 3 }}
+            />
 
-           <Typography variant="caption" sx={{ color: "#999" }}>
-                    Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
-                    </Typography>
+            <TextField
+              label="Description"
+              multiline
+              rows={3}
+              fullWidth
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              sx={{ mb: 3 }}
+            />
 
-          {thumbnail && (
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2">Preview:</Typography>
-              <img
-                src={thumbnail}
-                alt="Thumbnail Preview"
-                style={{ width: 200, borderRadius: 8 }}
-              />
+            <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
+              <Button
+                variant="outlined"
+                component="label"
+                startIcon={<UploadFileIcon />}
+                sx={{
+                  color: "#05344c",
+                  borderColor: "#05344c",
+                  "&:hover": { backgroundColor: "#f0f4f8" },
+                }}
+              >
+                Upload Thumbnail
+                <input type="file" hidden onChange={handleThumbnailChange} />
+              </Button>
+              <Typography variant="body2" sx={{ color: "#666" }}>
+                {selectedFileName}
+              </Typography>
             </Box>
-          )}
 
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <ReusableButton type="submit" disabled={loading}>
-              {loading ? (
-                <CircularProgress size={24} color="inherit" />
-              ) : (
-                "Update"
-              )}
-            </ReusableButton>
-            <CancelButton href="/admin/product-catalog/category">
-              Cancel
-            </CancelButton>
-          </Box>
-        </>
-      )}
-    </Box>
+            <Typography variant="caption" sx={{ color: "#999" }}>
+              Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+            </Typography>
+
+            {thumbnail && (
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle2">Preview:</Typography>
+                <img
+                  src={thumbnail}
+                  alt="Thumbnail Preview"
+                  style={{ width: 200, borderRadius: 8 }}
+                />
+              </Box>
+            )}
+
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <ReusableButton type="submit" disabled={loading}>
+                {loading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  "Update"
+                )}
+              </ReusableButton>
+              <CancelButton href="/admin/product-catalog/category">
+                Cancel
+              </CancelButton>
+            </Box>
+          </>
+        )}
+      </Box>
+    </>
   );
 };
 

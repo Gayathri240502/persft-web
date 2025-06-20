@@ -169,7 +169,7 @@ const UserEditPage: React.FC = () => {
               label="Username"
               value={user.username}
               disabled
-              // onChange={(e) => setUser({ ...user, username: e.target.value })}
+              onChange={(e) => setUser({ ...user, username: e.target.value })}
             />
           </Grid>
           <Grid item xs={12} sm={6}>

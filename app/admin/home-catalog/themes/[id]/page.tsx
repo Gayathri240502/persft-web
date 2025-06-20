@@ -153,9 +153,9 @@ const ThemeDetailsPage: React.FC = () => {
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box>
             <Typography variant="h4">{theme.name}</Typography>
-            <Typography color="text.secondary">
+            {/* <Typography color="text.secondary">
               {theme.archive ? "Archived" : "Active"}
-            </Typography>
+            </Typography> */}
           </Box>
           <Box>
             <IconButton

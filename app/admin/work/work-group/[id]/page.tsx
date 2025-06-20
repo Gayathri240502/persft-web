@@ -156,9 +156,9 @@ const WorkGroupDetails: React.FC = () => {
         <Typography variant="body1" mt={2}>
           <strong>Description:</strong> {workGroup.description}
         </Typography>
-        <Typography variant="body2" color="text.secondary" mt={2}>
+        {/* <Typography variant="body2" color="text.secondary" mt={2}>
           <strong>Status:</strong> {workGroup.archive ? "Archived" : "Active"}
-        </Typography>
+        </Typography> */}
         <Typography variant="body2" color="text.secondary">
           <strong>Created At:</strong>{" "}
           {new Date(workGroup.createdAt).toLocaleString()}

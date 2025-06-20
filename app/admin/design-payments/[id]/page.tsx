@@ -148,14 +148,14 @@ const PaymentOrderDetailPage = () => {
               {new Date(payment.validUntil).toLocaleString()}
             </Typography>
 
-            <Box sx={{ mt: 1 }}>
+            {/* <Box sx={{ mt: 1 }}>
               <strong>Status: </strong>
               <Chip
                 label={payment.isValid ? "Active" : "Expired"}
                 color={payment.isValid ? "success" : "error"}
                 size="small"
               />
-            </Box>
+            </Box> */}
 
             <Typography variant="body2" sx={{ mt: 2, color: "text.secondary" }}>
               Created: {new Date(payment.createdAt).toLocaleString()}

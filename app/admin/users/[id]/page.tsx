@@ -192,11 +192,11 @@ const UserViewPage: React.FC = () => {
               <strong>Role:</strong> {user.role.join(", ")}
             </Typography>
           </Grid>
-          <Grid item xs={12} sm={6}>
+          {/* <Grid item xs={12} sm={6}>
             <Typography variant="body1">
               <strong>Archived:</strong> {user.archive ? "Yes" : "No"}
             </Typography>
-          </Grid>
+          </Grid> */}
           <Grid item xs={12} sm={6}>
             <Typography variant="body1">
               <strong>Created At:</strong>{" "}

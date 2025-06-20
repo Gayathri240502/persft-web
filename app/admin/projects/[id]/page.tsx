@@ -143,9 +143,9 @@ const ProjectDetailsPage: React.FC = () => {
             <Typography variant="h4" gutterBottom>
               {project.name}
             </Typography>
-            <Typography variant="subtitle1" color="textSecondary">
+            {/* <Typography variant="subtitle1" color="textSecondary">
               {project.archive ? "Inactive" : "Active"}
-            </Typography>
+            </Typography> */}
           </Box>
           <Box>
             <IconButton

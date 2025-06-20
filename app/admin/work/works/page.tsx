@@ -37,6 +37,8 @@ import {
   Cancel as CancelIcon,
 } from "@mui/icons-material";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import ReusableButton from "@/app/components/Button";
+import CancelButton from "@/app/components/CancelButton";
 
 // --- Interfaces for type safety ---
 
@@ -485,7 +487,7 @@ const WorksManagement = () => {
         {/* Edit and Delete Buttons */}
         {work && !isEditing && !showCreateForm && (
           <Box sx={{ mb: 2, display: "flex", gap: 2 }}>
-            <Button
+            <ReusableButton
               variant="contained"
               startIcon={<EditIcon />}
               onClick={() => {
@@ -494,15 +496,15 @@ const WorksManagement = () => {
               }}
             >
               Edit Work
-            </Button>
-            <Button
+            </ReusableButton>
+            <CancelButton
               variant="outlined"
               color="error"
               startIcon={<DeleteIcon />}
               onClick={() => setDeleteConfirm(true)}
             >
               Delete Work
-            </Button>
+            </CancelButton>
           </Box>
         )}
 
@@ -757,7 +759,7 @@ const WorksManagement = () => {
             </Grid>
 
             <Box display="flex" gap={2} mt={3}>
-              <Button
+              <ReusableButton
                 variant="contained"
                 startIcon={<SaveIcon />}
                 onClick={showCreateForm ? createWork : updateWork}
@@ -768,8 +770,8 @@ const WorksManagement = () => {
                   : showCreateForm
                     ? "Create Work"
                     : "Update Work"}
-              </Button>
-              <Button
+              </ReusableButton>
+              <CancelButton
                 variant="outlined"
                 startIcon={<CancelIcon />}
                 onClick={() => {
@@ -783,7 +785,7 @@ const WorksManagement = () => {
                 }}
               >
                 Cancel
-              </Button>
+              </CancelButton>
             </Box>
           </Paper>
         )}

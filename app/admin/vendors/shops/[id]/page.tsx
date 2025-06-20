@@ -157,10 +157,10 @@ const ShopDetailsPage: React.FC = () => {
             <Typography variant="h4">
               {shop.firstName} {shop.lastName}
             </Typography>
-            <Typography color="text.secondary">
+            {/* <Typography color="text.secondary">
               {shop.archive ? "Archived" : "Active"} —{" "}
               {shop.enabled ? "Enabled" : "Disabled"}
-            </Typography>
+            </Typography> */}
           </Box>
           <Box>
             <IconButton

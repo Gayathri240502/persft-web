@@ -165,10 +165,10 @@ const MerchantDetailsPage: React.FC = () => {
             <Typography variant="h4">
               {merchant.firstName} {merchant.lastName}
             </Typography>
-            <Typography color="text.secondary">
+            {/* <Typography color="text.secondary">
               {merchant.archive ? "Archived" : "Active"} —{" "}
               {merchant.enabled ? "Enabled" : "Disabled"}
-            </Typography>
+            </Typography> */}
           </Box>
           <Box>
             <IconButton

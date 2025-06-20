@@ -172,9 +172,9 @@ const WorkTaskDetails: React.FC = () => {
         <Typography variant="body1" mt={1}>
           <strong>PO Days:</strong> {workTask.poDays}
         </Typography>
-        <Typography variant="body2" color="text.secondary" mt={2}>
+        {/* <Typography variant="body2" color="text.secondary" mt={2}>
           <strong>Status:</strong> {workTask.archive ? "Archived" : "Active"}
-        </Typography>
+        </Typography> */}
         <Typography variant="body2" color="text.secondary">
           <strong>Created At:</strong>{" "}
           {new Date(workTask.createdAt).toLocaleString()}

@@ -145,9 +145,9 @@ const ResidenceTypesPage: React.FC = () => {
             <Typography variant="h4" gutterBottom>
               {residence.name}
             </Typography>
-            <Typography variant="subtitle1" color="textSecondary">
+            {/* <Typography variant="subtitle1" color="textSecondary">
               {residence.archive ? "Active" : "Inactive"}
-            </Typography>
+            </Typography> */}
           </Box>
           <Box>
             <IconButton
@@ -182,12 +182,12 @@ const ResidenceTypesPage: React.FC = () => {
               <strong>Descripation:</strong> {residence.description}
             </Typography>
           </Grid>
-          <Grid item xs={12} sm={6}>
+          {/* <Grid item xs={12} sm={6}>
             <Typography variant="body1">
               <strong>Archived:</strong> {residence.archive ? "Yes" : "No"}
               
             </Typography>
-          </Grid>
+          </Grid> */}
 
           <Grid item xs={12} sm={6}>
             <Typography variant="body1">

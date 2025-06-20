@@ -151,9 +151,9 @@ const RoomTypeDetailsPage: React.FC = () => {
             <Typography variant="h4" gutterBottom>
               {room.name}
             </Typography>
-            <Typography variant="subtitle1" color="textSecondary">
+            {/* <Typography variant="subtitle1" color="textSecondary">
               {room.archive ? "Archived" : "Active"}
-            </Typography>
+            </Typography> */}
           </Box>
           <Box>
             <IconButton

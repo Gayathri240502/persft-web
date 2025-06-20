@@ -146,6 +146,7 @@ interface StyledDataGridProps extends Omit<DataGridProps, "slots" | "slotProps">
   onSearch?: (value: string) => void;
   searchPlaceholder?: string;
   showAddButton?: boolean;
+  searchValue?: string;
   addButtonText?: string;
 }
 
@@ -190,6 +191,7 @@ const StyledDataGrid: React.FC<StyledDataGridProps> = ({
             addButtonText,
           }as any,
         }}
+        
         sx={{
           "& .MuiDataGrid-columnHeader": {
             fontSize: "0.95rem",

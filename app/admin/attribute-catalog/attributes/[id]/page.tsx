@@ -147,9 +147,9 @@ const AttributeDetailsPage: React.FC = () => {
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box>
             <Typography variant="h4">{attribute.name}</Typography>
-            <Typography color="text.secondary">
+            {/* <Typography color="text.secondary">
               {attribute.archive ? "Archived" : "Active"}
-            </Typography>
+            </Typography> */}
           </Box>
           <Box>
             <IconButton

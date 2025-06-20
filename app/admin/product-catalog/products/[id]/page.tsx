@@ -137,9 +137,9 @@ const ProductDetailsPage: React.FC = () => {
             <Typography variant="h4" gutterBottom>
               {product.name}
             </Typography>
-            <Typography variant="subtitle1" color="textSecondary">
+            {/* <Typography variant="subtitle1" color="textSecondary">
               {product.archive ? "Inactive" : "Active"}
-            </Typography>
+            </Typography> */}
           </Box>
           <Box>
             <IconButton

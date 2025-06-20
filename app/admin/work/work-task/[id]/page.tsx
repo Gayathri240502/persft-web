@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -133,78 +134,90 @@ const WorkTaskDetails: React.FC = () => {
   }
 
   return (
-    <Box p={4}>
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => router.back()}
-        sx={{ marginBottom: 2 }}
-      >
-        Back
-      </Button>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="h4">{workTask.name}</Typography>
-          <Box>
-            <IconButton
-              color="primary"
-              onClick={() => router.push(`/admin/work/work-task/edit?id=${id}`)}
-            >
-              <Edit />
-            </IconButton>
-            <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
-              <Delete />
-            </IconButton>
+    <>
+      <Navbar label="Work Tasks" />
+      <Box p={4}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => router.back()}
+          sx={{ marginBottom: 2 }}
+        >
+          Back
+        </Button>
+        <Paper elevation={3} sx={{ p: 4 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Typography variant="h4">{workTask.name}</Typography>
+            <Box>
+              <IconButton
+                color="primary"
+                onClick={() =>
+                  router.push(`/admin/work/work-task/edit?id=${id}`)
+                }
+              >
+                <Edit />
+              </IconButton>
+              <IconButton
+                color="error"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Delete />
+              </IconButton>
+            </Box>
           </Box>
-        </Box>
 
-        <Typography variant="body1" mt={2}>
-          <strong>Description:</strong> {workTask.description}
-        </Typography>
-        <Typography variant="body1" mt={1}>
-          <strong>Work Group:</strong> {workTask.workGroup?.name}
-        </Typography>
-        <Typography variant="body1" mt={1}>
-          <strong>Target Days:</strong> {workTask.targetDays}
-        </Typography>
-        <Typography variant="body1" mt={1}>
-          <strong>Buffer Days:</strong> {workTask.bufferDays}
-        </Typography>
-        <Typography variant="body1" mt={1}>
-          <strong>PO Days:</strong> {workTask.poDays}
-        </Typography>
-        {/* <Typography variant="body2" color="text.secondary" mt={2}>
+          <Typography variant="body1" mt={2}>
+            <strong>Description:</strong> {workTask.description}
+          </Typography>
+          <Typography variant="body1" mt={1}>
+            <strong>Work Group:</strong> {workTask.workGroup?.name}
+          </Typography>
+          <Typography variant="body1" mt={1}>
+            <strong>Target Days:</strong> {workTask.targetDays}
+          </Typography>
+          <Typography variant="body1" mt={1}>
+            <strong>Buffer Days:</strong> {workTask.bufferDays}
+          </Typography>
+          <Typography variant="body1" mt={1}>
+            <strong>PO Days:</strong> {workTask.poDays}
+          </Typography>
+          {/* <Typography variant="body2" color="text.secondary" mt={2}>
           <strong>Status:</strong> {workTask.archive ? "Archived" : "Active"}
         </Typography> */}
-        <Typography variant="body2" color="text.secondary">
-          <strong>Created At:</strong>{" "}
-          {new Date(workTask.createdAt).toLocaleString()}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          <strong>Updated At:</strong>{" "}
-          {new Date(workTask.updatedAt).toLocaleString()}
-        </Typography>
-      </Paper>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Created At:</strong>{" "}
+            {new Date(workTask.createdAt).toLocaleString()}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Updated At:</strong>{" "}
+            {new Date(workTask.updatedAt).toLocaleString()}
+          </Typography>
+        </Paper>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Delete Work Task</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this work task? This action cannot
-            be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={handleDelete}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+        >
+          <DialogTitle>Delete Work Task</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this work task? This action cannot
+              be undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button color="error" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </>
   );
 };
 

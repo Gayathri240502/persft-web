@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -23,8 +24,6 @@ type WorkGroup = {
   name: string;
   id?: string;
 };
-
-
 
 const EditWorkTask = () => {
   const router = useRouter();
@@ -175,100 +174,110 @@ const EditWorkTask = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Edit Work Task
-      </Typography>
+    <>
+      <Navbar label="Work Tasks" />
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h5" sx={{ mb: 2 }}>
+          Edit Work Task
+        </Typography>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
-      <TextField
-        name="name"
-        label="Task Name"
-        fullWidth
-        sx={{ mb: 3 }}
-        value={formData.name}
-        onChange={handleChange}
-      />
+        <TextField
+          name="name"
+          label="Task Name"
+          fullWidth
+          sx={{ mb: 3 }}
+          value={formData.name}
+          onChange={handleChange}
+        />
 
-      <TextField
-        name="description"
-        label="Description"
-        multiline
-        rows={3}
-        fullWidth
-        sx={{ mb: 3 }}
-        value={formData.description}
-        onChange={handleChange}
-      />
+        <TextField
+          name="description"
+          label="Description"
+          multiline
+          rows={3}
+          fullWidth
+          sx={{ mb: 3 }}
+          value={formData.description}
+          onChange={handleChange}
+        />
 
-      <FormControl fullWidth sx={{ mb: 3 }} disabled={loadingWorkGroups || workGroups.length === 0}>
-        <InputLabel id="work-group-label">Work Group</InputLabel>
-        <Select
-          labelId="work-group-label"
-          id="work-group-select"
-          value={formData.workGroup || ""}
-          label="Work Group"
-          onChange={handleSelectChange}
+        <FormControl
+          fullWidth
+          sx={{ mb: 3 }}
+          disabled={loadingWorkGroups || workGroups.length === 0}
         >
-          <MenuItem value="" disabled>
-            {loadingWorkGroups
-              ? "Loading..."
-              : workGroups.length === 0
-              ? "No Work Groups Available"
-              : "Select Work Group"}
-          </MenuItem>
-          {workGroups
-            .filter((group) => group._id || group.id)
-            .map((group) => (
-              <MenuItem key={group._id || group.id} value={group._id || group.id}>
-                {group.name || "Unnamed Group"}
-              </MenuItem>
-            ))}
-        </Select>
-      </FormControl>
+          <InputLabel id="work-group-label">Work Group</InputLabel>
+          <Select
+            labelId="work-group-label"
+            id="work-group-select"
+            value={formData.workGroup || ""}
+            label="Work Group"
+            onChange={handleSelectChange}
+          >
+            <MenuItem value="" disabled>
+              {loadingWorkGroups
+                ? "Loading..."
+                : workGroups.length === 0
+                  ? "No Work Groups Available"
+                  : "Select Work Group"}
+            </MenuItem>
+            {workGroups
+              .filter((group) => group._id || group.id)
+              .map((group) => (
+                <MenuItem
+                  key={group._id || group.id}
+                  value={group._id || group.id}
+                >
+                  {group.name || "Unnamed Group"}
+                </MenuItem>
+              ))}
+          </Select>
+        </FormControl>
 
-      <TextField
-        name="targetDays"
-        label="Target Days"
-        type="number"
-        fullWidth
-        sx={{ mb: 3 }}
-        value={formData.targetDays}
-        onChange={handleChange}
-      />
+        <TextField
+          name="targetDays"
+          label="Target Days"
+          type="number"
+          fullWidth
+          sx={{ mb: 3 }}
+          value={formData.targetDays}
+          onChange={handleChange}
+        />
 
-      <TextField
-        name="bufferDays"
-        label="Buffer Days"
-        type="number"
-        fullWidth
-        sx={{ mb: 3 }}
-        value={formData.bufferDays}
-        onChange={handleChange}
-      />
+        <TextField
+          name="bufferDays"
+          label="Buffer Days"
+          type="number"
+          fullWidth
+          sx={{ mb: 3 }}
+          value={formData.bufferDays}
+          onChange={handleChange}
+        />
 
-      <TextField
-        name="poDays"
-        label="PO Days"
-        type="number"
-        fullWidth
-        sx={{ mb: 3 }}
-        value={formData.poDays}
-        onChange={handleChange}
-      />
+        <TextField
+          name="poDays"
+          label="PO Days"
+          type="number"
+          fullWidth
+          sx={{ mb: 3 }}
+          value={formData.poDays}
+          onChange={handleChange}
+        />
 
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton onClick={handleSubmit} disabled={loading}>
-          {loading ? <CircularProgress size={20} /> : "Update"}
-        </ReusableButton>
-        <CancelButton href="/admin/work/work-task"> Cancel </CancelButton>
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <ReusableButton onClick={handleSubmit} disabled={loading}>
+            {loading ? <CircularProgress size={20} /> : "Update"}
+          </ReusableButton>
+          <CancelButton href="/admin/work/work-task"> Cancel </CancelButton>
+        </Box>
       </Box>
-    </Box>
+    </>
   );
 };
 

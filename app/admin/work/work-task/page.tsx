@@ -283,7 +283,7 @@ const WorkTasksPage = () => {
             onAdd={handleAdd}
             onSearch={handleSearchChange}
             searchPlaceholder="Search work tasks..."
-            addButtonText="Add work Task"
+            addButtonText="Add"
           />
         </Box>
 

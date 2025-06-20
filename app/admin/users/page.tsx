@@ -269,6 +269,7 @@ const UserManagement = () => {
             loading={loading}
             onAdd={handleAdd}
             onSearch={handleSearchChange}
+            searchPlaceholder="Search Users..."
           />
         </Box>
 

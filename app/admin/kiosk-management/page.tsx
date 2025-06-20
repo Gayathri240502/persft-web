@@ -274,7 +274,7 @@ const KioskManagement = () => {
           onAdd={handleAdd}
           onSearch={handleSearch}
           searchPlaceholder="Search kiosks..."
-          addButtonText="Add Kiosk"
+          
         />
 
         <Dialog

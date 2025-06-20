@@ -121,7 +121,7 @@ const AddUser = () => {
   return (
     <>
 
-    <Navbar label="Add New User"/>
+    <Navbar label="Users"/>
     <Box sx={{ p: 4 }}>
       <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
         Add New User

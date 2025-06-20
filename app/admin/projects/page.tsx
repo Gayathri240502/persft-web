@@ -321,7 +321,6 @@ const Projects = () => {
               searchValue={search}
               onSearch={handleSearch}
               searchPlaceholder="Search Projects..."
-              addButtonText="Add Project"
               onAdd={handleAdd}
               loading={loading}
             />

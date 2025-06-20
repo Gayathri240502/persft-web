@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import React, { useEffect, useState,  } from "react";
+import { useParams, useRouter } from "next/navigation";
 import {
   Box,
   Typography,
@@ -11,8 +11,13 @@ import {
   Divider,
   Grid,
   Chip,
+  Button,
+  
 } from "@mui/material";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import Navbar from "@/app/components/navbar/navbar";
+import { ArrowBack } from "@mui/icons-material";
+
 
 interface Customer {
   id: string;
@@ -48,6 +53,7 @@ const PaymentOrderDetailPage = () => {
   const [payment, setPayment] = useState<DesignPaymentDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (!id) return;
@@ -103,6 +109,18 @@ const PaymentOrderDetailPage = () => {
     );
 
   return (
+    <>
+
+    <Navbar label="Design Payments"/>
+
+   
+      <Button
+        startIcon={<ArrowBack />}
+        onClick={() => router.back()}
+        sx={{ marginBottom: 2 }}
+      >
+        Back
+      </Button>
     <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 900, mx: "auto" }}>
       <Typography variant="h4" fontWeight={700} gutterBottom textAlign="center">
         Design Payment Details
@@ -205,6 +223,7 @@ const PaymentOrderDetailPage = () => {
         </Grid>
       </Grid>
     </Box>
+    </>
   );
 };
 

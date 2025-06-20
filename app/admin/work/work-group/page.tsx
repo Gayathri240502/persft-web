@@ -278,7 +278,6 @@ const WorkGroups = () => {
               searchValue={search}
               onSearch={handleSearch}
               searchPlaceholder="Search Work Groups..."
-              addButtonText="Add Work Group"
               onAdd={handleAdd}
               loading={loading}
             />

@@ -278,7 +278,7 @@ const AddKiosk = () => {
 
   return (
     <>
-      <Navbar label="Add New Kiosk" />
+      <Navbar label="Kiosk Management" />
       <Box sx={{ p: 3 }}>
         <Typography variant="h5" sx={{ mb: 3 }}>
           Add New Kiosk

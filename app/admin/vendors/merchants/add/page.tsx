@@ -142,7 +142,7 @@ const AddMerchant = () => {
 
   return (
     <>
-      <Navbar label=" Add Merchant Details" />
+      <Navbar label="Merchants" />
 
       <Box sx={{ p: 4 }}>
         <Typography variant="h5" sx={{ mb: 3 }}>

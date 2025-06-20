@@ -276,7 +276,7 @@ const Merchant = () => {
             onAdd={handleAdd}
             onSearch={handleSearchChange}
             searchPlaceholder="Search Merchants..."
-            addButtonText="Add Merchant"
+           
           />
         </Box>
 

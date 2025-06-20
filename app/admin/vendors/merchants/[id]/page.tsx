@@ -18,6 +18,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { ArrowBack, Edit, Delete } from "@mui/icons-material";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import Navbar from "@/app/components/navbar/navbar";
 
 interface Merchant {
   _id: string;
@@ -150,6 +151,9 @@ const MerchantDetailsPage: React.FC = () => {
   }
 
   return (
+
+    <>
+    <Navbar label="Merchants"/>
     <Box p={4}>
       <Button
         startIcon={<ArrowBack />}
@@ -165,10 +169,10 @@ const MerchantDetailsPage: React.FC = () => {
             <Typography variant="h4">
               {merchant.firstName} {merchant.lastName}
             </Typography>
-            {/* <Typography color="text.secondary">
+            <Typography color="text.secondary">
               {merchant.archive ? "Archived" : "Active"} —{" "}
               {merchant.enabled ? "Enabled" : "Disabled"}
-            </Typography> */}
+            </Typography>
           </Box>
           <Box>
             <IconButton
@@ -239,6 +243,7 @@ const MerchantDetailsPage: React.FC = () => {
         </DialogActions>
       </Dialog>
     </Box>
+    </>
   );
 };
 

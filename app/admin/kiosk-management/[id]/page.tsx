@@ -19,6 +19,7 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { Edit, Delete, ArrowBack } from "@mui/icons-material";
+import Navbar from "@/app/components/navbar/navbar";
 
 interface Kiosk {
   _id: string;
@@ -160,6 +161,8 @@ const KioskDetailsPage: React.FC = () => {
   }
 
   return (
+    <>
+    <Navbar label="Kiosk Management"/>
     <Box p={4}>
       <Button
         startIcon={<ArrowBack />}
@@ -310,6 +313,7 @@ const KioskDetailsPage: React.FC = () => {
         </DialogActions>
       </Dialog>
     </Box>
+    </>
   );
 };
 

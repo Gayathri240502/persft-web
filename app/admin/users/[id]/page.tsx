@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { Edit, Delete, ArrowBack } from "@mui/icons-material";
+import Navbar from "@/app/components/navbar/navbar";
 
 interface User {
   _id: string;
@@ -136,6 +137,8 @@ const UserViewPage: React.FC = () => {
   }
 
   return (
+    <>
+    <Navbar label="Users"/>
     <Box p={4}>
       <Button
         startIcon={<ArrowBack />}
@@ -231,6 +234,7 @@ const UserViewPage: React.FC = () => {
         </DialogActions>
       </Dialog>
     </Box>
+    </>
   );
 };
 

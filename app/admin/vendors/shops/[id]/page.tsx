@@ -18,6 +18,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { ArrowBack, Edit, Delete } from "@mui/icons-material";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import Navbar from "@/app/components/navbar/navbar";
 
 interface Shop {
   _id: string;
@@ -104,6 +105,7 @@ const ShopDetailsPage: React.FC = () => {
 
   if (loading) {
     return (
+      
       <Box
         display="flex"
         justifyContent="center"
@@ -142,6 +144,9 @@ const ShopDetailsPage: React.FC = () => {
   }
 
   return (
+
+    <>
+    <Navbar label="Shops"/>
     <Box p={4}>
       <Button
         startIcon={<ArrowBack />}
@@ -157,10 +162,10 @@ const ShopDetailsPage: React.FC = () => {
             <Typography variant="h4">
               {shop.firstName} {shop.lastName}
             </Typography>
-            {/* <Typography color="text.secondary">
+            <Typography color="text.secondary">
               {shop.archive ? "Archived" : "Active"} —{" "}
               {shop.enabled ? "Enabled" : "Disabled"}
-            </Typography> */}
+            </Typography>
           </Box>
           <Box>
             <IconButton
@@ -251,6 +256,7 @@ const ShopDetailsPage: React.FC = () => {
         </DialogActions>
       </Dialog>
     </Box>
+    </>
   );
 };
 

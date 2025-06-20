@@ -20,6 +20,7 @@ import CancelButton from "@/app/components/CancelButton";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { SelectChangeEvent } from "@mui/material";
+import Navbar from "@/app/components/navbar/navbar";
 
 interface ProjectMapping {
   _id: string;
@@ -339,6 +340,8 @@ const EditKiosk = () => {
   }
 
   return (
+    <>
+    <Navbar label="Kiosk Management"/>
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" sx={{ mb: 3 }}>
         Edit Kiosk
@@ -437,6 +440,7 @@ const EditKiosk = () => {
         <CancelButton href="/admin/kiosk-management">Cancel</CancelButton>
       </Box>
     </Box>
+    </>
   );
 };
 

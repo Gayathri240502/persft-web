@@ -270,6 +270,7 @@ const Shop = () => {
             getRowId={(row) => row.id || row._id || row.keycloakId}
             onAdd={handleAdd}
             onSearch={handleSearchChange}
+            searchPlaceholder="Search shops..."
           />
         </Box>
 

@@ -15,6 +15,7 @@ import ReusableButton from "@/app/components/Button"; // Assuming these are your
 import CancelButton from "@/app/components/CancelButton"; // Assuming these are your custom components
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { useSearchParams, useRouter } from "next/navigation";
+import Navbar from "@/app/components/navbar/navbar";
 
 // Interface for selection options fetched from the API (hierarchy)
 interface SelectionOption {
@@ -428,6 +429,8 @@ const EditProject = () => {
   }
 
   return (
+    <>
+    <Navbar label="projects"/>
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" sx={{ mb: 3 }}>
         Edit Project
@@ -626,6 +629,7 @@ const EditProject = () => {
         <CancelButton href="/admin/projects">Cancel</CancelButton>
       </Box>
     </Box>
+    </>
   );
 };
 

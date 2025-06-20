@@ -77,7 +77,7 @@ const WorkGroup = () => {
 
   return (
     <>
-      <Navbar label=" Add Work Group" />
+      <Navbar label=" Work Groups" />
       <Box sx={{ p: 3 }}>
         {/* Heading */}
         <Typography variant="h5" sx={{ mb: 2 }}>

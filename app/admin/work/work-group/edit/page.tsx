@@ -12,6 +12,7 @@ import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import Navbar from "@/app/components/navbar/navbar";
 
 const EditWorkGroup = () => {
   const router = useRouter();
@@ -108,6 +109,8 @@ const EditWorkGroup = () => {
   };
 
   return (
+    <>
+    <Navbar label=" Work Groups"/>
     <Box sx={{ p: 3 }} component="form" onSubmit={handleSubmit}>
       <Typography variant="h5" sx={{ mb: 2 }}>
         Edit Work Group
@@ -158,6 +161,7 @@ const EditWorkGroup = () => {
         </>
       )}
     </Box>
+    </>
   );
 };
 

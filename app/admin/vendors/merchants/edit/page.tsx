@@ -22,6 +22,7 @@ import { SelectChangeEvent } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import Navbar from "@/app/components/navbar/navbar";
 
 interface Category {
   _id: string;
@@ -319,6 +320,9 @@ const EditMerchant = () => {
   }
 
   return (
+
+    <>
+    <Navbar label="Merchants"/>
     <Box sx={{ p: 4 }}>
       <Typography variant="h5" sx={{ mb: 3 }}>
         Edit Merchant
@@ -414,6 +418,7 @@ const EditMerchant = () => {
         <CancelButton href="/admin/vendors/merchants">Cancel</CancelButton>
       </Box>
     </Box>
+    </>
   );
 };
 

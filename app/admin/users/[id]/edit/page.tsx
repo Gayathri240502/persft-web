@@ -18,7 +18,11 @@ import {
   InputLabel,
   FormControl,
   OutlinedInput,
+  Divider,
 } from "@mui/material";
+import Navbar from "@/app/components/navbar/navbar";
+import ReusableButton from "@/app/components/Button";
+import CancelButton from "@/app/components/CancelButton";
 
 interface User {
   _id: string;
@@ -150,13 +154,15 @@ const UserEditPage: React.FC = () => {
   }
 
   return (
+    <>
+    <Navbar label="Users"/>
     <Box p={4}>
-      <Button
+      {/* <Button
         onClick={() => router.push(`/admin/users`)}
         sx={{ marginBottom: 2 }}
       >
-        Back to User Details
-      </Button>
+        Back 
+      </Button> */}
       <Paper elevation={3} sx={{ padding: 4 }}>
         <Typography variant="h4" gutterBottom>
           Edit User
@@ -244,13 +250,16 @@ const UserEditPage: React.FC = () => {
             </FormControl>
           </Grid>*/}
         </Grid>
-        <Box display="flex" justifyContent="flex-end" sx={{ marginTop: 4 }}>
-          <Button variant="contained" color="primary" onClick={handleSave}>
-            Save Changes
-          </Button>
-        </Box>
+        <Divider sx={{ my: 4 }} />
+         <Box sx={{ display: "flex", gap: 2 }}>
+        <ReusableButton onClick={handleSave} disabled={loading}>
+          {loading ? <CircularProgress size={20} /> : "save"}
+        </ReusableButton>
+        <CancelButton href="/admin/users">Cancel</CancelButton>
+      </Box>
       </Paper>
     </Box>
+    </>
   );
 };
 

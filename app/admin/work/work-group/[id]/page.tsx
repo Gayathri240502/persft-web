@@ -17,6 +17,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { ArrowBack, Edit, Delete } from "@mui/icons-material";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import Navbar from "@/app/components/navbar/navbar";
 
 interface WorkGroup {
   _id: string;
@@ -126,6 +127,8 @@ const WorkGroupDetails: React.FC = () => {
   }
 
   return (
+    <>
+    <Navbar label="Work Groups"/>
     <Box p={4}>
       <Button
         startIcon={<ArrowBack />}
@@ -189,6 +192,7 @@ const WorkGroupDetails: React.FC = () => {
         </DialogActions>
       </Dialog>
     </Box>
+    </>
   );
 };
 

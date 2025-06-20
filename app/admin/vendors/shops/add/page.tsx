@@ -260,7 +260,7 @@ const AddShop = () => {
   return (
 
      <>
-     <Navbar label="Add New Shop" />
+     <Navbar label="Shop" />
      
     <Box sx={{ p: 4 }}>
       <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>

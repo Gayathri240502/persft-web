@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -138,91 +139,101 @@ const AttributeGroupDetailsPage: React.FC = () => {
   }
 
   return (
-    <Box p={4}>
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => router.back()}
-        sx={{ marginBottom: 2 }}
-      >
-        Back       
-      </Button>
+    <>
+      <Navbar label="Attribute Groups" />
+      <Box p={4}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => router.back()}
+          sx={{ marginBottom: 2 }}
+        >
+          Back       
+        </Button>
 
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box>
-            <Typography variant="h4">{group.name}</Typography>
-            {/* <Typography color="text.secondary">
+        <Paper elevation={3} sx={{ p: 4 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Box>
+              <Typography variant="h4">{group.name}</Typography>
+              {/* <Typography color="text.secondary">
               {group.archive ? "Archived" : "Active"}
             </Typography> */}
+            </Box>
+            <Box>
+              <IconButton
+                color="primary"
+                onClick={() =>
+                  router.push(
+                    `/admin/attribute-catalog/attributes-groups/edit?id=${id}`
+                  )
+                }
+              >
+                <Edit />
+              </IconButton>
+              <IconButton
+                color="error"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Delete />
+              </IconButton>
+            </Box>
           </Box>
-          <Box>
-            <IconButton
-              color="primary"
-              onClick={() =>
-                router.push(
-                  `/admin/attribute-catalog/attributes-groups/edit?id=${id}`
-                )
-              }
-            >
-              <Edit />
-            </IconButton>
-            <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
-              <Delete />
-            </IconButton>
+
+          <Box mt={3}>
+            <Typography>
+              <strong>ID:</strong> {group._id}
+            </Typography>
+            <Typography>
+              <strong>Description:</strong> {group.description}
+            </Typography>
+            <Typography>
+              <strong>Created At:</strong>{" "}
+              {new Date(group.createdAt).toLocaleString()}
+            </Typography>
+            <Typography>
+              <strong>Updated At:</strong>{" "}
+              {new Date(group.updatedAt).toLocaleString()}
+            </Typography>
           </Box>
-        </Box>
 
-        <Box mt={3}>
-          <Typography>
-            <strong>ID:</strong> {group._id}
-          </Typography>
-          <Typography>
-            <strong>Description:</strong> {group.description}
-          </Typography>
-          <Typography>
-            <strong>Created At:</strong>{" "}
-            {new Date(group.createdAt).toLocaleString()}
-          </Typography>
-          <Typography>
-            <strong>Updated At:</strong>{" "}
-            {new Date(group.updatedAt).toLocaleString()}
-          </Typography>
-        </Box>
+          <Box mt={4}>
+            <Typography variant="h6">Attributes</Typography>
+            {group.attributes.length === 0 ? (
+              <Typography>No attributes linked.</Typography>
+            ) : (
+              <ul>
+                {group.attributes.map((attr) => (
+                  <li key={attr._id}>{attr.name || attr._id}</li>
+                ))}
+              </ul>
+            )}
+          </Box>
+        </Paper>
 
-        <Box mt={4}>
-          <Typography variant="h6">Attributes</Typography>
-          {group.attributes.length === 0 ? (
-            <Typography>No attributes linked.</Typography>
-          ) : (
-            <ul>
-              {group.attributes.map((attr) => (
-                <li key={attr._id}>{attr.name || attr._id}</li>
-              ))}
-            </ul>
-          )}
-        </Box>
-      </Paper>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this attribute group? This action
-            cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={handleDelete}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+        >
+          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this attribute group? This action
+              cannot be undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button color="error" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </>
   );
 };
 

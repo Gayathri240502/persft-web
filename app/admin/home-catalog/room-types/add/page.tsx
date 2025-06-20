@@ -184,7 +184,7 @@ const AddRoomType = () => {
 
   return (
     <>
-      <Navbar label="Add Room Types" />
+      <Navbar label=" Room Types" />
       <Box sx={{ p: 3 }}>
         <Typography variant="h5" sx={{ mb: 2 }}>
           Add New Room Type

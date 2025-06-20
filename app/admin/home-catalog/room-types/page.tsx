@@ -307,7 +307,7 @@ const RoomTypes = () => {
           onAdd={handleAdd}
           onSearch={handleSearchChange}
           searchPlaceholder="Search room types..."
-          addButtonText="Add Room Type"
+          addButtonText="Add"
           getRowId={(row) => row.id}
         />
 

@@ -113,7 +113,7 @@ const AddAttributeGroups = () => {
 
   return (
     <>
-      <Navbar label="Add New Attribute Group" />
+      <Navbar label="Attribute Groups" />
       <Box sx={{ p: 3 }}>
         <Typography variant="h5" sx={{ mb: 2 }}>
           Add New Attribute Group

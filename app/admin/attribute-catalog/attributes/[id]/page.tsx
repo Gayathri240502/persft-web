@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -134,79 +135,91 @@ const AttributeDetailsPage: React.FC = () => {
   }
 
   return (
-    <Box p={4}>
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => router.back()}
-        sx={{ marginBottom: 2 }}
-      >
-        Back       
-      </Button>
+    <>
+      <Navbar label="Attributes" />
+      <Box p={4}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => router.back()}
+          sx={{ marginBottom: 2 }}
+        >
+          Back       
+        </Button>
 
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box>
-            <Typography variant="h4">{attribute.name}</Typography>
-            {/* <Typography color="text.secondary">
+        <Paper elevation={3} sx={{ p: 4 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Box>
+              <Typography variant="h4">{attribute.name}</Typography>
+              {/* <Typography color="text.secondary">
               {attribute.archive ? "Archived" : "Active"}
             </Typography> */}
+            </Box>
+            <Box>
+              <IconButton
+                color="primary"
+                onClick={() =>
+                  router.push(
+                    `/admin/attribute-catalog/attributes/edit?id=${id}`
+                  )
+                }
+              >
+                <Edit />
+              </IconButton>
+              <IconButton
+                color="error"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Delete />
+              </IconButton>
+            </Box>
           </Box>
-          <Box>
-            <IconButton
-              color="primary"
-              onClick={() =>
-                router.push(`/admin/attribute-catalog/attributes/edit?id=${id}`)
-              }
-            >
-              <Edit />
-            </IconButton>
-            <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
-              <Delete />
-            </IconButton>
+
+          <Box mt={3}>
+            <Typography>
+              <strong>ID:</strong> {attribute._id}
+            </Typography>
+            <Typography>
+              <strong>Description:</strong> {attribute.description}
+            </Typography>
+            <Typography>
+              <strong>Type:</strong> {attribute.type}
+            </Typography>
+            <Typography>
+              <strong>Created At:</strong>{" "}
+              {new Date(attribute.createdAt).toLocaleString()}
+            </Typography>
+            <Typography>
+              <strong>Updated At:</strong>{" "}
+              {new Date(attribute.updatedAt).toLocaleString()}
+            </Typography>
           </Box>
-        </Box>
+        </Paper>
 
-        <Box mt={3}>
-          <Typography>
-            <strong>ID:</strong> {attribute._id}
-          </Typography>
-          <Typography>
-            <strong>Description:</strong> {attribute.description}
-          </Typography>
-          <Typography>
-            <strong>Type:</strong> {attribute.type}
-          </Typography>
-          <Typography>
-            <strong>Created At:</strong>{" "}
-            {new Date(attribute.createdAt).toLocaleString()}
-          </Typography>
-          <Typography>
-            <strong>Updated At:</strong>{" "}
-            {new Date(attribute.updatedAt).toLocaleString()}
-          </Typography>
-        </Box>
-      </Paper>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this attribute? This action cannot
-            be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={handleDelete}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+        >
+          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this attribute? This action cannot
+              be undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button color="error" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </>
   );
 };
 

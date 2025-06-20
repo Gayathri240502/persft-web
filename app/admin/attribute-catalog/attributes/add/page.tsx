@@ -86,7 +86,7 @@ const AddAttribute = () => {
 
   return (
     <>
-      <Navbar label="Add New Attribute" />
+      <Navbar label=" Attribute" />
       <Box sx={{ p: 3 }}>
         <Typography variant="h5" sx={{ mb: 3 }}>
           Add New Attribute

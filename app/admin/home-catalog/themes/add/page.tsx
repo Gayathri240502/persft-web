@@ -174,7 +174,7 @@ const AddTheme = () => {
 
   return (
     <>
-      <Navbar label="Add New Theme" />
+      <Navbar label="Theme" />
       <Box sx={{ p: 3 }}>
         <Typography variant="h5" sx={{ mb: 2 }}>
           Add New Theme

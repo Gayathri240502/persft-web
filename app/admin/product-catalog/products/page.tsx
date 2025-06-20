@@ -169,7 +169,7 @@ const Products = () => {
       const queryParams = new URLSearchParams({
         page: String(page + 1),
         limit: String(pageSize),
-        searchTerm: debouncedSearch,
+        search: debouncedSearch, // ✅ correct
       });
 
       const res = await fetch(

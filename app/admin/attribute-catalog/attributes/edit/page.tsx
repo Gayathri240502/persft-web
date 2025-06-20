@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -132,64 +133,67 @@ const EditAttribute = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" sx={{ mb: 3 }}>
-        Edit Attribute
-      </Typography>
+    <>
+      <Navbar label="Attributes" />
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h5" sx={{ mb: 3 }}>
+          Edit Attribute
+        </Typography>
 
-      <form onSubmit={handleSubmit}>
-        <TextField
-          label="Name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          fullWidth
-          sx={{ mb: 2 }}
-        />
+        <form onSubmit={handleSubmit}>
+          <TextField
+            label="Name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            fullWidth
+            sx={{ mb: 2 }}
+          />
 
-        <TextField
-          label="Description"
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
-          fullWidth
-          multiline
-          rows={3}
-          sx={{ mb: 2 }}
-        />
+          <TextField
+            label="Description"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            fullWidth
+            multiline
+            rows={3}
+            sx={{ mb: 2 }}
+          />
 
-        <TextField
-          label="Type"
-          name="type"
-          value={formData.type}
-          onChange={handleChange}
-          select
-          fullWidth
-          sx={{ mb: 3 }}
-        >
-          {typeOptions.map((option) => (
-            <MenuItem key={option} value={option}>
-              {option.charAt(0).toUpperCase() + option.slice(1)}
-            </MenuItem>
-          ))}
-        </TextField>
+          <TextField
+            label="Type"
+            name="type"
+            value={formData.type}
+            onChange={handleChange}
+            select
+            fullWidth
+            sx={{ mb: 3 }}
+          >
+            {typeOptions.map((option) => (
+              <MenuItem key={option} value={option}>
+                {option.charAt(0).toUpperCase() + option.slice(1)}
+              </MenuItem>
+            ))}
+          </TextField>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
 
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <ReusableButton type="submit" disabled={loading}>
-            {loading ? <CircularProgress size={20} /> : "Update"}
-          </ReusableButton>
-          <CancelButton href="/admin/attribute-catalog/attributes">
-            Cancel
-          </CancelButton>
-        </Box>
-      </form>
-    </Box>
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <ReusableButton type="submit" disabled={loading}>
+              {loading ? <CircularProgress size={20} /> : "Update"}
+            </ReusableButton>
+            <CancelButton href="/admin/attribute-catalog/attributes">
+              Cancel
+            </CancelButton>
+          </Box>
+        </form>
+      </Box>
+    </>
   );
 };
 

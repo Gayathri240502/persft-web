@@ -469,7 +469,7 @@ const AddDesignType = () => {
       <Navbar label="Add Design Types" />
       <Box sx={{ p: 3 }}>
         <Typography variant="h5" sx={{ mb: 3 }}>
-          Add Design Type
+          Design Type
         </Typography>
 
         <TextField

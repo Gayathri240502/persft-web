@@ -325,7 +325,7 @@ const DesignType = () => {
             onAdd={handleAdd}
             onSearch={handleSearchChange}
             searchPlaceholder="Search Designs..."
-            addButtonText="Add Designs"
+            addButtonText="Add"
             getRowId={(row) => row.id}
             // Add these props for better UX
             disableRowSelectionOnClick

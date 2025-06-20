@@ -103,18 +103,19 @@ const WorkGroups = () => {
       });
 
       if (debouncedSearch.trim()) {
-        queryParams.append("search", debouncedSearch.trim());
+        queryParams.append("searchTerm", debouncedSearch.trim());
       }
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/work-groups?${queryParams}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const finalUrl = `${process.env.NEXT_PUBLIC_API_URL}/work-groups?${queryParams}`;
+      console.log("Fetching work groups with searchTerm:", debouncedSearch);
+      console.log("Final URL:", finalUrl);
+
+      const response = await fetch(finalUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to fetch data. Status: ${response.status}`);
@@ -274,11 +275,11 @@ const WorkGroups = () => {
               autoHeight
               disableColumnMenu={isSmallScreen}
               getRowId={(row) => row.id}
-              // searchValue={search}
-              onAdd={handleAdd}
+              searchValue={search}
               onSearch={handleSearch}
               searchPlaceholder="Search Work Groups..."
               addButtonText="Add Work Group"
+              onAdd={handleAdd}
               loading={loading}
             />
           </Box>

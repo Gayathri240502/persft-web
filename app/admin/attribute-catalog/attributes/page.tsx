@@ -238,7 +238,6 @@ const Attributes = () => {
   return (
     <>
       <Navbar label="Attributes" />
-
       <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
         {/* <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
           Attributes
@@ -287,7 +286,7 @@ const Attributes = () => {
             onAdd={handleAdd}
             onSearch={handleSearchChange}
             searchPlaceholder="Search Attributes..."
-            addButtonText="Add Attributes"
+            addButtonText="Add"
             getRowId={(row) => row.id}
             // Add these props for better UX
             disableRowSelectionOnClick

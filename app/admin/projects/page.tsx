@@ -1,11 +1,16 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, {
+  useEffect,
+  useCallback,
+  useState,
+  useMemo,
+  useRef,
+} from "react";
 import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
-  TextField,
   useMediaQuery,
   IconButton,
   CircularProgress,
@@ -24,7 +29,6 @@ import {
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
-import ReusableButton from "@/app/components/Button";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
@@ -40,14 +44,24 @@ interface Project {
   sn?: number;
 }
 
+// Industry standard debounce hook with proper cleanup
 const useDebounce = (value: string, delay: number) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-    return () => clearTimeout(handler);
+    // Clear existing timeout
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+    // Set new timeout
+    timeoutRef.current = setTimeout(() => setDebouncedValue(value), delay);
+
+    // Cleanup function
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
   }, [value, delay]);
+
   return debouncedValue;
 };
 
@@ -56,8 +70,9 @@ const Projects = () => {
   const router = useRouter();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
+  // State management
   const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search, 300);
+  const debouncedSearch = useDebounce(search, 500); // 500ms delay for better UX
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
     pageSize: 10,
@@ -68,13 +83,27 @@ const Projects = () => {
   const [error, setError] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+
+  // Component mount tracking for cleanup
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   const { token } = getTokenAndRole();
 
+  // Reset to first page when search changes
   useEffect(() => {
-    setPaginationModel((prev) => ({ ...prev, page: 0 }));
+    setPaginationModel((prev) => ({
+      ...prev,
+      page: 0,
+    }));
   }, [debouncedSearch]);
 
-  const fetchProjects = async () => {
+  // Fetch projects with proper error handling and cleanup
+  const fetchProjects = useCallback(async () => {
     const { page, pageSize } = paginationModel;
     setLoading(true);
     setError("");
@@ -83,60 +112,71 @@ const Projects = () => {
       const queryParams = new URLSearchParams({
         page: String(page + 1),
         limit: String(pageSize),
-        ...(debouncedSearch.trim() && { search: debouncedSearch.trim() }),
-        _ts: Date.now().toString(), // cache buster
+        _ts: Date.now().toString(), // Cache buster
       });
 
-      console.log("Fetching projects with", {
-        page: page + 1,
-        pageSize,
-        search: debouncedSearch,
-      });
+      // Add search parameter if exists
+      if (debouncedSearch.trim()) {
+        queryParams.append("search", debouncedSearch.trim());
+      }
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects?${queryParams}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const finalUrl = `${process.env.NEXT_PUBLIC_API_URL}/projects?${queryParams}`;
+      console.log("Fetching projects with search:", debouncedSearch);
+      console.log("Final URL:", finalUrl);
+
+      const response = await fetch(finalUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to fetch data. Status: ${response.status}`);
       }
 
       const result = await response.json();
-      console.log("API response:", result);
+      console.log("API Result:", result);
 
-      if (Array.isArray(result.projects)) {
-        const formatted = result.projects.map(
-          (item: Project, index: number) => ({
-            ...item,
-            id: item._id,
-            sn: page * pageSize + index + 1,
-          })
-        );
+      // Only update state if component is still mounted
+      if (mountedRef.current) {
+        if (Array.isArray(result.projects)) {
+          const formatted = result.projects.map(
+            (item: Project, index: number) => ({
+              ...item,
+              id: item._id,
+              sn: page * pageSize + index + 1,
+            })
+          );
 
-        setProjects(formatted);
-        setRowCount(result.totalDocs || result.totalCount || formatted.length);
-      } else {
-        setProjects([]);
-        setRowCount(0);
+          setProjects(formatted);
+          setRowCount(
+            result.totalDocs ||
+              result.totalCount ||
+              result.total ||
+              formatted.length
+          );
+        } else {
+          setProjects([]);
+          setRowCount(0);
+        }
       }
     } catch (err: any) {
       console.error("Error fetching projects:", err);
-      setError(err.message || "Something went wrong.");
+      if (mountedRef.current) {
+        setError(err.message || "Something went wrong.");
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
-  };
+  }, [paginationModel, debouncedSearch, token]);
 
+  // Fetch data when dependencies change
   useEffect(() => {
-    fetchProjects();
-  }, [paginationModel, debouncedSearch]);
+    if (token) fetchProjects();
+  }, [fetchProjects, token]);
 
+  // Event handlers with useCallback for performance
   const handleAdd = useCallback(() => {
     router.push("/admin/projects/add");
   }, [router]);
@@ -145,19 +185,18 @@ const Projects = () => {
     setSearch(value);
   }, []);
 
-  const handleOpenDeleteDialog = (project: Project) => {
+  const handleOpenDeleteDialog = useCallback((project: Project) => {
     setProjectToDelete(project);
     setDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const handleDeleteCancel = () => {
+  const handleDeleteCancel = useCallback(() => {
     setDeleteDialogOpen(false);
     setProjectToDelete(null);
-  };
+  }, []);
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = useCallback(async () => {
     if (!projectToDelete) return;
-
     setLoading(true);
     setError("");
 
@@ -177,7 +216,7 @@ const Projects = () => {
         throw new Error(`Failed to delete project. Status: ${response.status}`);
       }
 
-      fetchProjects();
+      await fetchProjects();
       handleDeleteCancel();
     } catch (err: any) {
       console.error("Error deleting project:", err);
@@ -185,75 +224,79 @@ const Projects = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectToDelete, token, fetchProjects, handleDeleteCancel]);
 
-  const columns: GridColDef[] = [
-    { field: "sn", headerName: "SN", flex: 0.5 },
-    { field: "name", headerName: "Name", flex: 1 },
-    { field: "description", headerName: "Description", flex: 2 },
-    {
-      field: "thumbnail",
-      headerName: "Thumbnail",
-      flex: 1,
-      renderCell: (params: GridRenderCellParams) => {
-        const base64String = params.value;
-        return base64String ? (
-          <img
-            src={`data:image/jpeg;base64,${base64String}`}
-            alt="Thumbnail"
-            style={{
-              width: 40,
-              height: 40,
-              objectFit: "cover",
-              borderRadius: 4,
-            }}
-          />
-        ) : (
-          <span style={{ fontStyle: "italic", color: "#999" }}>
-            No Thumbnail
-          </span>
-        );
+  // Memoized columns for performance
+  const columns: GridColDef[] = useMemo(
+    () => [
+      { field: "sn", headerName: "SN", flex: 0.5 },
+      { field: "name", headerName: "Name", flex: 1 },
+      { field: "description", headerName: "Description", flex: 2 },
+      {
+        field: "thumbnail",
+        headerName: "Thumbnail",
+        flex: 1,
+        renderCell: (params: GridRenderCellParams) => {
+          const base64String = params.value;
+          return base64String ? (
+            <img
+              src={`data:image/jpeg;base64,${base64String}`}
+              alt="Thumbnail"
+              style={{
+                width: 40,
+                height: 40,
+                objectFit: "cover",
+                borderRadius: 4,
+              }}
+            />
+          ) : (
+            <span style={{ fontStyle: "italic", color: "#999" }}>
+              No Thumbnail
+            </span>
+          );
+        },
       },
-    },
-    {
-      field: "action",
-      headerName: "Actions",
-      flex: 1,
-      renderCell: (params) => (
-        <Box>
-          <IconButton
-            color="primary"
-            size="small"
-            onClick={() => router.push(`/admin/projects/${params.row.id}`)}
-          >
-            <Visibility />
-          </IconButton>
-          <IconButton
-            color="primary"
-            size="small"
-            onClick={() =>
-              router.push(`/admin/projects/edit?id=${params.row.id}`)
-            }
-          >
-            <Edit fontSize="small" />
-          </IconButton>
-          <IconButton
-            color="error"
-            size="small"
-            onClick={() => handleOpenDeleteDialog(params.row)}
-          >
-            <Delete fontSize="small" />
-          </IconButton>
-        </Box>
-      ),
-    },
-  ];
+      {
+        field: "action",
+        headerName: "Actions",
+        flex: 1,
+        renderCell: (params) => (
+          <Box>
+            <IconButton
+              color="primary"
+              size="small"
+              onClick={() => router.push(`/admin/projects/${params.row._id}`)}
+            >
+              <Visibility />
+            </IconButton>
+            <IconButton
+              color="primary"
+              size="small"
+              onClick={() =>
+                router.push(`/admin/projects/edit?id=${params.row._id}`)
+              }
+            >
+              <Edit fontSize="small" />
+            </IconButton>
+            <IconButton
+              color="error"
+              size="small"
+              onClick={() => handleOpenDeleteDialog(params.row)}
+            >
+              <Delete fontSize="small" />
+            </IconButton>
+          </Box>
+        ),
+      },
+    ],
+    [router, handleOpenDeleteDialog]
+  );
 
   return (
     <>
       <Navbar label="Projects" />
       <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-        {loading ? (
+        {loading && projects.length === 0 ? (
           <Box display="flex" justifyContent="center" py={5}>
             <CircularProgress />
           </Box>
@@ -275,11 +318,11 @@ const Projects = () => {
               autoHeight
               disableColumnMenu={isSmallScreen}
               getRowId={(row) => row.id}
-              // searchValue={search}
-              onAdd={handleAdd}
+              searchValue={search}
               onSearch={handleSearch}
               searchPlaceholder="Search Projects..."
-              addButtonText="Add Projects"
+              addButtonText="Add Project"
+              onAdd={handleAdd}
               loading={loading}
             />
           </Box>

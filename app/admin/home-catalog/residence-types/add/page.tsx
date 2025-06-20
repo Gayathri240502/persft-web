@@ -101,11 +101,11 @@ const AddResidenceType = () => {
 
   return (
     <>
-      <Navbar label="Add Residence Types" />
+      <Navbar label=" Residence Types" />
 
       <Box sx={{ p: 3 }} component="form" onSubmit={handleSubmit}>
         <Typography variant="h5" sx={{ mb: 2 }}>
-          Add Residence Type
+           Residence Type
         </Typography>
 
         {error && (

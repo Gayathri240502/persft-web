@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   CircularProgress,
@@ -137,110 +138,120 @@ const RoomTypeDetailsPage: React.FC = () => {
   }
 
   return (
-    <Box p={4}>
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => router.back()}
-        sx={{ marginBottom: 2 }}
-      >
-        Back       
-      </Button>
-      <Paper elevation={3} sx={{ padding: 4 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box>
-            <Typography variant="h4" gutterBottom>
-              {room.name}
-            </Typography>
-            {/* <Typography variant="subtitle1" color="textSecondary">
+    <>
+      <Navbar label=" Room Types" />
+      <Box p={4}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => router.back()}
+          sx={{ marginBottom: 2 }}
+        >
+          Back       
+        </Button>
+        <Paper elevation={3} sx={{ padding: 4 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Box>
+              <Typography variant="h4" gutterBottom>
+                {room.name}
+              </Typography>
+              {/* <Typography variant="subtitle1" color="textSecondary">
               {room.archive ? "Archived" : "Active"}
             </Typography> */}
+            </Box>
+            <Box>
+              <IconButton
+                color="primary"
+                onClick={() =>
+                  router.push(`/admin/home-catalog/room-types/edit?id=${id}`)
+                }
+              >
+                <Edit />
+              </IconButton>
+              <IconButton
+                color="error"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Delete />
+              </IconButton>
+            </Box>
           </Box>
-          <Box>
-            <IconButton
-              color="primary"
-              onClick={() =>
-                router.push(`/admin/home-catalog/room-types/edit?id=${id}`)
-              }
-            >
-              <Edit />
-            </IconButton>
-            <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
-              <Delete />
-            </IconButton>
-          </Box>
-        </Box>
-        <Grid container spacing={2} sx={{ marginTop: 2 }}>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body1">
-              <strong>ID:</strong> {room._id}
-            </Typography>
+          <Grid container spacing={2} sx={{ marginTop: 2 }}>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body1">
+                <strong>ID:</strong> {room._id}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body1">
+                <strong>Description:</strong> {room.description}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body1">
+                <strong>Created At:</strong>{" "}
+                {new Date(room.createdAt).toLocaleString()}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body1">
+                <strong>Updated At:</strong>{" "}
+                {new Date(room.updatedAt).toLocaleString()}
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>
+                Associated Residence Types:
+              </Typography>
+              {room.residenceTypes.length === 0 ? (
+                <Typography>No associated residence types.</Typography>
+              ) : (
+                room.residenceTypes.map((resType) => (
+                  <Typography key={resType._id}>• {resType.name}</Typography>
+                ))
+              )}
+            </Grid>
           </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body1">
-              <strong>Description:</strong> {room.description}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body1">
-              <strong>Created At:</strong>{" "}
-              {new Date(room.createdAt).toLocaleString()}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body1">
-              <strong>Updated At:</strong>{" "}
-              {new Date(room.updatedAt).toLocaleString()}
-            </Typography>
-          </Grid>
-          <Grid item xs={12}>
+          <Box mt={4}>
             <Typography variant="h6" gutterBottom>
-              Associated Residence Types:
+              Thumbnail
             </Typography>
-            {room.residenceTypes.length === 0 ? (
-              <Typography>No associated residence types.</Typography>
+            {room.thumbnail ? (
+              <Box
+                component="img"
+                src={room.thumbnail}
+                alt="Thumbnail"
+                sx={{ maxWidth: 100 }}
+              />
             ) : (
-              room.residenceTypes.map((resType) => (
-                <Typography key={resType._id}>• {resType.name}</Typography>
-              ))
+              <Typography>No thumbnail available</Typography>
             )}
-          </Grid>
-        </Grid>
-        <Box mt={4}>
-          <Typography variant="h6" gutterBottom>
-            Thumbnail
-          </Typography>
-          {room.thumbnail ? (
-            <Box
-              component="img"
-              src={room.thumbnail}
-              alt="Thumbnail"
-              sx={{ maxWidth: 100 }}
-            />
-          ) : (
-            <Typography>No thumbnail available</Typography>
-          )}
-        </Box>
-      </Paper>
+          </Box>
+        </Paper>
 
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this room type? This action cannot
-            be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={handleDelete}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+        >
+          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this room type? This action cannot
+              be undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button color="error" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </>
   );
 };
 

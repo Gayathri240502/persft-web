@@ -151,12 +151,12 @@ const WorkTasksPage = () => {
   };
 
   const handleAdd = useCallback(() => {
-      router.push("/admin/work/work-task/add");
-    }, [router]);
+    router.push("/admin/work/work-task/add");
+  }, [router]);
 
-    const handleSearchChange = useCallback((value: string) => {
-        setSearch(value);
-      }, []);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+  }, []);
 
   const columns: GridColDef<WorkTask>[] = [
     { field: "sn", headerName: "SN", flex: 0.5 },
@@ -282,6 +282,8 @@ const WorkTasksPage = () => {
             disableColumnMenu={isSmallScreen}
             onAdd={handleAdd}
             onSearch={handleSearchChange}
+            searchPlaceholder="Search work tasks..."
+            addButtonText="Add work Task"
           />
         </Box>
 

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -156,124 +157,128 @@ const DesignTypeDetails = () => {
   const combination = designDetails.combinations[0];
 
   return (
-    <Box p={4}>
-      {/* Header */}
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={2}
-      >
-        <Button
-          startIcon={<ArrowBack />}
-          onClick={() => router.back()}
-          sx={{ marginBottom: 2 }}
+    <>
+      <Navbar label="Design Types" />
+      <Box p={4}>
+        {/* Header */}
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={2}
         >
-          Back       
-        </Button>
-
-        <Box>
-          <IconButton
-            onClick={() =>
-              router.push(
-                `/admin/home-catalog/design/edit?id=${designDetails._id}`
-              )
-            }
-            sx={{ marginRight: 1 }}
+          <Button
+            startIcon={<ArrowBack />}
+            onClick={() => router.back()}
+            sx={{ marginBottom: 2 }}
           >
-            <Edit color="primary" />
-          </IconButton>
-          <IconButton onClick={() => setDeleteDialogOpen(true)}>
-            <Delete color="error" />
-          </IconButton>
-        </Box>
-      </Box>
-
-      {/* Content */}
-      <Paper elevation={3} sx={{ padding: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          {designDetails.name}
-        </Typography>
-
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body1">
-              <strong>Name:</strong> {designDetails.name}
-            </Typography>
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body1">
-              <strong>Coohom URL:</strong>{" "}
-              <a
-                href={designDetails.coohomUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {designDetails.coohomUrl}
-              </a>
-            </Typography>
-          </Grid>
-
-          <Grid item xs={12}>
-            <Typography variant="body1">
-              <strong>Description:</strong> {designDetails.description}
-            </Typography>
-          </Grid>
-
-          <Grid item xs={12} sm={4}>
-            <Typography variant="body1">
-              <strong>Residence Type:</strong>{" "}
-              {combination?.residenceType?.name || "N/A"}
-            </Typography>
-          </Grid>
-
-          <Grid item xs={12} sm={4}>
-            <Typography variant="body1">
-              <strong>Room Type:</strong> {combination?.roomType?.name || "N/A"}
-            </Typography>
-          </Grid>
-
-          <Grid item xs={12} sm={4}>
-            <Typography variant="body1">
-              <strong>Theme:</strong> {combination?.theme?.name || "N/A"}
-            </Typography>
-          </Grid>
-        </Grid>
-
-        <Box mt={4}>
-          <Typography variant="h6" gutterBottom>
-            Thumbnail
-          </Typography>
-          {designDetails.thumbnailUrl ? (
-            <img
-              src={`${designDetails.thumbnailUrl}`}
-              alt="Thumbnail"
-              style={{ width: 150, maxHeight: 150 }}
-            />
-          ) : (
-            <Typography>No thumbnail available</Typography>
-          )}
-        </Box>
-      </Paper>
-
-      {/* Delete Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Confirm Deletion</DialogTitle>
-        <DialogContent>
-          Are you sure you want to delete this design?
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={handleDeleteDesign}>
-            Delete
+            Back       
           </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+
+          <Box>
+            <IconButton
+              onClick={() =>
+                router.push(
+                  `/admin/home-catalog/design/edit?id=${designDetails._id}`
+                )
+              }
+              sx={{ marginRight: 1 }}
+            >
+              <Edit color="primary" />
+            </IconButton>
+            <IconButton onClick={() => setDeleteDialogOpen(true)}>
+              <Delete color="error" />
+            </IconButton>
+          </Box>
+        </Box>
+
+        {/* Content */}
+        <Paper elevation={3} sx={{ padding: 4 }}>
+          <Typography variant="h4" gutterBottom>
+            {designDetails.name}
+          </Typography>
+
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body1">
+                <strong>Name:</strong> {designDetails.name}
+              </Typography>
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body1">
+                <strong>Coohom URL:</strong>{" "}
+                <a
+                  href={designDetails.coohomUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {designDetails.coohomUrl}
+                </a>
+              </Typography>
+            </Grid>
+
+            <Grid item xs={12}>
+              <Typography variant="body1">
+                <strong>Description:</strong> {designDetails.description}
+              </Typography>
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <Typography variant="body1">
+                <strong>Residence Type:</strong>{" "}
+                {combination?.residenceType?.name || "N/A"}
+              </Typography>
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <Typography variant="body1">
+                <strong>Room Type:</strong>{" "}
+                {combination?.roomType?.name || "N/A"}
+              </Typography>
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <Typography variant="body1">
+                <strong>Theme:</strong> {combination?.theme?.name || "N/A"}
+              </Typography>
+            </Grid>
+          </Grid>
+
+          <Box mt={4}>
+            <Typography variant="h6" gutterBottom>
+              Thumbnail
+            </Typography>
+            {designDetails.thumbnailUrl ? (
+              <img
+                src={`${designDetails.thumbnailUrl}`}
+                alt="Thumbnail"
+                style={{ width: 150, maxHeight: 150 }}
+              />
+            ) : (
+              <Typography>No thumbnail available</Typography>
+            )}
+          </Box>
+        </Paper>
+
+        {/* Delete Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+        >
+          <DialogTitle>Confirm Deletion</DialogTitle>
+          <DialogContent>
+            Are you sure you want to delete this design?
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button color="error" onClick={handleDeleteDesign}>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </>
   );
 };
 

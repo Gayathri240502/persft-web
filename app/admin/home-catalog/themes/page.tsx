@@ -357,7 +357,7 @@ const ThemesPage = () => {
             onAdd={handleAdd}
             onSearch={handleSearchChange}
             searchPlaceholder="Search themes..."
-            addButtonText="Add Themes"
+            addButtonText="Add"
             getRowId={(row) => row.id}
           />
         </Box>

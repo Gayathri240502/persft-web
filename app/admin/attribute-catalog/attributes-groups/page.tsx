@@ -313,7 +313,7 @@ const AttributeGroups = () => {
             onAdd={handleAdd}
             onSearch={handleSearchChange}
             searchPlaceholder="Search Attribute Groups..."
-            addButtonText="Add Attributes Groups"
+            addButtonText="Add"
             getRowId={(row) => row.id}
             // Add these props for better UX
             disableRowSelectionOnClick

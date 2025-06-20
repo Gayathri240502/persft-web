@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
@@ -44,16 +45,16 @@ const EditDesignType = () => {
   const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState<FormDataType>({
-  name: '',
-  description: '',
-  coohomUrl: '',
-  thumbnail: null,
-  thumbnailBase64: '',
-  thumbnailPreview: '',
-  residenceType: '',
-  roomType: '',
-  theme: '',
-});
+    name: "",
+    description: "",
+    coohomUrl: "",
+    thumbnail: null,
+    thumbnailBase64: "",
+    thumbnailPreview: "",
+    residenceType: "",
+    roomType: "",
+    theme: "",
+  });
 
   const [errors, setErrors] = useState({
     name: "",
@@ -286,191 +287,196 @@ const EditDesignType = () => {
   if (loading) return <CircularProgress />;
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Edit Design Type
-      </Typography>
-
-      <TextField
-        label="Name"
-        name="name"
-        fullWidth
-        sx={{ mb: 3 }}
-        value={formData.name}
-        onChange={handleInputChange}
-        error={!!errors.name}
-        helperText={errors.name}
-        required
-      />
-
-      <TextField
-        label="Coohom URL"
-        name="coohomUrl"
-        fullWidth
-        sx={{ mb: 3 }}
-        value={formData.coohomUrl}
-        onChange={handleInputChange}
-        error={!!errors.coohomUrl}
-        helperText={errors.coohomUrl}
-        required
-      />
-
-      <TextField
-        label="Description"
-        name="description"
-        multiline
-        rows={3}
-        fullWidth
-        sx={{ mb: 3 }}
-        value={formData.description}
-        onChange={handleInputChange}
-      />
-
-      {/* Thumbnail Upload Section */}
-      <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
-          <Button
-            variant="outlined"
-            component="label"
-            startIcon={<UploadFileIcon />}
-            sx={{
-              color: "#05344c",
-              borderColor: "#05344c",
-              "&:hover": { backgroundColor: "#f0f4f8" },
-            }}
-          >
-            Upload Thumbnail
-            <input
-              type="file"
-              hidden
-              accept="image/jpeg,image/jpg,image/png"
-              onChange={handleThumbnailChange}
-            />
-          </Button>
-          <Typography variant="body2" sx={{ color: "#666" }}>
-            {formData.thumbnail
-              ? formData.thumbnail.name
-              : "No new file selected"}
-          </Typography>
-        </Box>
-
-        <Typography
-          variant="caption"
-          sx={{ color: "#999", display: "block", mb: 2 }}
-        >
-          Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+    <>
+      <Navbar label="Design Types" />
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h5" sx={{ mb: 2 }}>
+          Edit Design Type
         </Typography>
 
-        {errors.thumbnail && (
+        <TextField
+          label="Name"
+          name="name"
+          fullWidth
+          sx={{ mb: 3 }}
+          value={formData.name}
+          onChange={handleInputChange}
+          error={!!errors.name}
+          helperText={errors.name}
+          required
+        />
+
+        <TextField
+          label="Coohom URL"
+          name="coohomUrl"
+          fullWidth
+          sx={{ mb: 3 }}
+          value={formData.coohomUrl}
+          onChange={handleInputChange}
+          error={!!errors.coohomUrl}
+          helperText={errors.coohomUrl}
+          required
+        />
+
+        <TextField
+          label="Description"
+          name="description"
+          multiline
+          rows={3}
+          fullWidth
+          sx={{ mb: 3 }}
+          value={formData.description}
+          onChange={handleInputChange}
+        />
+
+        {/* Thumbnail Upload Section */}
+        <Box sx={{ mb: 3 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<UploadFileIcon />}
+              sx={{
+                color: "#05344c",
+                borderColor: "#05344c",
+                "&:hover": { backgroundColor: "#f0f4f8" },
+              }}
+            >
+              Upload Thumbnail
+              <input
+                type="file"
+                hidden
+                accept="image/jpeg,image/jpg,image/png"
+                onChange={handleThumbnailChange}
+              />
+            </Button>
+            <Typography variant="body2" sx={{ color: "#666" }}>
+              {formData.thumbnail
+                ? formData.thumbnail.name
+                : "No new file selected"}
+            </Typography>
+          </Box>
+
           <Typography
             variant="caption"
-            sx={{ color: "error.main", display: "block", mb: 2 }}
+            sx={{ color: "#999", display: "block", mb: 2 }}
           >
-            {errors.thumbnail}
+            Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+          </Typography>
+
+          {errors.thumbnail && (
+            <Typography
+              variant="caption"
+              sx={{ color: "error.main", display: "block", mb: 2 }}
+            >
+              {errors.thumbnail}
+            </Typography>
+          )}
+
+          {/* Thumbnail Preview */}
+          {formData.thumbnailPreview && (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                Current Thumbnail:
+              </Typography>
+              <img
+                src={formData.thumbnailPreview}
+                alt="Thumbnail Preview"
+                style={{
+                  width: 200,
+                  height: "auto",
+                  borderRadius: 8,
+                  border: "1px solid #ddd",
+                  objectFit: "cover",
+                }}
+                onError={(e) => {
+                  console.error("Error loading thumbnail preview");
+                  // You can set a fallback image here if needed
+                }}
+              />
+            </Box>
+          )}
+        </Box>
+
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={4}>
+            <FormControl fullWidth error={!!errors.residenceType}>
+              <InputLabel required>Residence Type</InputLabel>
+              <Select
+                value={formData.residenceType}
+                onChange={(e) =>
+                  handleSelectChange("residenceType", e.target.value as string)
+                }
+                label="Residence Type *"
+              >
+                {residences.map((res: any) => (
+                  <MenuItem key={res._id} value={res._id}>
+                    {res.name}
+                  </MenuItem>
+                ))}
+              </Select>
+              {errors.residenceType && (
+                <FormHelperText>{errors.residenceType}</FormHelperText>
+              )}
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <FormControl fullWidth error={!!errors.roomType}>
+              <InputLabel required>Room Type</InputLabel>
+              <Select
+                value={formData.roomType}
+                onChange={(e) =>
+                  handleSelectChange("roomType", e.target.value as string)
+                }
+                label="Room Type *"
+              >
+                {rooms.map((room: any) => (
+                  <MenuItem key={room._id} value={room._id}>
+                    {room.name}
+                  </MenuItem>
+                ))}
+              </Select>
+              {errors.roomType && (
+                <FormHelperText>{errors.roomType}</FormHelperText>
+              )}
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <FormControl fullWidth error={!!errors.theme}>
+              <InputLabel required>Theme</InputLabel>
+              <Select
+                value={formData.theme}
+                onChange={(e) =>
+                  handleSelectChange("theme", e.target.value as string)
+                }
+                label="Theme *"
+              >
+                {Array.isArray(themes) &&
+                  themes.map((theme: any) => (
+                    <MenuItem key={theme._id} value={theme._id}>
+                      {theme.name}
+                    </MenuItem>
+                  ))}
+              </Select>
+              {errors.theme && <FormHelperText>{errors.theme}</FormHelperText>}
+            </FormControl>
+          </Grid>
+        </Grid>
+
+        {apiError && (
+          <Typography sx={{ mt: 2, color: "error.main" }}>
+            {apiError}
           </Typography>
         )}
 
-        {/* Thumbnail Preview */}
-        {formData.thumbnailPreview && (
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Current Thumbnail:
-            </Typography>
-            <img
-              src={formData.thumbnailPreview}
-              alt="Thumbnail Preview"
-              style={{
-                width: 200,
-                height: "auto",
-                borderRadius: 8,
-                border: "1px solid #ddd",
-                objectFit: "cover",
-              }}
-              onError={(e) => {
-                console.error("Error loading thumbnail preview");
-                // You can set a fallback image here if needed
-              }}
-            />
-          </Box>
-        )}
+        <Box sx={{ mt: 4, display: "flex", gap: 2 }}>
+          <ReusableButton onClick={handleSubmit}>Update</ReusableButton>
+          <CancelButton href="/admin/home-catalog/design">Cancel</CancelButton>
+        </Box>
       </Box>
-
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
-          <FormControl fullWidth error={!!errors.residenceType}>
-            <InputLabel required>Residence Type</InputLabel>
-            <Select
-              value={formData.residenceType}
-              onChange={(e) =>
-                handleSelectChange("residenceType", e.target.value as string)
-              }
-              label="Residence Type *"
-            >
-              {residences.map((res: any) => (
-                <MenuItem key={res._id} value={res._id}>
-                  {res.name}
-                </MenuItem>
-              ))}
-            </Select>
-            {errors.residenceType && (
-              <FormHelperText>{errors.residenceType}</FormHelperText>
-            )}
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <FormControl fullWidth error={!!errors.roomType}>
-            <InputLabel required>Room Type</InputLabel>
-            <Select
-              value={formData.roomType}
-              onChange={(e) =>
-                handleSelectChange("roomType", e.target.value as string)
-              }
-              label="Room Type *"
-            >
-              {rooms.map((room: any) => (
-                <MenuItem key={room._id} value={room._id}>
-                  {room.name}
-                </MenuItem>
-              ))}
-            </Select>
-            {errors.roomType && (
-              <FormHelperText>{errors.roomType}</FormHelperText>
-            )}
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <FormControl fullWidth error={!!errors.theme}>
-            <InputLabel required>Theme</InputLabel>
-            <Select
-              value={formData.theme}
-              onChange={(e) =>
-                handleSelectChange("theme", e.target.value as string)
-              }
-              label="Theme *"
-            >
-              {Array.isArray(themes) &&
-                themes.map((theme: any) => (
-                  <MenuItem key={theme._id} value={theme._id}>
-                    {theme.name}
-                  </MenuItem>
-                ))}
-            </Select>
-            {errors.theme && <FormHelperText>{errors.theme}</FormHelperText>}
-          </FormControl>
-        </Grid>
-      </Grid>
-
-      {apiError && (
-        <Typography sx={{ mt: 2, color: "error.main" }}>{apiError}</Typography>
-      )}
-
-      <Box sx={{ mt: 4, display: "flex", gap: 2 }}>
-        <ReusableButton onClick={handleSubmit}>Update</ReusableButton>
-        <CancelButton href="/admin/home-catalog/design">Cancel</CancelButton>
-      </Box>
-    </Box>
+    </>
   );
 };
 

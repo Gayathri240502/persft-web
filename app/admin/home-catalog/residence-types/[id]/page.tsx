@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   CircularProgress,
@@ -131,113 +132,122 @@ const ResidenceTypesPage: React.FC = () => {
   }
 
   return (
-    <Box p={4}>
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => router.back()}
-        sx={{ marginBottom: 2 }}
-      >
-        Back 
-      </Button>
-      <Paper elevation={3} sx={{ padding: 4 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box>
-            <Typography variant="h4" gutterBottom>
-              {residence.name}
-            </Typography>
-            {/* <Typography variant="subtitle1" color="textSecondary">
+    <>
+      <Navbar label="Residence Types" />
+      <Box p={4}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => router.back()}
+          sx={{ marginBottom: 2 }}
+        >
+          Back
+        </Button>
+        <Paper elevation={3} sx={{ padding: 4 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Box>
+              <Typography variant="h4" gutterBottom>
+                {residence.name}
+              </Typography>
+              {/* <Typography variant="subtitle1" color="textSecondary">
               {residence.archive ? "Active" : "Inactive"}
             </Typography> */}
+            </Box>
+            <Box>
+              <IconButton
+                color="primary"
+                onClick={() =>
+                  router.push(
+                    `/admin/home-catalog/residence-types/edit?id=${id}`
+                  )
+                }
+              >
+                <Edit />
+              </IconButton>
+              <IconButton
+                color="error"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Delete />
+              </IconButton>
+            </Box>
           </Box>
-          <Box>
-            <IconButton
-              color="primary"
-              onClick={() =>
-                router.push(`/admin/home-catalog/residence-types/edit?id=${id}`)
-              }
-            >
-              <Edit />
-            </IconButton>
-            <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
-              <Delete />
-            </IconButton>
-          </Box>
-        </Box>
-        <Grid container spacing={2} sx={{ marginTop: 2 }}>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body1">
-
-              <strong>ID:</strong> {residence._id}
-
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body1">
-              <strong>Name:</strong> {residence.name}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body1">
-
-              <strong>Descripation:</strong> {residence.description}
-            </Typography>
-          </Grid>
-          {/* <Grid item xs={12} sm={6}>
+          <Grid container spacing={2} sx={{ marginTop: 2 }}>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body1">
+                <strong>ID:</strong> {residence._id}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body1">
+                <strong>Name:</strong> {residence.name}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body1">
+                <strong>Descripation:</strong> {residence.description}
+              </Typography>
+            </Grid>
+            {/* <Grid item xs={12} sm={6}>
             <Typography variant="body1">
               <strong>Archived:</strong> {residence.archive ? "Yes" : "No"}
               
             </Typography>
           </Grid> */}
 
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body1">
-              <strong>Created At:</strong>{" "}
-              {new Date(residence.createdAt).toLocaleString()}
-            </Typography>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body1">
+                <strong>Created At:</strong>{" "}
+                {new Date(residence.createdAt).toLocaleString()}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body1">
+                <strong>Updated At:</strong>{" "}
+                {new Date(residence.updatedAt).toLocaleString()}
+              </Typography>
+            </Grid>
           </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body1">
-              <strong>Updated At:</strong>{" "}
-              {new Date(residence.updatedAt).toLocaleString()}
+          <Box mt={4}>
+            <Typography variant="h6" gutterBottom>
+              Thumbnail
             </Typography>
-          </Grid>
-        </Grid>
-        <Box mt={4}>
-          <Typography variant="h6" gutterBottom>
-            Thumbnail
-          </Typography>
-          {residence.thumbnail ? (
-            <Box
-              component="img"
-              src={residence.thumbnail}
-              alt="Thumbnail"
-              sx={{ maxWidth: 100 }}
-            />
-          ) : (
-            <Typography>No thumbnail available</Typography>
-          )}
-        </Box>
-      </Paper>
+            {residence.thumbnail ? (
+              <Box
+                component="img"
+                src={residence.thumbnail}
+                alt="Thumbnail"
+                sx={{ maxWidth: 100 }}
+              />
+            ) : (
+              <Typography>No thumbnail available</Typography>
+            )}
+          </Box>
+        </Paper>
 
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this user? This action cannot be
-            undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={handleDelete}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+        >
+          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this user? This action cannot be
+              undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button color="error" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </>
   );
 };
 

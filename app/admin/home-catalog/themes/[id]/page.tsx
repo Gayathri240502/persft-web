@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   CircularProgress,
@@ -141,110 +142,120 @@ const ThemeDetailsPage: React.FC = () => {
   }
 
   return (
-    <Box p={4}>
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => router.back()}
-        sx={{ marginBottom: 2 }}
-      >
-        Back       
-      </Button>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box>
-            <Typography variant="h4">{theme.name}</Typography>
-            {/* <Typography color="text.secondary">
+    <>
+      <Navbar label="Theme" />
+      <Box p={4}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => router.back()}
+          sx={{ marginBottom: 2 }}
+        >
+          Back       
+        </Button>
+        <Paper elevation={3} sx={{ p: 4 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Box>
+              <Typography variant="h4">{theme.name}</Typography>
+              {/* <Typography color="text.secondary">
               {theme.archive ? "Archived" : "Active"}
             </Typography> */}
+            </Box>
+            <Box>
+              <IconButton
+                color="primary"
+                onClick={() =>
+                  router.push(`/admin/home-catalog/themes/edit?id=${id}`)
+                }
+              >
+                <Edit />
+              </IconButton>
+              <IconButton
+                color="error"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Delete />
+              </IconButton>
+            </Box>
           </Box>
-          <Box>
-            <IconButton
-              color="primary"
-              onClick={() =>
-                router.push(`/admin/home-catalog/themes/edit?id=${id}`)
-              }
-            >
-              <Edit />
-            </IconButton>
-            <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
-              <Delete />
-            </IconButton>
-          </Box>
-        </Box>
 
-        <Grid container spacing={2} sx={{ mt: 2 }}>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>ID:</strong> {theme._id}
-            </Typography>
+          <Grid container spacing={2} sx={{ mt: 2 }}>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>ID:</strong> {theme._id}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Description:</strong> {theme.description}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Created At:</strong>{" "}
+                {new Date(theme.createdAt).toLocaleString()}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Updated At:</strong>{" "}
+                {new Date(theme.updatedAt).toLocaleString()}
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>
+                Associated Room Types
+              </Typography>
+              {theme.roomTypes.length === 0 ? (
+                <Typography>No associated room types.</Typography>
+              ) : (
+                theme.roomTypes.map((room) => (
+                  <Typography key={room._id}>• {room.name}</Typography>
+                ))
+              )}
+            </Grid>
           </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Description:</strong> {theme.description}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Created At:</strong>{" "}
-              {new Date(theme.createdAt).toLocaleString()}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Updated At:</strong>{" "}
-              {new Date(theme.updatedAt).toLocaleString()}
-            </Typography>
-          </Grid>
-          <Grid item xs={12}>
+          <Box mt={4}>
             <Typography variant="h6" gutterBottom>
-              Associated Room Types
+              Thumbnail
             </Typography>
-            {theme.roomTypes.length === 0 ? (
-              <Typography>No associated room types.</Typography>
+            {theme.thumbnail ? (
+              <Box
+                component="img"
+                src={theme.thumbnail}
+                alt="Thumbnail"
+                sx={{ maxWidth: 100 }}
+              />
             ) : (
-              theme.roomTypes.map((room) => (
-                <Typography key={room._id}>• {room.name}</Typography>
-              ))
+              <Typography>No thumbnail available</Typography>
             )}
-          </Grid>
-        </Grid>
-        <Box mt={4}>
-          <Typography variant="h6" gutterBottom>
-            Thumbnail
-          </Typography>
-          {theme.thumbnail ? (
-            <Box
-              component="img"
-              src={theme.thumbnail}
-              alt="Thumbnail"
-              sx={{ maxWidth: 100 }}
-            />
-          ) : (
-            <Typography>No thumbnail available</Typography>
-          )}
-        </Box>
-      </Paper>
+          </Box>
+        </Paper>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this theme? This action cannot be
-            undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={handleDelete}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+        >
+          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this theme? This action cannot be
+              undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button color="error" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </>
   );
 };
 

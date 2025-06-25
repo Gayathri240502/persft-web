@@ -122,7 +122,7 @@ const CustomToolbar = ({
       >
         <GridToolbarColumnsButton />
         <GridToolbarFilterButton />
-        <GridToolbarDensitySelector />
+        {/* <GridToolbarDensitySelector /> */}
         <GridToolbarExport />
         {showAddButton && onAdd && (
           <ReusableButton

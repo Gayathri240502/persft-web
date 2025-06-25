@@ -243,11 +243,11 @@ const KioskDetailsPage: React.FC = () => {
               <strong>Enabled:</strong> {kiosk.enabled ? "Yes" : "No"}
             </Typography>
           </Grid>
-          <Grid item xs={12} sm={6}>
+          {/* <Grid item xs={12} sm={6}>
             <Typography>
               <strong>Archived:</strong> {kiosk.archive ? "Yes" : "No"}
             </Typography>
-          </Grid>
+          </Grid> */}
           <Grid item xs={12} sm={6}>
             <Typography>
               <strong>Created At:</strong>{" "}

@@ -26,8 +26,8 @@ const WorkGroup = () => {
 
   // Form validation
   const validateForm = () => {
-    if (!name || !description) {
-      setError("Name and description are required.");
+    if (!name.trim()) {
+      setError("Name is required.");
       return false;
     }
     setError(null);
@@ -44,7 +44,10 @@ const WorkGroup = () => {
 
     const fullUrl = `${process.env.NEXT_PUBLIC_API_URL}/work-groups`;
 
-    const workGroupData = { name, description };
+    const workGroupData = {
+      name,
+      description: description.trim() || "N/A",
+    };
 
     try {
       const response = await fetch(fullUrl, {

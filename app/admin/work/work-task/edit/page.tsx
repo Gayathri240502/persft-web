@@ -119,7 +119,7 @@ const EditWorkTask = () => {
   };
 
   const handleSubmit = async () => {
-    if (!formData.name.trim() || !formData.workGroup || !formData.targetDays) {
+    if (!formData.name.trim() || !formData.workGroup || formData.targetDays <= 0) {
       setError("Please fill all required fields.");
       return;
     }

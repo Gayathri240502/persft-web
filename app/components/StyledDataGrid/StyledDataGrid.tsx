@@ -17,13 +17,14 @@ import {
   InputAdornment,
   IconButton,
   Tooltip,
+  useMediaQuery,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import {
   Search as SearchIcon,
   Clear as ClearIcon,
   Add as AddIcon,
 } from "@mui/icons-material";
-import { useTheme } from "@mui/material/styles";
 import ReusableButton from "../Button";
 
 interface CustomToolbarProps extends Partial<GridToolbarProps> {
@@ -68,7 +69,6 @@ const CustomToolbar = ({
     <GridToolbarContainer
       sx={{
         p: 2,
-        margin: "5px",
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
@@ -85,8 +85,7 @@ const CustomToolbar = ({
           onChange={handleSearchChange}
           onKeyDown={handleKeyDown}
           sx={{
-            minWidth: 350,
-            maxWidth: 400,
+            minWidth: 300,
             "& .MuiOutlinedInput-root": {
               "&:hover fieldset": {
                 borderColor: theme.palette.primary.main,
@@ -96,7 +95,7 @@ const CustomToolbar = ({
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon color="action" fontSize="small" />
+                <SearchIcon fontSize="small" />
               </InputAdornment>
             ),
             endAdornment: searchValue && (
@@ -129,10 +128,7 @@ const CustomToolbar = ({
             variant="contained"
             onClick={onAdd}
             startIcon={<AddIcon />}
-            sx={{
-              whiteSpace: "nowrap",
-              minWidth: "auto",
-            }}
+            sx={{ whiteSpace: "nowrap" }}
           >
             {addButtonText}
           </ReusableButton>
@@ -144,17 +140,14 @@ const CustomToolbar = ({
 
 interface StyledDataGridProps
   extends Omit<DataGridProps, "slots" | "slotProps"> {
-  minWidth?: number | string;
   onAdd?: () => void;
   onSearch?: (value: string) => void;
   searchPlaceholder?: string;
   showAddButton?: boolean;
-  searchValue?: string;
   addButtonText?: string;
 }
 
 const StyledDataGrid: React.FC<StyledDataGridProps> = ({
-  minWidth = 1000,
   onAdd,
   onSearch,
   searchPlaceholder,
@@ -163,85 +156,125 @@ const StyledDataGrid: React.FC<StyledDataGridProps> = ({
   ...props
 }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   return (
-    <Box
-      sx={{
-        width: "100%",
-        minWidth,
-        height: "auto",
-        "& .MuiDataGrid-root": {
-          border: `2px solid ${theme.palette.divider}`,
-        },
-      }}
-    >
-      <DataGrid
-        {...props}
-        autoHeight
-        disableColumnMenu={false}
-        disableRowSelectionOnClick
-        checkboxSelection={false}
-        density="standard"
-        slots={{
-          toolbar: CustomToolbar,
-        }}
-        slotProps={{
-          toolbar: {
-            onAdd,
-            onSearch,
-            searchPlaceholder,
-            showAddButton,
-            addButtonText,
-          } as any,
-        }}
+    <Box sx={{ width: "100%", mt: 2 }}>
+      <Box
         sx={{
-          "& .MuiDataGrid-columnHeader": {
-            fontSize: "0.95rem",
-            fontWeight: 600,
-            backgroundColor: theme.palette.grey[50],
-            color: theme.palette.text.primary,
-            borderBottom: `2px solid ${theme.palette.divider}`,
+          width: "100%",
+          height: { xs: "auto", sm: "70vh" },
+          minHeight: 400,
+          overflowX: "auto",
+          "&::-webkit-scrollbar": {
+            height: "8px",
           },
-          "& .MuiDataGrid-columnHeaderTitle": {
-            fontWeight: 600,
+          "&::-webkit-scrollbar-track": {
+            backgroundColor: "#f1f1f1",
+            borderRadius: "4px",
           },
-          "& .MuiDataGrid-row": {
-            "&:nth-of-type(even)": {
-              backgroundColor: theme.palette.background.default,
-            },
-            "&:nth-of-type(odd)": {
-              backgroundColor: theme.palette.background.paper,
-            },
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: "#c1c1c1",
+            borderRadius: "4px",
             "&:hover": {
-              backgroundColor: theme.palette.action.hover,
+              backgroundColor: "#a8a8a8",
             },
-            "&.Mui-selected": {
-              backgroundColor: theme.palette.action.selected,
-              "&:hover": {
-                backgroundColor: theme.palette.action.selected,
-              },
-            },
-          },
-          "& .MuiDataGrid-cell": {
-            borderBottom: `1px solid ${theme.palette.divider}`,
-            display: "flex",
-            alignItems: "center",
-          },
-          "& .MuiDataGrid-footerContainer": {
-            borderTop: `1px solid ${theme.palette.divider}`,
-            backgroundColor: theme.palette.grey[50],
-          },
-          "& .MuiDataGrid-toolbarContainer": {
-            padding: 0,
-          },
-          "& .MuiDataGrid-overlay": {
-            backgroundColor: theme.palette.background.paper,
-          },
-          "& .MuiCircularProgress-root": {
-            color: theme.palette.primary.main,
           },
         }}
-      />
+      >
+        <Box
+          sx={{
+            minWidth: isMobile ? "1200px" : "100%",
+            height: "100%",
+          }}
+        >
+          <DataGrid
+            {...props}
+            autoHeight={isMobile}
+            disableRowSelectionOnClick
+            checkboxSelection={false}
+            pageSizeOptions={[10, 25, 50, 100]}
+            initialState={{
+              pagination: {
+                paginationModel: {
+                  pageSize: isMobile ? 10 : 25,
+                  page: 0,
+                },
+              },
+            }}
+            slots={{ toolbar: CustomToolbar }}
+            slotProps={{
+              toolbar: {
+                onAdd,
+                onSearch,
+                searchPlaceholder,
+                showAddButton,
+                addButtonText,
+              } as any,
+            }}
+            density={isMobile ? "compact" : "standard"}
+            sx={{
+              fontFamily: theme.typography.fontFamily,
+              fontSize: { xs: "0.75rem", sm: "0.875rem" },
+              "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: "#5a7299",
+                color: "#000",
+                fontWeight: 600,
+                borderBottom: "2px solid #5a7299",
+                "& .MuiDataGrid-columnHeaderTitle": {
+                  color: "#000",
+                  fontWeight: 600,
+                  fontSize: { xs: "0.8rem", sm: "0.95rem" },
+                },
+              },
+              "& .MuiDataGrid-cell": {
+                paddingY: { xs: 0.5, sm: 1 },
+                paddingX: { xs: 1, sm: 2 },
+                borderBottom: "1px solid #e0e0e0",
+                "&:focus, &:focus-within": {
+                  outline: "none",
+                },
+              },
+              "& .MuiDataGrid-row": {
+                "&:hover": {
+                  backgroundColor: "#f5f5f5",
+                },
+                "&.Mui-selected": {
+                  backgroundColor: "#f0e9e3 !important",
+                  "&:hover": {
+                    backgroundColor: "#e8ddd4 !important",
+                  },
+                },
+              },
+              "& .MuiDataGrid-footerContainer": {
+                backgroundColor: "#f8f9fa",
+                borderTop: "1px solid #e0e0e0",
+                color: "#333",
+                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+              },
+              "& .MuiDataGrid-columnSeparator": {
+                display: "none",
+              },
+              "& .MuiCheckbox-root": {
+                color: "#b37f59",
+                "&.Mui-checked": {
+                  color: "#b37f59",
+                },
+              },
+              "& .MuiDataGrid-toolbarContainer": {
+                gap: 1,
+                flexWrap: "wrap",
+              },
+              "& .MuiDataGrid-virtualScroller": {
+                overflowX: "auto",
+              },
+              "& .MuiDataGrid-virtualScrollerContent": {
+                minWidth: isMobile ? "1200px" : "100%",
+              },
+            }}
+          />
+        </Box>
+      </Box>
     </Box>
   );
 };

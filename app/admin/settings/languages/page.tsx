@@ -22,14 +22,8 @@ const columns: GridColDef[] = [
   { field: "action", headerName: "Action", width: 280 },
 ];
 
-// Sample Data (Empty Rows for UI)
-const rows = Array.from({ length: 5 }, (_, index) => ({
-  id: index + 1,
-  name: "-",
-  code: "-",
-  status: "-",
-  action: "-",
-}));
+// Remove dummy data
+const rows: any[] = []; // Replace with API data when available
 
 const LanguageSettings = () => {
   const router = useRouter();
@@ -107,5 +101,7 @@ const LanguageSettings = () => {
     </Box>
   );
 };
+
+
 
 export default LanguageSettings;

@@ -479,9 +479,11 @@ const EditProduct = () => {
     setSubmitLoading(true);
 
     try {
+      const cleanedDescription = product.description.trim() || "N/A";
       const productData = {
         ...product,
         price: parseFloat(product.price),
+        description: cleanedDescription,
       };
 
       const body = JSON.stringify(productData);
@@ -620,14 +622,18 @@ const EditProduct = () => {
               <Grid item xs={12}>
                 <TextField
                   label="Description"
+                  value={product.description}
+                  onChange={(e) => handleInputChange("description", e.target.value)}
+                  fullWidth
                   multiline
                   rows={3}
-                  fullWidth
-                  value={product.description}
-                  onChange={(e) =>
-                    handleInputChange("description", e.target.value)
-                  }
                   sx={{ mb: 2 }}
+                  placeholder="Enter product description"
+                  InputProps={{
+                    style: {
+                      color: product.description.trim() === "" ? "#888" : undefined,
+                    },
+                  }}
                 />
               </Grid>
             </Grid>

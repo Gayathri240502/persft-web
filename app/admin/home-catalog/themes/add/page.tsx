@@ -124,14 +124,15 @@ const AddTheme = () => {
   };
 
   const validateForm = () => {
-    if (
-      !formData.name ||
-      !formData.description ||
-      formData.roomTypes.length === 0
-    ) {
-      setError("All fields including thumbnail are required");
+    if (!formData.name) {
+      setError("Name is required");
       return false;
     }
+    if (formData.roomTypes.length === 0) {
+      setError("Select at least one room type");
+      return false;
+    }
+    setError(null);
     return true;
   };
 
@@ -145,6 +146,11 @@ const AddTheme = () => {
       return;
     }
 
+    const payload = {
+      ...formData,
+      description: formData.description.trim() || "N/A",
+    };
+
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/themes`,
@@ -154,7 +160,7 @@ const AddTheme = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         }
       );
 

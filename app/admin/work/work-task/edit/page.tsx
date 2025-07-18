@@ -80,7 +80,6 @@ const EditWorkTask = () => {
         setFormData({
           name: taskData.name || "",
           description: taskData.description || "",
-          // extract id as string for workGroup
           workGroup: taskData.workGroup?._id?.toString() ?? "",
           targetDays: taskData.targetDays || 0,
           bufferDays: taskData.bufferDays || 0,
@@ -125,11 +124,10 @@ const EditWorkTask = () => {
       return;
     }
 
-    // Send workGroup as id string directly (not as object)
     const payload = {
       name: formData.name,
-      description: formData.description,
-      workGroup: formData.workGroup, // <-- just the id string here
+      description: formData.description.trim() || "N/A",
+      workGroup: formData.workGroup,
       targetDays: formData.targetDays,
       bufferDays: formData.bufferDays,
       poDays: formData.poDays,
@@ -203,8 +201,14 @@ const EditWorkTask = () => {
           rows={3}
           fullWidth
           sx={{ mb: 3 }}
+          placeholder="N/A"
           value={formData.description}
           onChange={handleChange}
+          InputProps={{
+            style: {
+              color: formData.description.trim() === "" ? "#888" : undefined,
+            },
+          }}
         />
 
         <FormControl
@@ -224,8 +228,8 @@ const EditWorkTask = () => {
               {loadingWorkGroups
                 ? "Loading..."
                 : workGroups.length === 0
-                  ? "No Work Groups Available"
-                  : "Select Work Group"}
+                ? "No Work Groups Available"
+                : "Select Work Group"}
             </MenuItem>
             {workGroups
               .filter((group) => group._id || group.id)

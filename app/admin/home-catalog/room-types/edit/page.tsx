@@ -42,35 +42,19 @@ const EditRoomType = () => {
 
     const fetchData = async () => {
       try {
-        // First fetch residence types to have them available
         const resResponse = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/residence-types`,
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
 
-        if (!resResponse.ok)
-          throw new Error("Failed to fetch residence types.");
         const residenceData = await resResponse.json();
-        console.log("Fetched Residence Types:", residenceData);
-
-        // Handle different possible response structures
-        let resTypes = [];
-        if (Array.isArray(residenceData)) {
-          resTypes = residenceData;
-        } else if (Array.isArray(residenceData?.data)) {
-          resTypes = residenceData.data;
-        } else if (Array.isArray(residenceData?.residenceTypes)) {
-          resTypes = residenceData.residenceTypes;
-        } else {
-          console.warn("Unexpected residence data structure:", residenceData);
-        }
+        const resTypes = Array.isArray(residenceData?.residenceTypes)
+          ? residenceData.residenceTypes
+          : residenceData.data || residenceData || [];
         setResidenceTypes(resTypes);
 
-        // Then fetch room type by ID
         const roomResponse = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/room-types/${id}`,
           {
@@ -81,42 +65,21 @@ const EditRoomType = () => {
           }
         );
 
-        if (!roomResponse.ok) throw new Error("Failed to fetch room type.");
         const roomData = await roomResponse.json();
-        console.log("Fetched Room Type:", roomData);
-
-        // Extract room data based on response structure
         const room = roomData.data || roomData;
 
         setName(room.name || "");
         setDescription(room.description || "");
         setThumbnail(room.thumbnail || "");
-        setSelectedFileName(
-          room.thumbnail ? "Existing Thumbnail" : "No file selected"
-        );
+        setSelectedFileName(room.thumbnail ? "Existing Thumbnail" : "No file selected");
 
-        // Extract selected residence IDs correctly
         if (Array.isArray(room.residenceTypes)) {
-          // Map the residenceTypes array to extract just the IDs
-          const residenceIds = room.residenceTypes.map((res: any) => res._id);
-          setSelectedResidences(residenceIds);
+          setSelectedResidences(room.residenceTypes.map((res: any) => res._id));
         } else if (Array.isArray(room.residences)) {
           setSelectedResidences(room.residences);
-        } else {
-          setSelectedResidences([]);
         }
-
-        console.log(
-          "Selected residence IDs:",
-          Array.isArray(room.residenceTypes)
-            ? room.residenceTypes.map((res: any) => res._id)
-            : Array.isArray(room.residences)
-              ? room.residences
-              : []
-        );
       } catch (err) {
-        console.error("Error fetching data:", err);
-        setError(err instanceof Error ? err.message : "Something went wrong.");
+        setError("Failed to load data");
       } finally {
         setInitialLoading(false);
       }
@@ -130,27 +93,26 @@ const EditRoomType = () => {
     if (file) {
       setSelectedFileName(file.name);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setThumbnail(reader.result as string);
-      };
+      reader.onloadend = () => setThumbnail(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
 
   const toggleResidenceSelection = (resId: string) => {
     setSelectedResidences((prev) =>
-      prev.includes(resId)
-        ? prev.filter((id) => id !== resId)
-        : [...prev, resId]
+      prev.includes(resId) ? prev.filter((id) => id !== resId) : [...prev, resId]
     );
   };
 
   const validateForm = () => {
-    if (!name) return setError("Name is required"), false;
-    if (!description) return setError("Description is required"), false;
-    // if (!thumbnail) return setError("Thumbnail is required"), false;
-    if (selectedResidences.length === 0)
-      return setError("Select at least one residence type"), false;
+    if (!name) {
+      setError("Name is required");
+      return false;
+    }
+    if (selectedResidences.length === 0) {
+      setError("Select at least one residence type");
+      return false;
+    }
     setError(null);
     return true;
   };
@@ -161,15 +123,12 @@ const EditRoomType = () => {
 
     setLoading(true);
     try {
-      // Prepare payload based on backend expectations
-      const body = JSON.stringify({
+      const payload = {
         name,
-        description,
+        description: description.trim() || "N/A",
         thumbnail,
-        residenceTypes: selectedResidences, // Updated key name to match backend
-      });
-
-      console.log("Submitting data:", body);
+        residenceTypes: selectedResidences,
+      };
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/room-types/${id}`,
@@ -179,24 +138,18 @@ const EditRoomType = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body,
+          body: JSON.stringify(payload),
         }
       );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.message ||
-            `Failed to update room type. Status: ${response.status}`
-        );
+        throw new Error(errorData.message || "Failed to update room type");
       }
 
       router.push("/admin/home-catalog/room-types");
     } catch (err) {
-      console.error("Error submitting form:", err);
-      setError(
-        err instanceof Error ? err.message : "Unexpected error occurred"
-      );
+      setError(err instanceof Error ? err.message : "Unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -258,6 +211,7 @@ const EditRoomType = () => {
                 {selectedFileName}
               </Typography>
             </Box>
+
             <Typography variant="caption" sx={{ color: "#999" }}>
               Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
             </Typography>
@@ -277,36 +231,24 @@ const EditRoomType = () => {
               Residence Type Mapping
             </Typography>
 
-            <Box
-              sx={{ mb: 3, display: "flex", flexDirection: "column", gap: 1 }}
-            >
-              {residenceTypes.length > 0 ? (
-                residenceTypes.map((res) => (
-                  <FormControlLabel
-                    key={res._id}
-                    control={
-                      <Checkbox
-                        checked={selectedResidences.includes(res._id)}
-                        onChange={() => toggleResidenceSelection(res._id)}
-                      />
-                    }
-                    label={res.name}
-                  />
-                ))
-              ) : (
-                <Typography color="text.secondary">
-                  No residence types available
-                </Typography>
-              )}
+            <Box sx={{ mb: 3, display: "flex", flexDirection: "column", gap: 1 }}>
+              {residenceTypes.map((res) => (
+                <FormControlLabel
+                  key={res._id}
+                  control={
+                    <Checkbox
+                      checked={selectedResidences.includes(res._id)}
+                      onChange={() => toggleResidenceSelection(res._id)}
+                    />
+                  }
+                  label={res.name}
+                />
+              ))}
             </Box>
 
             <Box sx={{ display: "flex", gap: 2 }}>
               <ReusableButton type="submit" disabled={loading}>
-                {loading ? (
-                  <CircularProgress size={24} color="inherit" />
-                ) : (
-                  "Update"
-                )}
+                {loading ? <CircularProgress size={24} color="inherit" /> : "Update"}
               </ReusableButton>
               <CancelButton href="/admin/home-catalog/room-types">
                 Cancel

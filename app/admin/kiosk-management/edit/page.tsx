@@ -250,6 +250,8 @@ const EditKiosk = () => {
     try {
       const payload = {
         ...form,
+          description: form.description.trim() || "N/A",
+
         country: form.country ? Number(form.country) : null,
         state: form.state ? Number(form.state) : null,
         city: form.city ? Number(form.city) : null,

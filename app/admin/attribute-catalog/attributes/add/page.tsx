@@ -50,12 +50,19 @@ const AddAttribute = () => {
     e.preventDefault();
     setError(null);
 
-    const { name, description, type } = formData;
+    const { name, type } = formData;
 
-    if (!name || !description || !type) {
-      setError("All fields are required.");
+    // Only validate required fields
+    if (!name || !type) {
+      setError("Name and Type are required.");
       return;
     }
+
+    const preparedData = {
+      name: name.trim(),
+      type,
+      description: formData.description.trim() || "N/A",
+    };
 
     setLoading(true);
     try {
@@ -67,7 +74,7 @@ const AddAttribute = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(preparedData),
         }
       );
 
@@ -86,7 +93,7 @@ const AddAttribute = () => {
 
   return (
     <>
-      <Navbar label=" Attribute" />
+      <Navbar label="Attribute" />
       <Box sx={{ p: 3 }}>
         <Typography variant="h5" sx={{ mb: 3 }}>
           Add New Attribute
@@ -99,17 +106,19 @@ const AddAttribute = () => {
             value={formData.name}
             onChange={handleChange}
             fullWidth
+            required
             sx={{ mb: 2 }}
           />
 
           <TextField
-            label="Description"
+            label="Description (Optional)"
             name="description"
             value={formData.description}
             onChange={handleChange}
             fullWidth
             multiline
             rows={3}
+            placeholder="Leave empty to default to 'N/A'"
             sx={{ mb: 2 }}
           />
 
@@ -120,6 +129,7 @@ const AddAttribute = () => {
             onChange={handleChange}
             select
             fullWidth
+            required
             sx={{ mb: 3 }}
           >
             {typeOptions.map((option) => (

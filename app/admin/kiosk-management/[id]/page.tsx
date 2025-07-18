@@ -86,8 +86,8 @@ const KioskDetailsPage: React.FC = () => {
 
         const data: { kiosk: Kiosk } = await res.json();
         setKiosk(data.kiosk);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
       } finally {
         setLoading(false);
       }
@@ -116,8 +116,8 @@ const KioskDetailsPage: React.FC = () => {
 
       setDeleteDialogOpen(false);
       router.push("/admin/kiosk-management");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
   };
 

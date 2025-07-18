@@ -83,9 +83,10 @@ const EditCategory = () => {
   };
 
   const validateForm = () => {
-    if (!name) return setError("Name is required"), false;
-    if (!description) return setError("Description is required"), false;
-    // if (!thumbnail) return setError("Thumbnail is required"), false;
+    if (!name) {
+      setError("Name is required.");
+      return false;
+    }
     setError(null);
     return true;
   };
@@ -97,7 +98,11 @@ const EditCategory = () => {
     setLoading(true);
 
     try {
-      const body = JSON.stringify({ name, description, thumbnail });
+      const body = JSON.stringify({
+        name: name.trim(),
+        description: description.trim() || "N/A",
+        thumbnail,
+      });
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/categories/${id}`,
@@ -154,12 +159,13 @@ const EditCategory = () => {
             />
 
             <TextField
-              label="Description"
+              label="Description (Optional)"
               multiline
               rows={3}
               fullWidth
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              placeholder="Leave blank to default to 'N/A'"
               sx={{ mb: 3 }}
             />
 

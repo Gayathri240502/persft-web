@@ -33,42 +33,30 @@ const AddRoomType = () => {
     residenceTypes: [] as string[],
   });
 
-  const [residenceTypeList, setResidenceTypeList] = useState<ResidenceType[]>(
-    []
-  );
+  const [residenceTypeList, setResidenceTypeList] = useState<ResidenceType[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingResidenceTypes, setLoadingResidenceTypes] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [thumbnail, setThumbnail] = useState<string>("");
-  const [selectedFileName, setSelectedFileName] =
-    useState<string>("No file selected");
+  const [selectedFileName, setSelectedFileName] = useState<string>("No file selected");
 
   useEffect(() => {
     const fetchResidenceTypes = async () => {
       try {
         setLoadingResidenceTypes(true);
-
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/residence-types`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/residence-types`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
         if (!response.ok) {
-          throw new Error(
-            `Failed to fetch residence types: ${response.status}`
-          );
+          throw new Error(`Failed to fetch residence types: ${response.status}`);
         }
 
         const result = await response.json();
-
-        // Use same key as the first component
         const types = result.residenceTypes || [];
-
         setResidenceTypeList(types);
       } catch (error) {
         console.error("Fetch error:", error);
@@ -103,16 +91,6 @@ const AddRoomType = () => {
     }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFormData((prev) => ({
-        ...prev,
-        thumbnail: file.name, // <-- this is not used correctly
-      }));
-    }
-  };
-
   const handleThumbnailChange = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -129,12 +107,8 @@ const AddRoomType = () => {
   };
 
   const validateForm = () => {
-    if (
-      !formData.name ||
-      !formData.description ||
-      formData.residenceTypes.length === 0
-    ) {
-      setError("All fields are required except thumbnail.");
+    if (!formData.name || formData.residenceTypes.length === 0) {
+      setError("Name and at least one residence type are required.");
       return false;
     }
     return true;
@@ -152,21 +126,19 @@ const AddRoomType = () => {
 
     const payload = {
       ...formData,
-      thumbnail: thumbnail, // ✅ Include the base64 string here
+      description: formData.description.trim() || "N/A",
+      thumbnail: thumbnail,
     };
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/room-types`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/room-types`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to create room type");
@@ -184,7 +156,7 @@ const AddRoomType = () => {
 
   return (
     <>
-      <Navbar label=" Room Types" />
+      <Navbar label="Room Types" />
       <Box sx={{ p: 3 }}>
         <Typography variant="h5" sx={{ mb: 2 }}>
           Add New Room Type
@@ -200,7 +172,7 @@ const AddRoomType = () => {
         />
 
         <TextField
-          label="Description"
+          label="Description (Optional)"
           name="description"
           value={formData.description}
           onChange={handleInputChange}

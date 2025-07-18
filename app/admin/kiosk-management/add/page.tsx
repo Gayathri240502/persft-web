@@ -205,6 +205,8 @@ const AddKiosk = () => {
       // Construct payload with IDs, ensuring numbers if needed
       const payload = {
         ...form,
+          description: form.description.trim() || "N/A",
+
         country:
           typeof form.country === "string"
             ? Number(form.country)

@@ -29,7 +29,7 @@ const typeOptions = [
 const EditAttribute = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const id = searchParams.get("id"); // Assuming ID is passed in the URL query parameters
+  const id = searchParams.get("id");
   const { token } = getTokenAndRole();
 
   const [formData, setFormData] = useState({
@@ -61,9 +61,9 @@ const EditAttribute = () => {
         const attribute = await response.json();
 
         setFormData({
-          name: attribute.name,
-          description: attribute.description,
-          type: attribute.type,
+          name: attribute.name || "",
+          description: attribute.description || "",
+          type: attribute.type || "",
         });
       } catch (err: any) {
         setError(err.message || "Error fetching attribute data");
@@ -76,6 +76,7 @@ const EditAttribute = () => {
       fetchAttribute();
     } else {
       setError("Attribute ID is missing");
+      setInitialLoading(false);
     }
   }, [id, token]);
 
@@ -90,12 +91,18 @@ const EditAttribute = () => {
     e.preventDefault();
     setError(null);
 
-    const { name, description, type } = formData;
+    const { name, type } = formData;
 
-    if (!name || !description || !type) {
-      setError("All fields are required.");
+    if (!name.trim() || !type) {
+      setError("Name and Type are required.");
       return;
     }
+
+    const updatedData = {
+      name: name.trim(),
+      type,
+      description: formData.description.trim() || "N/A",
+    };
 
     setLoading(true);
     try {
@@ -107,7 +114,7 @@ const EditAttribute = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(updatedData),
         }
       );
 
@@ -147,14 +154,16 @@ const EditAttribute = () => {
             value={formData.name}
             onChange={handleChange}
             fullWidth
+            required
             sx={{ mb: 2 }}
           />
 
           <TextField
-            label="Description"
+            label="Description (Optional)"
             name="description"
             value={formData.description}
             onChange={handleChange}
+            placeholder="Leave blank to default to 'N/A'"
             fullWidth
             multiline
             rows={3}
@@ -168,6 +177,7 @@ const EditAttribute = () => {
             onChange={handleChange}
             select
             fullWidth
+            required
             sx={{ mb: 3 }}
           >
             {typeOptions.map((option) => (

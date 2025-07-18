@@ -404,7 +404,7 @@ const AddDesignType = () => {
 
       const designPayload = {
         name: formData.name,
-        description: formData.description,
+        description: formData.description.trim() || "N/A", // 🟢 Default to "N/A" if empty
         coohomUrl: formData.coohomUrl,
         thumbnail: thumbnailToSend,
         combinations: formData.combinations.map((combo) => ({
@@ -719,3 +719,4 @@ const AddDesignType = () => {
 };
 
 export default AddDesignType;
+

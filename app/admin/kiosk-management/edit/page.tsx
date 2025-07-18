@@ -277,7 +277,11 @@ const EditKiosk = () => {
 
     try {
       // Validate phone number in E.164 format
-      const fullPhone = `${form.countryCode || ""}${form.phone || ""}`;
+      // Use default country code or prepend +91 if not present
+      let fullPhone = form.phone || "";
+      if (!fullPhone.startsWith("+")) {
+        fullPhone = "+91" + fullPhone;
+      }
       const phoneRegex = /^\+\d{1,4}\d{6,14}$/;
       if (!phoneRegex.test(fullPhone)) {
         setLoading(false);

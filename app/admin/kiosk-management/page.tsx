@@ -260,7 +260,6 @@ const KioskManagement = () => {
         )}
 
         <StyledDataGrid
-          minWidth={1500}
           rows={kiosks}
           columns={columns}
           rowCount={rowCount}

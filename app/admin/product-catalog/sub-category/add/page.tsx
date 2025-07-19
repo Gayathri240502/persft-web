@@ -103,13 +103,6 @@ const AddSubCategory = () => {
     }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFormData((prev) => ({ ...prev, thumbnail: file.name }));
-    }
-  };
-
   const handleThumbnailChange = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -127,15 +120,11 @@ const AddSubCategory = () => {
   };
 
   const validateForm = () => {
-    if (
-      !formData.name ||
-      !formData.description ||
-      !formData.category ||
-      formData.attributeGroups.length === 0
-    ) {
-      setError("All fields are required.");
+    if (!formData.name || !formData.category || formData.attributeGroups.length === 0) {
+      setError("Name, category, and at least one attribute group are required.");
       return false;
     }
+    setError(null);
     return true;
   };
 
@@ -143,6 +132,11 @@ const AddSubCategory = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    const finalData = {
+      ...formData,
+      description: formData.description.trim() || "N/A",
+    };
 
     if (!validateForm()) {
       setLoading(false);
@@ -158,7 +152,7 @@ const AddSubCategory = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(finalData),
         }
       );
 
@@ -238,10 +232,11 @@ const AddSubCategory = () => {
             </Typography>
           </Box>
         </Box>
-        {/* Help Text */}
+
         <Typography variant="caption" sx={{ color: "#999" }}>
           Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
         </Typography>
+
         {thumbnail && (
           <Box sx={{ mb: 3 }}>
             <Typography variant="subtitle2">Preview:</Typography>

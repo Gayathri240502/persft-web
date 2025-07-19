@@ -76,6 +76,8 @@ const WorkTaskForm = () => {
     try {
       const payload = {
         ...formData,
+          description: formData.description.trim() || "N/A",
+
         targetDays: Number(formData.targetDays),
         bufferDays: Number(formData.bufferDays),
         poDays: Number(formData.poDays),
@@ -93,7 +95,7 @@ const WorkTaskForm = () => {
       if (!res.ok) {
         const errorDetails = await res.text();
         console.error("Error creating work task:", errorDetails);
-        alert("Failed to create work task");
+        // alert("Failed to create work task");
         return;
       } else {
         Router.push("/admin/work/work-task");

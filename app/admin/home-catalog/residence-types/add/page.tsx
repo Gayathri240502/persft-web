@@ -23,14 +23,11 @@ const AddResidenceType = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [thumbnail, setThumbnail] = useState<string>("");
-  const [selectedFileName, setSelectedFileName] =
-    useState<string>("No file selected");
+  const [selectedFileName, setSelectedFileName] = useState("No file selected");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleThumbnailChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFileName(file.name);
@@ -48,29 +45,21 @@ const AddResidenceType = () => {
       setError("Name is required");
       return false;
     }
-    if (!description) {
-      setError("Description is required");
-      return false;
-    }
-    // if (!thumbnail) {
-    //   setError("Thumbnail is required");
-    //   return false;
-    // }
+    // Description is optional, so we don't validate it
     setError(null);
     return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validateForm()) return;
 
     setLoading(true);
     try {
       const body = JSON.stringify({
         name,
-        description,
-        thumbnail, // This is now a base64 string
+        description: description.trim() || "N/A",
+        thumbnail,
       });
 
       const response = await fetch(
@@ -102,10 +91,9 @@ const AddResidenceType = () => {
   return (
     <>
       <Navbar label=" Residence Types" />
-
       <Box sx={{ p: 3 }} component="form" onSubmit={handleSubmit}>
         <Typography variant="h5" sx={{ mb: 2 }}>
-           Residence Type
+          Add Residence Type
         </Typography>
 
         {error && (
@@ -133,7 +121,6 @@ const AddResidenceType = () => {
         />
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {/* Upload Section */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <Button
               variant="outlined"
@@ -153,10 +140,10 @@ const AddResidenceType = () => {
             </Typography>
           </Box>
 
-          {/* Help Text */}
           <Typography variant="caption" sx={{ color: "#999" }}>
             Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
           </Typography>
+
           {thumbnail && (
             <Box sx={{ mb: 3 }}>
               <Typography variant="subtitle2">Preview:</Typography>
@@ -168,7 +155,6 @@ const AddResidenceType = () => {
             </Box>
           )}
 
-          {/* Buttons */}
           <Box sx={{ display: "flex", gap: 2 }}>
             <ReusableButton type="submit" disabled={loading}>
               {loading ? <CircularProgress size={24} /> : "Submit"}

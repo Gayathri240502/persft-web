@@ -250,7 +250,7 @@ const EditDesignType = () => {
     try {
       const payload = {
         name: formData.name,
-        description: formData.description,
+        description: formData.description.trim() || "N/A",
         coohomUrl: formData.coohomUrl,
         combinations: [
           {

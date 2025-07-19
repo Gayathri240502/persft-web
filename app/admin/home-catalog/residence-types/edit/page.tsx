@@ -25,7 +25,7 @@ const EditResidenceType = () => {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [thumbnail, setThumbnail] = useState<string>("at");
+  const [thumbnail, setThumbnail] = useState<string>("");
   const [selectedFileName, setSelectedFileName] = useState("No file selected");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +63,7 @@ const EditResidenceType = () => {
         setDescription(residenceType.description || "");
         setThumbnail(residenceType.thumbnail || "");
         setResidenceTypes(residenceType.residenceTypes || []);
-        setSelectedFileName("Existing Thumbnail");
+        setSelectedFileName(residenceType.thumbnail ? "Existing Thumbnail" : "No file selected");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error fetching data");
       } finally {
@@ -88,8 +88,7 @@ const EditResidenceType = () => {
 
   const validateForm = () => {
     if (!name) return setError("Name is required"), false;
-    if (!description) return setError("Description is required"), false;
-    // if (!thumbnail) return setError("Thumbnail is required"), false;
+    // description is optional; no validation
     setError(null);
     return true;
   };
@@ -101,7 +100,11 @@ const EditResidenceType = () => {
     setLoading(true);
 
     try {
-      const body = JSON.stringify({ name, description, thumbnail });
+      const payload = {
+        name,
+        description: description.trim() || "N/A",
+        thumbnail,
+      };
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/residence-types/${id}`,
@@ -111,7 +114,7 @@ const EditResidenceType = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body,
+          body: JSON.stringify(payload),
         }
       );
 
@@ -121,9 +124,7 @@ const EditResidenceType = () => {
 
       router.push("/admin/home-catalog/residence-types");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unexpected error occurred"
-      );
+      setError(err instanceof Error ? err.message : "Unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -167,9 +168,8 @@ const EditResidenceType = () => {
               sx={{ mb: 3 }}
             />
 
-            {/* Residence Types List */}
             <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1">Residence Types:</Typography>
+              <Typography variant="subtitle1">Mapped Residence Types:</Typography>
               {residenceTypes.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
                   No residence types available

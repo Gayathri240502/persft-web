@@ -42,6 +42,29 @@ interface City {
   name: string;
 }
 
+const countryCodes = [
+  { code: "+91", name: "India" },
+  { code: "+1", name: "United States" },
+  { code: "+44", name: "United Kingdom" },
+  { code: "+61", name: "Australia" },
+  { code: "+81", name: "Japan" },
+  { code: "+971", name: "UAE" },
+  { code: "+49", name: "Germany" },
+  { code: "+33", name: "France" },
+  { code: "+86", name: "China" },
+  { code: "+92", name: "Pakistan" },
+  { code: "+880", name: "Bangladesh" },
+  { code: "+94", name: "Sri Lanka" },
+  { code: "+7", name: "Russia" },
+  { code: "+82", name: "South Korea" },
+  { code: "+34", name: "Spain" },
+  { code: "+39", name: "Italy" },
+  { code: "+55", name: "Brazil" },
+  { code: "+62", name: "Indonesia" },
+  { code: "+27", name: "South Africa" },
+  { code: "+63", name: "Philippines" },
+];
+
 const EditKiosk = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -224,6 +247,13 @@ const EditKiosk = () => {
       | SelectChangeEvent<string>
   ) => {
     const { name, value } = e.target;
+
+    if (name === "phone") {
+      const digitsOnly = value.replace(/\D/g, "").slice(0, 10);
+      setForm((prev) => ({ ...prev, phone: digitsOnly }));
+      return;
+    }
+
     setForm((prev) => ({
       ...prev,
       [name]: value,
@@ -245,19 +275,46 @@ const EditKiosk = () => {
     setLoading(true);
     setError("");
 
-    setError("");
-
     try {
+      // Validate phone number in E.164 format
+      // Use default country code or prepend +91 if not present
+      let fullPhone = form.phone || "";
+      if (!fullPhone.startsWith("+")) {
+        fullPhone = "+91" + fullPhone;
+      }
+      const phoneRegex = /^\+\d{1,4}\d{6,14}$/;
+      if (!phoneRegex.test(fullPhone)) {
+        setLoading(false);
+        setError("Phone number must be in E.164 format (e.g., +919876543210)");
+        return;
+      }
+
       const payload = {
         ...form,
+        description: form.description.trim() || "N/A",
         country: form.country ? Number(form.country) : null,
         state: form.state ? Number(form.state) : null,
         city: form.city ? Number(form.city) : null,
+        phone: fullPhone,
       };
 
       if (!payload.password) {
         // delete password if empty to avoid sending empty string
         delete (payload as any).password;
+      }
+
+      // Only check for other required fields
+      if (
+        !form.firstName ||
+        !form.username ||
+        !form.email ||
+        !form.country ||
+        !form.state ||
+        !form.city
+      ) {
+        setLoading(false);
+        setError("Please fill in all required fields.");
+        return;
       }
 
       const res = await fetch(
@@ -366,14 +423,33 @@ const EditKiosk = () => {
         <Grid item xs={12} sm={6}>
           {renderTextField("Email", "email")}
         </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderTextField("Phone", "phone")}
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderTextField(
-            "Password (leave blank to keep current)",
-            "password"
-          )}
+        <Grid item xs={12}>
+          <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+            {/* Phone Number */}
+            <Box sx={{ width: "70%" }}>
+              <TextField
+                label="Phone Number"
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                fullWidth
+                inputProps={{ maxLength: 10 }}
+                required
+              />
+            </Box>
+            {/* Password */}
+            <Box sx={{ width: "70%" }}>
+              <TextField
+                name="password"
+                label="Password"
+                type="password"
+                fullWidth
+                value={form.password}
+                onChange={handleChange}
+                sx={{ flex: 1 }}
+              />
+            </Box>
+          </Box>
         </Grid>
         <Grid item xs={12}>
           {renderTextField("Description", "description")}
@@ -445,3 +521,4 @@ const EditKiosk = () => {
 };
 
 export default EditKiosk;
+

@@ -76,8 +76,8 @@ const EditWorkGroup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.description) {
-      setError("Both name and description are required.");
+    if (!formData.name.trim()) {
+      setError("Name is required.");
       return;
     }
 
@@ -92,7 +92,10 @@ const EditWorkGroup = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({
+            ...formData,
+            description: formData.description.trim() || "N/A",
+          }),
         }
       );
 

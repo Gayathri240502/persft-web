@@ -28,24 +28,21 @@ const AddCategory = () => {
   const router = useRouter();
   const { token } = getTokenAndRole();
 
-  const handleThumbnailChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFileName(file.name);
       const reader = new FileReader();
       reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setThumbnail(base64String);
+        setThumbnail(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
 
   const validateForm = () => {
-    if (!name || !description) {
-      setError("Name and description are required.");
+    if (!name) {
+      setError("Name is required.");
       return false;
     }
     setError(null);
@@ -59,20 +56,24 @@ const AddCategory = () => {
     setError(null);
     setSuccess(null);
 
-    // Ensure the correct API URL
-    const fullUrl = `${process.env.NEXT_PUBLIC_API_URL}/categories`; // Correct the endpoint here
-
-    const categoryData = { name, description, thumbnail };
+    const payload = {
+      name: name.trim(),
+      description: description.trim() || "N/A",
+      thumbnail,
+    };
 
     try {
-      const response = await fetch(fullUrl, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(categoryData),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/categories`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -81,7 +82,7 @@ const AddCategory = () => {
         );
       }
 
-      const result = await response.json();
+      await response.json();
       setSuccess("Category successfully created!");
       router.push("/admin/product-catalog/category");
     } catch (error) {
@@ -95,20 +96,6 @@ const AddCategory = () => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setSelectedFileName(file.name); // Set the file name
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (reader.result) {
-        setThumbnail(reader.result.toString()); // base64 string
-      }
-    };
-    reader.readAsDataURL(file); // Converts file to base64 string
-  };
-
   return (
     <>
       <Navbar label="Category" />
@@ -117,7 +104,6 @@ const AddCategory = () => {
           Add New Category
         </Typography>
 
-        {/* Error/Success Alerts */}
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
@@ -129,27 +115,26 @@ const AddCategory = () => {
           </Alert>
         )}
 
-        {/* Name Field */}
         <TextField
           label="Name"
           fullWidth
           sx={{ mb: 3 }}
           value={name}
           onChange={(e) => setName(e.target.value)}
+          required
         />
 
-        {/* Description Field */}
         <TextField
-          label="Description"
+          label="Description (Optional)"
           multiline
           rows={3}
           fullWidth
           sx={{ mb: 3 }}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+          placeholder="Leave blank to default to 'N/A'"
         />
 
-        {/* Thumbnail Upload */}
         <Box sx={{ mb: 3 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <Button
@@ -170,10 +155,10 @@ const AddCategory = () => {
             </Typography>
           </Box>
         </Box>
-        {/* Help Text */}
         <Typography variant="caption" sx={{ color: "#999" }}>
           Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
         </Typography>
+
         {thumbnail && (
           <Box sx={{ mb: 3 }}>
             <Typography variant="subtitle2">Preview:</Typography>
@@ -185,7 +170,6 @@ const AddCategory = () => {
           </Box>
         )}
 
-        {/* Action Buttons */}
         <Box sx={{ display: "flex", gap: 2 }}>
           <ReusableButton onClick={handleSubmit} disabled={loading}>
             {loading ? <CircularProgress size={24} /> : "Submit"}

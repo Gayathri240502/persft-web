@@ -65,10 +65,6 @@ const EditThemeType = () => {
         );
         setSelectedRooms(roomIds);
 
-        setSelectedRooms(roomIds);
-
-        setSelectedRooms(roomIds);
-
         const roomsRes = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/room-types`,
           {
@@ -77,9 +73,9 @@ const EditThemeType = () => {
             },
           }
         );
-        const roomData = await roomsRes.json();
-        const roomList = roomData.data || roomData.roomTypes || roomData || [];
 
+        const roomData = await roomsRes.json();
+        const roomList = roomData.data || roomData.roomTypes || [];
         setRoomTypes(roomList);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -112,11 +108,14 @@ const EditThemeType = () => {
   };
 
   const validateForm = () => {
-    if (!name) return setError("Name is required"), false;
-    if (!description) return setError("Description is required"), false;
-    // if (!thumbnail) return setError("Thumbnail is required"), false;
-    if (selectedRooms.length === 0)
-      return setError("Select at least one room type"), false;
+    if (!name) {
+      setError("Name is required");
+      return false;
+    }
+    if (selectedRooms.length === 0) {
+      setError("Select at least one room type");
+      return false;
+    }
     setError(null);
     return true;
   };
@@ -129,9 +128,9 @@ const EditThemeType = () => {
     try {
       const body = JSON.stringify({
         name,
-        description,
+        description: description.trim() || "N/A",
         thumbnail,
-        roomTypes: selectedRooms, // ✅ not "rooms"
+        roomTypes: selectedRooms,
       });
 
       const response = await fetch(
@@ -147,12 +146,12 @@ const EditThemeType = () => {
       );
 
       const result = await response.json();
-      console.log("UPDATE RESPONSE", result); // ✅ debug this
+      console.log("UPDATE RESPONSE", result);
 
       if (!response.ok) throw new Error(result.message || "Update failed");
 
       await router.push("/admin/home-catalog/themes");
-      router.refresh(); // ✅ Ensure fresh data is loaded
+      router.refresh();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Unexpected error occurred"

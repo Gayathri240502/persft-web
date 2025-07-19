@@ -22,14 +22,8 @@ const columns: GridColDef[] = [
   { field: "option", headerName: "Option", width: 280 },
 ];
 
-// Sample Data (Empty Rows for UI)
-const rows = Array.from({ length: 5 }, (_, index) => ({
-  id: index + 1,
-  location: "-",
-  state: "-",
-  city: "-",
-  option: "-",
-}));
+// Remove dummy data
+const rows: any[] = []; // Replace with API data when available
 
 const LocationSettings = () => {
   const router = useRouter();
@@ -109,3 +103,4 @@ const LocationSettings = () => {
 };
 
 export default LocationSettings;
+  

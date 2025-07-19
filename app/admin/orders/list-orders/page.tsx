@@ -25,17 +25,7 @@ const columns: GridColDef[] = [
   { field: "option", headerName: "Options", width: 160 },
 ];
 
-// Sample Order Data (Empty Rows for UI)
-const rows = Array.from({ length: 5 }, (_, index) => ({
-  id: index + 1,
-  order: "-",
-  customer: "-",
-  product: "-",
-  qantity: "-",
-  date: "-",
-  status: "-",
-  option: "-",
-}));
+const rows: any[] = []; // Replace with API data when available
 
 const ListOrders = () => {
   const [search, setSearch] = useState("");
@@ -124,3 +114,4 @@ const ListOrders = () => {
 };
 
 export default ListOrders;
+         

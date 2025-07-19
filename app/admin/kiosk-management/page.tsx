@@ -61,7 +61,7 @@ const KioskManagement = () => {
   const [selectedKiosk, setSelectedKiosk] = useState<Kiosk | null>(null);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
-    pageSize: 5,
+    pageSize: 10,
   });
 
   useEffect(() => {
@@ -260,7 +260,6 @@ const KioskManagement = () => {
         )}
 
         <StyledDataGrid
-          minWidth={1500}
           rows={kiosks}
           columns={columns}
           rowCount={rowCount}

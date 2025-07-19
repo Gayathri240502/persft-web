@@ -290,20 +290,16 @@ const EditProduct = () => {
       // Process existing attribute values from API response
       if (existingAttributeValues && existingAttributeValues.length > 0) {
         existingAttributeValues.forEach((av: any) => {
-          // Handle both nested object format and simple format
           let attributeId: string;
 
           if (typeof av.attribute === "object" && av.attribute !== null) {
-            // If attribute is an object with _id or id
             attributeId = av.attribute._id || av.attribute.id || "";
           } else if (typeof av.attribute === "string") {
-            // If attribute is already a string ID
             attributeId = av.attribute;
           } else {
             attributeId = "";
           }
 
-          // Only add if we can find a matching attribute definition
           const matchingAttribute = extractedAttributes.find(
             (attrDef) =>
               attrDef.id === attributeId || attrDef._id === attributeId
@@ -311,9 +307,15 @@ const EditProduct = () => {
 
           if (matchingAttribute) {
             mappedAttributeValues.push({
-              attribute: matchingAttribute.id, // Use the attribute definition's id
+              attribute: matchingAttribute.id,
               value: av.value || "",
             });
+          } else {
+            console.warn(
+              `Attribute with id ${attributeId} not found in subcategory attributes.`
+            );
+            // Optionally show this as an error message:
+            // setError(`Attribute with id ${attributeId} not found. Please check subcategory attribute mapping.`);
           }
         });
       }
@@ -479,9 +481,11 @@ const EditProduct = () => {
     setSubmitLoading(true);
 
     try {
+      const cleanedDescription = product.description.trim() || "N/A";
       const productData = {
         ...product,
         price: parseFloat(product.price),
+        description: cleanedDescription,
       };
 
       const body = JSON.stringify(productData);
@@ -620,14 +624,18 @@ const EditProduct = () => {
               <Grid item xs={12}>
                 <TextField
                   label="Description"
+                  value={product.description}
+                  onChange={(e) => handleInputChange("description", e.target.value)}
+                  fullWidth
                   multiline
                   rows={3}
-                  fullWidth
-                  value={product.description}
-                  onChange={(e) =>
-                    handleInputChange("description", e.target.value)
-                  }
                   sx={{ mb: 2 }}
+                  placeholder="Enter product description"
+                  InputProps={{
+                    style: {
+                      color: product.description.trim() === "" ? "#888" : undefined,
+                    },
+                  }}
                 />
               </Grid>
             </Grid>

@@ -179,11 +179,11 @@ const ProjectDetailsPage: React.FC = () => {
               <strong>Description:</strong> {project.description}
             </Typography>
           </Grid>
-          <Grid item xs={12} sm={6}>
+          {/* <Grid item xs={12} sm={6}>
             <Typography>
               <strong>Archived:</strong> {project.archive ? "Yes" : "No"}
             </Typography>
-          </Grid>
+          </Grid> */}
           <Grid item xs={12} sm={6}>
             <Typography>
               <strong>Created At:</strong>{" "}

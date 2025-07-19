@@ -42,6 +42,29 @@ interface City {
   name: string;
 }
 
+const countryCodes = [
+ { code: "+91", name: "India" },
+  { code: "+1", name: "United States" },
+  { code: "+44", name: "United Kingdom" },
+  { code: "+61", name: "Australia" },
+  { code: "+81", name: "Japan" },
+  { code: "+971", name: "UAE" },
+  { code: "+49", name: "Germany" },
+  { code: "+33", name: "France" },
+  { code: "+86", name: "China" },
+  { code: "+92", name: "Pakistan" },
+  { code: "+880", name: "Bangladesh" },
+  { code: "+94", name: "Sri Lanka" },
+  { code: "+7", name: "Russia" },
+  { code: "+82", name: "South Korea" },
+  { code: "+34", name: "Spain" },
+  { code: "+39", name: "Italy" },
+  { code: "+55", name: "Brazil" },
+  { code: "+62", name: "Indonesia" },
+  { code: "+27", name: "South Africa" },
+  { code: "+63", name: "Philippines" },
+];
+
 const AddKiosk = () => {
   const router = useRouter();
   const { token } = getTokenAndRole();
@@ -59,6 +82,7 @@ const AddKiosk = () => {
     city: "",
     address: "",
     projects: [] as string[],
+    countryCode: "+91",
   });
 
   const [countries, setCountries] = useState<Country[]>([]);
@@ -168,6 +192,14 @@ const AddKiosk = () => {
       | SelectChangeEvent<string>
   ) => {
     const { name, value } = e.target;
+
+    // Only allow numeric input and 10 digits for phone
+    if (name === "phone") {
+      const digitsOnly = value.replace(/\D/g, "").slice(0, 10);
+      setForm((prev) => ({ ...prev, phone: digitsOnly }));
+      return;
+    }
+
     setForm((prev) => ({
       ...prev,
       [name]: value,
@@ -188,7 +220,6 @@ const AddKiosk = () => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      // Check required fields
       if (
         !form.firstName ||
         !form.username ||
@@ -202,18 +233,14 @@ const AddKiosk = () => {
         return;
       }
 
-      // Construct payload with IDs, ensuring numbers if needed
       const payload = {
         ...form,
-        country:
-          typeof form.country === "string"
-            ? Number(form.country)
-            : form.country,
-        state: typeof form.state === "string" ? Number(form.state) : form.state,
-        city: typeof form.city === "string" ? Number(form.city) : form.city,
+        description: form.description.trim() || "N/A",
+        country: Number(form.country),
+        state: Number(form.state),
+        city: Number(form.city),
+        phone: `${form.countryCode}${form.phone}`,
       };
-
-      console.log("Submitting payload:", payload);
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kiosks`, {
         method: "POST",
@@ -226,13 +253,11 @@ const AddKiosk = () => {
 
       if (!res.ok) {
         const errData = await res.json();
-        console.error("API Error Response:", errData);
         throw new Error(errData?.message || "Failed to create kiosk");
       }
 
       router.push("/admin/kiosk-management");
     } catch (err: any) {
-      console.error(err);
       alert(err.message || "Error creating kiosk");
     } finally {
       setLoading(false);
@@ -296,11 +321,49 @@ const AddKiosk = () => {
           <Grid item xs={12} sm={6}>
             {renderTextField("Email", "email")}
           </Grid>
-          <Grid item xs={12} sm={6}>
-            {renderTextField("Phone", "phone")}
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            {renderTextField("Password", "password")}
+          {/* Phone Number & Password Side by Side */}
+          <Grid item xs={12}>
+            <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+              {/* Country Code + Phone */}
+              <Box sx={{ display: "flex", gap: 1, width: "50%" }}>
+                <FormControl sx={{ minWidth: "30%" }}>
+                  <InputLabel>Country Code</InputLabel>
+                  <Select
+                    name="countryCode"
+                    value={form.countryCode}
+                    label="Country Code"
+                    onChange={handleChange}
+                  >
+                    {countryCodes.map((c) => (
+                      <MenuItem key={c.code} value={c.code}>
+                        {c.name} ({c.code})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <TextField
+                  label="Phone Number"
+                  name="phone"
+                  value={form.phone}
+                  onChange={handleChange}
+                  sx={{ flex: 1 }}
+                  inputProps={{ maxLength: 10 }}
+                  required
+                />
+              </Box>
+              {/* Password */}
+              <Box sx={{ width: "50%" }}>
+                <TextField
+                  name="password"
+                  label="Password"
+                  type="password"
+                  fullWidth
+                  value={form.password}
+                  onChange={handleChange}
+                  sx={{ flex: 1 }}
+                />
+              </Box>
+            </Box>
           </Grid>
           <Grid item xs={12}>
             {renderTextField("Description", "description")}
@@ -309,33 +372,13 @@ const AddKiosk = () => {
             {renderTextField("Address", "address")}
           </Grid>
           <Grid item xs={12} sm={6}>
-            {renderSelect(
-              "Country",
-              form.country,
-              "country",
-              countries,
-              loadingCountries
-            )}
+            {renderSelect("Country", form.country, "country", countries, loadingCountries)}
           </Grid>
           <Grid item xs={12} sm={6}>
-            {renderSelect(
-              "State",
-              form.state,
-              "state",
-              states,
-              false,
-              !form.country
-            )}
+            {renderSelect("State", form.state, "state", states, false, !form.country)}
           </Grid>
           <Grid item xs={12} sm={6}>
-            {renderSelect(
-              "City",
-              form.city,
-              "city",
-              cities,
-              false,
-              !form.state
-            )}
+            {renderSelect("City", form.city, "city", cities, false, !form.state)}
           </Grid>
           <Grid item xs={12}>
             <Typography variant="h6" sx={{ mb: 1 }}>

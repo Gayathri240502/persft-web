@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
@@ -26,7 +26,7 @@ interface Attribute {
 const EditAttributeGroup = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const id = searchParams.get("id"); // Assuming ID is passed in the URL query parameters
+  const id = searchParams.get("id");
   const { token } = getTokenAndRole();
 
   const [name, setName] = useState("");
@@ -39,7 +39,6 @@ const EditAttributeGroup = () => {
   const [error, setError] = useState("");
   const [initialLoading, setInitialLoading] = useState(true);
 
-  // Fetch attributes for the attribute group
   const fetchAttributes = async () => {
     try {
       const response = await fetch(
@@ -58,7 +57,6 @@ const EditAttributeGroup = () => {
     }
   };
 
-  // Fetch the attribute group details
   const fetchAttributeGroup = async () => {
     try {
       const response = await fetch(
@@ -77,15 +75,13 @@ const EditAttributeGroup = () => {
 
       const data = await response.json();
       setName(data.name);
-      setDescription(data.description);
+      setDescription(data.description || "");
 
-      // Set selected attributes
       const selected = data.attributes.reduce((acc: any, curr: any) => {
         const attrId = curr.attributeId || curr.attributeDetails?._id;
         if (attrId) acc[attrId] = true;
         return acc;
       }, {});
-
       setSelectedAttributes(selected);
     } catch (err) {
       setError("Failed to fetch attribute group.");
@@ -112,7 +108,6 @@ const EditAttributeGroup = () => {
   };
 
   const handleSubmit = async () => {
-    // Filter out selected IDs that are not part of the valid attributes list
     const validAttributeIds = new Set(attributes.map((attr) => attr._id));
 
     const selected = Object.entries(selectedAttributes)
@@ -141,7 +136,7 @@ const EditAttributeGroup = () => {
           },
           body: JSON.stringify({
             name: name.trim(),
-            description: description.trim(),
+            description: description.trim() || "N/A",
             attributes: selected,
           }),
         }
@@ -191,16 +186,18 @@ const EditAttributeGroup = () => {
           sx={{ mb: 3 }}
           value={name}
           onChange={(e) => setName(e.target.value)}
+          required
         />
 
         <TextField
-          label="Description"
+          label="Description (Optional)"
           multiline
           rows={3}
           fullWidth
           sx={{ mb: 3 }}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+          placeholder="Leave blank to default to 'N/A'"
         />
 
         <Typography variant="h6" sx={{ mb: 1 }}>

@@ -36,26 +36,25 @@ const AddAttributeGroups = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Fetch attributes
-  const fetchAttributes = async () => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/attributes?page=1&limit=1000`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      const result = await response.json();
-      setAttributes(result.attributes || []);
-    } catch (err) {
-      console.error("Error fetching attributes:", err);
-    }
-  };
-
   useEffect(() => {
+    const fetchAttributes = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/attributes?page=1&limit=1000`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        const result = await response.json();
+        setAttributes(result.attributes || []);
+      } catch (err) {
+        console.error("Error fetching attributes:", err);
+      }
+    };
+
     fetchAttributes();
   }, []);
 
@@ -83,6 +82,12 @@ const AddAttributeGroups = () => {
       setLoading(true);
       setError("");
 
+      const payload = {
+        name: name.trim(),
+        description: description.trim() || "N/A",
+        attributes: selected,
+      };
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/attribute-groups`,
         {
@@ -91,11 +96,7 @@ const AddAttributeGroups = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            name,
-            description,
-            attributes: selected,
-          }),
+          body: JSON.stringify(payload),
         }
       );
 
@@ -131,16 +132,18 @@ const AddAttributeGroups = () => {
           sx={{ mb: 3 }}
           value={name}
           onChange={(e) => setName(e.target.value)}
+          required
         />
 
         <TextField
-          label="Description"
+          label="Description (Optional)"
           multiline
           rows={3}
           fullWidth
           sx={{ mb: 3 }}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+          placeholder="Leave blank to default to 'N/A'"
         />
 
         <Typography variant="h6" sx={{ mb: 1 }}>

@@ -33,10 +33,8 @@ const AddProduct = () => {
     name: string;
     value: string;
     type: string;
-    // Add any other properties if needed
   };
 
-  // Form state
   const [product, setProduct] = useState({
     name: "",
     sku: "",
@@ -53,46 +51,31 @@ const AddProduct = () => {
     attributeValues: [] as { attribute: string; value: string }[],
   });
 
-  // File upload state
-
-  // Dropdown data
   const [categories, setCategories] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
   const [workGroups, setWorkGroups] = useState([]);
   const [workTasks, setWorkTasks] = useState([]);
-  const [attributeGroups, setAttributeGroups] = useState([]); // Raw API response
-  const [flattenedAttributes, setFlattenedAttributes] = useState<Attribute[]>(
-    []
-  ); // Flattened attributes for display
+  const [attributeGroups, setAttributeGroups] = useState([]);
+  const [flattenedAttributes, setFlattenedAttributes] = useState<Attribute[]>([]);
 
-  // UI state
   const [loading, setLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // API call helper
   const apiCall = async (endpoint: string, options: RequestInit = {}) => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}${endpoint}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-            ...options.headers,
-          },
-          ...options,
-        }
-      );
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          ...options.headers,
+        },
+        ...options,
+      });
 
       if (!response.ok) {
-        // Attempt to parse JSON error message if available
-        const errorData = await response
-          .json()
-          .catch(() => ({ message: response.statusText }));
-        throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`
-        );
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
       return await response.json();
@@ -102,7 +85,6 @@ const AddProduct = () => {
     }
   };
 
-  // Helper function to flatten attribute groups
   const flattenAttributeGroups = (attributeGroups: any[]) => {
     const flattened: any[] = [];
     attributeGroups.forEach((group: any) => {
@@ -114,7 +96,7 @@ const AddProduct = () => {
             type: attr.type,
             options: attr.options || [],
             order: attr.order || 0,
-            groupName: group.name, // Keep reference to the group name
+            groupName: group.name,
           });
         });
       }
@@ -122,7 +104,6 @@ const AddProduct = () => {
     return flattened;
   };
 
-  // Load initial data
   useEffect(() => {
     loadInitialData();
   }, []);
@@ -143,7 +124,6 @@ const AddProduct = () => {
     setLoading(false);
   };
 
-  // Load subcategories when category changes
   useEffect(() => {
     if (product.category) {
       loadSubCategories(product.category);
@@ -153,7 +133,6 @@ const AddProduct = () => {
     }
   }, [product.category]);
 
-  // Load work tasks when work group changes
   useEffect(() => {
     if (product.workGroup) {
       loadWorkTasks(product.workGroup);
@@ -163,7 +142,6 @@ const AddProduct = () => {
     }
   }, [product.workGroup]);
 
-  // Load attributes when subcategory changes
   useEffect(() => {
     if (product.subCategory) {
       loadAttributes(product.subCategory);
@@ -176,9 +154,7 @@ const AddProduct = () => {
 
   const loadSubCategories = async (categoryId: string) => {
     try {
-      const data = await apiCall(
-        `/products/dropdowns/subcategories/${categoryId}`
-      );
+      const data = await apiCall(`/products/dropdowns/subcategories/${categoryId}`);
       setSubCategories(data);
     } catch (err: any) {
       setError(err.message || "Failed to load subcategories");
@@ -187,9 +163,7 @@ const AddProduct = () => {
 
   const loadWorkTasks = async (workGroupId: string) => {
     try {
-      const data = await apiCall(
-        `/products/dropdowns/work-tasks/${workGroupId}`
-      );
+      const data = await apiCall(`/products/dropdowns/work-tasks/${workGroupId}`);
       setWorkTasks(data);
     } catch (err: any) {
       setError(err.message || "Failed to load work tasks");
@@ -200,12 +174,8 @@ const AddProduct = () => {
     try {
       const data = await apiCall(`/products/attributes/${subCategoryId}`);
       setAttributeGroups(data);
-
-      // Flatten the attribute groups to get individual attributes
       const flattened = flattenAttributeGroups(data);
       setFlattenedAttributes(flattened);
-
-      // Reset attribute values when attributes change to ensure consistency
       setProduct((prev) => ({ ...prev, attributeValues: [] }));
     } catch (err: any) {
       setError(err.message || "Failed to load attributes");
@@ -218,21 +188,6 @@ const AddProduct = () => {
       [field]: value,
     }));
   };
-
-  // const handleThumbnailChange = async (
-  //   e: React.ChangeEvent<HTMLInputElement>
-  // ) => {
-  //   const file = e.target.files?.[0];
-  //   if (file) {
-  //     setSelectedFileName(file.name);
-  //     const reader = new FileReader();
-  //     reader.onloadend = () => {
-  //       const base64String = reader.result as string;
-  //       setProduct((prev) => ({ ...prev, thumbnail: base64String }));
-  //     };
-  //     reader.readAsDataURL(file);
-  //   }
-  // };
 
   const addNewAttributeEntry = () => {
     setProduct((prev) => ({
@@ -264,50 +219,22 @@ const AddProduct = () => {
   };
 
   const validateForm = () => {
-    if (!product.name) {
-      setError("Product name is required");
-      return false;
-    }
-    if (!product.sku) {
-      setError("SKU is required");
-      return false;
-    }
-    if (!product.price) {
-      setError("Price is required");
-      return false;
-    }
-    if (!product.brand) {
-      setError("Brand is required");
-      return false;
-    }
-    if (!product.category) {
-      setError("Category is required");
-      return false;
-    }
-    if (!product.subCategory) {
-      setError("Subcategory is required");
-      return false;
-    }
+    if (!product.name) return setError("Product name is required"), false;
+    if (!product.sku) return setError("SKU is required"), false;
+    if (!product.price) return setError("Price is required"), false;
+    if (!product.brand) return setError("Brand is required"), false;
+    if (!product.category) return setError("Category is required"), false;
+    if (!product.subCategory) return setError("Subcategory is required"), false;
+    if (isNaN(parseFloat(product.price)) || parseFloat(product.price) <= 0)
+      return setError("Please enter a valid price greater than 0"), false;
 
-    if (isNaN(parseFloat(product.price)) || parseFloat(product.price) <= 0) {
-      setError("Please enter a valid price greater than 0");
-      return false;
-    }
-
-    // Validate attributes - assuming all attributes are required
     for (const attribute of flattenedAttributes) {
       const attributeId = attribute.id;
       const attributeName = attribute.name;
-
-      // Check if this attribute has a non-empty value in product.attributeValues
       const hasValue = product.attributeValues.some(
         (av) => av.attribute === attributeId && av.value.trim() !== ""
       );
-
-      if (!hasValue) {
-        setError(`Missing value for required attribute: ${attributeName}`);
-        return false;
-      }
+      if (!hasValue) return setError(`Missing value for required attribute: ${attributeName}`), false;
     }
 
     setError(null);
@@ -316,35 +243,31 @@ const AddProduct = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validateForm()) return;
 
     setSubmitLoading(true);
-
     try {
+      const cleanedDescription = product.description.trim() || "N/A";
+
       const productData = {
         ...product,
         price: parseFloat(product.price),
+        description: cleanedDescription,
       };
 
       const body = JSON.stringify(productData);
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/products`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body,
-        }
-      );
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body,
+      });
 
       if (!response.ok) {
-        const errorData = await response
-          .json()
-          .catch(() => ({ message: "Unknown error" }));
+        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
         throw new Error(errorData.message || "Failed to create product");
       }
 

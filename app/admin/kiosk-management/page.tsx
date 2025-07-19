@@ -237,7 +237,7 @@ const KioskManagement = () => {
             <IconButton
               size="small"
               color="error"
-              onClick={() => handleDeleteClick(params.row.keycloakId)}
+              onClick={() => handleDeleteClick(params.row)}
               title="Delete"
             >
               <Delete fontSize="small" />

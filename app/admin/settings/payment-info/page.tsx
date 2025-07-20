@@ -8,21 +8,14 @@ import {
   TextField,
   CircularProgress,
   Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
   Snackbar,
   useMediaQuery,
   Card,
   CardContent,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-
 import ReusableButton from "@/app/components/Button";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
-import CancelButton from "@/app/components/CancelButton";
 
 interface PaymentInfo {
   id: string;
@@ -40,7 +33,7 @@ const PaymentInfoPage: React.FC = () => {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
     designAmount: 1000,
     partialAmount: 50,
@@ -60,7 +53,6 @@ const PaymentInfoPage: React.FC = () => {
 
       if (!res.ok) {
         if (res.status === 404) {
-          // No payment info exists yet
           setPaymentInfo(null);
           return;
         }
@@ -70,6 +62,10 @@ const PaymentInfoPage: React.FC = () => {
       const item = await res.json();
       setPaymentInfo({
         id: item._id,
+        designAmount: item.designAmount,
+        partialAmount: item.partialAmount,
+      });
+      setFormData({
         designAmount: item.designAmount,
         partialAmount: item.partialAmount,
       });
@@ -99,7 +95,7 @@ const PaymentInfoPage: React.FC = () => {
       partialAmount: formData.partialAmount,
     };
 
-    if (method === "PATCH" && paymentInfo) {
+    if (paymentInfo) {
       requestBody.id = paymentInfo.id;
     }
 
@@ -126,33 +122,21 @@ const PaymentInfoPage: React.FC = () => {
       setSuccessMsg(
         `Payment info ${method === "POST" ? "added" : "updated"} successfully`
       );
-      setDialogOpen(false);
+      setEditMode(false);
       fetchPaymentInfo();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Submission failed");
     }
   };
 
-  const handleOpenDialog = () => {
+  const handleEditClick = () => {
     if (paymentInfo) {
-      // Pre-fill form with existing data for update
       setFormData({
         designAmount: paymentInfo.designAmount,
         partialAmount: paymentInfo.partialAmount,
       });
-    } else {
-      // Reset form for new entry
-      setFormData({
-        designAmount: 1000,
-        partialAmount: 50,
-      });
     }
-    setDialogOpen(true);
-  };
-
-  const handleCloseDialog = () => {
-    setDialogOpen(false);
-    setError(null);
+    setEditMode(true);
   };
 
   return (
@@ -170,101 +154,83 @@ const PaymentInfoPage: React.FC = () => {
             <CircularProgress />
           </Box>
         ) : (
-          <Box>
-            {paymentInfo ? (
-              // Show existing payment info with update button
-              <Card sx={{ mb: 3 }}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Current Payment Information
-                  </Typography>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body1" sx={{ mb: 1 }}>
-                      <strong>Design Amount:</strong> {paymentInfo.designAmount}
-                    </Typography>
-                    <Typography variant="body1" sx={{ mb: 2 }}>
-                      <strong>Partial Amount:</strong>{" "}
-                      {paymentInfo.partialAmount}%
-                    </Typography>
-                  </Box>
-                  <ReusableButton onClick={handleOpenDialog}>
-                    Update Payment Info
-                  </ReusableButton>
-                </CardContent>
-              </Card>
-            ) : (
-              // Show add button when no payment info exists
-              <Box sx={{ textAlign: "center", py: 4 }}>
-                <Typography
-                  variant="h6"
-                  sx={{ mb: 2, color: "text.secondary" }}
-                >
-                  No payment information configured
-                </Typography>
-                <ReusableButton onClick={handleOpenDialog}>
-                  Add Payment Info
-                </ReusableButton>
-              </Box>
-            )}
-          </Box>
-        )}
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                {paymentInfo
+                  ? editMode
+                    ? "Update Payment Info"
+                    : "Current Payment Information"
+                  : "Add Payment Info"}
+              </Typography>
 
-        <Dialog
-          open={dialogOpen}
-          onClose={handleCloseDialog}
-          fullWidth
-          maxWidth="sm"
-        >
-          <DialogTitle>
-            {paymentInfo ? "Update Payment Info" : "Add Payment Info"}
-          </DialogTitle>
-          <DialogContent
-            sx={{
-              mt: 2,
-              px: 2,
-              py: 1,
-              display: "flex",
-              flexDirection: "column",
-              gap: 2,
-              overflow: "visible",
-            }}
-          >
-            <TextField
-              label="Design Amount"
-              type="number"
-              fullWidth
-              variant="outlined"
-              value={formData.designAmount === 0 ? "" : formData.designAmount}
-              onChange={(e) => {
-                const value = e.target.value;
-                setFormData({
-                  ...formData,
-                  designAmount: value === "" ? 0 : parseFloat(value),
-                });
-              }}
-            />
-            <TextField
-              label="Partial Amount (%)"
-              type="number"
-              fullWidth
-              variant="outlined"
-              value={formData.partialAmount === 0 ? "" : formData.partialAmount}
-              onChange={(e) => {
-                const value = e.target.value;
-                setFormData({
-                  ...formData,
-                  partialAmount: value === "" ? 0 : parseFloat(value),
-                });
-              }}
-            />
-          </DialogContent>
-          <DialogActions>
-            <CancelButton onClick={handleCloseDialog}>Cancel</CancelButton>
-            <ReusableButton variant="contained" onClick={handleSubmit}>
-              {paymentInfo ? "Update" : "Add"}
-            </ReusableButton>
-          </DialogActions>
-        </Dialog>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
+                  my: 2,
+                }}
+              >
+                <TextField
+                  label="Design Amount"
+                  type="number"
+                  fullWidth
+                  disabled={!editMode}
+                  variant="outlined"
+                  value={formData.designAmount}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      designAmount: parseFloat(e.target.value),
+                    })
+                  }
+                />
+
+                <TextField
+                  label="Partial Amount (%)"
+                  type="number"
+                  fullWidth
+                  disabled={!editMode}
+                  variant="outlined"
+                  value={formData.partialAmount}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      partialAmount: parseFloat(e.target.value),
+                    })
+                  }
+                />
+              </Box>
+
+              {editMode ? (
+                <Box sx={{ display: "flex", gap: 2 }}>
+                  <ReusableButton onClick={handleSubmit}>Save</ReusableButton>
+                  <ReusableButton
+                    variant="outlined"
+                    onClick={() => {
+                      setEditMode(false);
+                      if (paymentInfo) {
+                        setFormData({
+                          designAmount: paymentInfo.designAmount,
+                          partialAmount: paymentInfo.partialAmount,
+                        });
+                      }
+                    }}
+                  >
+                    Cancel
+                  </ReusableButton>
+                </Box>
+              ) : (
+                <Box sx={{ mt: 2 }}>
+                  <ReusableButton onClick={handleEditClick}>
+                    {paymentInfo ? "Update Info" : "Add Info"}
+                  </ReusableButton>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <Snackbar
           open={!!successMsg}

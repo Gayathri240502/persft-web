@@ -57,7 +57,7 @@ const Merchant = () => {
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
-    pageSize: 5,
+    pageSize: 10,
   });
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -276,7 +276,6 @@ const Merchant = () => {
             onAdd={handleAdd}
             onSearch={handleSearchChange}
             searchPlaceholder="Search Merchants..."
-           
           />
         </Box>
 

@@ -64,7 +64,7 @@ const Category = () => {
 
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
-    pageSize: 5,
+    pageSize: 10,
   });
 
   const { token } = getTokenAndRole();

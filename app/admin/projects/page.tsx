@@ -75,7 +75,7 @@ const Projects = () => {
   const debouncedSearch = useDebounce(search, 500); // 500ms delay for better UX
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
-    pageSize: 5,
+    pageSize: 10,
   });
   const [rowCount, setRowCount] = useState(0);
   const [projects, setProjects] = useState<Project[]>([]);

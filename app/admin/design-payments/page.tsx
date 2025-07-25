@@ -59,7 +59,7 @@ const DesignPayments = () => {
 
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
-    pageSize: 5,
+    pageSize: 10,
   });
   const [rowCount, setRowCount] = useState(0);
 
@@ -132,11 +132,11 @@ const DesignPayments = () => {
   }, [paginationModel, isValid, debouncedSearchText]);
 
   const columns: GridColDef[] = [
-    { field: "sn", headerName: "SN", width: 70 },
+    { field: "sn", headerName: "SN", width:70 },
     {
       field: "_id",
       headerName: "ID",
-      flex: 2,
+      flex: 0.5,
       renderCell: (params) => (
         <Typography variant="body2" sx={{ color: theme.palette.primary.main }}>
           <a href={`/admin/design-payments/${params.row._id}`}>
@@ -145,19 +145,19 @@ const DesignPayments = () => {
         </Typography>
       ),
     },
-    { field: "amount", headerName: "Amount", flex: 1 },
-    { field: "orderId", headerName: "Order ID", flex: 1 },
-    { field: "paymentId", headerName: "Payment ID", flex: 1 },
+    { field: "amount", headerName: "Amount", flex: 0.3 },
+    { field: "orderId", headerName: "Order ID", flex: 0.5 },
+    { field: "paymentId", headerName: "Payment ID", flex: 0.5 },
     {
       field: "customerName",
       headerName: "Customer",
-      flex: 1,
+      flex: 0.5,
       renderCell: (params) => params.row.customer?.fullName || "N/A",
     },
     {
       field: "projectName",
       headerName: "Project",
-      flex: 1,
+      flex: 0.5,
       renderCell: (params) =>
         params.row.project?.name && params.row.project.name !== ""
           ? params.row.project.name

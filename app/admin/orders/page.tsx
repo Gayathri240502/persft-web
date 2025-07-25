@@ -1,157 +1,342 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
-  Button,
   TextField,
-  useMediaQuery,
-  IconButton,
-  Menu,
+  Select,
   MenuItem,
+  FormControl,
+  InputLabel,
+  CircularProgress,
+  Alert,
+  Button,
+  Chip,
 } from "@mui/material";
-import { GridColDef } from "@mui/x-data-grid";
-import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 import { useTheme } from "@mui/material/styles";
-import FilterListIcon from "@mui/icons-material/FilterList";
-import ReusableButton from "@/app/components/Button";
-import Link from "next/link";
+import {
+  GridColDef,
+  GridPaginationModel,
+  DataGrid,
+  GridRenderCellParams,
+} from "@mui/x-data-grid";
+import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
-// Columns for Orders Table
-const columns: GridColDef[] = [
-  { field: "id", headerName: "S.No", width: 80 },
-  { field: "order", headerName: "Order ID", width: 160 },
-  { field: "customer", headerName: "Customer Name", width: 160 },
-  { field: "product", headerName: "Product", width: 160 },
-  { field: "quantity", headerName: "Quantity", width: 160 },
-  { field: "date", headerName: "Order Date", width: 160 },
-  { field: "status", headerName: "Status", width: 160 },
-  { field: "option", headerName: "Options", width: 160 },
-];
+interface DesignOrder {
+  _id?: string;
+  orderId: string;
+  customerId: string;
+  customerEmail?: string;
+  projectId: string;
+  status: string;
+  currentPaymentStage?: string;
+  totalAmount: number;
+  createdAt: string;
+  updatedAt: string;
+  isArchived: boolean;
+  id?: string;
+  sn?: number;
+}
 
-// Remove dummy data for now
-// const rows = Array.from({ length: 5 }, (_, index) => ({
-//   id: index + 1,
-//   order: "-",
-//   customer: "-",
-//   product: "-",
-//   quantity: "-",
-//   date: "-",
-//   status: "-",
-//   option: "-",
-// }));
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = React.useState(value);
 
-// Use an empty array or fetch from API
-const rows: any[] = []; // Replace with API data when available
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
 
-const Orders = () => {
-  const [search, setSearch] = useState("");
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
+  return debouncedValue;
+}
 
+const getStatusColor = (status: string) => {
+  const statusColors: {
+    [key: string]:
+      | "default"
+      | "primary"
+      | "secondary"
+      | "error"
+      | "info"
+      | "success"
+      | "warning";
+  } = {
+    created: "default",
+    design_received: "info",
+    booking_payment_pending: "warning",
+    booking_payment_done: "success",
+    processing_payment_pending: "warning",
+    processing_payment_done: "success",
+    pre_delivery_payment_pending: "warning",
+    pre_delivery_payment_done: "success",
+    completion_payment_pending: "warning",
+    completion_payment_done: "success",
+    cancelled: "error",
+  };
+  return statusColors[status] || "default";
+};
+
+const DesignOrders = () => {
   const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // Handlers for filter menu
-  const handleFilterClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
+  const [orders, setOrders] = useState<DesignOrder[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
+    pageSize: 10,
+  });
+  const [rowCount, setRowCount] = useState(0);
+
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [paymentStageFilter, setPaymentStageFilter] = useState<string>("");
+  const [searchText, setSearchText] = useState("");
+  const [customerEmailFilter, setCustomerEmailFilter] = useState("");
+
+  const debouncedSearchText = useDebounce(searchText, 500);
+  const debouncedCustomerEmail = useDebounce(customerEmailFilter, 500);
+
+  const { token } = getTokenAndRole();
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const page = paginationModel.page + 1;
+      const limit = paginationModel.pageSize;
+      const sortField = "createdAt";
+      const sortOrder = "desc";
+
+      const params = new URLSearchParams();
+      params.append("page", page.toString());
+      params.append("limit", limit.toString());
+      params.append("sortBy", sortField);
+      params.append("sortOrder", sortOrder);
+
+      if (statusFilter) params.append("status", statusFilter);
+      if (paymentStageFilter)
+        params.append("currentPaymentStage", paymentStageFilter);
+      if (debouncedSearchText.trim())
+        params.append("orderId", debouncedSearchText.trim());
+      if (debouncedCustomerEmail.trim())
+        params.append("customerEmail", debouncedCustomerEmail.trim());
+
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/admin/design-orders?${params.toString()}`;
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch design orders");
+
+      const data = await res.json();
+      console.log("API response:", data);
+
+      const startIndex = (page - 1) * limit;
+      const formatted = data.orders.map((item: DesignOrder, index: number) => ({
+        ...item,
+        id: item._id || item.orderId || `row-${index}`,
+        sn: startIndex + index + 1,
+      }));
+
+      setOrders(formatted);
+      setRowCount(data.total || 0);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unknown error");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleFilterClose = () => {
-    setAnchorEl(null);
+  useEffect(() => {
+    fetchOrders();
+  }, [
+    paginationModel,
+    statusFilter,
+    paymentStageFilter,
+    debouncedSearchText,
+    debouncedCustomerEmail,
+  ]);
+
+  const handleClearFilters = () => {
+    setStatusFilter("");
+    setPaymentStageFilter("");
+    setSearchText("");
+    setCustomerEmailFilter("");
   };
+
+  const columns: GridColDef[] = [
+    { field: "sn", headerName: "SN", width: 70 },
+
+    { field: "orderId", headerName: "Order ID", flex: 0.4 },
+    {
+      field: "customerId",
+      headerName: "Customer ID",
+      flex: 0.5,
+      renderCell: (params) => (
+        <Typography variant="body2">{params.value}</Typography>
+      ),
+    },
+    {
+      field: "projectId",
+      headerName: "Project ID",
+      flex: 0.5,
+      renderCell: (params) => (
+        <Typography variant="body2">{params.value}</Typography>
+      ),
+    },
+    {
+      field: "totalAmount",
+      headerName: "Amount",
+      flex: 0.3,
+      renderCell: (params) =>
+        `$${params.row.totalAmount?.toFixed(2) || "0.00"}`,
+    },
+    {
+      field: "status",
+      headerName: "Status",
+      flex: 0.5,
+      renderCell: (params: GridRenderCellParams) => (
+        <Chip
+          label={params.value.replace(/_/g, " ").toUpperCase()}
+          color={getStatusColor(params.value)}
+          size="small"
+          variant="outlined"
+        />
+      ),
+    },
+    {
+      field: "currentPaymentStage",
+      headerName: "Payment Stage",
+      flex: 0.4,
+      renderCell: (params: GridRenderCellParams) => (
+        <Chip
+          label={params.value?.replace(/_/g, " ").toUpperCase() || "N/A"}
+          color="primary"
+          size="small"
+        />
+      ),
+    },
+  ];
 
   return (
-    <Box sx={{ p: isSmallScreen ? 2 : 3 }}>
-      <Typography variant={isSmallScreen ? "h6" : "h5"} sx={{ mb: 2 }}>
-        Orders
-      </Typography>
-
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: isSmallScreen ? "column" : "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 2,
-          gap: isSmallScreen ? 2 : 1,
-        }}
-      >
-        <TextField
-          label="Search Orders"
-          variant="outlined"
-          size="small"
-          fullWidth={isSmallScreen}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-
-        <Box sx={{ display: "flex", gap: 1 }}>
-          {/* Filter Button */}
-          <IconButton sx={{ color: "#05344c" }} onClick={handleFilterClick}>
-            <FilterListIcon />
-          </IconButton>
-
-          {/* Dropdown Menu */}
-          <Menu anchorEl={anchorEl} open={open} onClose={handleFilterClose}>
-            {/* <MenuItem onClick={handleFilterClose}>
-              <Link href="/orders" style={{ textDecoration: "none", color: "inherit" }}>
-                Orders
-              </Link>
-            </MenuItem> */}
-            <MenuItem onClick={handleFilterClose}>
-              <Link
-                href="/admin/orders/list-orders"
-                style={{ textDecoration: "none", color: "inherit" }}
-              >
-                List Orders
-              </Link>
-            </MenuItem>
-            <MenuItem onClick={handleFilterClose}>
-              <Link
-                href="/admin/orders/canceled-orders"
-                style={{ textDecoration: "none", color: "inherit" }}
-              >
-                Canceled Orders
-              </Link>
-            </MenuItem>
-          </Menu>
-
-          {/* Other Buttons */}
-          <ReusableButton>Export Orders</ReusableButton>
-          <Button
-            variant="contained"
-            sx={{
-              backgroundColor: "#05344c",
-              "&:hover": { backgroundColor: "#042a3b" },
-            }}
-          >
-            Print
-          </Button>
-          <Button
-            variant="contained"
-            sx={{
-              backgroundColor: "#05344c",
-              "&:hover": { backgroundColor: "#042a3b" },
-            }}
-          >
-            PDF
+    <>
+      <Navbar label="Design Orders" />
+      <Box sx={{ p: 3 }}>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            flexWrap: "wrap",
+            mb: 2,
+            alignItems: "center",
+          }}
+        >
+          <TextField
+            label="Search Order ID"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            placeholder="Search by Order ID"
+            sx={{ minWidth: 200 }}
+            size="small"
+          />
+          <TextField
+            label="Customer Email"
+            value={customerEmailFilter}
+            onChange={(e) => setCustomerEmailFilter(e.target.value)}
+            placeholder="Search by Customer Email"
+            sx={{ minWidth: 200 }}
+            size="small"
+          />
+          <FormControl sx={{ minWidth: 180 }} size="small">
+            <InputLabel id="status-label">Status</InputLabel>
+            <Select
+              labelId="status-label"
+              label="Status"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <MenuItem value="">All Statuses</MenuItem>
+              <MenuItem value="created">Created</MenuItem>
+              <MenuItem value="design_received">Design Received</MenuItem>
+              <MenuItem value="booking_payment_pending">
+                Booking Payment Pending
+              </MenuItem>
+              <MenuItem value="booking_payment_done">
+                Booking Payment Done
+              </MenuItem>
+              <MenuItem value="processing_payment_pending">
+                Processing Payment Pending
+              </MenuItem>
+              <MenuItem value="processing_payment_done">
+                Processing Payment Done
+              </MenuItem>
+              <MenuItem value="pre_delivery_payment_pending">
+                Pre Delivery Payment Pending
+              </MenuItem>
+              <MenuItem value="pre_delivery_payment_done">
+                Pre Delivery Payment Done
+              </MenuItem>
+              <MenuItem value="completion_payment_pending">
+                Completion Payment Pending
+              </MenuItem>
+              <MenuItem value="completion_payment_done">
+                Completion Payment Done
+              </MenuItem>
+              <MenuItem value="cancelled">Cancelled</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl sx={{ minWidth: 160 }} size="small">
+            <InputLabel id="payment-stage-label">Payment Stage</InputLabel>
+            <Select
+              labelId="payment-stage-label"
+              label="Payment Stage"
+              value={paymentStageFilter}
+              onChange={(e) => setPaymentStageFilter(e.target.value)}
+            >
+              <MenuItem value="">All Stages</MenuItem>
+              <MenuItem value="booking">Booking</MenuItem>
+              <MenuItem value="processing">Processing</MenuItem>
+              <MenuItem value="pre_delivery">Pre Delivery</MenuItem>
+              <MenuItem value="completion">Completion</MenuItem>
+            </Select>
+          </FormControl>
+          <Button variant="outlined" onClick={handleClearFilters}>
+            Clear Filters
           </Button>
         </Box>
-      </Box>
 
-      <Box sx={{ height: 400, width: "99%", overflowX: "auto" }}>
-        <StyledDataGrid
-          columns={columns}
-          rows={rows}
-          pageSizeOptions={[5, 10, 25]}
-          autoHeight
-          disableColumnMenu={isSmallScreen}
-        />
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        {loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <Box sx={{ minWidth: 1500 }}>
+            <DataGrid
+              rows={orders}
+              columns={columns}
+              rowCount={rowCount}
+              paginationModel={paginationModel}
+              onPaginationModelChange={setPaginationModel}
+              pageSizeOptions={[5, 10, 25, 50, 100]}
+              paginationMode="server"
+              autoHeight
+              disableRowSelectionOnClick
+              getRowId={(row) => row._id || row.orderId || row.id}
+            />
+          </Box>
+        )}
       </Box>
-    </Box>
+    </>
   );
 };
 
-export default Orders;
+export default DesignOrders;

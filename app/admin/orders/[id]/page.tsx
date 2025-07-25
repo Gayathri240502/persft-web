@@ -81,7 +81,12 @@ const DesignOrderDetailsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <CircularProgress />
       </Box>
     );
@@ -89,7 +94,12 @@ const DesignOrderDetailsPage: React.FC = () => {
 
   if (error) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="error">Error: {error}</Alert>
       </Box>
     );
@@ -97,7 +107,12 @@ const DesignOrderDetailsPage: React.FC = () => {
 
   if (!order) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <Alert severity="warning">No design order found</Alert>
       </Box>
     );
@@ -109,14 +124,18 @@ const DesignOrderDetailsPage: React.FC = () => {
       <Box p={4}>
         <Button
           startIcon={<ArrowBack />}
-          onClick={() => router.push('/admin/orders')}
+          onClick={() => router.push("/admin/orders")}
           sx={{ marginBottom: 2 }}
         >
           Back
         </Button>
 
         <Paper elevation={3} sx={{ p: 4 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
             <Typography variant="h4">{order.orderId}</Typography>
             <IconButton
               color="primary"
@@ -129,23 +148,55 @@ const DesignOrderDetailsPage: React.FC = () => {
           </Box>
 
           <Box mt={3}>
-            <Typography><strong>Customer ID:</strong> {order.customerId}</Typography>
-            <Typography><strong>Email:</strong> {order.customerEmail}</Typography>
-            <Typography><strong>Project ID:</strong> {order.projectId}</Typography>
-            <Typography><strong>Status:</strong> {order.status}</Typography>
-            <Typography><strong>Total Amount:</strong> ₹{order.totalAmount}</Typography>
-            <Typography><strong>Total Paid:</strong> ₹{order.totalPaidAmount}</Typography>
-            <Typography><strong>Archived:</strong> {order.isArchived ? "Yes" : "No"}</Typography>
-            <Typography><strong>Total Payment Attempts:</strong> {order.totalPaymentAttempts}</Typography>
-            <Typography mt={2}><strong>Payment Configuration:</strong></Typography>
+            <Typography>
+              <strong>Customer ID:</strong> {order.customerId}
+            </Typography>
+            <Typography>
+              <strong>Email:</strong> {order.customerEmail}
+            </Typography>
+            <Typography>
+              <strong>Project ID:</strong> {order.projectId}
+            </Typography>
+            <Typography>
+              <strong>Status:</strong> {order.status}
+            </Typography>
+            <Typography>
+              <strong>Total Amount:</strong> ₹{order.totalAmount}
+            </Typography>
+            <Typography>
+              <strong>Total Paid:</strong> ₹{order.totalPaidAmount}
+            </Typography>
+            <Typography>
+              <strong>Archived:</strong> {order.isArchived ? "Yes" : "No"}
+            </Typography>
+            <Typography>
+              <strong>Total Payment Attempts:</strong>{" "}
+              {order.totalPaymentAttempts}
+            </Typography>
+            <Typography mt={2}>
+              <strong>Payment Configuration:</strong>
+            </Typography>
             <ul>
               <li>Booking: {order.paymentConfiguration.bookingPercentage}%</li>
-              <li>Processing: {order.paymentConfiguration.processingPercentage}%</li>
-              <li>Pre-Delivery: {order.paymentConfiguration.preDeliveryPercentage}%</li>
-              <li>Completion: {order.paymentConfiguration.completionPercentage}%</li>
+              <li>
+                Processing: {order.paymentConfiguration.processingPercentage}%
+              </li>
+              <li>
+                Pre-Delivery: {order.paymentConfiguration.preDeliveryPercentage}
+                %
+              </li>
+              <li>
+                Completion: {order.paymentConfiguration.completionPercentage}%
+              </li>
             </ul>
-            <Typography><strong>Created At:</strong> {new Date(order.createdAt).toLocaleString()}</Typography>
-            <Typography><strong>Updated At:</strong> {new Date(order.updatedAt).toLocaleString()}</Typography>
+            <Typography>
+              <strong>Created At:</strong>{" "}
+              {new Date(order.createdAt).toLocaleString()}
+            </Typography>
+            <Typography>
+              <strong>Updated At:</strong>{" "}
+              {new Date(order.updatedAt).toLocaleString()}
+            </Typography>
           </Box>
         </Paper>
       </Box>

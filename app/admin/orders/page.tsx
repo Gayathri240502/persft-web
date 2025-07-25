@@ -23,6 +23,7 @@ import {
   GridRenderCellParams,
 } from "@mui/x-data-grid";
 import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useRouter } from "next/navigation";
 
 interface DesignOrder {
   _id?: string;
@@ -167,10 +168,25 @@ const DesignOrders = () => {
     setCustomerEmailFilter("");
   };
 
+  const router = useRouter();
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", width: 70 },
 
-    { field: "orderId", headerName: "Order ID", flex: 0.4 },
+    {
+      field: "orderId",
+      headerName: "Order ID",
+      flex: 0.4,
+      renderCell: (params) => (
+        <Typography
+          variant="body2"
+          sx={{ color: theme.palette.primary.main, cursor: "pointer" }}
+          onClick={() => router.push(`/admin/orders/${params.row.orderId}`)}
+        >
+          {params.row.orderId ?? "N/A"}
+        </Typography>
+      ),
+    },
+
     {
       field: "customerId",
       headerName: "Customer ID",

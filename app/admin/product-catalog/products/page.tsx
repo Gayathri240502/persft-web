@@ -22,7 +22,7 @@ import {
   GridCellParams,
   GridPaginationModel,
 } from "@mui/x-data-grid";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 // Interfaces
 export interface ProductResponse {
@@ -107,7 +107,7 @@ const Products = () => {
   const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
   const debouncedSearch = useDebounce(search, 300);
 
   const columns: GridColDef[] = [

@@ -12,7 +12,7 @@ import {
   Button,
 } from "@mui/material";
 import { ArrowBack, Edit } from "@mui/icons-material";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface PaymentConfiguration {
   bookingPercentage: number;
@@ -42,7 +42,7 @@ interface DesignOrder {
 const DesignOrderDetailsPage: React.FC = () => {
   const { id } = useParams(); // Assuming [id] route
   const router = useRouter();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const [order, setOrder] = useState<DesignOrder | null>(null);
   const [loading, setLoading] = useState(true);

@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowBack, Edit, Delete } from "@mui/icons-material";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface WorkTask {
   _id: string;
@@ -38,7 +38,7 @@ interface WorkTask {
 const WorkTaskDetails: React.FC = () => {
   const { id } = useParams();
   const router = useRouter();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const [workTask, setWorkTask] = useState<WorkTask | null>(null);
   const [loading, setLoading] = useState(true);

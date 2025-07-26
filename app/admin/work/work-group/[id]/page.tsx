@@ -16,7 +16,7 @@ import {
 } from "@mui/material";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowBack, Edit, Delete } from "@mui/icons-material";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import Navbar from "@/app/components/navbar/navbar";
 
 interface WorkGroup {
@@ -31,7 +31,7 @@ interface WorkGroup {
 const WorkGroupDetails: React.FC = () => {
   const { id } = useParams();
   const router = useRouter();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const [workGroup, setWorkGroup] = useState<WorkGroup | null>(null);
   const [loading, setLoading] = useState(true);
@@ -128,70 +128,77 @@ const WorkGroupDetails: React.FC = () => {
 
   return (
     <>
-    <Navbar label="Work Groups"/>
-    <Box p={4}>
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => router.back()}
-        sx={{ marginBottom: 2 }}
-      >
-        Back
-      </Button>
+      <Navbar label="Work Groups" />
+      <Box p={4}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => router.back()}
+          sx={{ marginBottom: 2 }}
+        >
+          Back
+        </Button>
 
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="h4">{workGroup.name}</Typography>
-          <Box>
-            <IconButton
-              color="primary"
-              onClick={() =>
-                router.push(`/admin/work/work-group/edit?id=${id}`)
-              }
-            >
-              <Edit />
-            </IconButton>
-            <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
-              <Delete />
-            </IconButton>
+        <Paper elevation={3} sx={{ p: 4 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Typography variant="h4">{workGroup.name}</Typography>
+            <Box>
+              <IconButton
+                color="primary"
+                onClick={() =>
+                  router.push(`/admin/work/work-group/edit?id=${id}`)
+                }
+              >
+                <Edit />
+              </IconButton>
+              <IconButton
+                color="error"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Delete />
+              </IconButton>
+            </Box>
           </Box>
-        </Box>
 
-        <Typography variant="body1" mt={2}>
-          <strong>Description:</strong> {workGroup.description}
-        </Typography>
-        {/* <Typography variant="body2" color="text.secondary" mt={2}>
+          <Typography variant="body1" mt={2}>
+            <strong>Description:</strong> {workGroup.description}
+          </Typography>
+          {/* <Typography variant="body2" color="text.secondary" mt={2}>
           <strong>Status:</strong> {workGroup.archive ? "Archived" : "Active"}
         </Typography> */}
-        <Typography variant="body2" color="text.secondary">
-          <strong>Created At:</strong>{" "}
-          {new Date(workGroup.createdAt).toLocaleString()}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          <strong>Updated At:</strong>{" "}
-          {new Date(workGroup.updatedAt).toLocaleString()}
-        </Typography>
-      </Paper>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Created At:</strong>{" "}
+            {new Date(workGroup.createdAt).toLocaleString()}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Updated At:</strong>{" "}
+            {new Date(workGroup.updatedAt).toLocaleString()}
+          </Typography>
+        </Paper>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Delete Work Group</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this work group? This action is
-            irreversible.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={handleDelete}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+        >
+          <DialogTitle>Delete Work Group</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this work group? This action is
+              irreversible.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button color="error" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
     </>
   );
 };

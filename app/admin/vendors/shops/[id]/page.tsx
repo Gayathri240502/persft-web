@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowBack, Edit, Delete } from "@mui/icons-material";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import Navbar from "@/app/components/navbar/navbar";
 
 interface Shop {
@@ -45,7 +45,7 @@ interface Shop {
 const ShopDetailsPage: React.FC = () => {
   const { id } = useParams();
   const router = useRouter();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const [shop, setShop] = useState<Shop | null>(null);
   const [loading, setLoading] = useState(true);
@@ -105,7 +105,6 @@ const ShopDetailsPage: React.FC = () => {
 
   if (loading) {
     return (
-      
       <Box
         display="flex"
         justifyContent="center"
@@ -144,118 +143,124 @@ const ShopDetailsPage: React.FC = () => {
   }
 
   return (
-
     <>
-    <Navbar label="Shops"/>
-    <Box p={4}>
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => router.back()}
-        sx={{ marginBottom: 2 }}
-      >
-        Back
-      </Button>
+      <Navbar label="Shops" />
+      <Box p={4}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => router.back()}
+          sx={{ marginBottom: 2 }}
+        >
+          Back
+        </Button>
 
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box>
-            <Typography variant="h4">
-              {shop.firstName} {shop.lastName}
+        <Paper elevation={3} sx={{ p: 4 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Box>
+              <Typography variant="h4">
+                {shop.firstName} {shop.lastName}
+              </Typography>
+              <Typography color="text.secondary">
+                {shop.archive ? "Archived" : "Active"} —{" "}
+                {shop.enabled ? "Enabled" : "Disabled"}
+              </Typography>
+            </Box>
+            <Box>
+              <IconButton
+                color="primary"
+                onClick={() =>
+                  router.push(`/admin/vendors/shops/edit?id=${id}`)
+                }
+              >
+                <Edit />
+              </IconButton>
+              <IconButton
+                color="error"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Delete />
+              </IconButton>
+            </Box>
+          </Box>
+
+          <Box mt={3}>
+            <Typography>
+              <strong>ID:</strong> {shop._id}
             </Typography>
-            <Typography color="text.secondary">
-              {shop.archive ? "Archived" : "Active"} —{" "}
-              {shop.enabled ? "Enabled" : "Disabled"}
+            <Typography>
+              <strong>First Name:</strong> {shop.firstName}
+            </Typography>
+            <Typography>
+              <strong>Last name:</strong> {shop.lastName}
+            </Typography>
+            <Typography>
+              <strong>Username:</strong> {shop.username}
+            </Typography>
+            <Typography>
+              <strong>Email:</strong> {shop.email}
+            </Typography>
+            <Typography>
+              <strong>Phone:</strong> {shop.phone}
+            </Typography>
+            <Typography>
+              <strong>Owner Name:</strong> {shop.ownerName}
+            </Typography>
+            <Typography>
+              <strong>Address:</strong> {shop.address}
+            </Typography>
+            <Typography>
+              <strong>Country:</strong> {shop.countryName ?? "Not set"}
+            </Typography>
+            <Typography>
+              <strong>State:</strong> {shop.stateName ?? "Not set"}
+            </Typography>
+            <Typography>
+              <strong>City:</strong> {shop.cityName ?? "Not set"}
+            </Typography>
+            <Typography>
+              <strong>Category:</strong> {shop.categoryName ?? "Not set"}
+            </Typography>
+            <Typography>
+              <strong>Subcategory:</strong> {shop.subCategoryName ?? "Not set"}
+            </Typography>
+            <Typography>
+              <strong>Role:</strong>{" "}
+              {Array.isArray(shop.role) ? shop.role.join(", ") : "Not set"}
+            </Typography>
+            <Typography>
+              <strong>Created At:</strong>{" "}
+              {new Date(shop.createdAt).toLocaleString()}
+            </Typography>
+            <Typography>
+              <strong>Updated At:</strong>{" "}
+              {new Date(shop.updatedAt).toLocaleString()}
             </Typography>
           </Box>
-          <Box>
-            <IconButton
-              color="primary"
-               onClick={() =>
-                router.push(`/admin/vendors/shops/edit?id=${id}`)
-              }
-            >
-              <Edit />
-            </IconButton>
-            <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
-              <Delete />
-            </IconButton>
-          </Box>
-        </Box>
+        </Paper>
 
-        <Box mt={3}>
-          <Typography>
-            <strong>ID:</strong> {shop._id}
-          </Typography>
-          <Typography>
-            <strong>First Name:</strong> {shop.firstName}
-          </Typography>
-          <Typography>
-            <strong>Last name:</strong> {shop.lastName}
-          </Typography>
-          <Typography>
-            <strong>Username:</strong> {shop.username}
-          </Typography>
-          <Typography>
-            <strong>Email:</strong> {shop.email}
-          </Typography>
-          <Typography>
-            <strong>Phone:</strong> {shop.phone}
-          </Typography>
-          <Typography>
-            <strong>Owner Name:</strong> {shop.ownerName}
-          </Typography>
-          <Typography>
-            <strong>Address:</strong> {shop.address}
-          </Typography>
-          <Typography>
-            <strong>Country:</strong> {shop.countryName ?? "Not set"}
-          </Typography>
-          <Typography>
-            <strong>State:</strong> {shop.stateName ?? "Not set"}
-          </Typography>
-          <Typography>
-            <strong>City:</strong> {shop.cityName ?? "Not set"}
-          </Typography>
-          <Typography>
-            <strong>Category:</strong> {shop.categoryName ?? "Not set"}
-          </Typography>
-          <Typography>
-            <strong>Subcategory:</strong> {shop.subCategoryName ?? "Not set"}
-          </Typography>
-          <Typography>
-            <strong>Role:</strong>{" "}
-            {Array.isArray(shop.role) ? shop.role.join(", ") : "Not set"}
-          </Typography>
-          <Typography>
-            <strong>Created At:</strong>{" "}
-            {new Date(shop.createdAt).toLocaleString()}
-          </Typography>
-          <Typography>
-            <strong>Updated At:</strong>{" "}
-            {new Date(shop.updatedAt).toLocaleString()}
-          </Typography>
-        </Box>
-      </Paper>
-
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this shop? This action cannot be
-            undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={handleDelete}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+        >
+          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this shop? This action cannot be
+              undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button color="error" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
     </>
   );
 };

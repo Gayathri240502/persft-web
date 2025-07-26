@@ -22,7 +22,7 @@ import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Delete, Edit, Visibility } from "@mui/icons-material";
 import ReusableButton from "@/app/components/Button";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 interface User {
@@ -56,7 +56,7 @@ const UserManagement = () => {
     null
   );
 
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const fetchUsers = async () => {
     const { page, pageSize } = paginationModel;
@@ -142,12 +142,12 @@ const UserManagement = () => {
   };
 
   const handleAdd = useCallback(() => {
-      router.push("/admin/users/add");
-    }, [router]);
+    router.push("/admin/users/add");
+  }, [router]);
 
-    const handleSearchChange = useCallback((value: string) => {
-        setSearch(value);
-      }, []);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+  }, []);
 
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", flex: 0.3 },

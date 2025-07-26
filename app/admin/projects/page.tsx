@@ -30,7 +30,7 @@ import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface Project {
   _id: string;
@@ -92,7 +92,7 @@ const Projects = () => {
     };
   }, []);
 
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   // Reset to first page when search changes
   useEffect(() => {

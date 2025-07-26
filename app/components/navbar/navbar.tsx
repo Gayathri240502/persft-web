@@ -4,16 +4,12 @@ import { useEffect, useState } from "react";
 import { Menu, MenuItem, IconButton, Divider, Avatar } from "@mui/material";
 import {
   ExpandMore as ExpandMoreIcon,
-  Person as PersonIcon,
-  Settings as SettingsIcon,
   ExitToApp as LogoutIcon,
-  Notifications as NotificationsIcon,
-  Badge,
 } from "@mui/icons-material";
-
+import { useSession } from "next-auth/react";
 import {
-  getTokenAndRole,
   clearSession,
+  useTokenAndRole,
 } from "@/app/containers/utils/session/CheckSession";
 import { decodeJwt } from "@/app/containers/utils/session/DecodeToken";
 
@@ -22,33 +18,59 @@ interface NavbarProps {
 }
 
 export default function Navbar({ label }: NavbarProps) {
+  const { data: session, status } = useSession();
+  const { token, role, isAuthenticated } = useTokenAndRole();
+
   const [userDetails, setUserDetails] = useState({
     name: "",
     email: "",
     role: "",
   });
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [notificationCount] = useState(3); // This would come from your notification system
 
   const updateUserDetails = () => {
-    const { token, role } = getTokenAndRole();
-    if (token) {
-      const decoded = decodeJwt(token);
-      if (decoded) {
-        setUserDetails({
-          name: decoded.preferred_username || "",
-          email: decoded.email || "",
-          role: role || decoded.realm_access?.roles[0] || "",
-        });
+    if (session && isAuthenticated) {
+      // Get details from NextAuth session
+      const sessionData = session as any;
+
+      // Try to decode the JWT token for additional details
+      let decodedData = null;
+      if (token && token !== "client-side-token") {
+        decodedData = decodeJwt(token);
       }
+
+      setUserDetails({
+        name:
+          decodedData?.preferred_username ||
+          decodedData?.name ||
+          sessionData?.user?.name ||
+          "User",
+        email:
+          decodedData?.email || sessionData?.user?.email || "user@example.com",
+        role:
+          role ||
+          decodedData?.realm_access?.roles[0] ||
+          sessionData?.roles ||
+          "Member",
+      });
+    } else {
+      // Clear user details if not authenticated
+      setUserDetails({
+        name: "",
+        email: "",
+        role: "",
+      });
     }
   };
 
   useEffect(() => {
     updateUserDetails();
+  }, [session, status, token, role, isAuthenticated]);
 
+  // Listen for session changes
+  useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === "token") {
+      if (event.key?.includes("nextauth") || event.key === "token") {
         updateUserDetails();
       }
     };
@@ -59,7 +81,6 @@ export default function Navbar({ label }: NavbarProps) {
 
   const handleLogout = () => {
     clearSession();
-    window.location.href = "/login";
   };
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -70,12 +91,15 @@ export default function Navbar({ label }: NavbarProps) {
     setAnchorEl(null);
   };
 
-  const getInitials = (name: string) =>
-    name
+  const getInitials = (name: string) => {
+    if (!name) return "U";
+    return name
       .split(" ")
       .map((word) => word[0])
       .join("")
-      .toUpperCase();
+      .toUpperCase()
+      .slice(0, 2); // Limit to 2 characters
+  };
 
   const getRoleColor = (role: string) => {
     switch (role.toLowerCase()) {
@@ -90,6 +114,29 @@ export default function Navbar({ label }: NavbarProps) {
     }
   };
 
+  // Don't render if not authenticated
+  if (status === "loading") {
+    return (
+      <nav className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+        <div className="px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="animate-pulse flex space-x-4">
+              <div className="h-4 bg-gray-300 rounded w-24"></div>
+            </div>
+            <div className="flex-1 flex justify-center px-4">
+              <div className="animate-pulse h-6 bg-gray-300 rounded w-48"></div>
+            </div>
+            <div className="animate-pulse h-8 w-8 bg-gray-300 rounded-full"></div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <nav className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
       <div className="px-4 sm:px-6 lg:px-8">
@@ -100,9 +147,9 @@ export default function Navbar({ label }: NavbarProps) {
           </div>
 
           {/* Center: Page Title */}
-          <div className="flex-1 flex justify-center  px-4  ">
+          <div className="flex-1 flex justify-center px-4">
             <div className="max-w-2xl w-full">
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 truncate text-center ">
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 truncate text-center">
                 {label}
               </h1>
             </div>
@@ -110,7 +157,7 @@ export default function Navbar({ label }: NavbarProps) {
 
           {/* Right: Actions and User Menu */}
           <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-shrink-0">
-            {/* Notifications */}
+            {/* Notifications - Optional */}
 
             {/* User Menu */}
             <div className="relative">

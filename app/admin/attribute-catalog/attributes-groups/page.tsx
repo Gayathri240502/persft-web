@@ -21,7 +21,7 @@ import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
 import ReusableButton from "@/app/components/Button";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 interface AttributeReference {
@@ -60,7 +60,7 @@ const AttributeGroups = () => {
   const router = useRouter();
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);

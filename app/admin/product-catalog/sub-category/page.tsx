@@ -23,7 +23,7 @@ import { useRouter } from "next/navigation";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
 import ReusableButton from "@/app/components/Button";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface Category {
   _id: string;
@@ -83,7 +83,7 @@ const SubCategory = () => {
     null
   );
 
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
   const debouncedSearch = useDebounce(search, 300);
 
   const fetchSubCategories = useCallback(async () => {

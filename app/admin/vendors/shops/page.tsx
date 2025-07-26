@@ -23,7 +23,7 @@ import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
 import ReusableButton from "@/app/components/Button";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 interface Shop {
@@ -64,7 +64,7 @@ const Shop = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
 
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const fetchShops = async () => {
     const { page, pageSize } = paginationModel;

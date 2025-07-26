@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { ArrowBack, Edit, Delete } from "@mui/icons-material";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface RoomType {
   _id: string;
@@ -45,7 +45,7 @@ const ThemeDetailsPage: React.FC = () => {
 
   const { id } = useParams();
   const router = useRouter();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   useEffect(() => {
     if (!id) return;

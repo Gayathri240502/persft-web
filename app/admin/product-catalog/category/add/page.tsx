@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 const AddCategory = () => {
   const [name, setName] = useState("");
@@ -26,7 +26,7 @@ const AddCategory = () => {
   const [success, setSuccess] = useState<string | null>(null);
 
   const router = useRouter();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

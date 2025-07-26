@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowBack, Edit, Delete } from "@mui/icons-material";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import Navbar from "@/app/components/navbar/navbar";
 
 interface Merchant {
@@ -41,7 +41,7 @@ interface Merchant {
 const MerchantDetailsPage: React.FC = () => {
   const { id } = useParams();
   const router = useRouter();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const [merchant, setMerchant] = useState<Merchant | null>(null);
   const [loading, setLoading] = useState(true);
@@ -151,98 +151,112 @@ const MerchantDetailsPage: React.FC = () => {
   }
 
   return (
-
     <>
-    <Navbar label="Merchants"/>
-    <Box p={4}>
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => router.back()}
-        sx={{ marginBottom: 2 }}
-      >
-        Back
-      </Button>
+      <Navbar label="Merchants" />
+      <Box p={4}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => router.back()}
+          sx={{ marginBottom: 2 }}
+        >
+          Back
+        </Button>
 
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box>
-            <Typography variant="h4">
-              {merchant.firstName} {merchant.lastName}
+        <Paper elevation={3} sx={{ p: 4 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Box>
+              <Typography variant="h4">
+                {merchant.firstName} {merchant.lastName}
+              </Typography>
+              <Typography color="text.secondary">
+                {merchant.archive ? "Archived" : "Active"} —{" "}
+                {merchant.enabled ? "Enabled" : "Disabled"}
+              </Typography>
+            </Box>
+            <Box>
+              <IconButton
+                color="primary"
+                onClick={() =>
+                  router.push(`/admin/vendors/merchants/edit?id=${id}`)
+                }
+              >
+                <Edit />
+              </IconButton>
+              <IconButton
+                color="error"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Delete />
+              </IconButton>
+            </Box>
+          </Box>
+
+          <Box mt={3}>
+            <Typography>
+              <strong>ID:</strong> {merchant._id}
             </Typography>
-            <Typography color="text.secondary">
-              {merchant.archive ? "Archived" : "Active"} —{" "}
-              {merchant.enabled ? "Enabled" : "Disabled"}
+            <Typography>
+              <strong>Username:</strong> {merchant.username}
+            </Typography>
+            <Typography>
+              <strong>Email:</strong> {merchant.email}
+            </Typography>
+            <Typography>
+              <strong>Phone:</strong> {merchant.phone}
+            </Typography>
+            <Typography>
+              <strong>Business Name:</strong> {merchant.businessName}
+            </Typography>
+            <Typography>
+              <strong>Address:</strong> {merchant.address}
+            </Typography>
+            <Typography>
+              <strong>Category:</strong> {merchant.categoryName ?? "Not set"}
+            </Typography>
+            <Typography>
+              <strong>Subcategory:</strong>{" "}
+              {merchant.subCategoryName ?? "Not set"}
+            </Typography>
+            <Typography>
+              <strong>Role:</strong>{" "}
+              {Array.isArray(merchant.role)
+                ? merchant.role.join(", ")
+                : "Not set"}
+            </Typography>
+            <Typography>
+              <strong>Created At:</strong>{" "}
+              {new Date(merchant.createdAt).toLocaleString()}
+            </Typography>
+            <Typography>
+              <strong>Updated At:</strong>{" "}
+              {new Date(merchant.updatedAt).toLocaleString()}
             </Typography>
           </Box>
-          <Box>
-            <IconButton
-              color="primary"
-              onClick={() => router.push(`/admin/vendors/merchants/edit?id=${id}`)}
-            >
-              <Edit />
-            </IconButton>
-            <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
-              <Delete />
-            </IconButton>
-          </Box>
-        </Box>
+        </Paper>
 
-        <Box mt={3}>
-          <Typography>
-            <strong>ID:</strong> {merchant._id}
-          </Typography>
-          <Typography>
-            <strong>Username:</strong> {merchant.username}
-          </Typography>
-          <Typography>
-            <strong>Email:</strong> {merchant.email}
-          </Typography>
-          <Typography>
-            <strong>Phone:</strong> {merchant.phone}
-          </Typography>
-          <Typography>
-            <strong>Business Name:</strong> {merchant.businessName}
-          </Typography>
-          <Typography>
-            <strong>Address:</strong> {merchant.address}
-          </Typography>
-          <Typography>
-            <strong>Category:</strong> {merchant.categoryName ?? "Not set"}
-          </Typography>
-          <Typography>
-            <strong>Subcategory:</strong> {merchant.subCategoryName ?? "Not set"}
-          </Typography>
-          <Typography>
-            <strong>Role:</strong>{" "}
-            {Array.isArray(merchant.role) ? merchant.role.join(", ") : "Not set"}
-          </Typography>
-          <Typography>
-            <strong>Created At:</strong>{" "}
-            {new Date(merchant.createdAt).toLocaleString()}
-          </Typography>
-          <Typography>
-            <strong>Updated At:</strong>{" "}
-            {new Date(merchant.updatedAt).toLocaleString()}
-          </Typography>
-        </Box>
-      </Paper>
-
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this merchant? This action cannot be
-            undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={handleDelete}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+        >
+          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this merchant? This action cannot
+              be undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button color="error" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
     </>
   );
 };

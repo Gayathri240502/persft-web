@@ -21,7 +21,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { SelectChangeEvent } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import Navbar from "@/app/components/navbar/navbar";
 
 interface Category {
@@ -51,7 +51,7 @@ interface MerchantForm {
 const EditMerchant = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const merchantId = useMemo(() => searchParams.get("id"), [searchParams]);
   const keycloakId = useMemo(
@@ -320,104 +320,103 @@ const EditMerchant = () => {
   }
 
   return (
-
     <>
-    <Navbar label="Merchants"/>
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h5" sx={{ mb: 3 }}>
-        Edit Merchant
-      </Typography>
+      <Navbar label="Merchants" />
+      <Box sx={{ p: 4 }}>
+        <Typography variant="h5" sx={{ mb: 3 }}>
+          Edit Merchant
+        </Typography>
 
-      {error && (
-        <Alert
-          severity="error"
-          sx={{ mb: 2 }}
-          action={
-            <Button
-              color="inherit"
-              size="small"
-              onClick={() => window.location.reload()}
-            >
-              Retry
-            </Button>
-          }
-        >
-          {error}
-        </Alert>
-      )}
+        {error && (
+          <Alert
+            severity="error"
+            sx={{ mb: 2 }}
+            action={
+              <Button
+                color="inherit"
+                size="small"
+                onClick={() => window.location.reload()}
+              >
+                Retry
+              </Button>
+            }
+          >
+            {error}
+          </Alert>
+        )}
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          {renderTextField("First Name", "firstName")}
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            {renderTextField("First Name", "firstName")}
+          </Grid>
+          <Grid item xs={12} md={6}>
+            {renderTextField("Last Name", "lastName")}
+          </Grid>
+          <Grid item xs={12} md={6}>
+            {renderTextField("Username", "username")}
+          </Grid>
+          <Grid item xs={12} md={6}>
+            {renderTextField("Email", "email")}
+          </Grid>
+          <Grid item xs={12} md={6}>
+            {renderTextField("Phone", "phone")}
+          </Grid>
+          <Grid item xs={12} md={6}>
+            {renderTextField("Password", "password")}
+          </Grid>
+          <Grid item xs={12} md={6}>
+            {renderTextField("Business Name", "businessName")}
+          </Grid>
+          <Grid item xs={12} md={6}>
+            {renderTextField("Address", "address")}
+          </Grid>
+          <Grid item xs={12} md={6}>
+            {renderSelect(
+              "Category",
+              formData.category,
+              "category",
+              categories,
+              loadingCategories
+            )}
+          </Grid>
+          <Grid item xs={12} md={6}>
+            {renderSelect(
+              "Sub Category",
+              formData.subCategory,
+              "subCategory",
+              subCategories,
+              loadingSubCategories,
+              !formData.category
+            )}
+          </Grid>
         </Grid>
-        <Grid item xs={12} md={6}>
-          {renderTextField("Last Name", "lastName")}
-        </Grid>
-        <Grid item xs={12} md={6}>
-          {renderTextField("Username", "username")}
-        </Grid>
-        <Grid item xs={12} md={6}>
-          {renderTextField("Email", "email")}
-        </Grid>
-        <Grid item xs={12} md={6}>
-          {renderTextField("Phone", "phone")}
-        </Grid>
-        <Grid item xs={12} md={6}>
-          {renderTextField("Password", "password")}
-        </Grid>
-        <Grid item xs={12} md={6}>
-          {renderTextField("Business Name", "businessName")}
-        </Grid>
-        <Grid item xs={12} md={6}>
-          {renderTextField("Address", "address")}
-        </Grid>
-        <Grid item xs={12} md={6}>
-          {renderSelect(
-            "Category",
-            formData.category,
-            "category",
-            categories,
-            loadingCategories
-          )}
-        </Grid>
-        <Grid item xs={12} md={6}>
-          {renderSelect(
-            "Sub Category",
-            formData.subCategory,
-            "subCategory",
-            subCategories,
-            loadingSubCategories,
-            !formData.category
-          )}
-        </Grid>
-      </Grid>
 
-      <Grid item xs={12} sm={6}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={formData.enabled}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  enabled: e.target.checked,
-                }))
-              }
-            />
-          }
-          label={formData.enabled ? "Active" : "Inactive"}
-        />
-      </Grid>
+        <Grid item xs={12} sm={6}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={formData.enabled}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    enabled: e.target.checked,
+                  }))
+                }
+              />
+            }
+            label={formData.enabled ? "Active" : "Inactive"}
+          />
+        </Grid>
 
-      <Divider sx={{ my: 4 }} />
+        <Divider sx={{ my: 4 }} />
 
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton onClick={handleSubmit} disabled={loading}>
-          {loading ? <CircularProgress size={20} /> : "Update"}
-        </ReusableButton>
-        <CancelButton href="/admin/vendors/merchants">Cancel</CancelButton>
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <ReusableButton onClick={handleSubmit} disabled={loading}>
+            {loading ? <CircularProgress size={20} /> : "Update"}
+          </ReusableButton>
+          <CancelButton href="/admin/vendors/merchants">Cancel</CancelButton>
+        </Box>
       </Box>
-    </Box>
     </>
   );
 };

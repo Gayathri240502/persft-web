@@ -11,13 +11,13 @@ import {
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import Navbar from "@/app/components/navbar/navbar";
 
 const EditWorkGroup = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const id = searchParams.get("id");
 
@@ -113,57 +113,57 @@ const EditWorkGroup = () => {
 
   return (
     <>
-    <Navbar label=" Work Groups"/>
-    <Box sx={{ p: 3 }} component="form" onSubmit={handleSubmit}>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Edit Work Group
-      </Typography>
+      <Navbar label=" Work Groups" />
+      <Box sx={{ p: 3 }} component="form" onSubmit={handleSubmit}>
+        <Typography variant="h5" sx={{ mb: 2 }}>
+          Edit Work Group
+        </Typography>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
-      {initialLoading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <>
-          <TextField
-            label="Name"
-            name="name"
-            fullWidth
-            value={formData.name}
-            onChange={handleChange}
-            sx={{ mb: 3 }}
-          />
-
-          <TextField
-            label="Description"
-            name="description"
-            multiline
-            rows={3}
-            fullWidth
-            value={formData.description}
-            onChange={handleChange}
-            sx={{ mb: 3 }}
-          />
-
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <ReusableButton type="submit" disabled={loading}>
-              {loading ? (
-                <CircularProgress size={24} color="inherit" />
-              ) : (
-                "Update"
-              )}
-            </ReusableButton>
-            <CancelButton href="/admin/work/work-group">Cancel</CancelButton>
+        {initialLoading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
+            <CircularProgress />
           </Box>
-        </>
-      )}
-    </Box>
+        ) : (
+          <>
+            <TextField
+              label="Name"
+              name="name"
+              fullWidth
+              value={formData.name}
+              onChange={handleChange}
+              sx={{ mb: 3 }}
+            />
+
+            <TextField
+              label="Description"
+              name="description"
+              multiline
+              rows={3}
+              fullWidth
+              value={formData.description}
+              onChange={handleChange}
+              sx={{ mb: 3 }}
+            />
+
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <ReusableButton type="submit" disabled={loading}>
+                {loading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  "Update"
+                )}
+              </ReusableButton>
+              <CancelButton href="/admin/work/work-group">Cancel</CancelButton>
+            </Box>
+          </>
+        )}
+      </Box>
     </>
   );
 };

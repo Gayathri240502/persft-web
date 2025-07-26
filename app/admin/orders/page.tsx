@@ -22,7 +22,7 @@ import {
   DataGrid,
   GridRenderCellParams,
 } from "@mui/x-data-grid";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { useRouter } from "next/navigation";
 
 interface DesignOrder {
@@ -99,7 +99,7 @@ const DesignOrders = () => {
   const debouncedSearchText = useDebounce(searchText, 500);
   const debouncedCustomerEmail = useDebounce(customerEmailFilter, 500);
 
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const fetchOrders = async () => {
     setLoading(true);

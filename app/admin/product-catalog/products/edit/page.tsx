@@ -26,7 +26,7 @@ import {
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 // Define interfaces for better type safety
 interface DropdownItem {
@@ -65,7 +65,7 @@ const EditProduct = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const productId = searchParams.get("id");
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const [product, setProduct] = useState({
     name: "",
@@ -625,7 +625,9 @@ const EditProduct = () => {
                 <TextField
                   label="Description"
                   value={product.description}
-                  onChange={(e) => handleInputChange("description", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("description", e.target.value)
+                  }
                   fullWidth
                   multiline
                   rows={3}
@@ -633,7 +635,8 @@ const EditProduct = () => {
                   placeholder="Enter product description"
                   InputProps={{
                     style: {
-                      color: product.description.trim() === "" ? "#888" : undefined,
+                      color:
+                        product.description.trim() === "" ? "#888" : undefined,
                     },
                   }}
                 />

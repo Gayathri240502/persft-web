@@ -18,7 +18,7 @@ import {
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { SelectChangeEvent } from "@mui/material";
 import Navbar from "@/app/components/navbar/navbar";
 
@@ -68,7 +68,7 @@ const countryCodes = [
 const EditKiosk = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const id = useMemo(() => searchParams.get("id"), [searchParams]);
 
@@ -398,127 +398,133 @@ const EditKiosk = () => {
 
   return (
     <>
-    <Navbar label="Kiosk Management"/>
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" sx={{ mb: 3 }}>
-        Edit Kiosk
-      </Typography>
-
-      {error && (
-        <Typography color="error" sx={{ mb: 2 }}>
-          {error}
+      <Navbar label="Kiosk Management" />
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h5" sx={{ mb: 3 }}>
+          Edit Kiosk
         </Typography>
-      )}
 
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
-          {renderTextField("First Name", "firstName")}
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderTextField("Last Name", "lastName")}
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderTextField("Username", "username")}
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderTextField("Email", "email")}
-        </Grid>
-        <Grid item xs={12}>
-          <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-            {/* Phone Number */}
-            <Box sx={{ width: "70%" }}>
-              <TextField
-                label="Phone Number"
-                name="phone"
-                value={form.phone}
-                onChange={handleChange}
-                fullWidth
-                inputProps={{ maxLength: 10 }}
-                required
-              />
-            </Box>
-            {/* Password */}
-            <Box sx={{ width: "70%" }}>
-              <TextField
-                name="password"
-                label="Password"
-                type="password"
-                fullWidth
-                value={form.password}
-                onChange={handleChange}
-                sx={{ flex: 1 }}
-              />
-            </Box>
-          </Box>
-        </Grid>
-        <Grid item xs={12}>
-          {renderTextField("Description", "description")}
-        </Grid>
-        <Grid item xs={12}>
-          {renderTextField("Address", "address")}
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          {renderSelect(
-            "Country",
-            form.country,
-            "country",
-            countries,
-            loadingCountries
-          )}
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          {renderSelect(
-            "State",
-            form.state,
-            "state",
-            states,
-            false,
-            !form.country
-          )}
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          {renderSelect("City", form.city, "city", cities, false, !form.state)}
-        </Grid>
-        <Grid item xs={12}>
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            Project Mapping
+        {error && (
+          <Typography color="error" sx={{ mb: 2 }}>
+            {error}
           </Typography>
-          <FormGroup>
-            {loadingProjects ? (
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <CircularProgress size={20} />
-                <Typography sx={{ ml: 1 }}>Loading projects...</Typography>
-              </Box>
-            ) : projects.length === 0 ? (
-              <Typography>No projects available</Typography>
-            ) : (
-              projects.map((proj) => (
-                <FormControlLabel
-                  key={proj._id}
-                  control={
-                    <Checkbox
-                      checked={form.projects.includes(proj._id)}
-                      onChange={() => handleCheckboxChange(proj._id)}
-                    />
-                  }
-                  label={proj.name}
-                />
-              ))
-            )}
-          </FormGroup>
-        </Grid>
-      </Grid>
+        )}
 
-      <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
-        <ReusableButton onClick={handleSubmit} disabled={loading}>
-          {loading ? <CircularProgress size={20} /> : "Update"}
-        </ReusableButton>
-        <CancelButton href="/admin/kiosk-management">Cancel</CancelButton>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            {renderTextField("First Name", "firstName")}
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {renderTextField("Last Name", "lastName")}
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {renderTextField("Username", "username")}
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {renderTextField("Email", "email")}
+          </Grid>
+          <Grid item xs={12}>
+            <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+              {/* Phone Number */}
+              <Box sx={{ width: "70%" }}>
+                <TextField
+                  label="Phone Number"
+                  name="phone"
+                  value={form.phone}
+                  onChange={handleChange}
+                  fullWidth
+                  inputProps={{ maxLength: 10 }}
+                  required
+                />
+              </Box>
+              {/* Password */}
+              <Box sx={{ width: "70%" }}>
+                <TextField
+                  name="password"
+                  label="Password"
+                  type="password"
+                  fullWidth
+                  value={form.password}
+                  onChange={handleChange}
+                  sx={{ flex: 1 }}
+                />
+              </Box>
+            </Box>
+          </Grid>
+          <Grid item xs={12}>
+            {renderTextField("Description", "description")}
+          </Grid>
+          <Grid item xs={12}>
+            {renderTextField("Address", "address")}
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            {renderSelect(
+              "Country",
+              form.country,
+              "country",
+              countries,
+              loadingCountries
+            )}
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            {renderSelect(
+              "State",
+              form.state,
+              "state",
+              states,
+              false,
+              !form.country
+            )}
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            {renderSelect(
+              "City",
+              form.city,
+              "city",
+              cities,
+              false,
+              !form.state
+            )}
+          </Grid>
+          <Grid item xs={12}>
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              Project Mapping
+            </Typography>
+            <FormGroup>
+              {loadingProjects ? (
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  <CircularProgress size={20} />
+                  <Typography sx={{ ml: 1 }}>Loading projects...</Typography>
+                </Box>
+              ) : projects.length === 0 ? (
+                <Typography>No projects available</Typography>
+              ) : (
+                projects.map((proj) => (
+                  <FormControlLabel
+                    key={proj._id}
+                    control={
+                      <Checkbox
+                        checked={form.projects.includes(proj._id)}
+                        onChange={() => handleCheckboxChange(proj._id)}
+                      />
+                    }
+                    label={proj.name}
+                  />
+                ))
+              )}
+            </FormGroup>
+          </Grid>
+        </Grid>
+
+        <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
+          <ReusableButton onClick={handleSubmit} disabled={loading}>
+            {loading ? <CircularProgress size={20} /> : "Update"}
+          </ReusableButton>
+          <CancelButton href="/admin/kiosk-management">Cancel</CancelButton>
+        </Box>
       </Box>
-    </Box>
     </>
   );
 };
 
 export default EditKiosk;
-

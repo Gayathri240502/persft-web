@@ -17,7 +17,7 @@ import {
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 type WorkGroup = {
   _id: string;
@@ -29,7 +29,7 @@ const EditWorkTask = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -119,7 +119,11 @@ const EditWorkTask = () => {
   };
 
   const handleSubmit = async () => {
-    if (!formData.name.trim() || !formData.workGroup || formData.targetDays <= 0) {
+    if (
+      !formData.name.trim() ||
+      !formData.workGroup ||
+      formData.targetDays <= 0
+    ) {
       setError("Please fill all required fields.");
       return;
     }
@@ -228,8 +232,8 @@ const EditWorkTask = () => {
               {loadingWorkGroups
                 ? "Loading..."
                 : workGroups.length === 0
-                ? "No Work Groups Available"
-                : "Select Work Group"}
+                  ? "No Work Groups Available"
+                  : "Select Work Group"}
             </MenuItem>
             {workGroups
               .filter((group) => group._id || group.id)

@@ -21,7 +21,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { useRouter } from "next/navigation";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface Combination {
   residenceType: string;
@@ -41,7 +41,7 @@ interface FormData {
 
 const AddDesignType = () => {
   const router = useRouter();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const [residences, setResidences] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
@@ -719,4 +719,3 @@ const AddDesignType = () => {
 };
 
 export default AddDesignType;
-

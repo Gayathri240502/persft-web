@@ -25,7 +25,7 @@ import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import ReusableButton from "@/app/components/Button";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 // Types for RoomDesign and SelectionReference
@@ -76,7 +76,7 @@ const DesignType = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);

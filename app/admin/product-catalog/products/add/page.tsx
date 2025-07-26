@@ -22,11 +22,11 @@ import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { useRouter } from "next/navigation";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 const AddProduct = () => {
   const router = useRouter();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   type Attribute = {
     id: string;
@@ -56,7 +56,9 @@ const AddProduct = () => {
   const [workGroups, setWorkGroups] = useState([]);
   const [workTasks, setWorkTasks] = useState([]);
   const [attributeGroups, setAttributeGroups] = useState([]);
-  const [flattenedAttributes, setFlattenedAttributes] = useState<Attribute[]>([]);
+  const [flattenedAttributes, setFlattenedAttributes] = useState<Attribute[]>(
+    []
+  );
 
   const [loading, setLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -64,18 +66,25 @@ const AddProduct = () => {
 
   const apiCall = async (endpoint: string, options: RequestInit = {}) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          ...options.headers,
-        },
-        ...options,
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}${endpoint}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            ...options.headers,
+          },
+          ...options,
+        }
+      );
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: response.statusText }));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: response.statusText }));
+        throw new Error(
+          errorData.message || `HTTP error! status: ${response.status}`
+        );
       }
 
       return await response.json();
@@ -154,7 +163,9 @@ const AddProduct = () => {
 
   const loadSubCategories = async (categoryId: string) => {
     try {
-      const data = await apiCall(`/products/dropdowns/subcategories/${categoryId}`);
+      const data = await apiCall(
+        `/products/dropdowns/subcategories/${categoryId}`
+      );
       setSubCategories(data);
     } catch (err: any) {
       setError(err.message || "Failed to load subcategories");
@@ -163,7 +174,9 @@ const AddProduct = () => {
 
   const loadWorkTasks = async (workGroupId: string) => {
     try {
-      const data = await apiCall(`/products/dropdowns/work-tasks/${workGroupId}`);
+      const data = await apiCall(
+        `/products/dropdowns/work-tasks/${workGroupId}`
+      );
       setWorkTasks(data);
     } catch (err: any) {
       setError(err.message || "Failed to load work tasks");
@@ -234,7 +247,11 @@ const AddProduct = () => {
       const hasValue = product.attributeValues.some(
         (av) => av.attribute === attributeId && av.value.trim() !== ""
       );
-      if (!hasValue) return setError(`Missing value for required attribute: ${attributeName}`), false;
+      if (!hasValue)
+        return (
+          setError(`Missing value for required attribute: ${attributeName}`),
+          false
+        );
     }
 
     setError(null);
@@ -257,17 +274,22 @@ const AddProduct = () => {
 
       const body = JSON.stringify(productData);
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body,
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/products`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body,
+        }
+      );
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: "Unknown error" }));
         throw new Error(errorData.message || "Failed to create product");
       }
 

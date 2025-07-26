@@ -15,7 +15,7 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { useRouter } from "next/navigation";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface ResidenceType {
   _id: string;
@@ -24,7 +24,7 @@ interface ResidenceType {
 
 const AddRoomType = () => {
   const router = useRouter();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -33,26 +33,34 @@ const AddRoomType = () => {
     residenceTypes: [] as string[],
   });
 
-  const [residenceTypeList, setResidenceTypeList] = useState<ResidenceType[]>([]);
+  const [residenceTypeList, setResidenceTypeList] = useState<ResidenceType[]>(
+    []
+  );
   const [loading, setLoading] = useState(false);
   const [loadingResidenceTypes, setLoadingResidenceTypes] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [thumbnail, setThumbnail] = useState<string>("");
-  const [selectedFileName, setSelectedFileName] = useState<string>("No file selected");
+  const [selectedFileName, setSelectedFileName] =
+    useState<string>("No file selected");
 
   useEffect(() => {
     const fetchResidenceTypes = async () => {
       try {
         setLoadingResidenceTypes(true);
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/residence-types`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/residence-types`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch residence types: ${response.status}`);
+          throw new Error(
+            `Failed to fetch residence types: ${response.status}`
+          );
         }
 
         const result = await response.json();
@@ -131,14 +139,17 @@ const AddRoomType = () => {
     };
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/room-types`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/room-types`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to create room type");

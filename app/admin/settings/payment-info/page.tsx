@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import ReusableButton from "@/app/components/Button";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface PaymentInfo {
   id: string;
@@ -26,7 +26,7 @@ interface PaymentInfo {
 const PaymentInfoPage: React.FC = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

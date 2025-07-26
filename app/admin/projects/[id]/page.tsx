@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import {
   Box,
   CircularProgress,
@@ -38,7 +38,7 @@ const ProjectDetailsPage: React.FC = () => {
 
   const { id } = useParams();
   const router = useRouter();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   useEffect(() => {
     if (!id) return;
@@ -130,110 +130,117 @@ const ProjectDetailsPage: React.FC = () => {
 
   return (
     <>
-    <Navbar label="Projects"/>
-    <Box p={4}>
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => router.back()}
-        sx={{ marginBottom: 2 }}
-      >
-        Back
-      </Button>
+      <Navbar label="Projects" />
+      <Box p={4}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => router.back()}
+          sx={{ marginBottom: 2 }}
+        >
+          Back
+        </Button>
 
-      <Paper elevation={3} sx={{ padding: 4 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box>
-            <Typography variant="h4" gutterBottom>
-              {project.name}
-            </Typography>
-            {/* <Typography variant="subtitle1" color="textSecondary">
+        <Paper elevation={3} sx={{ padding: 4 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Box>
+              <Typography variant="h4" gutterBottom>
+                {project.name}
+              </Typography>
+              {/* <Typography variant="subtitle1" color="textSecondary">
               {project.archive ? "Inactive" : "Active"}
             </Typography> */}
+            </Box>
+            <Box>
+              <IconButton
+                color="primary"
+                onClick={() => router.push(`/admin/projects/edit?id=${id}`)}
+              >
+                <Edit />
+              </IconButton>
+              <IconButton
+                color="error"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Delete />
+              </IconButton>
+            </Box>
           </Box>
-          <Box>
-            <IconButton
-              color="primary"
-              onClick={() => router.push(`/admin/projects/edit?id=${id}`)}
-            >
-              <Edit />
-            </IconButton>
-            <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
-              <Delete />
-            </IconButton>
-          </Box>
-        </Box>
 
-        <Grid container spacing={2} sx={{ marginTop: 2 }}>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>ID:</strong> {project._id}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Name:</strong> {project.name}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Description:</strong> {project.description}
-            </Typography>
-          </Grid>
-          {/* <Grid item xs={12} sm={6}>
+          <Grid container spacing={2} sx={{ marginTop: 2 }}>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>ID:</strong> {project._id}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Name:</strong> {project.name}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Description:</strong> {project.description}
+              </Typography>
+            </Grid>
+            {/* <Grid item xs={12} sm={6}>
             <Typography>
               <strong>Archived:</strong> {project.archive ? "Yes" : "No"}
             </Typography>
           </Grid> */}
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Created At:</strong>{" "}
-              {new Date(project.createdAt).toLocaleString()}
-            </Typography>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Created At:</strong>{" "}
+                {new Date(project.createdAt).toLocaleString()}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Updated At:</strong>{" "}
+                {new Date(project.updatedAt).toLocaleString()}
+              </Typography>
+            </Grid>
           </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Updated At:</strong>{" "}
-              {new Date(project.updatedAt).toLocaleString()}
+
+          <Box mt={4}>
+            <Typography variant="h6" gutterBottom>
+              Thumbnail
             </Typography>
-          </Grid>
-        </Grid>
+            {project.thumbnail ? (
+              <Box
+                component="img"
+                src={`data:image/jpeg;base64,${project.thumbnail}`}
+                alt="Thumbnail"
+                sx={{ maxWidth: 100 }}
+              />
+            ) : (
+              <Typography>No thumbnail available</Typography>
+            )}
+          </Box>
+        </Paper>
 
-        <Box mt={4}>
-          <Typography variant="h6" gutterBottom>
-            Thumbnail
-          </Typography>
-          {project.thumbnail ? (
-            <Box
-              component="img"
-              src={`data:image/jpeg;base64,${project.thumbnail}`}
-              alt="Thumbnail"
-              sx={{ maxWidth: 100 }}
-            />
-          ) : (
-            <Typography>No thumbnail available</Typography>
-          )}
-        </Box>
-      </Paper>
-
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this project? This action cannot be
-            undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={handleDelete}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+        >
+          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this project? This action cannot
+              be undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button color="error" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
     </>
   );
 };

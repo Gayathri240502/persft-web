@@ -14,12 +14,12 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 const EditResidenceType = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const id = useMemo(() => searchParams.get("id"), [searchParams]);
 
@@ -63,7 +63,9 @@ const EditResidenceType = () => {
         setDescription(residenceType.description || "");
         setThumbnail(residenceType.thumbnail || "");
         setResidenceTypes(residenceType.residenceTypes || []);
-        setSelectedFileName(residenceType.thumbnail ? "Existing Thumbnail" : "No file selected");
+        setSelectedFileName(
+          residenceType.thumbnail ? "Existing Thumbnail" : "No file selected"
+        );
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error fetching data");
       } finally {
@@ -124,7 +126,9 @@ const EditResidenceType = () => {
 
       router.push("/admin/home-catalog/residence-types");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error occurred");
+      setError(
+        err instanceof Error ? err.message : "Unexpected error occurred"
+      );
     } finally {
       setLoading(false);
     }
@@ -169,7 +173,9 @@ const EditResidenceType = () => {
             />
 
             <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1">Mapped Residence Types:</Typography>
+              <Typography variant="subtitle1">
+                Mapped Residence Types:
+              </Typography>
               {residenceTypes.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
                   No residence types available

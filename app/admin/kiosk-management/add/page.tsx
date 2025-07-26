@@ -19,7 +19,7 @@ import {
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { useRouter } from "next/navigation";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { SelectChangeEvent } from "@mui/material";
 
 interface ProjectMapping {
@@ -43,7 +43,7 @@ interface City {
 }
 
 const countryCodes = [
- { code: "+91", name: "India" },
+  { code: "+91", name: "India" },
   { code: "+1", name: "United States" },
   { code: "+44", name: "United Kingdom" },
   { code: "+61", name: "Australia" },
@@ -67,7 +67,7 @@ const countryCodes = [
 
 const AddKiosk = () => {
   const router = useRouter();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const [form, setForm] = useState({
     firstName: "",
@@ -372,13 +372,33 @@ const AddKiosk = () => {
             {renderTextField("Address", "address")}
           </Grid>
           <Grid item xs={12} sm={6}>
-            {renderSelect("Country", form.country, "country", countries, loadingCountries)}
+            {renderSelect(
+              "Country",
+              form.country,
+              "country",
+              countries,
+              loadingCountries
+            )}
           </Grid>
           <Grid item xs={12} sm={6}>
-            {renderSelect("State", form.state, "state", states, false, !form.country)}
+            {renderSelect(
+              "State",
+              form.state,
+              "state",
+              states,
+              false,
+              !form.country
+            )}
           </Grid>
           <Grid item xs={12} sm={6}>
-            {renderSelect("City", form.city, "city", cities, false, !form.state)}
+            {renderSelect(
+              "City",
+              form.city,
+              "city",
+              cities,
+              false,
+              !form.state
+            )}
           </Grid>
           <Grid item xs={12}>
             <Typography variant="h6" sx={{ mb: 1 }}>

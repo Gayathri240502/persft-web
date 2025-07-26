@@ -1,99 +1,35 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 const LoginForm = () => {
-  const [username, setUsername] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [isMounted, setIsMounted] = useState(false);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
-  if (!isMounted) {
-    return null;
-  }
+    const result = await signIn("credentials", {
+      redirect: false,
+      username,
+      password,
+    });
 
-  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    try {
-      setLoading(true);
-      setError(null);
-
-      console.log("Attempting login...");
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username,
-            password,
-          }),
-        }
-      );
-
-      let data;
-      try {
-        const text = await response.text();
-        data = text ? JSON.parse(text) : {};
-      } catch (parseError) {
-        console.error("Error parsing response:", parseError);
-        throw new Error("Invalid response from server");
-      }
-
-      console.log("Login response status:", response.status);
-      console.log("Login response:", data);
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error("Invalid username or password");
-        } else if (response.status === 404) {
-          throw new Error("User not found");
-        } else if (data.message) {
-          throw new Error(data.message);
-        } else {
-          throw new Error("An error occurred during login. Please try again.");
-        }
-      }
-
-      // Store the token
-      document.cookie = `token=${data.access_token}; path=/`;
-      localStorage.setItem("token", data.access_token);
-
-      // Extract and store role from JWT
-      const base64Url = data.access_token.split(".")[1];
-      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split("")
-          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-          .join("")
-      );
-      const decodedToken = JSON.parse(jsonPayload);
-      localStorage.setItem("role", decodedToken.realm_access.roles[0]);
-
-      console.log("Login successful, redirecting to dashboard...");
-
-      // Force a hard navigation to dashboard
-      window.location.href = "/admin/dashboard";
-    } catch (err) {
-      console.error("Login error:", err);
-      setError(
-        err instanceof Error ? err.message : "Invalid username or password"
-      );
-    } finally {
-      setLoading(false);
+    if (result?.error) {
+      setError(result.error);
+    } else {
+      router.push("/admin/dashboard");
     }
+    setLoading(false);
   };
 
   return (
@@ -102,7 +38,7 @@ const LoginForm = () => {
         Login
       </h1>
 
-      <form onSubmit={onSubmit} className="space-y-6">
+      <form onSubmit={handleLogin} className="space-y-6">
         <div>
           <label
             htmlFor="username"
@@ -156,14 +92,14 @@ const LoginForm = () => {
 
         <button
           type="submit"
-          className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium  text-white
-    ${loading ? "bg-[#1e5f7a] text-black cursor-not-allowed" : "bg-[#05344c]"} 
-    focus:outline-none focus:ring-2 focus:ring-offset-2`}
+          className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white
+          ${loading ? "bg-[#1e5f7a] text-black cursor-not-allowed" : "bg-[#05344c]"}
+          focus:outline-none focus:ring-2 focus:ring-offset-2`}
           disabled={loading}
         >
           {loading ? (
             <div className="flex items-center">
-              <span className="animate-spin border-2  border-t-transparent rounded-full w-5 h-5 mr-2"></span>
+              <span className="animate-spin border-2 border-t-transparent rounded-full w-5 h-5 mr-2"></span>
               Logging in...
             </div>
           ) : (

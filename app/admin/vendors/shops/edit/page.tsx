@@ -20,7 +20,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { SelectChangeEvent } from "@mui/material/Select";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import Navbar from "@/app/components/navbar/navbar";
 
 interface Category {
@@ -49,7 +49,7 @@ const EditShop = () => {
   const params = useSearchParams();
   const shopId = params.get("id");
 
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -309,154 +309,159 @@ const EditShop = () => {
 
   return (
     <>
-    <Navbar label="Shops"/>
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-        Edit Shop
-      </Typography>
+      <Navbar label="Shops" />
+      <Box sx={{ p: 4 }}>
+        <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
+          Edit Shop
+        </Typography>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="First Name"
-            fullWidth
-            name="firstName"
-            value={formData.firstName}
-            onChange={handleInputChange}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Last Name"
-            fullWidth
-            name="lastName"
-            value={formData.lastName}
-            onChange={handleInputChange}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="UserName"
-            fullWidth
-            name="username"
-            value={formData.username}
-            onChange={handleInputChange}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Email"
-            fullWidth
-            name="email"
-            value={formData.email}
-            onChange={handleInputChange}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Password"
-            fullWidth
-            name="password"
-            value={formData.password}
-            onChange={handleInputChange}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Phone"
-            fullWidth
-            name="phone"
-            value={formData.phone}
-            onChange={handleInputChange}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Owner Name"
-            fullWidth
-            name="ownerName"
-            value={formData.ownerName}
-            onChange={handleInputChange}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            label="Address"
-            fullWidth
-            name="address"
-            value={formData.address}
-            onChange={handleInputChange}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderSelect("Category", "category", formData.category, categories)}
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderSelect(
-            "SubCategory",
-            "subCategory",
-            formData.subCategory,
-            subCategories
-          )}
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderSelect("Country", "country", formData.country, countries)}
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderSelect(
-            "State",
-            "state",
-            formData.state,
-            states,
-            loadingStates,
-            !formData.country
-          )}
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderSelect(
-            "City",
-            "city",
-            formData.city,
-            cities,
-            loadingCities,
-            !formData.state
-          )}
-        </Grid>
-      </Grid>
-
-      <Grid item xs={12} sm={6}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={formData.enabled}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  enabled: e.target.checked,
-                }))
-              }
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="First Name"
+              fullWidth
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleInputChange}
             />
-          }
-          label={formData.enabled ? "Active" : "Inactive"}
-        />
-      </Grid>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Last Name"
+              fullWidth
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleInputChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="UserName"
+              fullWidth
+              name="username"
+              value={formData.username}
+              onChange={handleInputChange}
+            />
+          </Grid>
 
-      <Divider sx={{ my: 4 }} />
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Email"
+              fullWidth
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Password"
+              fullWidth
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Phone"
+              fullWidth
+              name="phone"
+              value={formData.phone}
+              onChange={handleInputChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Owner Name"
+              fullWidth
+              name="ownerName"
+              value={formData.ownerName}
+              onChange={handleInputChange}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Address"
+              fullWidth
+              name="address"
+              value={formData.address}
+              onChange={handleInputChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {renderSelect(
+              "Category",
+              "category",
+              formData.category,
+              categories
+            )}
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {renderSelect(
+              "SubCategory",
+              "subCategory",
+              formData.subCategory,
+              subCategories
+            )}
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {renderSelect("Country", "country", formData.country, countries)}
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {renderSelect(
+              "State",
+              "state",
+              formData.state,
+              states,
+              loadingStates,
+              !formData.country
+            )}
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {renderSelect(
+              "City",
+              "city",
+              formData.city,
+              cities,
+              loadingCities,
+              !formData.state
+            )}
+          </Grid>
+        </Grid>
 
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton onClick={handleSubmit} disabled={loading}>
-          {loading ? <CircularProgress size={20} /> : "Update"}
-        </ReusableButton>
-        <CancelButton href="/admin/vendors/shops">Cancel</CancelButton>
+        <Grid item xs={12} sm={6}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={formData.enabled}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    enabled: e.target.checked,
+                  }))
+                }
+              />
+            }
+            label={formData.enabled ? "Active" : "Inactive"}
+          />
+        </Grid>
+
+        <Divider sx={{ my: 4 }} />
+
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <ReusableButton onClick={handleSubmit} disabled={loading}>
+            {loading ? <CircularProgress size={20} /> : "Update"}
+          </ReusableButton>
+          <CancelButton href="/admin/vendors/shops">Cancel</CancelButton>
+        </Box>
       </Box>
-    </Box>
     </>
   );
 };

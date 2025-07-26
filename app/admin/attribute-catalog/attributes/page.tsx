@@ -21,7 +21,7 @@ import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
 import ReusableButton from "@/app/components/Button";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 interface Attribute {
@@ -77,7 +77,7 @@ const Attributes = () => {
     null
   );
 
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
   const debouncedSearch = useDebounce(search, 300);
 
   const fetchAttributes = async () => {

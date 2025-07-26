@@ -13,7 +13,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 const typeOptions = [
   "text",
@@ -30,7 +30,7 @@ const EditAttribute = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const [formData, setFormData] = useState({
     name: "",

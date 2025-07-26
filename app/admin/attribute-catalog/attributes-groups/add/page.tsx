@@ -16,7 +16,7 @@ import {
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 import { useRouter } from "next/navigation";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface Attribute {
   _id: string;
@@ -25,7 +25,7 @@ interface Attribute {
 
 const AddAttributeGroups = () => {
   const router = useRouter();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");

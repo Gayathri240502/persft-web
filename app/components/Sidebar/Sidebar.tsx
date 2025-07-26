@@ -10,8 +10,8 @@ import { useEffect, useRef, useState, useCallback, useMemo, memo } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { Tooltip } from "@mui/material";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface MenuItem {
   _id: string;
@@ -216,6 +216,14 @@ export default function Sidebar() {
   const sidebarRef = useRef<HTMLDivElement>(null);
   const menusCache = useRef<MenuItem[] | null>(null);
 
+  // Use the NextAuth hook for token and role
+  const {
+    token,
+    role,
+    isLoading: authLoading,
+    isAuthenticated,
+  } = useTokenAndRole();
+
   const screenSize = useResponsive();
   const isMobile = screenSize === "mobile";
 
@@ -306,8 +314,13 @@ export default function Sidebar() {
       return;
     }
 
+    // Wait for authentication to complete
+    if (authLoading || !isAuthenticated || !token) {
+      setLoading(false);
+      return;
+    }
+
     try {
-      const { token } = getTokenAndRole();
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/menus/role/admin`,
         {
@@ -327,16 +340,18 @@ export default function Sidebar() {
       menusCache.current = data;
     } catch (error) {
       console.error("Failed to fetch sidebar menus:", error);
+      // Clear cache on error
+      menusCache.current = null;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [token, authLoading, isAuthenticated]);
 
   useEffect(() => {
-    if (pathName !== "/login") {
+    if (pathName !== "/login" && !authLoading) {
       fetchMenus();
     }
-  }, [pathName, fetchMenus]);
+  }, [pathName, fetchMenus, authLoading]);
 
   // Handle click outside to close sidebar
   useEffect(() => {
@@ -434,8 +449,10 @@ export default function Sidebar() {
     );
   }, []);
 
-  // Don't render anything while loading or on login page
-  if (loading || pathName === "/login") return null;
+  // Don't render anything while loading or on login page or if not authenticated
+  if (loading || authLoading || pathName === "/login" || !isAuthenticated) {
+    return null;
+  }
 
   return (
     <>

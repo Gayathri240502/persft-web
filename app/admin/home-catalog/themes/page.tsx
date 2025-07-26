@@ -22,7 +22,7 @@ import { useTheme } from "@mui/material/styles";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import ReusableButton from "@/app/components/Button";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 // Interfaces
@@ -76,7 +76,7 @@ const ThemesPage = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
 
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
   const debouncedSearch = useDebounce(search, 300);
 
   const fetchThemes = async () => {

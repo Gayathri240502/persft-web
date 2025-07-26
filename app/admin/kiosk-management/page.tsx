@@ -16,7 +16,7 @@ import {
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useRouter } from "next/navigation";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 interface Kiosk {
@@ -48,7 +48,7 @@ const useDebounce = (value: string, delay: number) => {
 
 const KioskManagement = () => {
   const router = useRouter();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);

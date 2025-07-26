@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import {
   Box,
   CircularProgress,
@@ -44,7 +44,7 @@ const UserViewPage: React.FC = () => {
 
   const { id } = useParams();
   const router = useRouter();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   useEffect(() => {
     if (!id) return;
@@ -138,102 +138,109 @@ const UserViewPage: React.FC = () => {
 
   return (
     <>
-    <Navbar label="Users"/>
-    <Box p={4}>
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => router.back()}
-        sx={{ marginBottom: 2 }}
-      >
-        Back
-      </Button>
-      <Paper elevation={3} sx={{ padding: 4 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box>
-            <Typography variant="h4" gutterBottom>
-              {user.username}
-            </Typography>
-            <Typography variant="subtitle1" color="textSecondary">
-              {user.enabled ? "Active" : "Inactive"}
-            </Typography>
+      <Navbar label="Users" />
+      <Box p={4}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => router.back()}
+          sx={{ marginBottom: 2 }}
+        >
+          Back
+        </Button>
+        <Paper elevation={3} sx={{ padding: 4 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Box>
+              <Typography variant="h4" gutterBottom>
+                {user.username}
+              </Typography>
+              <Typography variant="subtitle1" color="textSecondary">
+                {user.enabled ? "Active" : "Inactive"}
+              </Typography>
+            </Box>
+            <Box>
+              <IconButton
+                color="primary"
+                onClick={() => router.push(`/admin/users/${id}/edit`)}
+              >
+                <Edit />
+              </IconButton>
+              <IconButton
+                color="error"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Delete />
+              </IconButton>
+            </Box>
           </Box>
-          <Box>
-            <IconButton
-              color="primary"
-              onClick={() => router.push(`/admin/users/${id}/edit`)}
-            >
-              <Edit />
-            </IconButton>
-            <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
-              <Delete />
-            </IconButton>
-          </Box>
-        </Box>
-        <Grid container spacing={2} sx={{ marginTop: 2 }}>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body1">
-              <strong>First Name:</strong> {user.firstName}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body1">
-              <strong>Last Name:</strong> {user.lastName}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body1">
-              <strong>Email:</strong> {user.email}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body1">
-              <strong>Phone:</strong> {user.phone}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body1">
-              <strong>Role:</strong> {user.role.join(", ")}
-            </Typography>
-          </Grid>
-          {/* <Grid item xs={12} sm={6}>
+          <Grid container spacing={2} sx={{ marginTop: 2 }}>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body1">
+                <strong>First Name:</strong> {user.firstName}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body1">
+                <strong>Last Name:</strong> {user.lastName}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body1">
+                <strong>Email:</strong> {user.email}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body1">
+                <strong>Phone:</strong> {user.phone}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body1">
+                <strong>Role:</strong> {user.role.join(", ")}
+              </Typography>
+            </Grid>
+            {/* <Grid item xs={12} sm={6}>
             <Typography variant="body1">
               <strong>Archived:</strong> {user.archive ? "Yes" : "No"}
             </Typography>
           </Grid> */}
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body1">
-              <strong>Created At:</strong>{" "}
-              {new Date(user.createdAt).toLocaleString()}
-            </Typography>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body1">
+                <strong>Created At:</strong>{" "}
+                {new Date(user.createdAt).toLocaleString()}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body1">
+                <strong>Updated At:</strong>{" "}
+                {new Date(user.updatedAt).toLocaleString()}
+              </Typography>
+            </Grid>
           </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body1">
-              <strong>Updated At:</strong>{" "}
-              {new Date(user.updatedAt).toLocaleString()}
-            </Typography>
-          </Grid>
-        </Grid>
-      </Paper>
+        </Paper>
 
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this user? This action cannot be
-            undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={handleDelete}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+        >
+          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this user? This action cannot be
+              undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button color="error" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
     </>
   );
 };

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import {
   Box,
   CircularProgress,
@@ -54,7 +54,7 @@ const KioskDetailsPage: React.FC = () => {
 
   const params = useParams();
   const router = useRouter();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const id = params?.id as string;
 
@@ -162,157 +162,164 @@ const KioskDetailsPage: React.FC = () => {
 
   return (
     <>
-    <Navbar label="Kiosk Management"/>
-    <Box p={4}>
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => router.back()}
-        sx={{ mb: 2 }}
-      >
-        Back
-      </Button>
+      <Navbar label="Kiosk Management" />
+      <Box p={4}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => router.back()}
+          sx={{ mb: 2 }}
+        >
+          Back
+        </Button>
 
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box>
-            <Typography variant="h4" gutterBottom>
-              {kiosk.firstName} {kiosk.lastName}
-            </Typography>
-            <Typography variant="subtitle1" color="textSecondary">
-              {kiosk.projects.length > 0
-                ? "Assigned Projects"
-                : "No Assigned Projects"}
-            </Typography>
+        <Paper elevation={3} sx={{ p: 4 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Box>
+              <Typography variant="h4" gutterBottom>
+                {kiosk.firstName} {kiosk.lastName}
+              </Typography>
+              <Typography variant="subtitle1" color="textSecondary">
+                {kiosk.projects.length > 0
+                  ? "Assigned Projects"
+                  : "No Assigned Projects"}
+              </Typography>
+            </Box>
+            <Box>
+              <IconButton
+                color="primary"
+                onClick={() =>
+                  router.push(
+                    `/admin/kiosk-management/edit?id=${kiosk.keycloakId}`
+                  )
+                }
+              >
+                <Edit />
+              </IconButton>
+
+              <IconButton
+                color="error"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Delete />
+              </IconButton>
+            </Box>
           </Box>
-          <Box>
-            <IconButton
-              color="primary"
-              onClick={() =>
-                router.push(
-                  `/admin/kiosk-management/edit?id=${kiosk.keycloakId}`
-                )
-              }
-            >
-              <Edit />
-            </IconButton>
 
-            <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
-              <Delete />
-            </IconButton>
-          </Box>
-        </Box>
-
-        <Grid container spacing={2} sx={{ mt: 2 }}>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>ID:</strong> {kiosk._id}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>First Name:</strong> {kiosk.firstName}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Last Name:</strong> {kiosk.lastName}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Username:</strong> {kiosk.username}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Email:</strong> {kiosk.email}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Phone:</strong> {kiosk.phone}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Role:</strong> {kiosk.role.join(", ")}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Enabled:</strong> {kiosk.enabled ? "Yes" : "No"}
-            </Typography>
-          </Grid>
-          {/* <Grid item xs={12} sm={6}>
+          <Grid container spacing={2} sx={{ mt: 2 }}>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>ID:</strong> {kiosk._id}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>First Name:</strong> {kiosk.firstName}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Last Name:</strong> {kiosk.lastName}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Username:</strong> {kiosk.username}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Email:</strong> {kiosk.email}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Phone:</strong> {kiosk.phone}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Role:</strong> {kiosk.role.join(", ")}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Enabled:</strong> {kiosk.enabled ? "Yes" : "No"}
+              </Typography>
+            </Grid>
+            {/* <Grid item xs={12} sm={6}>
             <Typography>
               <strong>Archived:</strong> {kiosk.archive ? "Yes" : "No"}
             </Typography>
           </Grid> */}
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Created At:</strong>{" "}
-              {new Date(kiosk.createdAt).toLocaleString()}
-            </Typography>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Created At:</strong>{" "}
+                {new Date(kiosk.createdAt).toLocaleString()}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Updated At:</strong>{" "}
+                {new Date(kiosk.updatedAt).toLocaleString()}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Description:</strong> {kiosk.description}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Address:</strong> {kiosk.address}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Country:</strong> {kiosk.countryName}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>State:</strong> {kiosk.stateName}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>City:</strong> {kiosk.cityName}
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography>
+                <strong>Assigned Projects:</strong>{" "}
+                {kiosk.projectNames?.join(", ") || "No Projects Assigned"}
+              </Typography>
+            </Grid>
           </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Updated At:</strong>{" "}
-              {new Date(kiosk.updatedAt).toLocaleString()}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Description:</strong> {kiosk.description}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Address:</strong> {kiosk.address}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Country:</strong> {kiosk.countryName}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>State:</strong> {kiosk.stateName}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>City:</strong> {kiosk.cityName}
-            </Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography>
-              <strong>Assigned Projects:</strong>{" "}
-              {kiosk.projectNames?.join(", ") || "No Projects Assigned"}
-            </Typography>
-          </Grid>
-        </Grid>
-      </Paper>
+        </Paper>
 
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this kiosk? This action cannot be
-            undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={handleDelete}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+        >
+          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this kiosk? This action cannot be
+              undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button color="error" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
     </>
   );
 };

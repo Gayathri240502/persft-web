@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { useRouter } from "next/navigation"; // <-- import useRouter
 import Navbar from "@/app/components/navbar/navbar";
 
@@ -76,7 +76,7 @@ const AddShop = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -258,97 +258,96 @@ const AddShop = () => {
   );
 
   return (
+    <>
+      <Navbar label="Shop" />
 
-     <>
-     <Navbar label="Shop" />
-     
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-        Add New Shop
-      </Typography>
+      <Box sx={{ p: 4 }}>
+        <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
+          Add New Shop
+        </Typography>
 
-      {error && <Alert severity="error">{error}</Alert>}
-      {success && <Alert severity="success">{success}</Alert>}
+        {error && <Alert severity="error">{error}</Alert>}
+        {success && <Alert severity="success">{success}</Alert>}
 
-      <Grid container spacing={2}>
-        {[
-          ["First Name", "firstName"],
-          ["Last Name", "lastName"],
-          ["Username", "username"],
-          ["Email", "email"],
-          ["Phone", "phone"],
-          ["Password", "password"],
-          ["Owner Name", "ownerName"],
-          ["Address", "address"],
-        ].map(([label, key]) => (
-          <Grid item xs={12} sm={6} key={key}>
-            <TextField
-              fullWidth
-              label={label}
-              value={form[key as keyof typeof form]}
-              onChange={(e) =>
-                handleChange(key as keyof typeof form, e.target.value)
-              }
-            />
+        <Grid container spacing={2}>
+          {[
+            ["First Name", "firstName"],
+            ["Last Name", "lastName"],
+            ["Username", "username"],
+            ["Email", "email"],
+            ["Phone", "phone"],
+            ["Password", "password"],
+            ["Owner Name", "ownerName"],
+            ["Address", "address"],
+          ].map(([label, key]) => (
+            <Grid item xs={12} sm={6} key={key}>
+              <TextField
+                fullWidth
+                label={label}
+                value={form[key as keyof typeof form]}
+                onChange={(e) =>
+                  handleChange(key as keyof typeof form, e.target.value)
+                }
+              />
+            </Grid>
+          ))}
+
+          <Grid item xs={12} sm={6}>
+            {renderSelect(
+              "Category",
+              form.category,
+              "category",
+              categories,
+              loadingCategories
+            )}
           </Grid>
-        ))}
+          <Grid item xs={12} sm={6}>
+            {renderSelect(
+              "SubCategory",
+              form.subCategory,
+              "subCategory",
+              subCategories,
+              loadingSubCategories
+            )}
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {renderSelect(
+              "Country",
+              form.country,
+              "country",
+              countries,
+              loadingCountries
+            )}
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {renderSelect(
+              "State",
+              form.state,
+              "state",
+              states,
+              loadingStates,
+              !form.country
+            )}
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {renderSelect(
+              "City",
+              form.city,
+              "city",
+              cities,
+              loadingCities,
+              !form.state
+            )}
+          </Grid>
+        </Grid>
 
-        <Grid item xs={12} sm={6}>
-          {renderSelect(
-            "Category",
-            form.category,
-            "category",
-            categories,
-            loadingCategories
-          )}
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderSelect(
-            "SubCategory",
-            form.subCategory,
-            "subCategory",
-            subCategories,
-            loadingSubCategories
-          )}
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderSelect(
-            "Country",
-            form.country,
-            "country",
-            countries,
-            loadingCountries
-          )}
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderSelect(
-            "State",
-            form.state,
-            "state",
-            states,
-            loadingStates,
-            !form.country
-          )}
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          {renderSelect(
-            "City",
-            form.city,
-            "city",
-            cities,
-            loadingCities,
-            !form.state
-          )}
-        </Grid>
-      </Grid>
+        <Divider sx={{ my: 4 }} />
 
-      <Divider sx={{ my: 4 }} />
-
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton onClick={handleSubmit}>Submit</ReusableButton>
-        <CancelButton href="/admin/vendors/shops">Cancel</CancelButton>
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <ReusableButton onClick={handleSubmit}>Submit</ReusableButton>
+          <CancelButton href="/admin/vendors/shops">Cancel</CancelButton>
+        </Box>
       </Box>
-    </Box>
     </>
   );
 };

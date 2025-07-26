@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import {
   Box,
   CircularProgress,
@@ -54,7 +54,7 @@ const UserEditPage: React.FC = () => {
 
   const { id } = useParams();
   const router = useRouter();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   useEffect(() => {
     if (!id) return;
@@ -155,76 +155,78 @@ const UserEditPage: React.FC = () => {
 
   return (
     <>
-    <Navbar label="Users"/>
-    <Box p={4}>
-      {/* <Button
+      <Navbar label="Users" />
+      <Box p={4}>
+        {/* <Button
         onClick={() => router.push(`/admin/users`)}
         sx={{ marginBottom: 2 }}
       >
         Back 
       </Button> */}
-      <Paper elevation={3} sx={{ padding: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Edit User
-        </Typography>
-        {success && <Alert severity="success">{success}</Alert>}
-        <Grid container spacing={2} sx={{ marginTop: 2 }}>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Username"
-              value={user.username}
-              disabled
-              onChange={(e) => setUser({ ...user, username: e.target.value })}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="First Name"
-              value={user.firstName}
-              onChange={(e) => setUser({ ...user, firstName: e.target.value })}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Last Name"
-              value={user.lastName}
-              onChange={(e) => setUser({ ...user, lastName: e.target.value })}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Email"
-              value={user.email}
-              onChange={(e) => setUser({ ...user, email: e.target.value })}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Phone"
-              value={user.phone}
-              onChange={(e) => setUser({ ...user, phone: e.target.value })}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={user.enabled}
-                  onChange={(e) =>
-                    setUser({ ...user, enabled: e.target.checked })
-                  }
-                />
-              }
-              label="Enabled"
-            />
-          </Grid>
+        <Paper elevation={3} sx={{ padding: 4 }}>
+          <Typography variant="h4" gutterBottom>
+            Edit User
+          </Typography>
+          {success && <Alert severity="success">{success}</Alert>}
+          <Grid container spacing={2} sx={{ marginTop: 2 }}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Username"
+                value={user.username}
+                disabled
+                onChange={(e) => setUser({ ...user, username: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="First Name"
+                value={user.firstName}
+                onChange={(e) =>
+                  setUser({ ...user, firstName: e.target.value })
+                }
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Last Name"
+                value={user.lastName}
+                onChange={(e) => setUser({ ...user, lastName: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Email"
+                value={user.email}
+                onChange={(e) => setUser({ ...user, email: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Phone"
+                value={user.phone}
+                onChange={(e) => setUser({ ...user, phone: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={user.enabled}
+                    onChange={(e) =>
+                      setUser({ ...user, enabled: e.target.checked })
+                    }
+                  />
+                }
+                label="Enabled"
+              />
+            </Grid>
 
-          {/* <Grid item xs={12} sm={6}>
+            {/* <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
               <InputLabel id="roles-label">Roles</InputLabel>
               <Select
@@ -249,16 +251,16 @@ const UserEditPage: React.FC = () => {
               </Select>
             </FormControl>
           </Grid>*/}
-        </Grid>
-        <Divider sx={{ my: 4 }} />
-         <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton onClick={handleSave} disabled={loading}>
-          {loading ? <CircularProgress size={20} /> : "save"}
-        </ReusableButton>
-        <CancelButton href="/admin/users">Cancel</CancelButton>
+          </Grid>
+          <Divider sx={{ my: 4 }} />
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <ReusableButton onClick={handleSave} disabled={loading}>
+              {loading ? <CircularProgress size={20} /> : "save"}
+            </ReusableButton>
+            <CancelButton href="/admin/users">Cancel</CancelButton>
+          </Box>
+        </Paper>
       </Box>
-      </Paper>
-    </Box>
     </>
   );
 };

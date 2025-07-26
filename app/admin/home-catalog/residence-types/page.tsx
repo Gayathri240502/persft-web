@@ -26,7 +26,7 @@ import { useRouter } from "next/navigation";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
 
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface ResidenceType {
   id: string;
@@ -72,7 +72,7 @@ const ResidenceTypePage = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
 
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   // Debounce search with 300ms delay (industry standard)
   const debouncedSearch = useDebounce(search, 300);

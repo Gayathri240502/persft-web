@@ -17,7 +17,7 @@ import {
   DialogActions,
 } from "@mui/material";
 import { ArrowBack, Edit, Delete } from "@mui/icons-material";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface Attribute {
   _id: string;
@@ -33,7 +33,7 @@ interface Attribute {
 const AttributeDetailsPage: React.FC = () => {
   const { id } = useParams();
   const router = useRouter();
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const [attribute, setAttribute] = useState<Attribute | null>(null);
   const [loading, setLoading] = useState(true);

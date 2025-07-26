@@ -15,7 +15,7 @@ import {
 import { useTheme } from "@mui/material/styles";
 import { GridColDef, GridPaginationModel, DataGrid } from "@mui/x-data-grid";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface DesignPayment {
   _id: string;
@@ -69,7 +69,7 @@ const DesignPayments = () => {
 
   const debouncedSearchText = useDebounce(searchText, 500); // 500ms debounce
 
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const fetchPayments = async () => {
     if (isValid === "") {
@@ -132,7 +132,7 @@ const DesignPayments = () => {
   }, [paginationModel, isValid, debouncedSearchText]);
 
   const columns: GridColDef[] = [
-    { field: "sn", headerName: "SN", width:70 },
+    { field: "sn", headerName: "SN", width: 70 },
     {
       field: "_id",
       headerName: "ID",

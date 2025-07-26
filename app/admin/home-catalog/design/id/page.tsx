@@ -18,10 +18,10 @@ import {
   DialogActions,
 } from "@mui/material";
 import { ArrowBack, Edit, Delete } from "@mui/icons-material";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 const DesignTypeDetails = () => {
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
   const searchParams = useSearchParams();
   const designId = searchParams.get("id");
   const router = useRouter();

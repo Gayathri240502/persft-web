@@ -27,7 +27,7 @@ import { useRouter } from "next/navigation";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
 import ReusableButton from "@/app/components/Button";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 // Interfaces
 interface ResidenceTypeReference {
@@ -78,7 +78,7 @@ const RoomTypes = () => {
   });
   const [rowCount, setRowCount] = useState(0);
   const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);

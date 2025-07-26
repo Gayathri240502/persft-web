@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { useRouter } from "next/navigation";
 
 const WorkGroup = () => {
@@ -22,7 +22,7 @@ const WorkGroup = () => {
   const [success, setSuccess] = useState<string | null>(null);
 
   const router = useRouter();
-  const { token } = getTokenAndRole(); // Get JWT token
+  const { token } = useTokenAndRole(); // Get JWT token
 
   // Form validation
   const validateForm = () => {

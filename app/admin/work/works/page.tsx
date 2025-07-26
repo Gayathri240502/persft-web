@@ -36,7 +36,7 @@ import {
   Save as SaveIcon,
   Cancel as CancelIcon,
 } from "@mui/icons-material";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
 
@@ -73,7 +73,7 @@ interface WorkData {
 }
 
 const WorksManagement = () => {
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
   const [work, setWork] = useState<WorkData | null>(null);
   const [workGroupsData, setWorkGroupsData] = useState<WorkGroupWithTasks[]>(
     []

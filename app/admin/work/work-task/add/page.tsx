@@ -10,12 +10,12 @@ import {
 } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
-import { getTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { useRouter } from "next/navigation";
 import Navbar from "@/app/components/navbar/navbar";
 
 const WorkTaskForm = () => {
-  const { token } = getTokenAndRole();
+  const { token } = useTokenAndRole();
   const Router = useRouter();
 
   const [workGroups, setWorkGroups] = useState<any[]>([]);
@@ -76,7 +76,7 @@ const WorkTaskForm = () => {
     try {
       const payload = {
         ...formData,
-          description: formData.description.trim() || "N/A",
+        description: formData.description.trim() || "N/A",
 
         targetDays: Number(formData.targetDays),
         bufferDays: Number(formData.bufferDays),
@@ -106,103 +106,104 @@ const WorkTaskForm = () => {
   };
 
   return (
-
     <>
-    <Navbar label="Create Work Task"/>
+      <Navbar label="Create Work Task" />
 
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h5" sx={{ mb: 2 }}>
+          Create Work Task
+        </Typography>
 
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Create Work Task
-      </Typography>
-
-      <TextField
-        label="Name"
-        name="name"
-        fullWidth
-        sx={{ mb: 3 }}
-        value={formData.name}
-        onChange={handleChange}
-      />
-
-      <TextField
-        label="Description"
-        name="description"
-        multiline
-        rows={3}
-        fullWidth
-        sx={{ mb: 3 }}
-        value={formData.description}
-        onChange={handleChange}
-      />
-
-      <TextField
-        select
-        label="Work Group"
-        name="workGroup"
-        fullWidth
-        sx={{ mb: 3 }}
-        value={formData.workGroup || ""}
-        onChange={handleChange}
-        disabled={loadingWorkGroups || workGroups.length === 0}
-      >
-        <MenuItem value="" disabled>
-          {loadingWorkGroups
-            ? "Loading..."
-            : workGroups.length === 0
-              ? "No Work Groups Available"
-              : "Select Work Group"}
-        </MenuItem>
-        {workGroups
-          .filter((group) => group._id || group.id)
-          .map((group) => (
-            <MenuItem key={group._id || group.id} value={group._id || group.id}>
-              {group.name || "Unnamed Group"}
-            </MenuItem>
-          ))}
-      </TextField>
-
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-        <Typography>Target Days:</Typography>
         <TextField
-          type="number"
-          name="targetDays"
-          sx={{ width: 120 }}
-          value={formData.targetDays}
+          label="Name"
+          name="name"
+          fullWidth
+          sx={{ mb: 3 }}
+          value={formData.name}
           onChange={handleChange}
         />
-      </Box>
 
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-        <Typography>Buffer Days:</Typography>
         <TextField
-          type="number"
-          name="bufferDays"
-          sx={{ width: 120 }}
-          value={formData.bufferDays}
+          label="Description"
+          name="description"
+          multiline
+          rows={3}
+          fullWidth
+          sx={{ mb: 3 }}
+          value={formData.description}
           onChange={handleChange}
         />
-      </Box>
 
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-        <Typography>PO Days:</Typography>
         <TextField
-          type="number"
-          name="poDays"
-          sx={{ width: 150 }}
-          value={formData.poDays}
+          select
+          label="Work Group"
+          name="workGroup"
+          fullWidth
+          sx={{ mb: 3 }}
+          value={formData.workGroup || ""}
           onChange={handleChange}
-        />
-      </Box>
+          disabled={loadingWorkGroups || workGroups.length === 0}
+        >
+          <MenuItem value="" disabled>
+            {loadingWorkGroups
+              ? "Loading..."
+              : workGroups.length === 0
+                ? "No Work Groups Available"
+                : "Select Work Group"}
+          </MenuItem>
+          {workGroups
+            .filter((group) => group._id || group.id)
+            .map((group) => (
+              <MenuItem
+                key={group._id || group.id}
+                value={group._id || group.id}
+              >
+                {group.name || "Unnamed Group"}
+              </MenuItem>
+            ))}
+        </TextField>
 
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <ReusableButton onClick={handleSubmit} disabled={loadingSubmit}>
-          {loadingSubmit ? <CircularProgress size={20} /> : "Submit"}
-        </ReusableButton>
-        <CancelButton href="/admin/work/work-task">Cancel</CancelButton>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+          <Typography>Target Days:</Typography>
+          <TextField
+            type="number"
+            name="targetDays"
+            sx={{ width: 120 }}
+            value={formData.targetDays}
+            onChange={handleChange}
+          />
+        </Box>
+
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+          <Typography>Buffer Days:</Typography>
+          <TextField
+            type="number"
+            name="bufferDays"
+            sx={{ width: 120 }}
+            value={formData.bufferDays}
+            onChange={handleChange}
+          />
+        </Box>
+
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+          <Typography>PO Days:</Typography>
+          <TextField
+            type="number"
+            name="poDays"
+            sx={{ width: 150 }}
+            value={formData.poDays}
+            onChange={handleChange}
+          />
+        </Box>
+
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <ReusableButton onClick={handleSubmit} disabled={loadingSubmit}>
+            {loadingSubmit ? <CircularProgress size={20} /> : "Submit"}
+          </ReusableButton>
+          <CancelButton href="/admin/work/work-task">Cancel</CancelButton>
+        </Box>
       </Box>
-    </Box>
-     </>
+    </>
   );
 };
 

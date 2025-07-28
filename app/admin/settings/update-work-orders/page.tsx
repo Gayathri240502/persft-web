@@ -19,6 +19,7 @@ import {
   Select,
   Checkbox,
   FormControlLabel,
+  Typography,
   Grid,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
@@ -31,6 +32,7 @@ import { Edit, Delete, Visibility } from "@mui/icons-material";
 
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { useRouter } from "next/navigation";
 
 interface WorkOrder {
   id: string;
@@ -45,6 +47,7 @@ interface WorkOrder {
 const UpdateWorkOrdersPage = () => {
   const theme = useTheme();
   const { token } = useTokenAndRole();
+  const router = useRouter();
 
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
@@ -166,8 +169,14 @@ const UpdateWorkOrdersPage = () => {
     handleDeleteCancel();
   };
 
-  const handleView = (id: string) => alert(`View: ${id}`);
-  const handleEdit = (id: string) => alert(`Edit: ${id}`);
+  const handleView = (workOrderId: string) => {
+    router.push(`/admin/settings/update-work-orders/${workOrderId}`);
+  };
+
+  const handleEdit = (workOrderId: string) => {
+    router.push(`/admin/settings/update-work-orders/${workOrderId}`);
+  };
+
   const handleAdd = () => alert("Add new Work Order");
 
   const columns: GridColDef[] = useMemo(
@@ -177,15 +186,18 @@ const UpdateWorkOrdersPage = () => {
         field: "workOrderId",
         headerName: "Work Order ID",
         flex: 1,
-        minWidth: 180,
-      },
-      { field: "projectName", headerName: "Project", flex: 1, minWidth: 150 },
-      {
-        field: "customerEmail",
-        headerName: "Customer Email",
-        flex: 1,
         minWidth: 200,
+        renderCell: (params: any) => (
+          <Typography
+            variant="body2"
+            sx={{ color: theme.palette.primary.main, cursor: "pointer" }}
+            onClick={() => handleView(params.row.workOrderId)}
+          >
+            {params.row.workOrderId ?? "N/A"}
+          </Typography>
+        ),
       },
+
       { field: "status", headerName: "Status", flex: 1, minWidth: 120 },
       {
         field: "action",
@@ -198,14 +210,14 @@ const UpdateWorkOrdersPage = () => {
             <IconButton
               size="small"
               color="primary"
-              onClick={() => handleView(params.row.id)}
+              onClick={() => handleView(params.row.workOrderId)}
             >
               <Visibility fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
               color="primary"
-              onClick={() => handleEdit(params.row.id)}
+              onClick={() => handleEdit(params.row.workOrderId)}
             >
               <Edit fontSize="small" />
             </IconButton>
@@ -220,12 +232,12 @@ const UpdateWorkOrdersPage = () => {
         ),
       },
     ],
-    []
+    [theme.palette.primary.main]
   );
 
   return (
     <>
-      <Navbar label="Work Orders" />
+      <Navbar label="Update Work Orders" />
 
       <Box sx={{ p: 3 }}>
         {error && <Alert severity="error">{error}</Alert>}

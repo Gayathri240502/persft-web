@@ -121,6 +121,50 @@ const DateRange = ({
   </Box>
 );
 
+type WorkTask = {
+  workTaskId: string;
+  workTaskName: string;
+  status: string;
+  notes?: string;
+  actualStartDate?: string;
+  actualEndDate?: string;
+};
+
+type WorkGroup = {
+  workGroupName: string;
+  workGroupId: string;
+  status: string;
+  notes?: string;
+  workTasks: WorkTask[];
+};
+
+type POScheduleItem = {
+  workTaskName: string;
+  status: string;
+  expectedPODate: string;
+  actualPODate: string;
+  notes?: string;
+};
+
+type MatchedProduct = {
+  productName: string;
+  coohomId: string;
+  obsBrandGoodId: string;
+  workGroupName: string;
+  workTaskName: string;
+};
+
+type UnmatchedItem = {
+  obsBrandGoodId: string;
+  reason: string;
+};
+
+type WorksSnapshot = {
+  worksId: string;
+  worksName: string;
+  capturedAt: string | null;
+};
+
 const WorkOrderDetailsPage = () => {
   const theme = useTheme();
   const { token } = useTokenAndRole();
@@ -341,72 +385,74 @@ const WorkOrderDetailsPage = () => {
             }
           />
           <CardContent sx={{ pt: 0 }}>
-            {workOrder?.executionPlan?.map((group, i) => (
-              <Accordion key={i} sx={{ mb: 1, "&:last-child": { mb: 0 } }}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    spacing={2}
-                    sx={{ width: "100%" }}
-                  >
-                    <Typography variant="subtitle1" fontWeight={600}>
-                      {group?.workGroupName || `Work Group ${i + 1}`}
+            {Array.isArray(workOrder?.executionPlan) &&
+              workOrder.executionPlan.map((group: WorkGroup, i: number) => (
+                <Accordion key={i} sx={{ mb: 1, "&:last-child": { mb: 0 } }}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      spacing={2}
+                      sx={{ width: "100%" }}
+                    >
+                      <Typography variant="subtitle1" fontWeight={600}>
+                        {group?.workGroupName || `Work Group ${i + 1}`}
+                      </Typography>
+                      <StatusChip status={group?.status || "—"} />
+                    </Stack>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    {group?.notes && (
+                      <Alert severity="info" sx={{ mb: 2 }}>
+                        {group.notes}
+                      </Alert>
+                    )}
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ mb: 2, fontWeight: 600 }}
+                    >
+                      Work Tasks ({group?.workTasks?.length || 0})
                     </Typography>
-                    <StatusChip status={group?.status || "—"} />
-                  </Stack>
-                </AccordionSummary>
-                <AccordionDetails>
-                  {group?.notes && (
-                    <Alert severity="info" sx={{ mb: 2 }}>
-                      {group.notes}
-                    </Alert>
-                  )}
-
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ mb: 2, fontWeight: 600 }}
-                  >
-                    Work Tasks ({group?.workTasks?.length || 0})
-                  </Typography>
-
-                  <Grid container spacing={2}>
-                    {group?.workTasks?.map((task, j) => (
-                      <Grid item xs={12} md={6} key={j}>
-                        <Paper
-                          variant="outlined"
-                          sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2 }}
-                        >
-                          <Stack spacing={1}>
-                            <Typography variant="subtitle2" fontWeight={600}>
-                              {task?.workTaskName || `Task ${j + 1}`}
-                            </Typography>
-                            <StatusChip status={task?.status || "—"} />
-                            <Typography variant="body2" color="text.secondary">
-                              {task?.actualStartDate
-                                ? dayjs(task.actualStartDate).format("DD MMM")
-                                : "—"}{" "}
-                              →{" "}
-                              {task?.actualEndDate
-                                ? dayjs(task.actualEndDate).format("DD MMM")
-                                : "—"}
-                            </Typography>
-                            {task?.notes && (
+                    <Grid container spacing={2}>
+                      {group?.workTasks?.map((task, j) => (
+                        <Grid item xs={12} md={6} key={j}>
+                          <Paper
+                            variant="outlined"
+                            sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2 }}
+                          >
+                            <Stack spacing={1}>
+                              <Typography variant="subtitle2" fontWeight={600}>
+                                {task?.workTaskName || `Task ${j + 1}`}
+                              </Typography>
+                              <StatusChip status={task?.status || "—"} />
                               <Typography
-                                variant="caption"
+                                variant="body2"
                                 color="text.secondary"
                               >
-                                {task.notes}
+                                {task?.actualStartDate
+                                  ? dayjs(task.actualStartDate).format("DD MMM")
+                                  : "—"}{" "}
+                                →{" "}
+                                {task?.actualEndDate
+                                  ? dayjs(task.actualEndDate).format("DD MMM")
+                                  : "—"}
                               </Typography>
-                            )}
-                          </Stack>
-                        </Paper>
-                      </Grid>
-                    ))}
-                  </Grid>
-                </AccordionDetails>
-              </Accordion>
-            ))}
+                              {task?.notes && (
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
+                                  {task.notes}
+                                </Typography>
+                              )}
+                            </Stack>
+                          </Paper>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </AccordionDetails>
+                </Accordion>
+              ))}
           </CardContent>
         </Card>
 
@@ -428,7 +474,7 @@ const WorkOrderDetailsPage = () => {
           />
           <CardContent sx={{ pt: 0 }}>
             <Grid container spacing={2}>
-              {workOrder.poSchedule?.map((po, i) => (
+              {workOrder.poSchedule?.map((po: POScheduleItem, i: number) => (
                 <Grid item xs={12} md={6} key={i}>
                   <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
                     <Stack spacing={1}>
@@ -476,43 +522,57 @@ const WorkOrderDetailsPage = () => {
               </AccordionSummary>
               <AccordionDetails sx={{ maxHeight: 400, overflow: "auto" }}>
                 <Stack spacing={2}>
-                  {workOrder.matchedProducts?.map((prod, i) => (
-                    <Paper
-                      key={i}
-                      variant="outlined"
-                      sx={{ p: 2, borderRadius: 1 }}
-                    >
-                      <Typography
-                        variant="subtitle2"
-                        fontWeight={600}
-                        sx={{ mb: 1 }}
+                  {workOrder.matchedProducts?.map(
+                    (prod: MatchedProduct, i: number) => (
+                      <Paper
+                        key={i}
+                        variant="outlined"
+                        sx={{ p: 2, borderRadius: 1 }}
                       >
-                        {prod.productName}
-                      </Typography>
-                      <Grid container spacing={1}>
-                        <Grid item xs={6}>
-                          <Typography variant="caption" color="text.secondary">
-                            Coohom ID: {prod.coohomId}
-                          </Typography>
+                        <Typography
+                          variant="subtitle2"
+                          fontWeight={600}
+                          sx={{ mb: 1 }}
+                        >
+                          {prod.productName}
+                        </Typography>
+                        <Grid container spacing={1}>
+                          <Grid item xs={6}>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              Coohom ID: {prod.coohomId}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              OBS ID: {prod.obsBrandGoodId}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              Group: {prod.workGroupName}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              Task: {prod.workTaskName}
+                            </Typography>
+                          </Grid>
                         </Grid>
-                        <Grid item xs={6}>
-                          <Typography variant="caption" color="text.secondary">
-                            OBS ID: {prod.obsBrandGoodId}
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={6}>
-                          <Typography variant="caption" color="text.secondary">
-                            Group: {prod.workGroupName}
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={6}>
-                          <Typography variant="caption" color="text.secondary">
-                            Task: {prod.workTaskName}
-                          </Typography>
-                        </Grid>
-                      </Grid>
-                    </Paper>
-                  ))}
+                      </Paper>
+                    )
+                  )}
                 </Stack>
               </AccordionDetails>
             </Accordion>
@@ -535,16 +595,22 @@ const WorkOrderDetailsPage = () => {
               </AccordionSummary>
               <AccordionDetails sx={{ maxHeight: 400, overflow: "auto" }}>
                 <Stack spacing={2}>
-                  {workOrder.unmatchedItems?.map((item, i) => (
-                    <Alert key={i} severity="warning" sx={{ borderRadius: 1 }}>
-                      <Typography variant="body2" fontWeight={600}>
-                        OBS ID: {item.obsBrandGoodId}
-                      </Typography>
-                      <Typography variant="caption">
-                        Reason: {item.reason}
-                      </Typography>
-                    </Alert>
-                  ))}
+                  {workOrder.unmatchedItems?.map(
+                    (item: UnmatchedItem, i: number) => (
+                      <Alert
+                        key={i}
+                        severity="warning"
+                        sx={{ borderRadius: 1 }}
+                      >
+                        <Typography variant="body2" fontWeight={600}>
+                          OBS ID: {item.obsBrandGoodId}
+                        </Typography>
+                        <Typography variant="caption">
+                          Reason: {item.reason}
+                        </Typography>
+                      </Alert>
+                    )
+                  )}
                 </Stack>
               </AccordionDetails>
             </Accordion>

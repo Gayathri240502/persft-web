@@ -32,12 +32,12 @@ const PREFERRED_ORDER = [
   "Product Catalog",
   "Vendors",
   "Projects",
-  "Design Payments",
-  "Payment Info",
   "Kiosk Management",
   "Work",
-  "Users",
+  "Design Payments",
   "Orders",
+  "Tickets",
+  "Users",
   "Settings",
 ] as const;
 

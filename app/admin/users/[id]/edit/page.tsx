@@ -13,11 +13,6 @@ import {
   Button,
   Checkbox,
   FormControlLabel,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
-  OutlinedInput,
   Divider,
 } from "@mui/material";
 import Navbar from "@/app/components/navbar/navbar";
@@ -32,10 +27,7 @@ interface User {
   email: string;
   phone: string;
   enabled: boolean;
-  // roles: string[];
 }
-
-// const availableRoles = ["admin", "merchant", "customer", "kisok"];
 
 const UserEditPage: React.FC = () => {
   const [user, setUser] = useState<User>({
@@ -46,11 +38,21 @@ const UserEditPage: React.FC = () => {
     email: "",
     phone: "",
     enabled: false,
-    // roles: [],
   });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changePasswordSuccess, setChangePasswordSuccess] = useState<
+    string | null
+  >(null);
+  const [changePasswordError, setChangePasswordError] = useState<string | null>(
+    null
+  );
+  const [changingPassword, setChangingPassword] = useState(false);
 
   const { id } = useParams();
   const router = useRouter();
@@ -74,10 +76,7 @@ const UserEditPage: React.FC = () => {
           throw new Error("Failed to fetch user data");
         }
         const data: User = await response.json();
-        setUser({
-          ...data,
-          // roles: data.roles || [],
-        });
+        setUser(data);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -111,6 +110,52 @@ const UserEditPage: React.FC = () => {
       setTimeout(() => router.push(`/admin/users`), 1000);
     } catch (err: any) {
       setError(err.message);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!newPassword.trim()) {
+      setChangePasswordError("New password cannot be empty");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setChangePasswordError("Passwords do not match");
+      return;
+    }
+
+    try {
+      setChangingPassword(true);
+      setChangePasswordError(null);
+      setChangePasswordSuccess(null);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/change-password`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: user._id,
+            newPassword: newPassword.trim(),
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to change password");
+      }
+
+      setChangePasswordSuccess("Password updated successfully!");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: any) {
+      setChangePasswordError(err.message);
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -157,12 +202,6 @@ const UserEditPage: React.FC = () => {
     <>
       <Navbar label="Users" />
       <Box p={4}>
-        {/* <Button
-        onClick={() => router.push(`/admin/users`)}
-        sx={{ marginBottom: 2 }}
-      >
-        Back 
-      </Button> */}
         <Paper elevation={3} sx={{ padding: 4 }}>
           <Typography variant="h4" gutterBottom>
             Edit User
@@ -225,37 +264,70 @@ const UserEditPage: React.FC = () => {
                 label="Enabled"
               />
             </Grid>
-
-            {/* <Grid item xs={12} sm={6}>
-            <FormControl fullWidth>
-              <InputLabel id="roles-label">Roles</InputLabel>
-              <Select
-                labelId="roles-label"
-                multiple
-                value={user.roles}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setUser({
-                    ...user,
-                    roles: typeof value === "string" ? value.split(",") : value,
-                  });
-                }}
-                input={<OutlinedInput label="Roles" />}
-                renderValue={(selected) => (selected as string[]).join(", ")}
-              >
-                {availableRoles.map((role) => (
-                  <MenuItem key={role} value={role}>
-                    {role}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>*/}
           </Grid>
+
           <Divider sx={{ my: 4 }} />
+
+          <Typography variant="h6" gutterBottom>
+            Change Password
+          </Typography>
+
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="New Password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Confirm Password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+            </Grid>
+            <Grid
+              item
+              xs={12}
+              sm={12}
+              sx={{ display: "flex", justifyContent: "flex-end" }}
+            >
+              <Button
+                variant="outlined"
+                onClick={handleChangePassword}
+                disabled={changingPassword}
+              >
+                {changingPassword ? (
+                  <CircularProgress size={20} />
+                ) : (
+                  "Change Password"
+                )}
+              </Button>
+            </Grid>
+          </Grid>
+
+          {changePasswordSuccess && (
+            <Alert severity="success" sx={{ mt: 2 }}>
+              {changePasswordSuccess}
+            </Alert>
+          )}
+
+          {changePasswordError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {changePasswordError}
+            </Alert>
+          )}
+
+          <Divider sx={{ my: 4 }} />
+
           <Box sx={{ display: "flex", gap: 2 }}>
             <ReusableButton onClick={handleSave} disabled={loading}>
-              {loading ? <CircularProgress size={20} /> : "save"}
+              {loading ? <CircularProgress size={20} /> : "Save"}
             </ReusableButton>
             <CancelButton href="/admin/users">Cancel</CancelButton>
           </Box>

@@ -219,19 +219,14 @@ const DesignOrders = () => {
         <Stack spacing={0.5}>
           <Chip
             label={params.value.replace(/_/g, " ").toUpperCase()}
-            color={getStatusColor(params.value)}
+            color={getStatusColor(params.value)} // e.g., "success" | "warning" | "error"
             size="small"
             variant="outlined"
-          />
-          <Typography
-            variant="body2"
-            sx={{ color: theme.palette.primary.main, cursor: "pointer" }}
             onClick={() =>
               router.push(`/admin/orders/payments/${params.row.orderId}`)
             }
-          >
-            {params.row.orderId ?? "N/A"}
-          </Typography>
+            sx={{ cursor: "pointer" }}
+          />
         </Stack>
       ),
     },

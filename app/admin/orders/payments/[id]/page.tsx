@@ -5,26 +5,21 @@ import { useParams } from "next/navigation";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 const PaymentsPage = () => {
-  const params = useParams();
-  const orderId = params.orderId; // or: const { orderId } = useParams();
+  const id = useParams();
+
   const { token } = useTokenAndRole();
 
   const [payments, setPayments] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
-  console.log(
-    "PaymentsPage rendered with orderId:",
-    orderId,
-    "and token:",
-    token
-  );
+  console.log("PaymentsPage rendered with orderId:", id);
 
   useEffect(() => {
-    if (!orderId || !token) return;
+    if (!id || !token) return;
 
     const fetchPayments = async () => {
       try {
         const response = await fetch(
-          `/admin/design-orders/${orderId}/payments`,
+          `${process.env.NEXT_PUBLIC_API_URL}/admin/design-orders/DO-c546347c-68762/payments`,
           {
             method: "GET",
             headers: {
@@ -47,7 +42,7 @@ const PaymentsPage = () => {
     };
 
     fetchPayments();
-  }, [orderId, token]);
+  }, [id, token]);
 
   return null; // No UI rendering
 };

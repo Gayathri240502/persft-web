@@ -170,11 +170,11 @@ const UpdateWorkOrdersPage = () => {
   };
 
   const handleView = (workOrderId: string) => {
-    router.push(`/admin/settings/update-work-orders/${workOrderId}`);
+    router.push(`/admin/work/work-orders/${workOrderId}`);
   };
 
   const handleEdit = (workOrderId: string) => {
-    router.push(`/admin/settings/update-work-orders/${workOrderId}`);
+    router.push(`/admin/work/work-orders/${workOrderId}`);
   };
 
   const handleAdd = () => alert("Add new Work Order");

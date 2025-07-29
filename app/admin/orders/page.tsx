@@ -13,6 +13,7 @@ import {
   CircularProgress,
   Alert,
   Button,
+  Stack,
   Chip,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
@@ -215,14 +216,26 @@ const DesignOrders = () => {
       headerName: "Status",
       flex: 0.5,
       renderCell: (params: GridRenderCellParams) => (
-        <Chip
-          label={params.value.replace(/_/g, " ").toUpperCase()}
-          color={getStatusColor(params.value)}
-          size="small"
-          variant="outlined"
-        />
+        <Stack spacing={0.5}>
+          <Chip
+            label={params.value.replace(/_/g, " ").toUpperCase()}
+            color={getStatusColor(params.value)}
+            size="small"
+            variant="outlined"
+          />
+          <Typography
+            variant="body2"
+            sx={{ color: theme.palette.primary.main, cursor: "pointer" }}
+            onClick={() =>
+              router.push(`/admin/orders/payments/${params.row.orderId}`)
+            }
+          >
+            {params.row.orderId ?? "N/A"}
+          </Typography>
+        </Stack>
       ),
     },
+
     {
       field: "currentPaymentStage",
       headerName: "Payment Stage",

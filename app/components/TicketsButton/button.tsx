@@ -1,14 +1,19 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
-import { Button, Tooltip, IconButton, Typography, Box } from "@mui/material";
+import { Tooltip, IconButton, Box } from "@mui/material";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import Link from "next/link";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
+type Ticket = {
+  id: string;
+  status: string;
+};
+
 const TicketBadge = () => {
   const { token } = useTokenAndRole();
-  const [tickets, setTickets] = useState([]);
+  const [tickets, setTickets] = useState<Ticket[]>([]); // ✅ Typed correctly
 
   useEffect(() => {
     const fetchTickets = async () => {
@@ -44,11 +49,13 @@ const TicketBadge = () => {
   return (
     <Link href="/admin/tickets" passHref>
       <Tooltip
-        title={`${ticketCount} Open / In-Progress Ticket${ticketCount !== 1 ? "s" : ""}`}
+        title={`${ticketCount} Open / In-Progress Ticket${
+          ticketCount !== 1 ? "s" : ""
+        }`}
       >
         <IconButton
           color="primary"
-          sx={{ position: "relative", padding: "12px" }} // slightly more padding for larger icon
+          sx={{ position: "relative", padding: "12px" }}
         >
           <ConfirmationNumberIcon fontSize="large" />
           {ticketCount > 0 && (

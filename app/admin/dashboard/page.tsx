@@ -170,9 +170,12 @@ const DesignOrdersDashboard = () => {
             <Grid item xs={12} sm={6} md={4} lg={2.4}>
               <StatCard
                 title="Total Revenue"
-                value={`₹${(stats?.totalRevenue / 100).toLocaleString("en-IN", {
-                  minimumFractionDigits: 2,
-                })}`}
+                value={`₹${((stats?.totalRevenue ?? 0) / 100).toLocaleString(
+                  "en-IN",
+                  {
+                    minimumFractionDigits: 2,
+                  }
+                )}`}
                 icon={MonetizationOn}
                 bgGradient="linear-gradient(135deg, #114357, #f29492)"
               />

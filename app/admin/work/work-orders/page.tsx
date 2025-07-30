@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
@@ -21,6 +27,9 @@ import {
   FormControlLabel,
   Typography,
   Grid,
+  Chip,
+  Menu,
+  ListItemText,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import {
@@ -29,7 +38,6 @@ import {
   GridPaginationModel,
 } from "@mui/x-data-grid";
 import { Edit, Delete, Visibility } from "@mui/icons-material";
-
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { useRouter } from "next/navigation";
@@ -37,12 +45,30 @@ import { useRouter } from "next/navigation";
 interface WorkOrder {
   id: string;
   workOrderId: string;
+  workGroupId: string | null;
   status: string;
   customerEmail: string;
   projectName: string;
   createdAt: string;
   sn: number;
 }
+
+const normalizeStatus = (
+  status: string
+): "pending" | "active" | "completed" | "cancelled" => {
+  const map: Record<string, "pending" | "active" | "completed" | "cancelled"> =
+    {
+      pending: "pending",
+      started: "active",
+      inprogress: "active",
+      in_progress: "active",
+      delayed: "active",
+      active: "active",
+      completed: "completed",
+      cancelled: "cancelled",
+    };
+  return map[status.toLowerCase()] ?? "pending";
+};
 
 const UpdateWorkOrdersPage = () => {
   const theme = useTheme();
@@ -59,9 +85,16 @@ const UpdateWorkOrdersPage = () => {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
+
+  // Updated status menu state to match tickets pattern
+  const [statusMenuAnchor, setStatusMenuAnchor] = useState<{
+    [key: string]: HTMLElement | null;
+  }>({});
+  const [updatingStatuses, setUpdatingStatuses] = useState<Set<string>>(
+    new Set()
+  );
 
   const [filters, setFilters] = useState({
     status: "",
@@ -76,6 +109,28 @@ const UpdateWorkOrdersPage = () => {
     expectedCompletionBefore: "",
     includeArchived: false,
   });
+
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  const getStatusColor = (status: string) => {
+    switch (normalizeStatus(status)) {
+      case "pending":
+        return "default";
+      case "active":
+        return "warning";
+      case "completed":
+        return "success";
+      case "cancelled":
+        return "error";
+      default:
+        return "default";
+    }
+  };
 
   const fetchWorkOrders = useCallback(async () => {
     if (!token) return;
@@ -116,30 +171,128 @@ const UpdateWorkOrdersPage = () => {
       if (!res.ok) throw new Error("Failed to fetch work orders");
 
       const data = await res.json();
-      const transformed = (data.workOrders || []).map(
-        (item: any, index: number) => ({
-          id: item._id,
-          workOrderId: item.workOrderId,
-          status: item.status,
-          customerEmail: item.customerEmail,
-          projectName: item.project?.name ?? "N/A",
-          createdAt: item.createdAt,
-          sn: page * pageSize + index + 1,
-        })
-      );
 
-      setRows(transformed);
-      setRowCount(data.total || 0);
+      if (mountedRef.current) {
+        const transformed = (data.workOrders || []).map(
+          (item: any, index: number) => {
+            const groupId =
+              item.workGroupId ??
+              item.groupId ??
+              (item.executionPlan?.length > 0
+                ? item.executionPlan[0]?.groupId
+                : null) ??
+              null;
+
+            if (!groupId) {
+              console.warn(
+                `Missing groupId for workOrderId: ${item.workOrderId}`
+              );
+            }
+
+            return {
+              id: item._id,
+              workOrderId: item.workOrderId,
+              workGroupId: groupId,
+              status: normalizeStatus(item.status),
+              customerEmail: item.customerEmail,
+              projectName: item.project?.name ?? "N/A",
+              createdAt: item.createdAt,
+              sn: page * pageSize + index + 1,
+            };
+          }
+        );
+
+        setRows(transformed);
+        setRowCount(data.total || 0);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      if (mountedRef.current) {
+        setError(err instanceof Error ? err.message : "Unknown error");
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   }, [paginationModel, search, filters, token]);
 
   useEffect(() => {
     fetchWorkOrders();
   }, [fetchWorkOrders]);
+
+  // Updated status menu handlers to match tickets pattern
+  const handleStatusMenuClick = (
+    workOrderId: string,
+    event: React.MouseEvent<HTMLElement>
+  ) => {
+    setStatusMenuAnchor((prev) => ({
+      ...prev,
+      [workOrderId]: event.currentTarget,
+    }));
+  };
+
+  const handleStatusMenuClose = (workOrderId: string) => {
+    setStatusMenuAnchor((prev) => ({
+      ...prev,
+      [workOrderId]: null,
+    }));
+  };
+
+  const handleStatusChange = async (workOrderId: string, newStatus: string) => {
+    const workOrder = rows.find((row) => row.workOrderId === workOrderId);
+    if (!workOrder?.workGroupId) {
+      console.error("Missing workOrderId or groupId");
+      setError("Missing work order or group ID for status update");
+      return;
+    }
+
+    setUpdatingStatuses((prev) => new Set(prev).add(workOrderId));
+
+    try {
+      console.log("Updating status:", {
+        workOrderId,
+        groupId: workOrder.workGroupId,
+        newStatus,
+      });
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/work-orders/${workOrderId}/groups/${workOrder.workGroupId}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        console.error("Status update failed:", errorData);
+        throw new Error(errorData.message || "Failed to update status");
+      }
+
+      await fetchWorkOrders();
+      setError(null);
+    } catch (err) {
+      console.error("Error updating status:", err);
+      if (mountedRef.current) {
+        setError(
+          err instanceof Error ? err.message : "Failed to update status"
+        );
+      }
+    } finally {
+      if (mountedRef.current) {
+        setUpdatingStatuses((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(workOrderId);
+          return newSet;
+        });
+        handleStatusMenuClose(workOrderId);
+      }
+    }
+  };
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -187,7 +340,7 @@ const UpdateWorkOrdersPage = () => {
         headerName: "Work Order ID",
         flex: 1,
         minWidth: 200,
-        renderCell: (params: any) => (
+        renderCell: (params) => (
           <Typography
             variant="body2"
             sx={{ color: theme.palette.primary.main, cursor: "pointer" }}
@@ -197,8 +350,37 @@ const UpdateWorkOrdersPage = () => {
           </Typography>
         ),
       },
+      {
+        field: "status",
+        headerName: "Status",
+        flex: 0.8,
+        minWidth: 140,
+        renderCell: (params) => {
+          const hasGroupId = !!params.row.workGroupId;
+          const isUpdating = updatingStatuses.has(params.row.workOrderId);
 
-      { field: "status", headerName: "Status", flex: 1, minWidth: 120 },
+          return (
+            <Chip
+              label={params.value.replace("_", " ")}
+              color={getStatusColor(params.value)}
+              size="small"
+              variant="outlined"
+              onClick={(e) => {
+                if (hasGroupId && !isUpdating) {
+                  handleStatusMenuClick(params.row.workOrderId, e);
+                } else if (!hasGroupId) {
+                  console.warn("Group ID missing. Cannot update status.");
+                }
+              }}
+              sx={{
+                cursor: hasGroupId && !isUpdating ? "pointer" : "default",
+                opacity: hasGroupId && !isUpdating ? 1 : 0.5,
+              }}
+              disabled={isUpdating}
+            />
+          );
+        },
+      },
       {
         field: "action",
         headerName: "Action",
@@ -232,16 +414,20 @@ const UpdateWorkOrdersPage = () => {
         ),
       },
     ],
-    [theme.palette.primary.main]
+    [theme.palette.primary.main, updatingStatuses]
   );
 
   return (
     <>
       <Navbar label="Update Work Orders" />
-
       <Box sx={{ p: 3 }}>
-        {error && <Alert severity="error">{error}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
+        {/* Filters */}
         <Grid container spacing={2} sx={{ mb: 2 }}>
           <Grid item xs={12} sm={6} md={3}>
             <TextField
@@ -264,10 +450,9 @@ const UpdateWorkOrdersPage = () => {
               >
                 <MenuItem value="">All</MenuItem>
                 <MenuItem value="pending">Pending</MenuItem>
-                <MenuItem value="started">Started</MenuItem>
-                <MenuItem value="inprogress">In Progress</MenuItem>
-                <MenuItem value="delayed">Delayed</MenuItem>
+                <MenuItem value="active">Active</MenuItem>
                 <MenuItem value="completed">Completed</MenuItem>
+                <MenuItem value="cancelled">Cancelled</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -295,6 +480,7 @@ const UpdateWorkOrdersPage = () => {
           </Grid>
         </Grid>
 
+        {/* Table */}
         <StyledDataGrid
           rows={rows}
           columns={columns}
@@ -312,6 +498,34 @@ const UpdateWorkOrdersPage = () => {
           getRowId={(row) => row.id}
         />
 
+        {/* Status Change Menus - Updated to match tickets pattern */}
+        {rows.map((workOrder) => (
+          <Menu
+            key={`menu-${workOrder.workOrderId}`}
+            anchorEl={statusMenuAnchor[workOrder.workOrderId]}
+            open={Boolean(statusMenuAnchor[workOrder.workOrderId])}
+            onClose={() => handleStatusMenuClose(workOrder.workOrderId)}
+          >
+            {["pending", "active", "completed", "cancelled"].map((status) => (
+              <MenuItem
+                key={status}
+                onClick={() =>
+                  handleStatusChange(workOrder.workOrderId, status)
+                }
+                disabled={
+                  workOrder.status === status ||
+                  updatingStatuses.has(workOrder.workOrderId)
+                }
+              >
+                <ListItemText>
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </ListItemText>
+              </MenuItem>
+            ))}
+          </Menu>
+        ))}
+
+        {/* Delete Confirmation Dialog */}
         <Dialog
           open={deleteDialogOpen}
           onClose={handleDeleteCancel}

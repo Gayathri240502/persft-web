@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Menu, MenuItem, IconButton, Divider, Avatar } from "@mui/material";
+import {
+  Menu,
+  MenuItem,
+  Divider,
+  Avatar,
+} from "@mui/material";
 import {
   ExpandMore as ExpandMoreIcon,
   ExitToApp as LogoutIcon,
@@ -12,7 +17,7 @@ import {
   useTokenAndRole,
 } from "@/app/containers/utils/session/CheckSession";
 import { decodeJwt } from "@/app/containers/utils/session/DecodeToken";
-
+import TicketBadge from "@/app/components/TicketsButton/button";
 interface NavbarProps {
   label: string;
 }
@@ -153,6 +158,10 @@ export default function Navbar({ label }: NavbarProps) {
                 {label}
               </h1>
             </div>
+          </div>
+
+          <div className="hidden lg:flex items-center space-x-2 sm:space-x-4">
+            <TicketBadge />
           </div>
 
           {/* Right: Actions and User Menu */}

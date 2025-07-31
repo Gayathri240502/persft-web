@@ -30,6 +30,21 @@ const AddResidenceType = () => {
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      const maxSize = 60 * 1024; // 60KB
+      const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
+
+      if (!allowedTypes.includes(file.type)) {
+        setError("Only JPG, JPEG, and PNG files are allowed.");
+        setSelectedFileName("Invalid file type");
+        return;
+      }
+
+      if (file.size > maxSize) {
+        setError("File size exceeds 60KB.");
+        setSelectedFileName("File too large");
+        return;
+      }
+
       setSelectedFileName(file.name);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -37,16 +52,15 @@ const AddResidenceType = () => {
         setThumbnail(base64String);
       };
       reader.readAsDataURL(file);
+      setError(null); // Clear error if everything is valid
     }
   };
 
   const validateForm = () => {
     if (!name) {
-      setError("Name is required");
+      setError("Name is required.");
       return false;
     }
-    // Description is optional, so we don't validate it
-    setError(null);
     return true;
   };
 
@@ -75,7 +89,10 @@ const AddResidenceType = () => {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to create residence type");
+        const errorData = await response.json().catch(() => ({}));
+        const message =
+          errorData?.message || errorData?.error || "Failed to create residence type";
+        throw new Error(message);
       }
 
       router.push("/admin/home-catalog/residence-types");
@@ -90,7 +107,7 @@ const AddResidenceType = () => {
 
   return (
     <>
-      <Navbar label=" Residence Types" />
+      <Navbar label="Residence Types" />
       <Box sx={{ p: 3 }} component="form" onSubmit={handleSubmit}>
         <Typography variant="h5" sx={{ mb: 2 }}>
           Add Residence Type
@@ -106,7 +123,10 @@ const AddResidenceType = () => {
           label="Name"
           fullWidth
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => {
+            setName(e.target.value);
+            setError(null);
+          }}
           sx={{ mb: 3 }}
         />
 
@@ -116,7 +136,10 @@ const AddResidenceType = () => {
           rows={3}
           fullWidth
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={(e) => {
+            setDescription(e.target.value);
+            setError(null);
+          }}
           sx={{ mb: 3 }}
         />
 
@@ -141,7 +164,7 @@ const AddResidenceType = () => {
           </Box>
 
           <Typography variant="caption" sx={{ color: "#999" }}>
-            Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+            Accepted formats: JPG, JPEG, PNG. Max size: 60KB.
           </Typography>
 
           {thumbnail && (

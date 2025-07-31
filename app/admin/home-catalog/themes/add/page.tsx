@@ -95,33 +95,32 @@ const AddTheme = () => {
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate size (max 60KB)
-      if (file.size > 60 * 1024) {
-        setError("Image must be less than 60KB");
+      const maxSize = 60 * 1024; // 60KB
+      const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
+
+      if (!allowedTypes.includes(file.type)) {
+        setError("Only JPG, JPEG, and PNG files are allowed.");
+        setSelectedFileName("Invalid file type");
         return;
       }
 
-      // Validate format
-      const validFormats = ["image/jpeg", "image/png", "image/jpg"];
-      if (!validFormats.includes(file.type)) {
-        setError("Only JPG, JPEG, and PNG formats are accepted");
+      if (file.size > maxSize) {
+        setError("File size exceeds 60KB.");
+        setSelectedFileName("File too large");
         return;
       }
 
-      setError(null);
       setSelectedFileName(file.name);
-
       const reader = new FileReader();
       reader.onloadend = () => {
-        const base64 = reader.result as string;
-        setFormData((prev) => ({
-          ...prev,
-          thumbnail: base64,
-        }));
+        const base64String = reader.result as string;
+        setThumbnail(base64String);
       };
       reader.readAsDataURL(file);
+      setError(null); // Clear error if everything is valid
     }
   };
+
 
   const validateForm = () => {
     if (!formData.name) {

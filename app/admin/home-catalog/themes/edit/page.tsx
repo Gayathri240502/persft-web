@@ -90,14 +90,32 @@ const EditThemeType = () => {
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      const maxSize = 60 * 1024; // 60KB
+      const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
+
+      if (!allowedTypes.includes(file.type)) {
+        setError("Only JPG, JPEG, and PNG files are allowed.");
+        setSelectedFileName("Invalid file type");
+        return;
+      }
+
+      if (file.size > maxSize) {
+        setError("File size exceeds 60KB.");
+        setSelectedFileName("File too large");
+        return;
+      }
+
       setSelectedFileName(file.name);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setThumbnail(reader.result as string);
+        const base64String = reader.result as string;
+        setThumbnail(base64String);
       };
       reader.readAsDataURL(file);
+      setError(null); // Clear error if everything is valid
     }
   };
+
 
   const toggleRoomSelection = (roomId: string) => {
     setSelectedRooms((prev) =>

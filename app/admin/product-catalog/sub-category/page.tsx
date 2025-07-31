@@ -187,12 +187,12 @@ const SubCategory = () => {
 
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", width: 70 },
-    { field: "name", headerName: "Name", flex: 0.8 },
-    { field: "description", headerName: "Description", flex: 1 },
+    { field: "name", headerName: "Name", flex: 1 },
+    { field: "description", headerName: "Description", flex: 1.5 },
     {
       field: "thumbnail",
       headerName: "Thumbnail",
-      flex: 1,
+      flex: 0.8,
       sortable: false,
       filterable: false,
       renderCell: (params) =>
@@ -213,7 +213,6 @@ const SubCategory = () => {
           </Typography>
         ),
     },
-
     {
       field: "category",
       headerName: "Category",
@@ -259,7 +258,7 @@ const SubCategory = () => {
     {
       field: "action",
       headerName: "Action",
-      flex: 0.5,
+      flex: 0.6,
       renderCell: (params) => (
         <Box>
           <IconButton
@@ -346,7 +345,6 @@ const SubCategory = () => {
             searchPlaceholder="Search Sub Category..."
             addButtonText="Add"
             getRowId={(row) => row.id}
-            // Add these props for better UX
             disableRowSelectionOnClick
             hideFooterSelectedRowCount
           />

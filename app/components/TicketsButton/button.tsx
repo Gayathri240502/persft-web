@@ -48,11 +48,7 @@ const TicketBadge = () => {
 
   return (
     <Link href="/admin/tickets" passHref>
-      <Tooltip
-        title={`${ticketCount} Open / In-Progress Ticket${
-          ticketCount !== 1 ? "s" : ""
-        }`}
-      >
+      <Tooltip title={`${ticketCount} ticket${ticketCount !== 1 ? "s" : ""}`}>
         <IconButton
           color="primary"
           sx={{ position: "relative", padding: "12px" }}

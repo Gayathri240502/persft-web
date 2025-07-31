@@ -249,6 +249,8 @@ const CreateProject = () => {
   const validate = () => {
     const newErrors: Record<string, string> = {};
 
+    
+
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
     }

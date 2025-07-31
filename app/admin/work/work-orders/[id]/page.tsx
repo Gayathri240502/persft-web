@@ -181,7 +181,7 @@ const StatusChip = ({ status }: { status: string }) => {
       return <PendingIcon sx={{ fontSize: 16 }} />;
     if (lowercaseStatus === "cancelled")
       return <Cancel sx={{ fontSize: 16 }} />;
-    return null;
+    return undefined;
   };
 
   return (

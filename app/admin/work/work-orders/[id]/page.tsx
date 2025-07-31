@@ -19,6 +19,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   Badge,
+  Button,
 } from "@mui/material";
 import {
   ExpandMore as ExpandMoreIcon,
@@ -30,6 +31,9 @@ import {
   WorkOutline as WorkOutlineIcon,
   CheckCircle as CheckIcon,
   Schedule as ScheduleIcon,
+  Pending as PendingIcon,
+  Cancel as CancelIcon,
+  PlayArrow as StartIcon,
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
@@ -66,31 +70,49 @@ const StatusChip = ({ status }: { status: string }) => {
   const getStatusColor = (status: string) => {
     const lowercaseStatus = status?.toLowerCase();
     if (lowercaseStatus?.includes("complete")) return "success";
-    if (
-      lowercaseStatus?.includes("progress") ||
-      lowercaseStatus?.includes("active")
-    )
-      return "primary";
-    if (
-      lowercaseStatus?.includes("pending") ||
-      lowercaseStatus?.includes("wait")
-    )
-      return "warning";
-    if (
-      lowercaseStatus?.includes("cancel") ||
-      lowercaseStatus?.includes("error")
-    )
-      return "error";
+    if (lowercaseStatus?.includes("progress") || lowercaseStatus?.includes("active")) return "primary";
+    if (lowercaseStatus?.includes("pending") || lowercaseStatus?.includes("wait")) return "warning";
+    if (lowercaseStatus?.includes("cancel") || lowercaseStatus?.includes("error")) return "error";
     return "default";
   };
 
+  return <Chip label={status} color={getStatusColor(status)} size="small" sx={{ fontWeight: 600 }} />;
+};
+
+const StatusUpdateButtons = ({
+  currentStatus,
+  onChange,
+  disabled = false,
+}: {
+  currentStatus: string;
+  onChange: (status: string) => void;
+  disabled?: boolean;
+}) => {
+  const statusOptions = [
+    { value: "pending", label: "Pending", color: "warning", icon: <PendingIcon /> },
+    { value: "completed", label: "Completed", color: "success", icon: <CheckIcon /> },
+    { value: "cancelled", label: "Cancelled", color: "error", icon: <CancelIcon /> },
+  ];
+
   return (
-    <Chip
-      label={status}
-      color={getStatusColor(status)}
-      size="small"
-      sx={{ fontWeight: 600 }}
-    />
+    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+      {statusOptions.map((option) => (
+        <Button
+          key={option.value}
+          variant={
+            currentStatus?.toLowerCase() === option.value ? "contained" : "outlined"
+          }
+          color={option.color as any}
+          size="small"
+          startIcon={option.icon}
+          onClick={() => onChange(option.value)}
+          disabled={disabled}
+          sx={{ minWidth: 100 }}
+        >
+          {option.label}
+        </Button>
+      ))}
+    </Stack>
   );
 };
 
@@ -173,6 +195,149 @@ const WorkOrderDetailsPage = () => {
   const [workOrder, setWorkOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [updating, setUpdating] = useState<string | null>(null);
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    open: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+  });
+
+  const showSnackbar = (message: string, severity: "success" | "error" = "success") => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const updateWorkGroupStatus = async (workGroupId: string, newStatus: string) => {
+    const updateKey = `group-${workGroupId}`;
+    setUpdating(updateKey);
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/work-orders/${workOrderId}/groups/${workGroupId}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to update work group status: ${await response.text()}`);
+      }
+
+      // Update local state
+      setWorkOrder((prev: any) => ({
+        ...prev,
+        executionPlan: prev.executionPlan.map((group: WorkGroup) =>
+          group.workGroupId === workGroupId
+            ? { ...group, status: newStatus }
+            : group
+        ),
+      }));
+
+      showSnackbar(`Work group status updated to ${newStatus}`, "success");
+    } catch (error: any) {
+      console.error("Error updating work group status:", error);
+      showSnackbar(`Error updating work group status: ${error.message}`, "error");
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  const updateWorkTaskStatus = async (
+    workGroupId: string,
+    workTaskId: string,
+    newStatus: string
+  ) => {
+    const updateKey = `task-${workTaskId}`;
+    setUpdating(updateKey);
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/work-orders/${workOrderId}/groups/${workGroupId}/tasks/${workTaskId}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to update work task status: ${await response.text()}`);
+      }
+
+      // Update local state
+      setWorkOrder((prev: any) => ({
+        ...prev,
+        executionPlan: prev.executionPlan.map((group: WorkGroup) =>
+          group.workGroupId === workGroupId
+            ? {
+                ...group,
+                workTasks: group.workTasks.map((task: WorkTask) =>
+                  task.workTaskId === workTaskId
+                    ? { ...task, status: newStatus }
+                    : task
+                ),
+              }
+            : group
+        ),
+      }));
+
+      showSnackbar(`Work task status updated to ${newStatus}`, "success");
+    } catch (error: any) {
+      console.error("Error updating work task status:", error);
+      showSnackbar(`Error updating work task status: ${error.message}`, "error");
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  const handleStatusChange = (
+    type: "group" | "task",
+    workGroupId: string,
+    newStatus: string,
+    workTaskId?: string
+  ) => {
+    const confirmMessage =
+      type === "group"
+        ? `Are you sure you want to change the work group status to "${newStatus}"?`
+        : `Are you sure you want to change the work task status to "${newStatus}"?`;
+
+    setConfirmDialog({
+      open: true,
+      title: "Confirm Status Change",
+      message: confirmMessage,
+      onConfirm: () => {
+        if (type === "group") {
+          updateWorkGroupStatus(workGroupId, newStatus);
+        } else if (workTaskId) {
+          updateWorkTaskStatus(workGroupId, workTaskId, newStatus);
+        }
+        setConfirmDialog({ ...confirmDialog, open: false });
+      },
+    });
+  };
 
   useEffect(() => {
     if (!workOrderId || !token) return;
@@ -385,74 +550,124 @@ const WorkOrderDetailsPage = () => {
             }
           />
           <CardContent sx={{ pt: 0 }}>
-            {Array.isArray(workOrder?.executionPlan) &&
-              workOrder.executionPlan.map((group: WorkGroup, i: number) => (
-                <Accordion key={i} sx={{ mb: 1, "&:last-child": { mb: 0 } }}>
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      spacing={2}
-                      sx={{ width: "100%" }}
-                    >
-                      <Typography variant="subtitle1" fontWeight={600}>
-                        {group?.workGroupName || `Work Group ${i + 1}`}
-                      </Typography>
-                      <StatusChip status={group?.status || "—"} />
-                    </Stack>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    {group?.notes && (
-                      <Alert severity="info" sx={{ mb: 2 }}>
-                        {group.notes}
-                      </Alert>
-                    )}
-                    <Typography
-                      variant="subtitle2"
-                      sx={{ mb: 2, fontWeight: 600 }}
-                    >
-                      Work Tasks ({group?.workTasks?.length || 0})
+            {workOrder.executionPlan.map((group: any, i: number) => (
+              <Accordion key={i} sx={{ mb: 2 }}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    spacing={2}
+                    sx={{ width: "100%" }}
+                  >
+                    <Typography variant="subtitle1" fontWeight={600}>
+                      {group?.workGroupName || `Work Group ${i + 1}`}
                     </Typography>
-                    <Grid container spacing={2}>
-                      {group?.workTasks?.map((task, j) => (
-                        <Grid item xs={12} md={6} key={j}>
-                          <Paper
-                            variant="outlined"
-                            sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2 }}
-                          >
-                            <Stack spacing={1}>
-                              <Typography variant="subtitle2" fontWeight={600}>
-                                {task?.workTaskName || `Task ${j + 1}`}
-                              </Typography>
-                              <StatusChip status={task?.status || "—"} />
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                              >
-                                {task?.actualStartDate
-                                  ? dayjs(task.actualStartDate).format("DD MMM")
-                                  : "—"}{" "}
-                                →{" "}
-                                {task?.actualEndDate
-                                  ? dayjs(task.actualEndDate).format("DD MMM")
-                                  : "—"}
-                              </Typography>
-                              {task?.notes && (
+                    <StatusChip status={group?.status || "—"} />
+                    {updating === `group-${group.workGroupId}` && (
+                      <CircularProgress size={16} />
+                    )}
+                  </Stack>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {group?.notes && (
+                    <Alert severity="info" sx={{ mb: 2 }}>
+                      {group.notes}
+                    </Alert>
+                  )}
+
+                  {/* Work Group Status Buttons */}
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                      Update Work Group Status:
+                    </Typography>
+                    <StatusUpdateButtons
+                      currentStatus={group.status}
+                      onChange={(newStatus) =>
+                        handleStatusChange("group", group.workGroupId, newStatus)
+                      }
+                      disabled={updating === `group-${group.workGroupId}`}
+                    />
+                  </Box>
+
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ mb: 2, fontWeight: 600 }}
+                  >
+                    Work Tasks ({group?.workTasks?.length || 0})
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {group?.workTasks?.map((task: any, j: number) => (
+                      <Grid item xs={12} key={j}>
+                        <Paper
+                          variant="outlined"
+                          sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2 }}
+                        >
+                          <Grid container spacing={2}>
+                            <Grid item xs={12} md={6}>
+                              <Stack spacing={1}>
+                                <Typography variant="subtitle2" fontWeight={600}>
+                                  {task?.workTaskName || `Task ${j + 1}`}
+                                </Typography>
+                                <StatusChip status={task?.status || "—"} />
+                                <Typography variant="body2" color="text.secondary">
+                                  {task?.actualStartDate
+                                    ? dayjs(task.actualStartDate).format("DD MMM")
+                                    : "—"}{" "}
+                                  →{" "}
+                                  {task?.actualEndDate
+                                    ? dayjs(task.actualEndDate).format("DD MMM")
+                                    : "—"}
+                                </Typography>
+                                {task?.notes && (
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                  >
+                                    {task.notes}
+                                  </Typography>
+                                )}
+                              </Stack>
+                            </Grid>
+                            <Grid item xs={12} md={6}>
+                              <Box>
                                 <Typography
                                   variant="caption"
-                                  color="text.secondary"
+                                  sx={{ fontWeight: 600, display: "block", mb: 1 }}
                                 >
-                                  {task.notes}
+                                  Update Task Status:
                                 </Typography>
-                              )}
-                            </Stack>
-                          </Paper>
-                        </Grid>
-                      ))}
-                    </Grid>
-                  </AccordionDetails>
-                </Accordion>
-              ))}
+                                <StatusUpdateButtons
+                                  currentStatus={task.status}
+                                  onChange={(newStatus) =>
+                                    handleStatusChange(
+                                      "task",
+                                      group.workGroupId,
+                                      newStatus,
+                                      task.workTaskId
+                                    )
+                                  }
+                                  disabled={updating === `task-${task.workTaskId}`}
+                                />
+                                {updating === `task-${task.workTaskId}` && (
+                                  <Box
+                                    sx={{ mt: 1, display: "flex", alignItems: "center" }}
+                                  >
+                                    <CircularProgress size={16} sx={{ mr: 1 }} />
+                                    <Typography variant="caption">
+                                      Updating...
+                                    </Typography>
+                                  </Box>
+                                )}
+                              </Box>
+                            </Grid>
+                          </Grid>
+                        </Paper>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </AccordionDetails>
+              </Accordion>
+            ))}
           </CardContent>
         </Card>
 
@@ -616,6 +831,7 @@ const WorkOrderDetailsPage = () => {
             </Accordion>
           </Grid>
         </Grid>
+
         {/* Works Snapshot */}
         <Card sx={{ mb: 3, borderRadius: 2 }}>
           <CardHeader
@@ -663,7 +879,7 @@ const WorkOrderDetailsPage = () => {
           </Typography>
         </Paper>
       </Container>
-    </>
+</>
   );
 };
 

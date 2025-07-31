@@ -407,6 +407,7 @@ const Tickets = () => {
             <StyledDataGrid
               rows={tickets}
               columns={columns}
+              disableAllSorting
               pagination
               rowCount={rowCount}
               paginationMode="server"

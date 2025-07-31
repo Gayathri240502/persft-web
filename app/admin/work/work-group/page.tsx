@@ -279,6 +279,7 @@ const WorkGroups = () => {
               searchPlaceholder="Search Work Groups..."
               onAdd={handleAdd}
               loading={loading}
+              disableAllSorting
             />
           </Box>
         )}

@@ -275,6 +275,7 @@ const Attributes = () => {
           <StyledDataGrid
             columns={columns}
             rows={attributes}
+            disableAllSorting
             rowCount={rowCount}
             paginationMode="server"
             paginationModel={paginationModel}

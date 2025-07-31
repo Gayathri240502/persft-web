@@ -121,7 +121,7 @@ const CustomToolbar = ({
       >
         <GridToolbarColumnsButton />
         <GridToolbarFilterButton />
-        {/* <GridToolbarDensitySelector /> */}
+
         <GridToolbarExport />
         {showAddButton && onAdd && (
           <ReusableButton
@@ -139,12 +139,14 @@ const CustomToolbar = ({
 };
 
 interface StyledDataGridProps
-  extends Omit<DataGridProps, "slots" | "slotProps"> {
+  extends Omit<DataGridProps, "slots" | "slotProps" | "columns"> {
   onAdd?: () => void;
   onSearch?: (value: string) => void;
   searchPlaceholder?: string;
   showAddButton?: boolean;
   addButtonText?: string;
+  disableAllSorting?: boolean;
+  columns: DataGridProps["columns"];
 }
 
 const StyledDataGrid: React.FC<StyledDataGridProps> = ({
@@ -153,10 +155,15 @@ const StyledDataGrid: React.FC<StyledDataGridProps> = ({
   searchPlaceholder,
   showAddButton,
   addButtonText,
+  disableAllSorting = false,
+  columns,
   ...props
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const processedColumns = disableAllSorting
+    ? columns.map((col) => ({ ...col, sortable: false }))
+    : columns;
 
   return (
     <Box sx={{ width: "100%", mt: 2 }}>
@@ -190,6 +197,7 @@ const StyledDataGrid: React.FC<StyledDataGridProps> = ({
         >
           <DataGrid
             {...props}
+            columns={processedColumns}
             autoHeight={isMobile}
             disableRowSelectionOnClick
             checkboxSelection={false}

@@ -268,6 +268,7 @@ const Products = () => {
             searchPlaceholder="Search Products..."
             addButtonText="Add"
             getRowId={(row) => row.id}
+            disableAllSorting
           />
         </Box>
 

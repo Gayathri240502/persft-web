@@ -323,6 +323,7 @@ const UpdateWorkOrdersPage = () => {
         <StyledDataGrid
           rows={rows}
           columns={columns}
+          disableAllSorting
           rowCount={rowCount}
           paginationModel={paginationModel}
           onPaginationModelChange={handlePaginationChange}

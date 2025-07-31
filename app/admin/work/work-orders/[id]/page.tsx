@@ -20,6 +20,19 @@ import {
   AccordionDetails,
   Badge,
   Button,
+  Snackbar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Divider,
+  LinearProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from "@mui/material";
 import {
   ExpandMore as ExpandMoreIcon,
@@ -32,13 +45,95 @@ import {
   CheckCircle as CheckIcon,
   Schedule as ScheduleIcon,
   Pending as PendingIcon,
-  Cancel as CancelIcon,
+  Cancel,
   PlayArrow as StartIcon,
+  Warning as WarningIcon,
+  ShoppingCart as ShoppingCartIcon,
+  CalendarToday as CalendarIcon,
+  Business as BusinessIcon,
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import dayjs from "dayjs";
 import Navbar from "@/app/components/navbar/navbar";
+
+interface ExecutionPlanItem {
+  type: "workGroup" | "workTask";
+  id: string;
+  name: string;
+  order: number;
+  workGroupName?: string;
+  workTaskName?: string;
+  parentWorkGroupId?: string;
+  scheduledStartDate: string;
+  scheduledEndDate: string;
+  status: string;
+  progress: number;
+  targetDays?: number;
+  bufferDays?: number;
+  totalDays?: number;
+  poDays?: number;
+  scheduledPoDate?: string;
+  poStatus?: string;
+  applicableProducts?: string[];
+  productCount?: number;
+  actualStartDate?: string;
+  actualEndDate?: string;
+  notes?: string;
+}
+
+interface UnmatchedItem {
+  obsBrandGoodId: string;
+  reason: string;
+  itemData: {
+    styleItemName: string;
+    brandGoodName: string;
+    obsBrandGoodId: string;
+    sku: string;
+    quantity: number;
+    price: number;
+    currency: string;
+  };
+}
+
+interface MatchedProduct {
+  obsBrandGoodId: string;
+  coohomId: string;
+  productId: string;
+  productName: string;
+  workGroupId: string;
+  workGroupName: string;
+  workTaskId: string;
+  workTaskName: string;
+  targetDays: number;
+  bufferDays: number;
+  poDays: number;
+}
+
+interface WorksSnapshot {
+  worksId: string;
+  worksName: string;
+  capturedAt: string;
+}
+
+interface WorkOrder {
+  _id: string;
+  workOrderId: string;
+  designOrderId: string;
+  customerId: string;
+  status: string;
+  currentPhase: string;
+  overallProgress: number;
+  startDate: string;
+  estimatedCompletionDate: string;
+  executionPlan: ExecutionPlanItem[];
+  unmatchedItems: UnmatchedItem[];
+  matchedProducts: MatchedProduct[];
+  worksSnapshot: WorksSnapshot;
+  isArchived: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 const LabelValue = ({
   label,
@@ -69,14 +164,35 @@ const LabelValue = ({
 const StatusChip = ({ status }: { status: string }) => {
   const getStatusColor = (status: string) => {
     const lowercaseStatus = status?.toLowerCase();
-    if (lowercaseStatus?.includes("complete")) return "success";
-    if (lowercaseStatus?.includes("progress") || lowercaseStatus?.includes("active")) return "primary";
-    if (lowercaseStatus?.includes("pending") || lowercaseStatus?.includes("wait")) return "warning";
-    if (lowercaseStatus?.includes("cancel") || lowercaseStatus?.includes("error")) return "error";
+    if (lowercaseStatus === "completed") return "success";
+    if (lowercaseStatus === "active") return "primary";
+    if (lowercaseStatus === "pending") return "warning";
+    if (lowercaseStatus === "cancelled") return "error";
     return "default";
   };
 
-  return <Chip label={status} color={getStatusColor(status)} size="small" sx={{ fontWeight: 600 }} />;
+  const getStatusIcon = (status: string) => {
+    const lowercaseStatus = status?.toLowerCase();
+    if (lowercaseStatus === "completed")
+      return <CheckIcon sx={{ fontSize: 16 }} />;
+    if (lowercaseStatus === "active")
+      return <StartIcon sx={{ fontSize: 16 }} />;
+    if (lowercaseStatus === "pending")
+      return <PendingIcon sx={{ fontSize: 16 }} />;
+    if (lowercaseStatus === "cancelled")
+      return <Cancel sx={{ fontSize: 16 }} />;
+    return null;
+  };
+
+  return (
+    <Chip
+      label={status}
+      color={getStatusColor(status)}
+      size="small"
+      icon={getStatusIcon(status)}
+      sx={{ fontWeight: 600 }}
+    />
+  );
 };
 
 const StatusUpdateButtons = ({
@@ -89,9 +205,25 @@ const StatusUpdateButtons = ({
   disabled?: boolean;
 }) => {
   const statusOptions = [
-    { value: "pending", label: "Pending", color: "warning", icon: <PendingIcon /> },
-    { value: "completed", label: "Completed", color: "success", icon: <CheckIcon /> },
-    { value: "cancelled", label: "Cancelled", color: "error", icon: <CancelIcon /> },
+    {
+      value: "pending",
+      label: "Pending",
+      color: "warning",
+      icon: <PendingIcon />,
+    },
+    { value: "active", label: "Active", color: "primary", icon: <StartIcon /> },
+    {
+      value: "completed",
+      label: "Completed",
+      color: "success",
+      icon: <CheckIcon />,
+    },
+    {
+      value: "cancelled",
+      label: "Cancelled",
+      color: "error",
+      icon: <Cancel />,
+    },
   ];
 
   return (
@@ -100,7 +232,9 @@ const StatusUpdateButtons = ({
         <Button
           key={option.value}
           variant={
-            currentStatus?.toLowerCase() === option.value ? "contained" : "outlined"
+            currentStatus?.toLowerCase() === option.value
+              ? "contained"
+              : "outlined"
           }
           color={option.color as any}
           size="small"
@@ -119,22 +253,23 @@ const StatusUpdateButtons = ({
 const DateRange = ({
   startDate,
   endDate,
-  type = "expected",
+  type = "scheduled",
 }: {
   startDate: string;
   endDate: string;
-  type?: "expected" | "actual";
+  type?: "scheduled" | "actual";
 }) => (
   <Box
     sx={{
       p: 1.5,
       borderRadius: 1,
-      bgcolor: type === "expected" ? "info.light" : "success.light",
-      color: type === "expected" ? "info.contrastText" : "success.contrastText",
+      bgcolor: type === "scheduled" ? "info.light" : "success.light",
+      color:
+        type === "scheduled" ? "info.contrastText" : "success.contrastText",
     }}
   >
     <Typography variant="caption" sx={{ fontWeight: 600, display: "block" }}>
-      {type === "expected" ? "Expected" : "Actual"}
+      {type === "scheduled" ? "Scheduled" : "Actual"}
     </Typography>
     <Typography variant="body2">
       {dayjs(startDate).format("DD MMM YYYY")} →{" "}
@@ -143,56 +278,12 @@ const DateRange = ({
   </Box>
 );
 
-type WorkTask = {
-  workTaskId: string;
-  workTaskName: string;
-  status: string;
-  notes?: string;
-  actualStartDate?: string;
-  actualEndDate?: string;
-};
-
-type WorkGroup = {
-  workGroupName: string;
-  workGroupId: string;
-  status: string;
-  notes?: string;
-  workTasks: WorkTask[];
-};
-
-type POScheduleItem = {
-  workTaskName: string;
-  status: string;
-  expectedPODate: string;
-  actualPODate: string;
-  notes?: string;
-};
-
-type MatchedProduct = {
-  productName: string;
-  coohomId: string;
-  obsBrandGoodId: string;
-  workGroupName: string;
-  workTaskName: string;
-};
-
-type UnmatchedItem = {
-  obsBrandGoodId: string;
-  reason: string;
-};
-
-type WorksSnapshot = {
-  worksId: string;
-  worksName: string;
-  capturedAt: string | null;
-};
-
 const WorkOrderDetailsPage = () => {
   const theme = useTheme();
   const { token } = useTokenAndRole();
   const { id: workOrderId } = useParams();
 
-  const [workOrder, setWorkOrder] = useState<any>(null);
+  const [workOrder, setWorkOrder] = useState<WorkOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
@@ -218,11 +309,17 @@ const WorkOrderDetailsPage = () => {
     onConfirm: () => {},
   });
 
-  const showSnackbar = (message: string, severity: "success" | "error" = "success") => {
+  const showSnackbar = (
+    message: string,
+    severity: "success" | "error" = "success"
+  ) => {
     setSnackbar({ open: true, message, severity });
   };
 
-  const updateWorkGroupStatus = async (workGroupId: string, newStatus: string) => {
+  const updateWorkGroupStatus = async (
+    workGroupId: string,
+    newStatus: string
+  ) => {
     const updateKey = `group-${workGroupId}`;
     setUpdating(updateKey);
 
@@ -240,23 +337,21 @@ const WorkOrderDetailsPage = () => {
       );
 
       if (!response.ok) {
-        throw new Error(`Failed to update work group status: ${await response.text()}`);
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || `Failed to update work group status`
+        );
       }
 
-      // Update local state
-      setWorkOrder((prev: any) => ({
-        ...prev,
-        executionPlan: prev.executionPlan.map((group: WorkGroup) =>
-          group.workGroupId === workGroupId
-            ? { ...group, status: newStatus }
-            : group
-        ),
-      }));
-
+      const data = await response.json();
+      setWorkOrder(data.workOrder);
       showSnackbar(`Work group status updated to ${newStatus}`, "success");
     } catch (error: any) {
       console.error("Error updating work group status:", error);
-      showSnackbar(`Error updating work group status: ${error.message}`, "error");
+      showSnackbar(
+        `Error updating work group status: ${error.message}`,
+        "error"
+      );
     } finally {
       setUpdating(null);
     }
@@ -284,30 +379,21 @@ const WorkOrderDetailsPage = () => {
       );
 
       if (!response.ok) {
-        throw new Error(`Failed to update work task status: ${await response.text()}`);
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || `Failed to update work task status`
+        );
       }
 
-      // Update local state
-      setWorkOrder((prev: any) => ({
-        ...prev,
-        executionPlan: prev.executionPlan.map((group: WorkGroup) =>
-          group.workGroupId === workGroupId
-            ? {
-                ...group,
-                workTasks: group.workTasks.map((task: WorkTask) =>
-                  task.workTaskId === workTaskId
-                    ? { ...task, status: newStatus }
-                    : task
-                ),
-              }
-            : group
-        ),
-      }));
-
+      const data = await response.json();
+      setWorkOrder(data.workOrder);
       showSnackbar(`Work task status updated to ${newStatus}`, "success");
     } catch (error: any) {
       console.error("Error updating work task status:", error);
-      showSnackbar(`Error updating work task status: ${error.message}`, "error");
+      showSnackbar(
+        `Error updating work task status: ${error.message}`,
+        "error"
+      );
     } finally {
       setUpdating(null);
     }
@@ -339,120 +425,86 @@ const WorkOrderDetailsPage = () => {
     });
   };
 
-  useEffect(() => {
+  const fetchWorkOrder = async () => {
     if (!workOrderId || !token) return;
 
-    const fetchWorkOrder = async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/work-orders/${workOrderId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (!res.ok) throw new Error(await res.text());
-        const data = await res.json();
-
-        // Group execution plan
-        const structuredExecutionPlan: any[] = [];
-        let currentGroup: any = null;
-
-        for (const step of data.executionPlan || []) {
-          if (step.type === "workGroup") {
-            if (currentGroup) structuredExecutionPlan.push(currentGroup);
-            currentGroup = {
-              workGroupName: step.name || "—",
-              workGroupId: step.id || "—",
-              status: step.status || "active",
-              notes: step.notes || "",
-              workTasks: [],
-            };
-          } else if (step.type === "workTask") {
-            const task = {
-              workTaskId: step.id || "—",
-              workTaskName: step.name || "—",
-              status: step.status || "pending",
-              notes: step.notes || "",
-              actualStartDate: step.startDate || data.startDate,
-              actualEndDate: step.endDate || data.estimatedCompletionDate,
-            };
-
-            if (currentGroup) currentGroup.workTasks.push(task);
-          }
-        }
-        if (currentGroup) structuredExecutionPlan.push(currentGroup);
-
-        setWorkOrder({
-          _id: data._id || "—",
-          workOrderId: data.workOrderId || "—",
-          designOrderId: data.designOrderId || "—",
-          customerId: data.customerId || "—",
-          customerEmail: data.customerEmail || "—",
-          currentPhase: data.currentPhase || "—",
-          status: data.status || "—",
-          overallStatus: data.status || "—",
-          overallProgress: data.overallProgress ?? 0,
-          isArchived: data.isArchived ?? false,
-          expectedStartDate: data.startDate || null,
-          expectedCompletionDate: data.estimatedCompletionDate || null,
-          actualStartDate: data.startDate || null,
-          actualCompletionDate: data.estimatedCompletionDate || null,
-          executionPlan: structuredExecutionPlan,
-          poSchedule: data.poSchedule || [],
-          matchedProducts: data.matchedProducts || [],
-          unmatchedItems: data.unmatchedItems || [],
-          worksSnapshot: {
-            worksId: data.worksSnapshot?.worksId || "—",
-            worksName: data.worksSnapshot?.worksName || "—",
-            capturedAt: data.worksSnapshot?.capturedAt || null,
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/work-orders/${workOrderId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
-          projectId: data.worksSnapshot?.worksId || "—",
-          projectName: data.worksSnapshot?.worksName || "—",
-          createdAt: data.createdAt || null,
-          updatedAt: data.updatedAt || null,
-        });
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+        }
+      );
 
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Error ${res.status}: ${errorText}`);
+      }
+
+      const data = await res.json();
+      setWorkOrder(data);
+    } catch (err: any) {
+      console.error("Fetch work order error:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchWorkOrder();
   }, [workOrderId, token]);
 
   if (loading) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="400px"
-      >
-        <CircularProgress size={60} />
-      </Box>
+      <>
+        <Navbar label="Work Order Details" />
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="60vh"
+        >
+          <CircularProgress size={60} thickness={4} />
+        </Box>
+      </>
     );
   }
 
   if (error) {
     return (
-      <Container maxWidth="md" sx={{ mt: 4 }}>
-        <Alert severity="error" sx={{ borderRadius: 2 }}>
-          {error}
-        </Alert>
-      </Container>
+      <>
+        <Navbar label="Work Order Details" />
+        <Container maxWidth="md" sx={{ mt: 4 }}>
+          <Alert severity="error" sx={{ borderRadius: 2 }}>
+            {error}
+          </Alert>
+        </Container>
+      </>
     );
   }
 
   if (!workOrder) return null;
 
+  // Group execution plan items
+  const workGroups = workOrder.executionPlan.filter(
+    (item) => item.type === "workGroup"
+  );
+  const workTasks = workOrder.executionPlan.filter(
+    (item) => item.type === "workTask"
+  );
+
+  const getTasksForGroup = (groupId: string) => {
+    return workTasks.filter((task) => task.parentWorkGroupId === groupId);
+  };
+
   return (
     <>
-      <Navbar label="Update Work Orders" />
+      <Navbar label="Work Order Details" />
       <Container maxWidth="xl" sx={{ py: 3 }}>
         {/* Header */}
         <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
@@ -463,9 +515,14 @@ const WorkOrderDetailsPage = () => {
             mb={2}
           >
             <Typography variant="h4" sx={{ fontWeight: 700 }}>
-              Work Order: {workOrder?.workOrderId || "—"}
+              Work Order: {workOrder.workOrderId}
             </Typography>
-            <StatusChip status={workOrder?.overallStatus || "—"} />
+            <Stack direction="row" spacing={1} alignItems="center">
+              <StatusChip status={workOrder.status} />
+              {workOrder.isArchived && (
+                <Chip label="Archived" color="default" size="small" />
+              )}
+            </Stack>
           </Stack>
 
           <Grid container spacing={3}>
@@ -475,33 +532,56 @@ const WorkOrderDetailsPage = () => {
                   title="Project Information"
                   sx={{ pb: 1 }}
                   titleTypographyProps={{ variant: "h6", fontWeight: 600 }}
+                  avatar={<BusinessIcon color="primary" />}
                 />
                 <CardContent sx={{ pt: 0 }}>
                   <LabelValue
                     label="Design Order ID"
-                    value={workOrder?.designOrderId || "—"}
+                    value={workOrder.designOrderId}
                     icon={<TaskIcon fontSize="small" color="primary" />}
                   />
                   <LabelValue
-                    label="Customer Email"
-                    value={workOrder?.customerEmail || "—"}
-                    icon={<ErrorIcon fontSize="small" color="primary" />}
-                  />
-                  <LabelValue
                     label="Customer ID"
-                    value={workOrder?.customerId || "—"}
+                    value={workOrder.customerId}
                     icon={<PersonIcon fontSize="small" color="primary" />}
                   />
                   <LabelValue
-                    label="Project Name"
-                    value={workOrder?.projectName || "—"}
-                    icon={<ProductIcon fontSize="small" color="primary" />}
-                  />
-                  <LabelValue
-                    label="Project ID"
-                    value={workOrder?.projectId || "—"}
+                    label="Current Phase"
+                    value={workOrder.currentPhase}
                     icon={<WorkOutlineIcon fontSize="small" color="primary" />}
                   />
+                  <LabelValue
+                    label="Works Name"
+                    value={workOrder.worksSnapshot.worksName}
+                    icon={<ProductIcon fontSize="small" color="primary" />}
+                  />
+                  <Box sx={{ mb: 2 }}>
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      spacing={1}
+                      sx={{ mb: 0.5 }}
+                    >
+                      <ScheduleIcon fontSize="small" color="primary" />
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ fontWeight: 600 }}
+                      >
+                        Overall Progress
+                      </Typography>
+                    </Stack>
+                    <Box sx={{ pl: 3 }}>
+                      <LinearProgress
+                        variant="determinate"
+                        value={workOrder.overallProgress}
+                        sx={{ height: 8, borderRadius: 4, mb: 0.5 }}
+                      />
+                      <Typography variant="body2">
+                        {workOrder.overallProgress}%
+                      </Typography>
+                    </Box>
+                  </Box>
                 </CardContent>
               </Card>
             </Grid>
@@ -517,15 +597,27 @@ const WorkOrderDetailsPage = () => {
                 <CardContent sx={{ pt: 0 }}>
                   <Stack spacing={2}>
                     <DateRange
-                      startDate={workOrder?.expectedStartDate || null}
-                      endDate={workOrder?.expectedCompletionDate || null}
-                      type="expected"
+                      startDate={workOrder.startDate}
+                      endDate={workOrder.estimatedCompletionDate}
+                      type="scheduled"
                     />
-                    <DateRange
-                      startDate={workOrder?.actualStartDate || null}
-                      endDate={workOrder?.actualCompletionDate || null}
-                      type="actual"
-                    />
+                    <Box sx={{ p: 1.5, borderRadius: 1, bgcolor: "grey.100" }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ fontWeight: 600, display: "block" }}
+                      >
+                        Works Snapshot
+                      </Typography>
+                      <Typography variant="body2" sx={{ mb: 0.5 }}>
+                        {workOrder.worksSnapshot.worksName}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Captured:{" "}
+                        {dayjs(workOrder.worksSnapshot.capturedAt).format(
+                          "DD MMM YYYY HH:mm"
+                        )}
+                      </Typography>
+                    </Box>
                   </Stack>
                 </CardContent>
               </Card>
@@ -542,344 +634,402 @@ const WorkOrderDetailsPage = () => {
                 <Typography variant="h6" fontWeight={600}>
                   Execution Plan
                 </Typography>
-                <Badge
-                  badgeContent={workOrder?.executionPlan?.length || 0}
-                  color="primary"
-                />
+                <Badge badgeContent={workGroups.length} color="primary" />
               </Stack>
             }
           />
           <CardContent sx={{ pt: 0 }}>
-            {workOrder.executionPlan.map((group: any, i: number) => (
-              <Accordion key={i} sx={{ mb: 2 }}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    spacing={2}
-                    sx={{ width: "100%" }}
-                  >
-                    <Typography variant="subtitle1" fontWeight={600}>
-                      {group?.workGroupName || `Work Group ${i + 1}`}
-                    </Typography>
-                    <StatusChip status={group?.status || "—"} />
-                    {updating === `group-${group.workGroupId}` && (
-                      <CircularProgress size={16} />
-                    )}
-                  </Stack>
-                </AccordionSummary>
-                <AccordionDetails>
-                  {group?.notes && (
-                    <Alert severity="info" sx={{ mb: 2 }}>
-                      {group.notes}
-                    </Alert>
-                  )}
+            {workGroups.map((group, i) => {
+              const groupTasks = getTasksForGroup(group.id);
+              return (
+                <Accordion key={group.id} sx={{ mb: 2 }}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      spacing={2}
+                      sx={{ width: "100%" }}
+                    >
+                      <Typography variant="subtitle1" fontWeight={600}>
+                        {group.name} (Order: {group.order})
+                      </Typography>
+                      <StatusChip status={group.status} />
+                      <Typography variant="caption" color="text.secondary">
+                        Progress: {group.progress}%
+                      </Typography>
+                      {updating === `group-${group.id}` && (
+                        <CircularProgress size={16} />
+                      )}
+                    </Stack>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Grid container spacing={2} sx={{ mb: 3 }}>
+                      <Grid item xs={12} md={6}>
+                        <DateRange
+                          startDate={group.scheduledStartDate}
+                          endDate={group.scheduledEndDate}
+                          type="scheduled"
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        {group.actualStartDate && group.actualEndDate && (
+                          <DateRange
+                            startDate={group.actualStartDate}
+                            endDate={group.actualEndDate}
+                            type="actual"
+                          />
+                        )}
+                      </Grid>
+                    </Grid>
 
-                  {/* Work Group Status Buttons */}
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                      Update Work Group Status:
-                    </Typography>
-                    <StatusUpdateButtons
-                      currentStatus={group.status}
-                      onChange={(newStatus) =>
-                        handleStatusChange("group", group.workGroupId, newStatus)
-                      }
-                      disabled={updating === `group-${group.workGroupId}`}
-                    />
-                  </Box>
+                    {/* Work Group Status Buttons */}
+                    <Box sx={{ mb: 3 }}>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ mb: 1, fontWeight: 600 }}
+                      >
+                        Update Work Group Status:
+                      </Typography>
+                      <StatusUpdateButtons
+                        currentStatus={group.status}
+                        onChange={(newStatus) =>
+                          handleStatusChange("group", group.id, newStatus)
+                        }
+                        disabled={updating === `group-${group.id}`}
+                      />
+                    </Box>
 
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ mb: 2, fontWeight: 600 }}
-                  >
-                    Work Tasks ({group?.workTasks?.length || 0})
-                  </Typography>
-                  <Grid container spacing={2}>
-                    {group?.workTasks?.map((task: any, j: number) => (
-                      <Grid item xs={12} key={j}>
-                        <Paper
-                          variant="outlined"
-                          sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2 }}
-                        >
-                          <Grid container spacing={2}>
-                            <Grid item xs={12} md={6}>
-                              <Stack spacing={1}>
-                                <Typography variant="subtitle2" fontWeight={600}>
-                                  {task?.workTaskName || `Task ${j + 1}`}
-                                </Typography>
-                                <StatusChip status={task?.status || "—"} />
-                                <Typography variant="body2" color="text.secondary">
-                                  {task?.actualStartDate
-                                    ? dayjs(task.actualStartDate).format("DD MMM")
-                                    : "—"}{" "}
-                                  →{" "}
-                                  {task?.actualEndDate
-                                    ? dayjs(task.actualEndDate).format("DD MMM")
-                                    : "—"}
-                                </Typography>
-                                {task?.notes && (
+                    <Divider sx={{ mb: 2 }} />
+
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ mb: 2, fontWeight: 600 }}
+                    >
+                      Work Tasks ({groupTasks.length})
+                    </Typography>
+                    <Grid container spacing={2}>
+                      {groupTasks.map((task) => (
+                        <Grid item xs={12} key={task.id}>
+                          <Paper
+                            variant="outlined"
+                            sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2 }}
+                          >
+                            <Grid container spacing={2}>
+                              <Grid item xs={12} md={4}>
+                                <Stack spacing={1}>
+                                  <Typography
+                                    variant="subtitle2"
+                                    fontWeight={600}
+                                  >
+                                    {task.name} (Order: {task.order})
+                                  </Typography>
+                                  <StatusChip status={task.status} />
                                   <Typography
                                     variant="caption"
                                     color="text.secondary"
                                   >
-                                    {task.notes}
+                                    Target: {task.targetDays} days | Buffer:{" "}
+                                    {task.bufferDays} days
                                   </Typography>
-                                )}
-                              </Stack>
-                            </Grid>
-                            <Grid item xs={12} md={6}>
-                              <Box>
-                                <Typography
-                                  variant="caption"
-                                  sx={{ fontWeight: 600, display: "block", mb: 1 }}
-                                >
-                                  Update Task Status:
-                                </Typography>
-                                <StatusUpdateButtons
-                                  currentStatus={task.status}
-                                  onChange={(newStatus) =>
-                                    handleStatusChange(
-                                      "task",
-                                      group.workGroupId,
-                                      newStatus,
-                                      task.workTaskId
-                                    )
-                                  }
-                                  disabled={updating === `task-${task.workTaskId}`}
-                                />
-                                {updating === `task-${task.workTaskId}` && (
-                                  <Box
-                                    sx={{ mt: 1, display: "flex", alignItems: "center" }}
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
                                   >
-                                    <CircularProgress size={16} sx={{ mr: 1 }} />
-                                    <Typography variant="caption">
-                                      Updating...
+                                    PO Days: {task.poDays} | Products:{" "}
+                                    {task.productCount}
+                                  </Typography>
+                                  {task.poStatus && (
+                                    <Chip
+                                      label={`PO: ${task.poStatus}`}
+                                      size="small"
+                                      color={
+                                        task.poStatus === "pending"
+                                          ? "warning"
+                                          : "success"
+                                      }
+                                    />
+                                  )}
+                                </Stack>
+                              </Grid>
+                              <Grid item xs={12} md={4}>
+                                <Stack spacing={1}>
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
+                                    Scheduled:{" "}
+                                    {dayjs(task.scheduledStartDate).format(
+                                      "DD MMM"
+                                    )}{" "}
+                                    →{" "}
+                                    {dayjs(task.scheduledEndDate).format(
+                                      "DD MMM"
+                                    )}
+                                  </Typography>
+                                  {task.scheduledPoDate && (
+                                    <Typography
+                                      variant="body2"
+                                      color="text.secondary"
+                                    >
+                                      PO Date:{" "}
+                                      {dayjs(task.scheduledPoDate).format(
+                                        "DD MMM YYYY"
+                                      )}
                                     </Typography>
-                                  </Box>
-                                )}
-                              </Box>
+                                  )}
+                                  {task.applicableProducts &&
+                                    task.applicableProducts.length > 0 && (
+                                      <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                      >
+                                        Products:{" "}
+                                        {task.applicableProducts.join(", ")}
+                                      </Typography>
+                                    )}
+                                </Stack>
+                              </Grid>
+                              <Grid item xs={12} md={4}>
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    sx={{
+                                      fontWeight: 600,
+                                      display: "block",
+                                      mb: 1,
+                                    }}
+                                  >
+                                    Update Task Status:
+                                  </Typography>
+                                  <StatusUpdateButtons
+                                    currentStatus={task.status}
+                                    onChange={(newStatus) =>
+                                      handleStatusChange(
+                                        "task",
+                                        group.id,
+                                        newStatus,
+                                        task.id
+                                      )
+                                    }
+                                    disabled={updating === `task-${task.id}`}
+                                  />
+                                  {updating === `task-${task.id}` && (
+                                    <Box
+                                      sx={{
+                                        mt: 1,
+                                        display: "flex",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <CircularProgress
+                                        size={16}
+                                        sx={{ mr: 1 }}
+                                      />
+                                      <Typography variant="caption">
+                                        Updating...
+                                      </Typography>
+                                    </Box>
+                                  )}
+                                </Box>
+                              </Grid>
                             </Grid>
-                          </Grid>
-                        </Paper>
-                      </Grid>
-                    ))}
-                  </Grid>
-                </AccordionDetails>
-              </Accordion>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* PO Schedule */}
-        <Card sx={{ mb: 3, borderRadius: 2 }}>
-          <CardHeader
-            title={
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <ScheduleIcon color="primary" />
-                <Typography variant="h6" fontWeight={600}>
-                  PO Schedule
-                </Typography>
-                <Badge
-                  badgeContent={workOrder.poSchedule?.length || 0}
-                  color="primary"
-                />
-              </Stack>
-            }
-          />
-          <CardContent sx={{ pt: 0 }}>
-            <Grid container spacing={2}>
-              {workOrder.poSchedule?.map((po: POScheduleItem, i: number) => (
-                <Grid item xs={12} md={6} key={i}>
-                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-                    <Stack spacing={1}>
-                      <Typography variant="subtitle2" fontWeight={600}>
-                        {po.workTaskName}
-                      </Typography>
-                      <StatusChip status={po.status} />
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">
-                          Expected: {dayjs(po.expectedPODate).format("DD MMM")}
-                        </Typography>
-                        <br />
-                        <Typography variant="caption" color="text.secondary">
-                          Actual: {dayjs(po.actualPODate).format("DD MMM")}
-                        </Typography>
-                      </Box>
-                      {po.notes && (
-                        <Typography variant="caption" color="text.secondary">
-                          {po.notes}
-                        </Typography>
-                      )}
-                    </Stack>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
+                          </Paper>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </AccordionDetails>
+                </Accordion>
+              );
+            })}
           </CardContent>
         </Card>
 
         <Grid container spacing={3} sx={{ mb: 3 }}>
           {/* Matched Products */}
           <Grid item xs={12} lg={6}>
-            <Accordion sx={{ borderRadius: 2 }}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <CheckIcon color="success" />
-                  <Typography variant="h6" fontWeight={600}>
-                    Matched Products
-                  </Typography>
-                  <Badge
-                    badgeContent={workOrder.matchedProducts?.length || 0}
-                    color="success"
-                  />
-                </Stack>
-              </AccordionSummary>
-              <AccordionDetails sx={{ maxHeight: 400, overflow: "auto" }}>
+            <Card sx={{ borderRadius: 2, height: "100%" }}>
+              <CardHeader
+                title={
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <CheckIcon color="success" />
+                    <Typography variant="h6" fontWeight={600}>
+                      Matched Products
+                    </Typography>
+                    <Badge
+                      badgeContent={workOrder.matchedProducts.length}
+                      color="success"
+                    />
+                  </Stack>
+                }
+              />
+              <CardContent sx={{ maxHeight: 400, overflow: "auto" }}>
                 <Stack spacing={2}>
-                  {workOrder.matchedProducts?.map(
-                    (prod: MatchedProduct, i: number) => (
-                      <Paper
-                        key={i}
-                        variant="outlined"
-                        sx={{ p: 2, borderRadius: 1 }}
+                  {workOrder.matchedProducts.map((prod, i) => (
+                    <Paper
+                      key={i}
+                      variant="outlined"
+                      sx={{ p: 2, borderRadius: 1 }}
+                    >
+                      <Typography
+                        variant="subtitle2"
+                        fontWeight={600}
+                        sx={{ mb: 1 }}
                       >
-                        <Typography
-                          variant="subtitle2"
-                          fontWeight={600}
-                          sx={{ mb: 1 }}
-                        >
-                          {prod.productName}
-                        </Typography>
-                        <Grid container spacing={1}>
-                          <Grid item xs={6}>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              Coohom ID: {prod.coohomId}
-                            </Typography>
-                          </Grid>
-                          <Grid item xs={6}>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              OBS ID: {prod.obsBrandGoodId}
-                            </Typography>
-                          </Grid>
-                          <Grid item xs={6}>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              Group: {prod.workGroupName}
-                            </Typography>
-                          </Grid>
-                          <Grid item xs={6}>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              Task: {prod.workTaskName}
-                            </Typography>
-                          </Grid>
+                        {prod.productName}
+                      </Typography>
+                      <Grid container spacing={1}>
+                        <Grid item xs={6}>
+                          <Typography variant="caption" color="text.secondary">
+                            Coohom ID: {prod.coohomId}
+                          </Typography>
                         </Grid>
-                      </Paper>
-                    )
-                  )}
+                        <Grid item xs={6}>
+                          <Typography variant="caption" color="text.secondary">
+                            Product ID: {prod.productId}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Typography variant="caption" color="text.secondary">
+                            Group: {prod.workGroupName}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Typography variant="caption" color="text.secondary">
+                            Task: {prod.workTaskName}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12}>
+                          <Typography variant="caption" color="text.secondary">
+                            Timeline: {prod.targetDays}d target,{" "}
+                            {prod.bufferDays}d buffer, {prod.poDays}d PO
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </Paper>
+                  ))}
                 </Stack>
-              </AccordionDetails>
-            </Accordion>
+              </CardContent>
+            </Card>
           </Grid>
 
           {/* Unmatched Items */}
           <Grid item xs={12} lg={6}>
-            <Accordion sx={{ borderRadius: 2 }}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <ErrorIcon color="error" />
-                  <Typography variant="h6" fontWeight={600}>
-                    Unmatched Items
-                  </Typography>
-                  <Badge
-                    badgeContent={workOrder.unmatchedItems?.length || 0}
-                    color="error"
-                  />
-                </Stack>
-              </AccordionSummary>
-              <AccordionDetails sx={{ maxHeight: 400, overflow: "auto" }}>
+            <Card sx={{ borderRadius: 2, height: "100%" }}>
+              <CardHeader
+                title={
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <ErrorIcon color="error" />
+                    <Typography variant="h6" fontWeight={600}>
+                      Unmatched Items
+                    </Typography>
+                    <Badge
+                      badgeContent={workOrder.unmatchedItems.length}
+                      color="error"
+                    />
+                  </Stack>
+                }
+              />
+              <CardContent sx={{ maxHeight: 400, overflow: "auto" }}>
                 <Stack spacing={2}>
-                  {workOrder.unmatchedItems?.map(
-                    (item: UnmatchedItem, i: number) => (
-                      <Alert
-                        key={i}
-                        severity="warning"
-                        sx={{ borderRadius: 1 }}
+                  {workOrder.unmatchedItems.map((item, i) => (
+                    <Alert key={i} severity="warning" sx={{ borderRadius: 1 }}>
+                      <Typography
+                        variant="body2"
+                        fontWeight={600}
+                        sx={{ mb: 0.5 }}
                       >
-                        <Typography variant="body2" fontWeight={600}>
-                          OBS ID: {item.obsBrandGoodId}
-                        </Typography>
-                        <Typography variant="caption">
-                          Reason: {item.reason}
-                        </Typography>
-                      </Alert>
-                    )
-                  )}
+                        {item.itemData.brandGoodName}
+                      </Typography>
+                      <Typography variant="caption" display="block">
+                        Type: {item.itemData.styleItemName}
+                      </Typography>
+                      <Typography variant="caption" display="block">
+                        SKU: {item.itemData.sku || "N/A"}
+                      </Typography>
+                      <Typography variant="caption" display="block">
+                        Price: ₹
+                        {(item.itemData.price / 100).toLocaleString("en-IN")} x{" "}
+                        {item.itemData.quantity}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        display="block"
+                        color="error.main"
+                      >
+                        Reason: {item.reason.replace(/_/g, " ")}
+                      </Typography>
+                    </Alert>
+                  ))}
                 </Stack>
-              </AccordionDetails>
-            </Accordion>
+              </CardContent>
+            </Card>
           </Grid>
         </Grid>
 
-        {/* Works Snapshot */}
-        <Card sx={{ mb: 3, borderRadius: 2 }}>
-          <CardHeader
-            title={
-              <Typography variant="h6" fontWeight={600}>
-                Works Snapshot
-              </Typography>
-            }
-          />
-          <CardContent sx={{ pt: 0 }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <LabelValue
-                  label="Works Name"
-                  value={workOrder?.worksSnapshot?.worksName || "—"}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <LabelValue
-                  label="Captured At"
-                  value={
-                    workOrder?.worksSnapshot?.capturedAt
-                      ? dayjs(workOrder.worksSnapshot.capturedAt).format(
-                          "DD MMM YYYY HH:mm"
-                        )
-                      : "—"
-                  }
-                />
-              </Grid>
-            </Grid>
-          </CardContent>
-        </Card>
-
         {/* Footer */}
         <Paper sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2 }}>
-          <Typography variant="caption" color="text.secondary">
-            Created:{" "}
-            {workOrder?.createdAt
-              ? dayjs(workOrder.createdAt).format("DD MMM YYYY HH:mm")
-              : "—"}{" "}
-            • Last Updated:{" "}
-            {workOrder?.updatedAt
-              ? dayjs(workOrder.updatedAt).format("DD MMM YYYY HH:mm")
-              : "—"}
-          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <Typography variant="caption" color="text.secondary">
+                Created:{" "}
+                {dayjs(workOrder.createdAt).format("DD MMM YYYY HH:mm")}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} md={6} sx={{ textAlign: { md: "right" } }}>
+              <Typography variant="caption" color="text.secondary">
+                Last Updated:{" "}
+                {dayjs(workOrder.updatedAt).format("DD MMM YYYY HH:mm")}
+              </Typography>
+            </Grid>
+          </Grid>
         </Paper>
+
+        {/* Snackbar */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            sx={{ width: "100%" }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+
+        {/* Confirmation Dialog */}
+        <Dialog
+          open={confirmDialog.open}
+          onClose={() => setConfirmDialog({ ...confirmDialog, open: false })}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>{confirmDialog.title}</DialogTitle>
+          <DialogContent>
+            <Typography>{confirmDialog.message}</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() =>
+                setConfirmDialog({ ...confirmDialog, open: false })
+              }
+              color="inherit"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmDialog.onConfirm}
+              color="primary"
+              variant="contained"
+            >
+              Confirm
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Container>
-</>
+    </>
   );
 };
 

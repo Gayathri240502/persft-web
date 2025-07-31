@@ -9,11 +9,17 @@ interface DecodedToken {
     roles: string[];
   };
 }
-
 export function decodeJwt(token: string): DecodedToken | null {
   try {
+    if (!token || token.split(".").length !== 3) {
+      throw new Error("Invalid JWT format");
+    }
+
     const base64Url = token.split(".")[1];
+    if (!base64Url) throw new Error("Missing payload in token");
+
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+
     const jsonPayload = decodeURIComponent(
       atob(base64)
         .split("")

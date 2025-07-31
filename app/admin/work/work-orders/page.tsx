@@ -96,17 +96,13 @@ const UpdateWorkOrdersPage = () => {
     setError(null);
 
     const { page, pageSize } = paginationModel;
-    const sortField = sortModel[0]?.field || "status";
-    const sortOrder = sortModel[0]?.sort || "asc";
 
     const queryParams = new URLSearchParams({
       page: String(page + 1),
       limit: String(pageSize),
-      ...(search && { search }),
+      ...(debouncedSearch && { search: debouncedSearch }),
       ...(filters.status && { status: filters.status }),
       includeArchived: String(filters.includeArchived),
-      sortField,
-      sortOrder,
     });
 
     try {
@@ -120,32 +116,69 @@ const UpdateWorkOrdersPage = () => {
       if (!res.ok) throw new Error("Failed to fetch work orders");
 
       const data = await res.json();
+      console.log("API Response:", data); // Debug log to check data structure
+
       const transformed = (data.workOrders || []).map(
-        (item: any, index: number) => ({
-          id: item._id,
-          workOrderId: item.workOrderId,
-          designOrderId: item.designOrderId ?? "N/A",
-          status: item.status,
-          currentPhase: item.executionPlan?.currentPhase?.name ?? "Not Started",
-          sn: page * pageSize + index + 1,
-        })
+        (item: any, index: number) => {
+          // Enhanced current phase extraction with multiple fallbacks
+          let currentPhase = "Not Started";
+
+          // Try different possible data structures
+          if (item.executionPlan?.currentPhase?.name) {
+            currentPhase = item.executionPlan.currentPhase.name;
+          } else if (item.executionPlan?.currentPhase) {
+            currentPhase = item.executionPlan.currentPhase;
+          } else if (item.currentPhase?.name) {
+            currentPhase = item.currentPhase.name;
+          } else if (item.currentPhase) {
+            currentPhase = item.currentPhase;
+          } else if (item.phase?.name) {
+            currentPhase = item.phase.name;
+          } else if (item.phase) {
+            currentPhase = item.phase;
+          }
+
+          console.log(
+            `Work Order ${item.workOrderId} - Current Phase:`,
+            currentPhase
+          ); // Debug log
+
+          return {
+            id: item._id,
+            workOrderId: item.workOrderId,
+            designOrderId: item.designOrderId ?? "N/A",
+            status: item.status,
+            currentPhase,
+            sn: page * pageSize + index + 1,
+          };
+        }
       );
 
       setRows(transformed);
       setRowCount(data.total || 0);
     } catch (err) {
+      console.error("Fetch error:", err);
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
     }
-  }, [paginationModel, search, filters, sortModel, debouncedSearch, token]);
+  }, [paginationModel, debouncedSearch, filters, token]);
 
+  // Reset pagination when search changes
   useEffect(() => {
     setPaginationModel((prev) => ({
       ...prev,
       page: 0,
     }));
   }, [debouncedSearch]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setPaginationModel((prev) => ({
+      ...prev,
+      page: 0,
+    }));
+  }, [filters.status, filters.includeArchived]);
 
   useEffect(() => {
     fetchWorkOrders();
@@ -164,10 +197,11 @@ const UpdateWorkOrdersPage = () => {
   };
 
   const handleSortModelChange = (newModel: GridSortModel) => {
-    if (newModel.length > 0) setSortModel(newModel);
+    setSortModel(newModel);
   };
+
   const handleDeleteClick = (id: string) => {
-    console.log("Selected delete ID:", id); // <-- ADD THIS
+    console.log("Selected delete ID:", id);
     setSelectedDeleteId(id);
     setDeleteDialogOpen(true);
   };
@@ -202,7 +236,7 @@ const UpdateWorkOrdersPage = () => {
         throw new Error(responseText || "Failed to delete work order");
       }
 
-      // Refresh
+      // Refresh data
       setReloadFlag((prev) => !prev);
     } catch (err) {
       console.error("Delete error:", err);
@@ -218,7 +252,7 @@ const UpdateWorkOrdersPage = () => {
 
   const columns: GridColDef[] = useMemo(
     () => [
-      { field: "sn", headerName: "SN", width: 70 },
+      { field: "sn", headerName: "SN", width: 70, sortable: false },
       {
         field: "workOrderId",
         headerName: "Work Order ID",
@@ -270,7 +304,7 @@ const UpdateWorkOrdersPage = () => {
             <IconButton
               size="small"
               color="error"
-              onClick={() => handleDeleteClick(params.row.workOrderId)} // ✅ correct ID now
+              onClick={() => handleDeleteClick(params.row.workOrderId)}
             >
               <Delete fontSize="small" />
             </IconButton>
@@ -327,7 +361,7 @@ const UpdateWorkOrdersPage = () => {
           paginationModel={paginationModel}
           onPaginationModelChange={handlePaginationChange}
           paginationMode="server"
-          sortingMode="server"
+          sortingMode="client"
           sortModel={sortModel}
           onSortModelChange={handleSortModelChange}
           onSearch={handleSearch}

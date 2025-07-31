@@ -13,6 +13,7 @@ import {
   CircularProgress,
   Alert,
   Button,
+  useMediaQuery,
   Stack,
   Chip,
 } from "@mui/material";
@@ -99,6 +100,7 @@ const DesignOrders = () => {
 
   const debouncedSearchText = useDebounce(searchText, 500);
   const debouncedCustomerEmail = useDebounce(customerEmailFilter, 500);
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // ✅ Add this line
 
   const { token } = useTokenAndRole();
 
@@ -244,6 +246,10 @@ const DesignOrders = () => {
       ),
     },
   ];
+  const unsortableColumns = columns.map((col) => ({
+    ...col,
+    sortable: false,
+  }));
 
   return (
     <>
@@ -343,19 +349,108 @@ const DesignOrders = () => {
             <CircularProgress />
           </Box>
         ) : (
-          <Box sx={{ minWidth: 1500 }}>
-            <DataGrid
-              rows={orders}
-              columns={columns}
-              rowCount={rowCount}
-              paginationModel={paginationModel}
-              onPaginationModelChange={setPaginationModel}
-              pageSizeOptions={[5, 10, 25, 50, 100]}
-              paginationMode="server"
-              autoHeight
-              disableRowSelectionOnClick
-              getRowId={(row) => row._id || row.orderId || row.id}
-            />
+          <Box sx={{ width: "100%", mt: 2 }}>
+            <Box
+              sx={{
+                width: "100%",
+                height: { xs: "auto", sm: "70vh" },
+                minHeight: 400,
+                overflowX: "auto",
+                "&::-webkit-scrollbar": {
+                  height: "8px",
+                },
+                "&::-webkit-scrollbar-track": {
+                  backgroundColor: "#f1f1f1",
+                  borderRadius: "4px",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: "#c1c1c1",
+                  borderRadius: "4px",
+                  "&:hover": {
+                    backgroundColor: "#a8a8a8",
+                  },
+                },
+              }}
+            >
+              <Box
+                sx={{
+                  minWidth: isMobile ? "1200px" : "100%",
+                  height: "100%",
+                }}
+              >
+                <DataGrid
+                  rows={orders}
+                  columns={unsortableColumns}
+                  rowCount={rowCount}
+                  paginationModel={paginationModel}
+                  onPaginationModelChange={setPaginationModel}
+                  pageSizeOptions={[5, 10, 25, 50, 100]}
+                  paginationMode="server"
+                  autoHeight
+                  disableRowSelectionOnClick
+                  getRowId={(row) => row._id || row.orderId || row.id}
+                  sx={{
+                    fontFamily: theme.typography.fontFamily,
+                    fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                    "& .MuiDataGrid-columnHeaders": {
+                      backgroundColor: "#5a7299",
+                      color: "#000",
+                      fontWeight: 600,
+                      borderBottom: "2px solid #5a7299",
+                      "& .MuiDataGrid-columnHeaderTitle": {
+                        color: "#000",
+                        fontWeight: 600,
+                        fontSize: { xs: "0.8rem", sm: "0.95rem" },
+                      },
+                    },
+                    "& .MuiDataGrid-cell": {
+                      paddingY: { xs: 0.5, sm: 1 },
+                      paddingX: { xs: 1, sm: 2 },
+                      borderBottom: "1px solid #e0e0e0",
+                      "&:focus, &:focus-within": {
+                        outline: "none",
+                      },
+                    },
+                    "& .MuiDataGrid-row": {
+                      "&:hover": {
+                        backgroundColor: "#f5f5f5",
+                      },
+                      "&.Mui-selected": {
+                        backgroundColor: "#f0e9e3 !important",
+                        "&:hover": {
+                          backgroundColor: "#e8ddd4 !important",
+                        },
+                      },
+                    },
+                    "& .MuiDataGrid-footerContainer": {
+                      backgroundColor: "#f8f9fa",
+                      borderTop: "1px solid #e0e0e0",
+                      color: "#333",
+                      fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                    },
+                    "& .MuiDataGrid-columnSeparator": {
+                      display: "none",
+                    },
+                    "& .MuiCheckbox-root": {
+                      color: "#b37f59",
+                      "&.Mui-checked": {
+                        color: "#b37f59",
+                      },
+                    },
+                    "& .MuiDataGrid-toolbarContainer": {
+                      gap: 1,
+                      flexWrap: "wrap",
+                    },
+                    "& .MuiDataGrid-virtualScroller": {
+                      overflowX: "auto",
+                    },
+                    "& .MuiDataGrid-virtualScrollerContent": {
+                      minWidth: isMobile ? "1200px" : "100%",
+                    },
+                  }}
+                />
+              </Box>
+            </Box>
           </Box>
         )}
       </Box>

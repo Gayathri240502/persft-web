@@ -622,7 +622,7 @@ export default function Sidebar() {
                       isActive={isActive}
                       isOpen={isSubmenuOpen}
                       hasChildren={hasChildren}
-                      sidebarOpen={isOpen}
+                      sidebarOpen={isOpen ?? false}
                       onMenuClick={handleMenuClick}
                     />
 

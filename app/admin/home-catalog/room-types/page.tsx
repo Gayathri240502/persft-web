@@ -297,6 +297,7 @@ const RoomTypes = () => {
           columns={columns}
           rowCount={rowCount}
           pagination
+          disableAllSorting
           paginationMode="server"
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}

@@ -214,45 +214,49 @@ const SubCategory = () => {
         ),
     },
     {
-  field: "category",
-  headerName: "Category",
-  flex: 1,
-  renderCell: (params) => (
-    <span
-      onClick={() =>
-        router.push(`/admin/product-catalog/category/${params.row?.category?._id}`)
-      }
-      style={{ color: "#1976d2", cursor: "pointer" }}
-    >
-      {params.row?.category?.name || "N/A"}
-    </span>
-  ),
-},
-{
-  field: "attributeGroups",
-  headerName: "Attribute Groups",
-  flex: 1,
-  renderCell: (params) => {
-    const groups = params.row?.attributeGroups;
-    if (!Array.isArray(groups) || groups.length === 0) return "N/A";
+      field: "category",
+      headerName: "Category",
+      flex: 1,
+      renderCell: (params) => (
+        <span
+          onClick={() =>
+            router.push(
+              `/admin/product-catalog/category/${params.row?.category?._id}`
+            )
+          }
+          style={{ color: "#1976d2", cursor: "pointer" }}
+        >
+          {params.row?.category?.name || "N/A"}
+        </span>
+      ),
+    },
+    {
+      field: "attributeGroups",
+      headerName: "Attribute Groups",
+      flex: 1,
+      renderCell: (params) => {
+        const groups = params.row?.attributeGroups;
+        if (!Array.isArray(groups) || groups.length === 0) return "N/A";
 
-    return (
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
-        {groups.map((group) => (
-          <span
-            key={group._id}
-            style={{ color: "#1976d2", cursor: "pointer" }}
-            onClick={() =>
-              router.push(`/admin/attribute-catalog/attributes-groups/${group._id}`)
-            }
-          >
-            {group?.name || "Unnamed"}
-          </span>
-        ))}
-      </Box>
-    );
-  },
-},
+        return (
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+            {groups.map((group) => (
+              <span
+                key={group._id}
+                style={{ color: "#1976d2", cursor: "pointer" }}
+                onClick={() =>
+                  router.push(
+                    `/admin/attribute-catalog/attributes-groups/${group._id}`
+                  )
+                }
+              >
+                {group?.name || "Unnamed"}
+              </span>
+            ))}
+          </Box>
+        );
+      },
+    },
     {
       field: "action",
       headerName: "Action",
@@ -345,6 +349,7 @@ const SubCategory = () => {
             getRowId={(row) => row.id}
             disableRowSelectionOnClick
             hideFooterSelectedRowCount
+            disableAllSorting
           />
         </Box>
 

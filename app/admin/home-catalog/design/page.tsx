@@ -321,6 +321,7 @@ const DesignType = () => {
             autoHeight
             disableColumnMenu={isSmallScreen}
             loading={loading}
+            disableAllSorting
             onAdd={handleAdd}
             onSearch={handleSearchChange}
             searchPlaceholder="Search Designs..."

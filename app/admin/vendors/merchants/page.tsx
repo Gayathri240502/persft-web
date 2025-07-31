@@ -264,6 +264,7 @@ const Merchant = () => {
             columns={columns}
             rows={rows}
             rowCount={rowCount}
+            disableAllSorting
             paginationMode="server"
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}

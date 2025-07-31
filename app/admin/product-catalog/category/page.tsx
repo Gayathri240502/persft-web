@@ -283,6 +283,7 @@ const Category = () => {
             rowCount={rowCount}
             loading={loading}
             pagination
+            disableAllSorting
             paginationMode="server"
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}

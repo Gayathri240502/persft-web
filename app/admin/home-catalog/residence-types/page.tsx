@@ -324,6 +324,7 @@ const ResidenceTypePage = () => {
           autoHeight
           disableRowSelectionOnClick
           onAdd={handleAdd}
+          disableAllSorting
           onSearch={handleSearchChange}
           searchPlaceholder="Search Residence types..."
           getRowId={(row) => row.id}

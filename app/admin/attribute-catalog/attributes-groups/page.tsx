@@ -303,6 +303,7 @@ const AttributeGroups = () => {
             rows={attributeGroups}
             rowCount={rowCount}
             pagination
+            disableAllSorting
             paginationMode="server"
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}

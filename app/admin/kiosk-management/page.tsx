@@ -261,6 +261,7 @@ const KioskManagement = () => {
         <StyledDataGrid
           rows={kiosks}
           columns={columns}
+          disableAllSorting
           rowCount={rowCount}
           pagination
           paginationMode="server"

@@ -260,6 +260,7 @@ const Shop = () => {
           <StyledDataGrid
             columns={columns}
             rows={rows}
+            disableAllSorting
             rowCount={rowCount}
             paginationModel={paginationModel}
             onPaginationModelChange={(newModel) => setPaginationModel(newModel)}

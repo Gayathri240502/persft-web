@@ -358,6 +358,7 @@ const ThemesPage = () => {
             onSearch={handleSearchChange}
             searchPlaceholder="Search themes..."
             addButtonText="Add"
+            disableAllSorting
             getRowId={(row) => row.id}
           />
         </Box>

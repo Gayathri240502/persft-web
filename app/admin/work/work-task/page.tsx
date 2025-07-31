@@ -284,6 +284,7 @@ const WorkTasksPage = () => {
             onSearch={handleSearchChange}
             searchPlaceholder="Search work tasks..."
             addButtonText="Add"
+            disableAllSorting
           />
         </Box>
 

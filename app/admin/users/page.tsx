@@ -260,6 +260,7 @@ const UserManagement = () => {
             columns={columns}
             rows={users}
             rowCount={rowCount}
+            disableAllSorting
             paginationMode="server"
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}

@@ -1,3 +1,4 @@
+// components/Sidebar/Sidebar.tsx
 "use client";
 
 import {
@@ -52,13 +53,23 @@ const SIDEBAR_WIDTH = {
   COLLAPSED: 64,
 } as const;
 
-const ANIMATION_DURATION = 300;
+// Global cache to prevent re-fetching
+let globalMenusCache: MenuItem[] | null = null;
+let globalMenusPromise: Promise<MenuItem[]> | null = null;
 
-// Custom hook for responsive behavior
+// Routes where sidebar should not be shown
+const NO_SIDEBAR_ROUTES = [
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/unauthorized",
+];
+
+// Custom hook for responsive behavior with initialization
 const useResponsive = () => {
-  const [screenSize, setScreenSize] = useState<"mobile" | "tablet" | "desktop">(
-    "desktop"
-  );
+  const [screenSize, setScreenSize] = useState<
+    "mobile" | "tablet" | "desktop" | null
+  >(null);
 
   useEffect(() => {
     const updateScreenSize = () => {
@@ -72,6 +83,7 @@ const useResponsive = () => {
       }
     };
 
+    // Initial check
     updateScreenSize();
     window.addEventListener("resize", updateScreenSize);
     return () => window.removeEventListener("resize", updateScreenSize);
@@ -81,18 +93,18 @@ const useResponsive = () => {
 };
 
 // Custom hook for sidebar state management
-const useSidebarState = (screenSize: "mobile" | "tablet" | "desktop") => {
-  const [isOpen, setIsOpen] = useState(false);
+const useSidebarState = (
+  screenSize: "mobile" | "tablet" | "desktop" | null
+) => {
+  const [isOpen, setIsOpen] = useState<boolean | null>(null);
   const [openSubMenus, setOpenSubMenus] = useState<Record<string, boolean>>({});
 
-  // Initialize sidebar state based on screen size
+  // Initialize sidebar state based on screen size only once
   useEffect(() => {
-    if (screenSize === "desktop") {
-      setIsOpen(true);
-    } else {
-      setIsOpen(false);
+    if (screenSize !== null && isOpen === null) {
+      setIsOpen(screenSize === "desktop");
     }
-  }, [screenSize]);
+  }, [screenSize, isOpen]);
 
   const toggleSidebar = useCallback(() => {
     setIsOpen((prev) => !prev);
@@ -117,6 +129,73 @@ const useSidebarState = (screenSize: "mobile" | "tablet" | "desktop") => {
     toggleSubMenu,
     setOpenSubMenus,
   };
+};
+
+// Optimized menu fetching hook
+const useMenus = (
+  token: string,
+  isAuthenticated: boolean,
+  authLoading: boolean
+) => {
+  const [menus, setMenus] = useState<MenuItem[]>(globalMenusCache || []);
+  const [loading, setLoading] = useState(!globalMenusCache);
+
+  const fetchMenus = useCallback(async (): Promise<MenuItem[]> => {
+    if (!isAuthenticated || !token) return [];
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/menus/role/admin`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: MenuItem[] = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Failed to fetch sidebar menus:", error);
+      return [];
+    }
+  }, [token, isAuthenticated]);
+
+  useEffect(() => {
+    if (authLoading || !isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+
+    // Use cached data if available
+    if (globalMenusCache) {
+      setMenus(globalMenusCache);
+      setLoading(false);
+      return;
+    }
+
+    // Use existing promise or create new one
+    if (!globalMenusPromise) {
+      globalMenusPromise = fetchMenus();
+    }
+
+    globalMenusPromise.then((data) => {
+      globalMenusCache = data;
+      setMenus(data);
+      setLoading(false);
+    });
+
+    return () => {
+      // Don't clear the promise on unmount to maintain global cache
+    };
+  }, [fetchMenus, authLoading, isAuthenticated]);
+
+  return { menus, loading };
 };
 
 // Memoized menu item component
@@ -209,14 +288,11 @@ const MenuItemComponent = memo(
 MenuItemComponent.displayName = "MenuItemComponent";
 
 export default function Sidebar() {
-  const [loading, setLoading] = useState(true);
-  const [menus, setMenus] = useState<MenuItem[]>([]);
   const router = useRouter();
   const pathName = usePathname();
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const menusCache = useRef<MenuItem[] | null>(null);
 
-  // Use the NextAuth hook for token and role
+  // Session management
   const {
     token,
     role,
@@ -224,8 +300,13 @@ export default function Sidebar() {
     isAuthenticated,
   } = useTokenAndRole();
 
+  // Custom hooks
   const screenSize = useResponsive();
-  const isMobile = screenSize === "mobile";
+  const { menus, loading: menusLoading } = useMenus(
+    token,
+    isAuthenticated,
+    authLoading
+  );
 
   const {
     isOpen,
@@ -235,6 +316,19 @@ export default function Sidebar() {
     toggleSubMenu,
     setOpenSubMenus,
   } = useSidebarState(screenSize);
+
+  const isMobile = screenSize === "mobile";
+
+  // Don't render sidebar on specific routes or while authentication is loading
+  const shouldHideSidebar = useMemo(() => {
+    return (
+      authLoading ||
+      !isAuthenticated ||
+      NO_SIDEBAR_ROUTES.includes(pathName) ||
+      screenSize === null ||
+      isOpen === null
+    );
+  }, [authLoading, isAuthenticated, pathName, screenSize, isOpen]);
 
   // Memoized menu calculations
   const { parentMenus, childMenus } = useMemo(() => {
@@ -285,10 +379,10 @@ export default function Sidebar() {
     [pathName]
   );
 
-  // Auto-open submenus for active parent items
+  // Auto-open submenus for active parent items (only when menus are loaded)
   useEffect(() => {
-    if (menus.length > 0) {
-      const newOpenSubMenus = { ...openSubMenus };
+    if (menus.length > 0 && !menusLoading) {
+      const newOpenSubMenus: Record<string, boolean> = {};
 
       parentMenus.forEach((parent) => {
         const children = childMenus.filter(
@@ -303,58 +397,21 @@ export default function Sidebar() {
         }
       });
 
-      setOpenSubMenus(newOpenSubMenus);
-    }
-  }, [menus, pathName, parentMenus, childMenus]);
-
-  const fetchMenus = useCallback(async () => {
-    if (menusCache.current) {
-      setMenus(menusCache.current);
-      setLoading(false);
-      return;
-    }
-
-    // Wait for authentication to complete
-    if (authLoading || !isAuthenticated || !token) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/menus/role/admin`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
+      // Only update if there are changes
+      const hasChanges = Object.keys(newOpenSubMenus).some(
+        (key) => openSubMenus[key] !== newOpenSubMenus[key]
       );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (hasChanges) {
+        setOpenSubMenus((prev) => ({ ...prev, ...newOpenSubMenus }));
       }
-
-      const data: MenuItem[] = await response.json();
-      setMenus(data);
-      menusCache.current = data;
-    } catch (error) {
-      console.error("Failed to fetch sidebar menus:", error);
-      // Clear cache on error
-      menusCache.current = null;
-    } finally {
-      setLoading(false);
     }
-  }, [token, authLoading, isAuthenticated]);
-
-  useEffect(() => {
-    if (pathName !== "/login" && !authLoading) {
-      fetchMenus();
-    }
-  }, [pathName, fetchMenus, authLoading]);
+  }, [menus.length, menusLoading, pathName, parentMenus, childMenus]);
 
   // Handle click outside to close sidebar
   useEffect(() => {
+    if (shouldHideSidebar) return;
+
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
 
@@ -364,7 +421,6 @@ export default function Sidebar() {
         !sidebarRef.current.contains(target) &&
         isMobile
       ) {
-        // Don't close if clicking on tooltip or other floating elements
         const isTooltipClick = (target as Element).closest?.(
           ".MuiTooltip-root, .MuiTooltip-popper, [role='tooltip']"
         );
@@ -383,10 +439,12 @@ export default function Sidebar() {
       clearTimeout(timeoutId);
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isOpen, isMobile, closeSidebar]);
+  }, [isOpen, isMobile, closeSidebar, shouldHideSidebar]);
 
   // Handle escape key
   useEffect(() => {
+    if (shouldHideSidebar) return;
+
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape" && isOpen && isMobile) {
         closeSidebar();
@@ -395,7 +453,7 @@ export default function Sidebar() {
 
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, isMobile, closeSidebar]);
+  }, [isOpen, isMobile, closeSidebar, shouldHideSidebar]);
 
   const getChildren = useCallback(
     (parentId: string) =>
@@ -449,9 +507,18 @@ export default function Sidebar() {
     );
   }, []);
 
-  // Don't render anything while loading or on login page or if not authenticated
-  if (loading || authLoading || pathName === "/login" || !isAuthenticated) {
+  // Don't render anything if should hide sidebar
+  if (shouldHideSidebar) {
     return null;
+  }
+
+  // Show loading state only after session is loaded but menus are still loading
+  if (menusLoading && isAuthenticated) {
+    return (
+      <aside className="w-16 bg-white shadow-xl border-r border-gray-200 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+      </aside>
+    );
   }
 
   return (
@@ -485,7 +552,7 @@ export default function Sidebar() {
         ref={sidebarRef}
         className={`
           fixed top-0 left-0 h-full bg-white shadow-xl z-50 flex flex-col border-r border-gray-200
-          transition-all duration-${ANIMATION_DURATION} ease-in-out
+          transition-all duration-300 ease-in-out
           ${
             isMobile
               ? `w-${SIDEBAR_WIDTH.EXPANDED}px ${isOpen ? "translate-x-0" : "-translate-x-full"}`

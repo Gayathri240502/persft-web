@@ -114,13 +114,15 @@ const AddTheme = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
-        setThumbnail(base64String);
+        setFormData((prev) => ({
+          ...prev,
+          thumbnail: base64String,
+        }));
       };
       reader.readAsDataURL(file);
       setError(null); // Clear error if everything is valid
     }
   };
-
 
   const validateForm = () => {
     if (!formData.name) {

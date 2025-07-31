@@ -325,6 +325,7 @@ const ResidenceTypePage = () => {
           disableRowSelectionOnClick
           onAdd={handleAdd}
           onSearch={handleSearchChange}
+          searchPlaceholder="Search Residence types..."
           getRowId={(row) => row.id}
         />
 

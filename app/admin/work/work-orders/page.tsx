@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import {
   Box,
   Typography,
@@ -42,6 +48,21 @@ interface WorkOrder {
   sn: number;
 }
 
+const useDebounce = (value: string, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setDebouncedValue(value), delay);
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
 const UpdateWorkOrdersPage = () => {
   const { token } = useTokenAndRole();
   const router = useRouter();
@@ -50,9 +71,11 @@ const UpdateWorkOrdersPage = () => {
     page: 0,
     pageSize: 10,
   });
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
+
   const [rows, setRows] = useState<WorkOrder[]>([]);
   const [rowCount, setRowCount] = useState(0);
-  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reloadFlag, setReloadFlag] = useState(false);
@@ -115,11 +138,22 @@ const UpdateWorkOrdersPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [paginationModel, search, filters, sortModel, token]);
+  }, [paginationModel, search, filters, sortModel, debouncedSearch, token]);
+
+  useEffect(() => {
+    setPaginationModel((prev) => ({
+      ...prev,
+      page: 0,
+    }));
+  }, [debouncedSearch]);
 
   useEffect(() => {
     fetchWorkOrders();
   }, [fetchWorkOrders, reloadFlag]);
+
+  const handleSearch = useCallback((value: string) => {
+    setSearch(value);
+  }, []);
 
   const handlePaginationChange = (newModel: GridPaginationModel) => {
     setPaginationModel(newModel);
@@ -296,6 +330,8 @@ const UpdateWorkOrdersPage = () => {
           sortingMode="server"
           sortModel={sortModel}
           onSortModelChange={handleSortModelChange}
+          onSearch={handleSearch}
+          searchPlaceholder="Search Work Orders..."
           loading={loading}
           autoHeight
           disableRowSelectionOnClick

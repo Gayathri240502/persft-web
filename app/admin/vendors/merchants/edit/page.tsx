@@ -221,7 +221,6 @@ const EditMerchant = () => {
     try {
       const payload = { ...formData };
       if (!payload.password) {
-        // delete password if empty to avoid sending empty string
         delete (payload as any).password;
       }
       const id = keycloakId || merchantId;
@@ -288,7 +287,6 @@ const EditMerchant = () => {
     </FormControl>
   );
 
-  // Render error if ID is missing
   if (missingId) {
     return (
       <Box sx={{ p: 4 }}>
@@ -361,9 +359,7 @@ const EditMerchant = () => {
           <Grid item xs={12} md={6}>
             {renderTextField("Phone", "phone")}
           </Grid>
-          <Grid item xs={12} md={6}>
-            {renderTextField("Password", "password")}
-          </Grid>
+
           <Grid item xs={12} md={6}>
             {renderTextField("Business Name", "businessName")}
           </Grid>

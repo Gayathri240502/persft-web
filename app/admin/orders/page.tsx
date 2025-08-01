@@ -16,6 +16,10 @@ import {
   useMediaQuery,
   Stack,
   Chip,
+  Switch,
+  FormControlLabel,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import {
@@ -24,6 +28,7 @@ import {
   DataGrid,
   GridRenderCellParams,
 } from "@mui/x-data-grid";
+import { Archive, Unarchive } from "@mui/icons-material";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { useRouter } from "next/navigation";
 
@@ -86,6 +91,7 @@ const DesignOrders = () => {
   const [orders, setOrders] = useState<DesignOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [archiveLoading, setArchiveLoading] = useState<string | null>(null);
 
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
@@ -100,9 +106,10 @@ const DesignOrders = () => {
 
   const debouncedSearchText = useDebounce(searchText, 500);
   const debouncedCustomerEmail = useDebounce(customerEmailFilter, 500);
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // ✅ Add this line
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const { token } = useTokenAndRole();
+  const router = useRouter();
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -154,6 +161,51 @@ const DesignOrders = () => {
     }
   };
 
+  const handleArchiveToggle = async (
+    orderId: string,
+    currentArchiveStatus: boolean
+  ) => {
+    setArchiveLoading(orderId);
+    try {
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/admin/design-orders/${orderId}/archive`;
+      const res = await fetch(url, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          isArchived: !currentArchiveStatus,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to update archive status");
+      }
+
+      // Update the local state
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.orderId === orderId
+            ? { ...order, isArchived: !currentArchiveStatus }
+            : order
+        )
+      );
+
+      // Show success message (optional)
+      console.log(
+        `Order ${orderId} ${!currentArchiveStatus ? "archived" : "unarchived"} successfully`
+      );
+    } catch (e) {
+      console.error("Archive toggle error:", e);
+      setError(
+        e instanceof Error ? e.message : "Failed to update archive status"
+      );
+    } finally {
+      setArchiveLoading(null);
+    }
+  };
+
   useEffect(() => {
     fetchOrders();
   }, [
@@ -171,7 +223,6 @@ const DesignOrders = () => {
     setCustomerEmailFilter("");
   };
 
-  const router = useRouter();
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", width: 70 },
 
@@ -221,7 +272,7 @@ const DesignOrders = () => {
         <Stack spacing={0.5}>
           <Chip
             label={params.value.replace(/_/g, " ").toUpperCase()}
-            color={getStatusColor(params.value)} // e.g., "success" | "warning" | "error"
+            color={getStatusColor(params.value)}
             size="small"
             variant="outlined"
             onClick={() =>
@@ -245,10 +296,64 @@ const DesignOrders = () => {
         />
       ),
     },
+
+    {
+      field: "actions",
+      headerName: "Actions",
+      flex: 0.3,
+      sortable: false,
+      renderCell: (params: GridRenderCellParams) => (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Tooltip title={params.row.isArchived ? "Unarchive" : "Archive"}>
+            <span>
+              <IconButton
+                size="small"
+                onClick={() =>
+                  handleArchiveToggle(params.row.orderId, params.row.isArchived)
+                }
+                disabled={archiveLoading === params.row.orderId}
+                sx={{
+                  color: params.row.isArchived
+                    ? theme.palette.success.main
+                    : theme.palette.warning.main,
+                  "&:hover": {
+                    backgroundColor: params.row.isArchived
+                      ? theme.palette.success.light + "20"
+                      : theme.palette.warning.light + "20",
+                  },
+                }}
+              >
+                {archiveLoading === params.row.orderId ? (
+                  <CircularProgress size={16} />
+                ) : params.row.isArchived ? (
+                  <Unarchive fontSize="small" />
+                ) : (
+                  <Archive fontSize="small" />
+                )}
+              </IconButton>
+            </span>
+          </Tooltip>
+
+          {/* Archive status indicator */}
+          <Chip
+            label={params.row.isArchived ? "Archived" : "Active"}
+            size="small"
+            variant="outlined"
+            color={params.row.isArchived ? "default" : "success"}
+            sx={{
+              fontSize: "0.75rem",
+              height: "20px",
+              opacity: params.row.isArchived ? 0.7 : 1,
+            }}
+          />
+        </Box>
+      ),
+    },
   ];
+
   const unsortableColumns = columns.map((col) => ({
     ...col,
-    sortable: false,
+    sortable: col.field === "actions" ? false : false, // Keep all columns unsortable as per original
   }));
 
   return (
@@ -374,7 +479,7 @@ const DesignOrders = () => {
             >
               <Box
                 sx={{
-                  minWidth: isMobile ? "1200px" : "100%",
+                  minWidth: isMobile ? "1400px" : "100%", // Increased width for actions column
                   height: "100%",
                 }}
               >
@@ -445,7 +550,7 @@ const DesignOrders = () => {
                       overflowX: "auto",
                     },
                     "& .MuiDataGrid-virtualScrollerContent": {
-                      minWidth: isMobile ? "1200px" : "100%",
+                      minWidth: isMobile ? "1400px" : "100%", // Increased width for actions column
                     },
                   }}
                 />

@@ -97,75 +97,117 @@ const UpdateWorkOrdersPage = () => {
 
     const { page, pageSize } = paginationModel;
 
-    const queryParams = new URLSearchParams({
-      page: String(page + 1),
-      limit: String(pageSize),
-      ...(debouncedSearch && { search: debouncedSearch }),
-      ...(filters.status && { status: filters.status }),
-      includeArchived: String(filters.includeArchived),
-    });
+    // Build query parameters properly
+    const queryParams = new URLSearchParams();
+
+    // Pagination - convert to 1-based indexing for API
+    queryParams.append("page", String(page + 1));
+    queryParams.append("limit", String(pageSize));
+
+    // Search filter
+    if (debouncedSearch.trim()) {
+      queryParams.append("search", debouncedSearch.trim());
+    }
+
+    // Status filter
+    if (filters.status) {
+      queryParams.append("status", filters.status);
+    }
+
+    // Archive filter
+    queryParams.append("includeArchived", String(filters.includeArchived));
+
+    // Sort parameters
+    if (sortModel.length > 0) {
+      const { field, sort } = sortModel[0];
+      queryParams.append("sortBy", field);
+      queryParams.append("sortOrder", sort || "asc");
+    }
+
+    console.log("Query Parameters:", queryParams.toString()); // Debug log
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/work-orders?${queryParams}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/work-orders?${queryParams.toString()}`;
+      console.log("API URL:", url); // Debug log
 
-      if (!res.ok) throw new Error("Failed to fetch work orders");
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("API Error Response:", errorText);
+        throw new Error(
+          `Failed to fetch work orders: ${res.status} ${res.statusText}`
+        );
+      }
 
       const data = await res.json();
       console.log("API Response:", data); // Debug log to check data structure
 
-      const transformed = (data.workOrders || []).map(
-        (item: any, index: number) => {
-          // Enhanced current phase extraction with multiple fallbacks
-          let currentPhase = "Not Started";
+      // Handle different possible response structures
+      const workOrdersArray = data.workOrders || data.data || data || [];
+      const totalCount =
+        data.total || data.totalCount || data.count || workOrdersArray.length;
 
-          // Try different possible data structures
-          if (item.executionPlan?.currentPhase?.name) {
-            currentPhase = item.executionPlan.currentPhase.name;
-          } else if (item.executionPlan?.currentPhase) {
-            currentPhase = item.executionPlan.currentPhase;
-          } else if (item.currentPhase?.name) {
-            currentPhase = item.currentPhase.name;
-          } else if (item.currentPhase) {
-            currentPhase = item.currentPhase;
-          } else if (item.phase?.name) {
-            currentPhase = item.phase.name;
-          } else if (item.phase) {
-            currentPhase = item.phase;
+      const transformed = workOrdersArray.map((item: any, index: number) => {
+        // Enhanced current phase extraction with multiple fallbacks
+        let currentPhase = "No phases";
+
+        // Try different possible data structures for current phase
+        if (item.currentPhase && item.currentPhase !== "No phases") {
+          currentPhase = item.currentPhase;
+        } else if (item.executionPlan?.length > 0) {
+          // Find the current active phase from execution plan
+          const activePhase = item.executionPlan.find(
+            (phase: any) =>
+              phase.status === "started" || phase.status === "active"
+          );
+          if (activePhase) {
+            currentPhase =
+              activePhase.workGroupName || activePhase.name || "In Progress";
+          } else {
+            // If no active phase, get the first phase name
+            const firstPhase = item.executionPlan[0];
+            currentPhase =
+              firstPhase?.workGroupName || firstPhase?.name || "Planned";
           }
-
-          console.log(
-            `Work Order ${item.workOrderId} - Current Phase:`,
-            currentPhase
-          ); // Debug log
-
-          return {
-            id: item._id,
-            workOrderId: item.workOrderId,
-            designOrderId: item.designOrderId ?? "N/A",
-            status: item.status,
-            currentPhase,
-            sn: page * pageSize + index + 1,
-          };
         }
-      );
+
+        console.log(
+          `Work Order ${item.workOrderId} - Current Phase:`,
+          currentPhase
+        ); // Debug log
+
+        return {
+          id: item._id,
+          workOrderId: item.workOrderId,
+          designOrderId: item.designOrderId || "N/A",
+          status: item.status,
+          currentPhase,
+          sn: page * pageSize + index + 1,
+        };
+      });
 
       setRows(transformed);
-      setRowCount(data.total || 0);
+      setRowCount(totalCount);
+
+      console.log("Transformed rows:", transformed.length);
+      console.log("Total count:", totalCount);
     } catch (err) {
       console.error("Fetch error:", err);
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : "Unknown error occurred");
     } finally {
       setLoading(false);
     }
-  }, [paginationModel, debouncedSearch, filters, token]);
+  }, [paginationModel, debouncedSearch, filters, token, sortModel]);
 
   // Reset pagination when search changes
   useEffect(() => {
+    console.log("Search changed, resetting pagination");
     setPaginationModel((prev) => ({
       ...prev,
       page: 0,
@@ -174,6 +216,7 @@ const UpdateWorkOrdersPage = () => {
 
   // Reset pagination when filters change
   useEffect(() => {
+    console.log("Filters changed, resetting pagination");
     setPaginationModel((prev) => ({
       ...prev,
       page: 0,
@@ -185,18 +228,22 @@ const UpdateWorkOrdersPage = () => {
   }, [fetchWorkOrders, reloadFlag]);
 
   const handleSearch = useCallback((value: string) => {
+    console.log("Search input changed:", value);
     setSearch(value);
   }, []);
 
   const handlePaginationChange = (newModel: GridPaginationModel) => {
+    console.log("Pagination changed:", newModel);
     setPaginationModel(newModel);
   };
 
   const handleFilterChange = (field: string, value: any) => {
+    console.log(`Filter changed - ${field}:`, value);
     setFilters((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSortModelChange = (newModel: GridSortModel) => {
+    console.log("Sort model changed:", newModel);
     setSortModel(newModel);
   };
 
@@ -228,19 +275,21 @@ const UpdateWorkOrdersPage = () => {
         }
       );
 
-      const responseText = await res.text();
-      console.log("Delete response status:", res.status);
-      console.log("Delete response text:", responseText);
-
       if (!res.ok) {
-        throw new Error(responseText || "Failed to delete work order");
+        const errorText = await res.text();
+        throw new Error(errorText || "Failed to delete work order");
       }
 
       // Refresh data
       setReloadFlag((prev) => !prev);
+
+      // Show success message (optional)
+      console.log("Work order deleted successfully");
     } catch (err) {
       console.error("Delete error:", err);
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(
+        err instanceof Error ? err.message : "Failed to delete work order"
+      );
     } finally {
       handleDeleteCancel();
     }
@@ -261,7 +310,7 @@ const UpdateWorkOrdersPage = () => {
         renderCell: (params) => (
           <Typography
             color="primary"
-            sx={{ cursor: "pointer" }}
+            sx={{ cursor: "pointer", textDecoration: "underline" }}
             onClick={() => handleView(params.row.workOrderId)}
           >
             {params.row.workOrderId}
@@ -279,6 +328,30 @@ const UpdateWorkOrdersPage = () => {
         headerName: "Status",
         flex: 1,
         minWidth: 120,
+        renderCell: (params) => (
+          <Box
+            sx={{
+              px: 1,
+              py: 0.5,
+              borderRadius: 1,
+              bgcolor:
+                params.value === "completed"
+                  ? "success.light"
+                  : params.value === "active"
+                    ? "info.light"
+                    : params.value === "pending"
+                      ? "warning.light"
+                      : params.value === "cancelled"
+                        ? "error.light"
+                        : "grey.light",
+              color: "white",
+              fontSize: "0.75rem",
+              textAlign: "center",
+            }}
+          >
+            {params.value?.toUpperCase()}
+          </Box>
+        ),
       },
       {
         field: "currentPhase",
@@ -298,6 +371,7 @@ const UpdateWorkOrdersPage = () => {
               size="small"
               color="primary"
               onClick={() => handleView(params.row.workOrderId)}
+              title="View Details"
             >
               <Visibility fontSize="small" />
             </IconButton>
@@ -305,6 +379,7 @@ const UpdateWorkOrdersPage = () => {
               size="small"
               color="error"
               onClick={() => handleDeleteClick(params.row.workOrderId)}
+              title="Delete Work Order"
             >
               <Delete fontSize="small" />
             </IconButton>
@@ -319,19 +394,23 @@ const UpdateWorkOrdersPage = () => {
     <>
       <Navbar label="Update Work Orders" />
       <Box sx={{ p: 3 }}>
-        {error && <Alert severity="error">{error}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
 
         <Grid container spacing={2} sx={{ mb: 2 }}>
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={6} md={3}>
             <FormControl fullWidth size="small">
               <InputLabel>Status</InputLabel>
               <Select
                 value={filters.status}
                 onChange={(e) => handleFilterChange("status", e.target.value)}
-                displayEmpty
+                label="Status"
                 size="small"
               >
-                <MenuItem value="">All</MenuItem>
+                <MenuItem value="">All Statuses</MenuItem>
                 <MenuItem value="pending">Pending</MenuItem>
                 <MenuItem value="active">Active</MenuItem>
                 <MenuItem value="completed">Completed</MenuItem>
@@ -339,7 +418,7 @@ const UpdateWorkOrdersPage = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={6} md={3}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -357,12 +436,12 @@ const UpdateWorkOrdersPage = () => {
         <StyledDataGrid
           rows={rows}
           columns={columns}
-          disableAllSorting
+          disableAllSorting={false}
           rowCount={rowCount}
           paginationModel={paginationModel}
           onPaginationModelChange={handlePaginationChange}
           paginationMode="server"
-          sortingMode="client"
+          sortingMode="server"
           sortModel={sortModel}
           onSortModelChange={handleSortModelChange}
           onSearch={handleSearch}
@@ -371,13 +450,15 @@ const UpdateWorkOrdersPage = () => {
           autoHeight
           disableRowSelectionOnClick
           getRowId={(row) => row.id}
+          pageSizeOptions={[5, 10, 25, 50, 100]}
         />
 
         <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
           <DialogTitle>Confirm Delete</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              Are you sure you want to delete this work order?
+              Are you sure you want to delete this work order? This action
+              cannot be undone.
             </DialogContentText>
           </DialogContent>
           <DialogActions>

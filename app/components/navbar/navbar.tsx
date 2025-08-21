@@ -30,10 +30,8 @@ export default function Navbar({ label }: NavbarProps) {
 
   const updateUserDetails = () => {
     if (session && isAuthenticated) {
-      // Get details from NextAuth session
       const sessionData = session as any;
 
-      // Try to decode the JWT token for additional details
       let decodedData = null;
       if (token && token !== "client-side-token") {
         decodedData = decodeJwt(token);
@@ -47,14 +45,20 @@ export default function Navbar({ label }: NavbarProps) {
           "User",
         email:
           decodedData?.email || sessionData?.user?.email || "user@example.com",
-        role:
-          role ||
-          decodedData?.realm_access?.roles[0] ||
-          sessionData?.roles ||
-          "Member",
+        role: (() => {
+          const roles =
+            role ||
+            decodedData?.realm_access?.roles ||
+            sessionData?.roles ||
+            [];
+
+          if (roles.includes("admin")) return "admin";
+          if (roles.includes("merchant")) return "merchant";
+          if (roles.length > 0) return roles[0];
+          return "Member";
+        })(),
       });
     } else {
-      // Clear user details if not authenticated
       setUserDetails({
         name: "",
         email: "",

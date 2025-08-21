@@ -5,20 +5,38 @@ import { Tooltip, IconButton, Box } from "@mui/material";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import Link from "next/link";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { decodeJwt } from "@/app/containers/utils/session/DecodeToken";
 
 type Ticket = {
   id: string;
   status: string;
 };
 
+type DecodedToken = {
+  realm_access?: { roles?: string[] };
+  roles?: string[];
+};
+
 const TicketBadge = () => {
   const { token } = useTokenAndRole();
-  const [tickets, setTickets] = useState<Ticket[]>([]); // ✅ Typed correctly
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+
+  // check if user is admin
+  const isAdmin = useMemo(() => {
+    if (!token) return false;
+    try {
+      const decoded = decodeJwt(token);
+      const roles = decoded?.realm_access?.roles || decoded?.roles || [];
+      return roles.includes("admin");
+    } catch {
+      return false;
+    }
+  }, [token]);
 
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        if (!token) return;
+        if (!token || !isAdmin) return;
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_SUPPORT_API_URL}/admin/support/tickets`,
           {
@@ -37,7 +55,7 @@ const TicketBadge = () => {
     };
 
     fetchTickets();
-  }, [token]);
+  }, [token, isAdmin]);
 
   const ticketCount = useMemo(
     () =>
@@ -45,6 +63,9 @@ const TicketBadge = () => {
         .length,
     [tickets]
   );
+
+  // if not admin, render nothing
+  if (!isAdmin) return null;
 
   return (
     <Link href="/admin/tickets" passHref>

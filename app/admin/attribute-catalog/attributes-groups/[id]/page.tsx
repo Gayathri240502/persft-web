@@ -5,7 +5,9 @@ import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
-  Paper,
+  Card,
+  CardHeader,
+  CardContent,
   CircularProgress,
   IconButton,
   Alert,
@@ -15,6 +17,11 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Grid,
+  List,
+  ListItem,
+  ListItemText,
+  Divider,
 } from "@mui/material";
 import { ArrowBack, Edit, Delete } from "@mui/icons-material";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
@@ -107,7 +114,7 @@ const AttributeGroupDetailsPage: React.FC = () => {
         alignItems="center"
         height="100vh"
       >
-        <CircularProgress />
+        <CircularProgress size={60} />
       </Box>
     );
   }
@@ -141,77 +148,101 @@ const AttributeGroupDetailsPage: React.FC = () => {
   return (
     <>
       <Navbar label="Attribute Groups" />
-      <Box p={4}>
+      <Box p={4} bgcolor="#f9fafb" minHeight="100vh">
         <Button
           startIcon={<ArrowBack />}
           onClick={() => router.back()}
-          sx={{ marginBottom: 2 }}
+          sx={{ mb: 3, textTransform: "none" }}
         >
-          Back       
+          Back
         </Button>
 
-        <Paper elevation={3} sx={{ p: 4 }}>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Box>
-              <Typography variant="h4">{group.name}</Typography>
-              {/* <Typography color="text.secondary">
-              {group.archive ? "Archived" : "Active"}
-            </Typography> */}
-            </Box>
-            <Box>
-              <IconButton
-                color="primary"
-                onClick={() =>
-                  router.push(
-                    `/admin/attribute-catalog/attributes-groups/edit?id=${id}`
-                  )
-                }
-              >
-                <Edit />
-              </IconButton>
-              <IconButton
-                color="error"
-                onClick={() => setDeleteDialogOpen(true)}
-              >
-                <Delete />
-              </IconButton>
-            </Box>
-          </Box>
+        <Card elevation={4} sx={{ borderRadius: 3 }}>
+          <CardHeader
+            title={
+              <Typography variant="h5" fontWeight={600}>
+                {group.name}
+              </Typography>
+            }
+            action={
+              <Box>
+                <IconButton
+                  color="primary"
+                  onClick={() =>
+                    router.push(
+                      `/admin/attribute-catalog/attributes-groups/edit?id=${id}`
+                    )
+                  }
+                  sx={{ "&:hover": { bgcolor: "primary.light" } }}
+                >
+                  <Edit />
+                </IconButton>
+                <IconButton
+                  color="error"
+                  onClick={() => setDeleteDialogOpen(true)}
+                  sx={{ "&:hover": { bgcolor: "error.light" } }}
+                >
+                  <Delete />
+                </IconButton>
+              </Box>
+            }
+          />
 
-          <Box mt={3}>
-            <Typography>
-              <strong>ID:</strong> {group._id}
-            </Typography>
-            <Typography>
-              <strong>Description:</strong> {group.description}
-            </Typography>
-            <Typography>
-              <strong>Created At:</strong>{" "}
-              {new Date(group.createdAt).toLocaleString()}
-            </Typography>
-            <Typography>
-              <strong>Updated At:</strong>{" "}
-              {new Date(group.updatedAt).toLocaleString()}
-            </Typography>
-          </Box>
+          <CardContent>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <Typography fontWeight={600}>Group ID</Typography>
+                <Typography variant="body1">{group._id}</Typography>
+              </Grid>
 
-          <Box mt={4}>
-            <Typography variant="h6">Attributes</Typography>
+              <Grid item xs={12}>
+                <Typography fontWeight={600}>Description</Typography>
+                <Typography variant="body1">
+                  {group.description || "—"}
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Typography fontWeight={600}>Created At</Typography>
+                <Typography variant="body1">
+                  {new Date(group.createdAt).toLocaleString()}
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Typography fontWeight={600}>Updated At</Typography>
+                <Typography variant="body1">
+                  {new Date(group.updatedAt).toLocaleString()}
+                </Typography>
+              </Grid>
+            </Grid>
+
+            <Divider sx={{ my: 3 }} />
+
+            <Typography variant="h6" gutterBottom>
+              Attributes
+            </Typography>
             {group.attributes.length === 0 ? (
-              <Typography>No attributes linked.</Typography>
+              <Typography color="text.secondary">
+                No attributes linked.
+              </Typography>
             ) : (
-              <ul>
+              <List dense>
                 {group.attributes.map((attr) => (
-                  <li key={attr._id}>{attr.name || attr._id}</li>
+                  <ListItem key={attr._id} sx={{ pl: 0 }}>
+                    <ListItemText
+                      primary={attr.name || attr._id}
+                      primaryTypographyProps={{
+                        fontSize: "0.95rem",
+                        fontWeight: 500,
+                      }}
+                    />
+                  </ListItem>
                 ))}
-              </ul>
+              </List>
             )}
-          </Box>
-        </Paper>
+          </CardContent>
+        </Card>
 
         {/* Delete Confirmation Dialog */}
         <Dialog
@@ -227,7 +258,7 @@ const AttributeGroupDetailsPage: React.FC = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-            <Button color="error" onClick={handleDelete}>
+            <Button color="error" variant="contained" onClick={handleDelete}>
               Delete
             </Button>
           </DialogActions>

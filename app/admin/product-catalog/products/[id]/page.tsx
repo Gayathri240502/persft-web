@@ -12,6 +12,8 @@ import {
   Alert,
   IconButton,
   Button,
+  Divider,
+  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -19,10 +21,6 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { Edit, Delete, ArrowBack } from "@mui/icons-material";
-
-// import {
-//   Product,
-// } from "@/app/admin/products/types"; // optional if you're moving interfaces
 
 const ProductDetailsPage: React.FC = () => {
   const [product, setProduct] = useState<any | null>(null);
@@ -126,27 +124,32 @@ const ProductDetailsPage: React.FC = () => {
     <>
       <Navbar label="Products" />
       <Box p={4}>
+        {/* Back Button */}
         <Button
           startIcon={<ArrowBack />}
           onClick={() => router.back()}
-          sx={{ marginBottom: 2 }}
+          sx={{ marginBottom: 3 }}
         >
           Back
         </Button>
 
-        <Paper elevation={3} sx={{ padding: 4 }}>
+        {/* Main Product Card */}
+        <Paper elevation={3} sx={{ padding: 4, borderRadius: 3 }}>
           <Box
             display="flex"
             justifyContent="space-between"
             alignItems="center"
+            mb={2}
           >
             <Box>
-              <Typography variant="h4" gutterBottom>
+              <Typography variant="h4" gutterBottom fontWeight="bold">
                 {product.name}
               </Typography>
-              {/* <Typography variant="subtitle1" color="textSecondary">
-              {product.archive ? "Inactive" : "Active"}
-            </Typography> */}
+              <Chip
+                label={product.archive ? "Inactive" : "Active"}
+                color={product.archive ? "default" : "success"}
+                size="small"
+              />
             </Box>
             <Box>
               <IconButton
@@ -166,7 +169,13 @@ const ProductDetailsPage: React.FC = () => {
             </Box>
           </Box>
 
-          <Grid container spacing={2} sx={{ marginTop: 2 }}>
+          <Divider sx={{ mb: 3 }} />
+
+          {/* Product Info */}
+          <Typography variant="h6" fontWeight="bold" gutterBottom>
+            Product Information
+          </Typography>
+          <Grid container spacing={2} mb={3}>
             <Grid item xs={12} sm={6}>
               <Typography>
                 <strong>ID:</strong> {product._id}
@@ -202,6 +211,15 @@ const ProductDetailsPage: React.FC = () => {
                 <strong>Description:</strong> {product.description}
               </Typography>
             </Grid>
+          </Grid>
+
+          <Divider sx={{ mb: 3 }} />
+
+          {/* Categorization */}
+          <Typography variant="h6" fontWeight="bold" gutterBottom>
+            Categorization
+          </Typography>
+          <Grid container spacing={2} mb={3}>
             <Grid item xs={12} sm={6}>
               <Typography>
                 <strong>Category:</strong> {product.category?.name}
@@ -222,6 +240,38 @@ const ProductDetailsPage: React.FC = () => {
                 <strong>Work Task:</strong> {product.workTask?.name}
               </Typography>
             </Grid>
+          </Grid>
+
+          {/* Attributes */}
+          <Divider sx={{ mb: 3 }} />
+          <Grid container spacing={2} mb={3}>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                Attributes
+              </Typography>
+              {product.attributeValues?.length > 0 ? (
+                <Grid container spacing={2}>
+                  {product.attributeValues.map((attr: any, index: any) => (
+                    <Grid item xs={12} sm={6} key={index}>
+                      <Typography>
+                        <strong>{attr.attribute.name}:</strong> {attr.value}
+                      </Typography>
+                    </Grid>
+                  ))}
+                </Grid>
+              ) : (
+                <Typography>No attributes available</Typography>
+              )}
+            </Grid>
+          </Grid>
+
+          <Divider sx={{ mb: 3 }} />
+
+          {/* Metadata */}
+          <Typography variant="h6" fontWeight="bold" gutterBottom>
+            Metadata
+          </Typography>
+          <Grid container spacing={2} mb={3}>
             <Grid item xs={12} sm={6}>
               <Typography>
                 <strong>Created At:</strong>{" "}
@@ -236,26 +286,10 @@ const ProductDetailsPage: React.FC = () => {
             </Grid>
           </Grid>
 
-          <Box mt={4}>
-            <Typography variant="h6" gutterBottom>
-              Attributes
-            </Typography>
-            {product.attributeValues.length > 0 ? (
-              <Grid container spacing={2}>
-                {product.attributeValues.map((attr: any, index: any) => (
-                  <Grid item xs={12} sm={6} key={index}>
-                    <Typography>
-                      <strong>{attr.attribute.name}:</strong> {attr.value}
-                    </Typography>
-                  </Grid>
-                ))}
-              </Grid>
-            ) : (
-              <Typography>No attributes available</Typography>
-            )}
-          </Box>
+          <Divider sx={{ mb: 3 }} />
         </Paper>
 
+        {/* Delete Dialog */}
         <Dialog
           open={deleteDialogOpen}
           onClose={() => setDeleteDialogOpen(false)}

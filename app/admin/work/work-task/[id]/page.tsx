@@ -7,16 +7,18 @@ import {
   Paper,
   CircularProgress,
   Alert,
-  Button,
   IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogContentText,
   DialogActions,
+  Button,
+  Divider,
+  Stack,
 } from "@mui/material";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowBack, Edit, Delete } from "@mui/icons-material";
+import { Edit, Delete, ArrowBack } from "@mui/icons-material";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface WorkTask {
@@ -137,21 +139,27 @@ const WorkTaskDetails: React.FC = () => {
     <>
       <Navbar label="Work Tasks" />
       <Box p={4}>
+        {/* Back Button */}
         <Button
           startIcon={<ArrowBack />}
           onClick={() => router.back()}
-          sx={{ marginBottom: 2 }}
+          sx={{ mb: 2 }}
         >
           Back
         </Button>
-        <Paper elevation={3} sx={{ p: 4 }}>
+
+        {/* Card Layout */}
+        <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+          {/* Header */}
           <Box
             display="flex"
             justifyContent="space-between"
             alignItems="center"
           >
-            <Typography variant="h4">{workTask.name}</Typography>
-            <Box>
+            <Typography variant="h4" fontWeight="bold">
+              {workTask.name}
+            </Typography>
+            <Stack direction="row" spacing={1}>
               <IconButton
                 color="primary"
                 onClick={() =>
@@ -166,27 +174,33 @@ const WorkTaskDetails: React.FC = () => {
               >
                 <Delete />
               </IconButton>
-            </Box>
+            </Stack>
           </Box>
 
-          <Typography variant="body1" mt={2}>
-            <strong>Description:</strong> {workTask.description}
-          </Typography>
-          <Typography variant="body1" mt={1}>
-            <strong>Work Group:</strong> {workTask.workGroup?.name}
-          </Typography>
-          <Typography variant="body1" mt={1}>
-            <strong>Target Days:</strong> {workTask.targetDays}
-          </Typography>
-          <Typography variant="body1" mt={1}>
-            <strong>Buffer Days:</strong> {workTask.bufferDays}
-          </Typography>
-          <Typography variant="body1" mt={1}>
-            <strong>PO Days:</strong> {workTask.poDays}
-          </Typography>
-          {/* <Typography variant="body2" color="text.secondary" mt={2}>
-          <strong>Status:</strong> {workTask.archive ? "Archived" : "Active"}
-        </Typography> */}
+          <Divider sx={{ my: 2 }} />
+
+          {/* Details Section */}
+          <Box mt={2}>
+            <Typography variant="body1" sx={{ mb: 1 }}>
+              <strong>Description:</strong> {workTask.description}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 1 }}>
+              <strong>Work Group:</strong> {workTask.workGroup?.name}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 1 }}>
+              <strong>Target Days:</strong> {workTask.targetDays}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 1 }}>
+              <strong>Buffer Days:</strong> {workTask.bufferDays}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 1 }}>
+              <strong>PO Days:</strong> {workTask.poDays}
+            </Typography>
+          </Box>
+
+          <Divider sx={{ my: 2 }} />
+
+          {/* Metadata */}
           <Typography variant="body2" color="text.secondary">
             <strong>Created At:</strong>{" "}
             {new Date(workTask.createdAt).toLocaleString()}

@@ -140,7 +140,7 @@ const ProjectDetailsPage: React.FC = () => {
           Back
         </Button>
 
-        <Paper elevation={3} sx={{ padding: 4 }}>
+        <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
           <Box
             display="flex"
             justifyContent="space-between"
@@ -150,9 +150,9 @@ const ProjectDetailsPage: React.FC = () => {
               <Typography variant="h4" gutterBottom>
                 {project.name}
               </Typography>
-              {/* <Typography variant="subtitle1" color="textSecondary">
-              {project.archive ? "Inactive" : "Active"}
-            </Typography> */}
+              <Typography variant="subtitle1" color="text.secondary">
+                {project.archive ? "Archived" : "Active"}
+              </Typography>
             </Box>
             <Box>
               <IconButton
@@ -170,41 +170,45 @@ const ProjectDetailsPage: React.FC = () => {
             </Box>
           </Box>
 
-          <Grid container spacing={2} sx={{ marginTop: 2 }}>
-            <Grid item xs={12} sm={6}>
-              <Typography>
-                <strong>ID:</strong> {project._id}
-              </Typography>
+          {/* Details Section */}
+          <Box mt={3}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <Typography>
+                  <strong>ID:</strong> {project._id}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography>
+                  <strong>Name:</strong> {project.name}
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography>
+                  <strong>Description:</strong> {project.description}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography>
+                  <strong>Created At:</strong>{" "}
+                  {new Date(project.createdAt).toLocaleString()}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography>
+                  <strong>Updated At:</strong>{" "}
+                  {new Date(project.updatedAt).toLocaleString()}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography>
+                  <strong>Archive:</strong> {project.archive ? "Yes" : "No"}
+                </Typography>
+              </Grid>
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography>
-                <strong>Name:</strong> {project.name}
-              </Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography>
-                <strong>Description:</strong> {project.description}
-              </Typography>
-            </Grid>
-            {/* <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Archived:</strong> {project.archive ? "Yes" : "No"}
-            </Typography>
-          </Grid> */}
-            <Grid item xs={12} sm={6}>
-              <Typography>
-                <strong>Created At:</strong>{" "}
-                {new Date(project.createdAt).toLocaleString()}
-              </Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography>
-                <strong>Updated At:</strong>{" "}
-                {new Date(project.updatedAt).toLocaleString()}
-              </Typography>
-            </Grid>
-          </Grid>
+          </Box>
 
+          {/* Thumbnail Section */}
           <Box mt={4}>
             <Typography variant="h6" gutterBottom>
               Thumbnail
@@ -213,11 +217,17 @@ const ProjectDetailsPage: React.FC = () => {
               <Box
                 component="img"
                 src={`data:image/jpeg;base64,${project.thumbnail}`}
-                alt="Thumbnail"
-                sx={{ maxWidth: 100 }}
+                alt="Project Thumbnail"
+                sx={{
+                  maxWidth: 200,
+                  borderRadius: 2,
+                  boxShadow: 2,
+                }}
               />
             ) : (
-              <Typography>No thumbnail available</Typography>
+              <Typography color="text.secondary">
+                No thumbnail available
+              </Typography>
             )}
           </Box>
         </Paper>

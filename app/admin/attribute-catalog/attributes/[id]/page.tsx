@@ -5,7 +5,9 @@ import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
-  Paper,
+  Card,
+  CardContent,
+  CardHeader,
   CircularProgress,
   IconButton,
   Alert,
@@ -15,6 +17,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Grid,
 } from "@mui/material";
 import { ArrowBack, Edit, Delete } from "@mui/icons-material";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
@@ -103,7 +106,7 @@ const AttributeDetailsPage: React.FC = () => {
         alignItems="center"
         height="100vh"
       >
-        <CircularProgress />
+        <CircularProgress size={60} />
       </Box>
     );
   }
@@ -137,67 +140,91 @@ const AttributeDetailsPage: React.FC = () => {
   return (
     <>
       <Navbar label="Attributes" />
-      <Box p={4}>
+      <Box p={4} bgcolor="#f9fafb" minHeight="100vh">
         <Button
           startIcon={<ArrowBack />}
           onClick={() => router.back()}
-          sx={{ marginBottom: 2 }}
+          sx={{ mb: 3, textTransform: "none" }}
         >
-          Back       
+          Back
         </Button>
 
-        <Paper elevation={3} sx={{ p: 4 }}>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Box>
-              <Typography variant="h4">{attribute.name}</Typography>
-              {/* <Typography color="text.secondary">
-              {attribute.archive ? "Archived" : "Active"}
-            </Typography> */}
-            </Box>
-            <Box>
-              <IconButton
-                color="primary"
-                onClick={() =>
-                  router.push(
-                    `/admin/attribute-catalog/attributes/edit?id=${id}`
-                  )
-                }
-              >
-                <Edit />
-              </IconButton>
-              <IconButton
-                color="error"
-                onClick={() => setDeleteDialogOpen(true)}
-              >
-                <Delete />
-              </IconButton>
-            </Box>
-          </Box>
+        <Card elevation={4} sx={{ borderRadius: 3 }}>
+          <CardHeader
+            title={
+              <Typography variant="h5" fontWeight={600}>
+                {attribute.name}
+              </Typography>
+            }
+            action={
+              <Box>
+                <IconButton
+                  color="primary"
+                  onClick={() =>
+                    router.push(
+                      `/admin/attribute-catalog/attributes/edit?id=${id}`
+                    )
+                  }
+                  sx={{ "&:hover": { bgcolor: "primary.light" } }}
+                >
+                  <Edit />
+                </IconButton>
+                <IconButton
+                  color="error"
+                  onClick={() => setDeleteDialogOpen(true)}
+                  sx={{ "&:hover": { bgcolor: "error.light" } }}
+                >
+                  <Delete />
+                </IconButton>
+              </Box>
+            }
+          />
 
-          <Box mt={3}>
-            <Typography>
-              <strong>ID:</strong> {attribute._id}
-            </Typography>
-            <Typography>
-              <strong>Description:</strong> {attribute.description}
-            </Typography>
-            <Typography>
-              <strong>Type:</strong> {attribute.type}
-            </Typography>
-            <Typography>
-              <strong>Created At:</strong>{" "}
-              {new Date(attribute.createdAt).toLocaleString()}
-            </Typography>
-            <Typography>
-              <strong>Updated At:</strong>{" "}
-              {new Date(attribute.updatedAt).toLocaleString()}
-            </Typography>
-          </Box>
-        </Paper>
+          <CardContent>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="body1" fontWeight={600}>
+                  Attribute ID:
+                </Typography>
+                <Typography variant="body1">{attribute._id}</Typography>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Typography variant="body1" fontWeight={600}>
+                  Type:
+                </Typography>
+                <Typography variant="body1">{attribute.type}</Typography>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Typography variant="body1" fontWeight={600}>
+                  Description:
+                </Typography>
+                <Typography variant="body1">
+                  {attribute.description || "—"}
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Typography variant="body1" fontWeight={600}>
+                  Created At:
+                </Typography>
+                <Typography variant="body1">
+                  {new Date(attribute.createdAt).toLocaleString()}
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Typography variant="body1" fontWeight={600}>
+                  Updated At:
+                </Typography>
+                <Typography variant="body1">
+                  {new Date(attribute.updatedAt).toLocaleString()}
+                </Typography>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
 
         {/* Delete Confirmation Dialog */}
         <Dialog
@@ -213,7 +240,7 @@ const AttributeDetailsPage: React.FC = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-            <Button color="error" onClick={handleDelete}>
+            <Button color="error" variant="contained" onClick={handleDelete}>
               Delete
             </Button>
           </DialogActions>

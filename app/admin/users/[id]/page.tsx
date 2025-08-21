@@ -16,6 +16,8 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Divider,
+  Chip,
 } from "@mui/material";
 import { Edit, Delete, ArrowBack } from "@mui/icons-material";
 import Navbar from "@/app/components/navbar/navbar";
@@ -139,103 +141,162 @@ const UserViewPage: React.FC = () => {
   return (
     <>
       <Navbar label="Users" />
-      <Box p={4}>
+      <Box p={{ xs: 2, md: 4 }}>
+        {/* Back Button */}
         <Button
           startIcon={<ArrowBack />}
           onClick={() => router.back()}
-          sx={{ marginBottom: 2 }}
+          sx={{ mb: 2, fontWeight: 600 }}
         >
           Back
         </Button>
-        <Paper elevation={3} sx={{ padding: 4 }}>
+
+        {/* User Card */}
+        <Paper
+          elevation={4}
+          sx={{
+            p: 4,
+            borderRadius: 3,
+            backgroundColor: "#fff",
+          }}
+        >
           <Box
             display="flex"
             justifyContent="space-between"
             alignItems="center"
+            flexDirection={{ xs: "column", md: "row" }}
+            mb={2}
           >
-            <Box>
-              <Typography variant="h4" gutterBottom>
-                {user.username}
-              </Typography>
-              <Typography variant="subtitle1" color="textSecondary">
-                {user.enabled ? "Active" : "Inactive"}
-              </Typography>
+            {/* Avatar + Name */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box>
+                <Typography variant="h5" fontWeight={700}>
+                  {user.username}
+                </Typography>
+                <Chip
+                  label={user.enabled ? "Active" : "Inactive"}
+                  color={user.enabled ? "success" : "default"}
+                  size="small"
+                />
+              </Box>
             </Box>
+
+            {/* Action Icons */}
             <Box>
               <IconButton
                 color="primary"
+                sx={{
+                  "&:hover": {
+                    bgcolor: "rgba(5, 54, 73, 0.08)",
+                  },
+                }}
                 onClick={() => router.push(`/admin/users/${id}/edit`)}
               >
                 <Edit />
               </IconButton>
               <IconButton
                 color="error"
+                sx={{
+                  "&:hover": {
+                    bgcolor: "rgba(244, 67, 54, 0.08)",
+                  },
+                }}
                 onClick={() => setDeleteDialogOpen(true)}
               >
                 <Delete />
               </IconButton>
             </Box>
           </Box>
-          <Grid container spacing={2} sx={{ marginTop: 2 }}>
+
+          <Divider sx={{ mb: 3 }} />
+
+          {/* User Details */}
+          <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
-              <Typography variant="body1">
-                <strong>First Name:</strong> {user.firstName}
+              <Typography variant="body2" color="textSecondary">
+                First Name
+              </Typography>
+              <Typography variant="body1" fontWeight={500}>
+                {user.firstName}
               </Typography>
             </Grid>
+
             <Grid item xs={12} sm={6}>
-              <Typography variant="body1">
-                <strong>Last Name:</strong> {user.lastName}
+              <Typography variant="body2" color="textSecondary">
+                Last Name
+              </Typography>
+              <Typography variant="body1" fontWeight={500}>
+                {user.lastName}
               </Typography>
             </Grid>
+
             <Grid item xs={12} sm={6}>
-              <Typography variant="body1">
-                <strong>Email:</strong> {user.email}
+              <Typography variant="body2" color="textSecondary">
+                Email
+              </Typography>
+              <Typography variant="body1" fontWeight={500}>
+                {user.email}
               </Typography>
             </Grid>
+
             <Grid item xs={12} sm={6}>
-              <Typography variant="body1">
-                <strong>Phone:</strong> {user.phone}
+              <Typography variant="body2" color="textSecondary">
+                Phone
+              </Typography>
+              <Typography variant="body1" fontWeight={500}>
+                {user.phone}
               </Typography>
             </Grid>
+
             <Grid item xs={12} sm={6}>
-              <Typography variant="body1">
-                <strong>Role:</strong> {user.role.join(", ")}
+              <Typography variant="body2" color="textSecondary">
+                Role
+              </Typography>
+              <Typography variant="body1" fontWeight={500}>
+                {user.role.join(", ")}
               </Typography>
             </Grid>
-            {/* <Grid item xs={12} sm={6}>
-            <Typography variant="body1">
-              <strong>Archived:</strong> {user.archive ? "Yes" : "No"}
-            </Typography>
-          </Grid> */}
+
             <Grid item xs={12} sm={6}>
-              <Typography variant="body1">
-                <strong>Created At:</strong>{" "}
+              <Typography variant="body2" color="textSecondary">
+                Created At
+              </Typography>
+              <Typography variant="body1" fontWeight={500}>
                 {new Date(user.createdAt).toLocaleString()}
               </Typography>
             </Grid>
+
             <Grid item xs={12} sm={6}>
-              <Typography variant="body1">
-                <strong>Updated At:</strong>{" "}
+              <Typography variant="body2" color="textSecondary">
+                Updated At
+              </Typography>
+              <Typography variant="body1" fontWeight={500}>
                 {new Date(user.updatedAt).toLocaleString()}
               </Typography>
             </Grid>
           </Grid>
         </Paper>
 
+        {/* Delete Confirmation Dialog */}
         <Dialog
           open={deleteDialogOpen}
           onClose={() => setDeleteDialogOpen(false)}
         >
-          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogTitle fontWeight={700}>Confirm Delete</DialogTitle>
           <DialogContent>
             <DialogContentText>
               Are you sure you want to delete this user? This action cannot be
               undone.
             </DialogContentText>
           </DialogContent>
-          <DialogActions>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
             <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-            <Button color="error" onClick={handleDelete}>
+            <Button
+              color="error"
+              variant="contained"
+              sx={{ borderRadius: 2, textTransform: "none" }}
+              onClick={handleDelete}
+            >
               Delete
             </Button>
           </DialogActions>

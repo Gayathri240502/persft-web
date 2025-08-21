@@ -14,6 +14,9 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Divider,
+  Grid,
+  Chip,
 } from "@mui/material";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowBack, Edit, Delete } from "@mui/icons-material";
@@ -66,9 +69,6 @@ const MerchantDetailsPage: React.FC = () => {
         if (!res.ok) throw new Error("Failed to fetch merchant");
 
         const data = await res.json();
-
-        // Your data shape has the merchant object nested inside "merchant"
-        // Also, businessName, address, categoryName, subCategoryName are outside _doc, so merge properly
 
         const mergedMerchant: Merchant = {
           ...data.merchant._doc,
@@ -157,25 +157,35 @@ const MerchantDetailsPage: React.FC = () => {
         <Button
           startIcon={<ArrowBack />}
           onClick={() => router.back()}
-          sx={{ marginBottom: 2 }}
+          sx={{ mb: 3 }}
         >
           Back
         </Button>
 
-        <Paper elevation={3} sx={{ p: 4 }}>
+        <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+          {/* Header Section */}
           <Box
             display="flex"
             justifyContent="space-between"
             alignItems="center"
+            mb={2}
           >
             <Box>
-              <Typography variant="h4">
+              <Typography variant="h4" fontWeight="bold">
                 {merchant.firstName} {merchant.lastName}
               </Typography>
-              <Typography color="text.secondary">
-                {merchant.archive ? "Archived" : "Active"} —{" "}
-                {merchant.enabled ? "Enabled" : "Disabled"}
-              </Typography>
+              <Box mt={1} display="flex" gap={1}>
+                <Chip
+                  label={merchant.archive ? "Archived" : "Active"}
+                  color={merchant.archive ? "default" : "success"}
+                  size="small"
+                />
+                <Chip
+                  label={merchant.enabled ? "Enabled" : "Disabled"}
+                  color={merchant.enabled ? "success" : "warning"}
+                  size="small"
+                />
+              </Box>
             </Box>
             <Box>
               <IconButton
@@ -195,49 +205,97 @@ const MerchantDetailsPage: React.FC = () => {
             </Box>
           </Box>
 
-          <Box mt={3}>
-            <Typography>
-              <strong>ID:</strong> {merchant._id}
-            </Typography>
-            <Typography>
-              <strong>Username:</strong> {merchant.username}
-            </Typography>
-            <Typography>
-              <strong>Email:</strong> {merchant.email}
-            </Typography>
-            <Typography>
-              <strong>Phone:</strong> {merchant.phone}
-            </Typography>
-            <Typography>
-              <strong>Business Name:</strong> {merchant.businessName}
-            </Typography>
-            <Typography>
-              <strong>Address:</strong> {merchant.address}
-            </Typography>
-            <Typography>
-              <strong>Category:</strong> {merchant.categoryName ?? "Not set"}
-            </Typography>
-            <Typography>
-              <strong>Subcategory:</strong>{" "}
-              {merchant.subCategoryName ?? "Not set"}
-            </Typography>
-            <Typography>
-              <strong>Role:</strong>{" "}
-              {Array.isArray(merchant.role)
-                ? merchant.role.join(", ")
-                : "Not set"}
-            </Typography>
-            <Typography>
-              <strong>Created At:</strong>{" "}
-              {new Date(merchant.createdAt).toLocaleString()}
-            </Typography>
-            <Typography>
-              <strong>Updated At:</strong>{" "}
-              {new Date(merchant.updatedAt).toLocaleString()}
-            </Typography>
-          </Box>
+          <Divider sx={{ my: 3 }} />
+
+          {/* Business Info */}
+          <Typography variant="h6" fontWeight="bold" gutterBottom>
+            Business Information
+          </Typography>
+          <Grid container spacing={2} mb={3}>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Business Name:</strong>{" "}
+                {merchant.businessName || "Not set"}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Category:</strong> {merchant.categoryName || "Not set"}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Subcategory:</strong>{" "}
+                {merchant.subCategoryName || "Not set"}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Address:</strong> {merchant.address || "Not set"}
+              </Typography>
+            </Grid>
+          </Grid>
+
+          <Divider sx={{ my: 3 }} />
+
+          {/* Contact Info */}
+          <Typography variant="h6" fontWeight="bold" gutterBottom>
+            Contact Information
+          </Typography>
+          <Grid container spacing={2} mb={3}>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Email:</strong> {merchant.email}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Phone:</strong> {merchant.phone}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Username:</strong> {merchant.username}
+              </Typography>
+            </Grid>
+          </Grid>
+
+          <Divider sx={{ my: 3 }} />
+
+          {/* System Info */}
+          <Typography variant="h6" fontWeight="bold" gutterBottom>
+            System Information
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>ID:</strong> {merchant._id}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Role:</strong>{" "}
+                {Array.isArray(merchant.role)
+                  ? merchant.role.join(", ")
+                  : "Not set"}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Created At:</strong>{" "}
+                {new Date(merchant.createdAt).toLocaleString()}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Updated At:</strong>{" "}
+                {new Date(merchant.updatedAt).toLocaleString()}
+              </Typography>
+            </Grid>
+          </Grid>
         </Paper>
 
+        {/* Delete Confirmation Dialog */}
         <Dialog
           open={deleteDialogOpen}
           onClose={() => setDeleteDialogOpen(false)}

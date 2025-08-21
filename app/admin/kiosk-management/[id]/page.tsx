@@ -17,6 +17,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Divider,
 } from "@mui/material";
 import { Edit, Delete, ArrowBack } from "@mui/icons-material";
 import Navbar from "@/app/components/navbar/navbar";
@@ -172,7 +173,7 @@ const KioskDetailsPage: React.FC = () => {
           Back
         </Button>
 
-        <Paper elevation={3} sx={{ p: 4 }}>
+        <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
           <Box
             display="flex"
             justifyContent="space-between"
@@ -182,7 +183,7 @@ const KioskDetailsPage: React.FC = () => {
               <Typography variant="h4" gutterBottom>
                 {kiosk.firstName} {kiosk.lastName}
               </Typography>
-              <Typography variant="subtitle1" color="textSecondary">
+              <Typography variant="subtitle1" color="text.secondary">
                 {kiosk.projects.length > 0
                   ? "Assigned Projects"
                   : "No Assigned Projects"}
@@ -209,7 +210,9 @@ const KioskDetailsPage: React.FC = () => {
             </Box>
           </Box>
 
-          <Grid container spacing={2} sx={{ mt: 2 }}>
+          <Divider sx={{ my: 2 }} />
+
+          <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <Typography>
                 <strong>ID:</strong> {kiosk._id}
@@ -232,6 +235,11 @@ const KioskDetailsPage: React.FC = () => {
             </Grid>
             <Grid item xs={12} sm={6}>
               <Typography>
+                <strong>Keycloak ID:</strong> {kiosk.keycloakId}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
                 <strong>Email:</strong> {kiosk.email}
               </Typography>
             </Grid>
@@ -250,11 +258,11 @@ const KioskDetailsPage: React.FC = () => {
                 <strong>Enabled:</strong> {kiosk.enabled ? "Yes" : "No"}
               </Typography>
             </Grid>
-            {/* <Grid item xs={12} sm={6}>
-            <Typography>
-              <strong>Archived:</strong> {kiosk.archive ? "Yes" : "No"}
-            </Typography>
-          </Grid> */}
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Archive:</strong> {kiosk.archive ? "Yes" : "No"}
+              </Typography>
+            </Grid>
             <Grid item xs={12} sm={6}>
               <Typography>
                 <strong>Created At:</strong>{" "}
@@ -267,27 +275,27 @@ const KioskDetailsPage: React.FC = () => {
                 {new Date(kiosk.updatedAt).toLocaleString()}
               </Typography>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12}>
               <Typography>
                 <strong>Description:</strong> {kiosk.description}
               </Typography>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12}>
               <Typography>
                 <strong>Address:</strong> {kiosk.address}
               </Typography>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12}>
               <Typography>
                 <strong>Country:</strong> {kiosk.countryName}
               </Typography>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12}>
               <Typography>
                 <strong>State:</strong> {kiosk.stateName}
               </Typography>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12}>
               <Typography>
                 <strong>City:</strong> {kiosk.cityName}
               </Typography>
@@ -301,6 +309,7 @@ const KioskDetailsPage: React.FC = () => {
           </Grid>
         </Paper>
 
+        {/* Delete Confirmation Dialog */}
         <Dialog
           open={deleteDialogOpen}
           onClose={() => setDeleteDialogOpen(false)}

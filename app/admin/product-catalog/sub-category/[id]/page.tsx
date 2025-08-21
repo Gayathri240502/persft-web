@@ -5,7 +5,9 @@ import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
-  Paper,
+  Card,
+  CardContent,
+  CardHeader,
   CircularProgress,
   IconButton,
   Alert,
@@ -15,27 +17,17 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Grid,
+  Chip,
+  Divider,
+  Paper,
+  Tooltip,
 } from "@mui/material";
 import { ArrowBack, Edit, Delete } from "@mui/icons-material";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface SubCategory {
-  _id: string;
-  name: string;
-  description: string;
-  thumbnail: string;
-  category: {
-    _id: string;
-    name: string;
-  };
-  attributeGroups: {
-    _id: string;
-    name: string;
-  }[];
-  archive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
+  [key: string]: any; // dynamic to handle all fields
 }
 
 const SubCategoryDetailsPage: React.FC = () => {
@@ -67,7 +59,7 @@ const SubCategoryDetailsPage: React.FC = () => {
           throw new Error("Failed to fetch sub-category");
         }
 
-        const data: SubCategory = await response.json();
+        const data = await response.json();
         setSubCategory(data);
       } catch (err: any) {
         setError(err.message);
@@ -144,111 +136,164 @@ const SubCategoryDetailsPage: React.FC = () => {
 
   return (
     <>
-      <Navbar label=" Sub Category" />
+      <Navbar label="Sub Category" />
       <Box p={4}>
         <Button
           startIcon={<ArrowBack />}
           onClick={() => router.push("/admin/product-catalog/sub-category")}
-          sx={{ mb: 2 }}
+          sx={{ mb: 3 }}
         >
-          Back to Sub-Categories
+          Back
         </Button>
 
-        <Paper elevation={3} sx={{ p: 4 }}>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Box>
-              <Typography variant="h4">{subCategory.name}</Typography>
-              {/* <Typography color="text.secondary">
-              {subCategory.archive ? "Archived" : "Active"}
-            </Typography> */}
-            </Box>
-            <Box>
-              <IconButton
-                color="primary"
-                onClick={() =>
-                  router.push(
-                    `/admin/product-catalog/sub-category/edit?id=${id}`
-                  )
-                }
-              >
-                <Edit />
-              </IconButton>
-              <IconButton
-                color="error"
-                onClick={() => setDeleteDialogOpen(true)}
-              >
-                <Delete />
-              </IconButton>
-            </Box>
-          </Box>
+        <Card elevation={4} sx={{ borderRadius: 3, p: 2 }}>
+          <CardHeader
+            title={
+              <Box display="flex" alignItems="center" gap={2}>
+                <Typography variant="h5" fontWeight="bold">
+                  {subCategory.name}
+                </Typography>
+              </Box>
+            }
+            action={
+              <Box>
+                <IconButton
+                  color="primary"
+                  onClick={() =>
+                    router.push(
+                      `/admin/product-catalog/sub-category/edit?id=${id}`
+                    )
+                  }
+                >
+                  <Edit />
+                </IconButton>
+                <IconButton
+                  color="error"
+                  onClick={() => setDeleteDialogOpen(true)}
+                >
+                  <Delete />
+                </IconButton>
+              </Box>
+            }
+          />
+          <Divider />
 
-          <Box mt={3}>
-            <Typography>
-              <strong>ID:</strong> {subCategory._id}
-            </Typography>
-            <Typography>
-              <strong>Description:</strong> {subCategory.description}
-            </Typography>
-            <Typography>
-              <strong>Category:</strong> {subCategory.category?.name}
-            </Typography>
-            <Typography>
-              <strong>Created At:</strong>{" "}
-              {new Date(subCategory.createdAt).toLocaleString()}
-            </Typography>
-            <Typography>
-              <strong>Updated At:</strong>{" "}
-              {new Date(subCategory.updatedAt).toLocaleString()}
-            </Typography>
-          </Box>
+          <CardContent>
+            <Grid container spacing={4}>
+              {/* Left Column */}
+              <Grid item xs={12} md={6}>
+                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                  <Typography variant="subtitle2" fontWeight="bold">
+                    ID:
+                  </Typography>
+                  <Typography variant="body1" gutterBottom>
+                    {subCategory._id}
+                  </Typography>
 
-          <Box mt={4}>
-            <Typography variant="h6">Attribute Groups</Typography>
-            {subCategory.attributeGroups.length ? (
-              <ul>
-                {subCategory.attributeGroups.map((group) => (
-                  <li key={group._id}>{group.name}</li>
-                ))}
-              </ul>
-            ) : (
-              <Typography>No attribute groups linked</Typography>
-            )}
-          </Box>
+                  <Typography variant="subtitle2" fontWeight="bold">
+                    Name:
+                  </Typography>
+                  <Typography variant="body1" gutterBottom>
+                    {subCategory.name}
+                  </Typography>
 
-          <Box mt={4}>
-            <Typography variant="h6">Thumbnail</Typography>
-            {subCategory.thumbnail ? (
-              <Box
-                component="img"
-                src={subCategory.thumbnail}
-                alt="Thumbnail"
-                sx={{ maxWidth: 100 }}
-              />
-            ) : (
-              <Typography>No thumbnail available</Typography>
-            )}
-          </Box>
-        </Paper>
+                  <Typography variant="subtitle2" fontWeight="bold">
+                    Description:
+                  </Typography>
+                  <Typography variant="body1" gutterBottom>
+                    {subCategory.description || "—"}
+                  </Typography>
+
+                  <Typography variant="subtitle2" fontWeight="bold">
+                    Category:
+                  </Typography>
+                  <Typography variant="body1" gutterBottom>
+                    {subCategory.category
+                      ? `${subCategory.category.name} (${subCategory.category._id})`
+                      : "—"}
+                  </Typography>
+
+                  <Typography variant="subtitle2" fontWeight="bold">
+                    Attribute Groups:
+                  </Typography>
+                  {subCategory.attributeGroups?.length ? (
+                    <Box display="flex" flexDirection="column" gap={1} mt={1}>
+                      {subCategory.attributeGroups.map((group: any) => (
+                        <Box key={group._id}>
+                          <Typography variant="body1">
+                            {group.name} ({group._id})
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      No attribute groups linked
+                    </Typography>
+                  )}
+                </Paper>
+              </Grid>
+
+              {/* Right Column */}
+              <Grid item xs={12} md={6}>
+                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                  <Typography variant="subtitle2" fontWeight="bold">
+                    Created At:
+                  </Typography>
+                  <Typography variant="body1" gutterBottom>
+                    {new Date(subCategory.createdAt).toLocaleString()}
+                  </Typography>
+
+                  <Typography variant="subtitle2" fontWeight="bold">
+                    Updated At:
+                  </Typography>
+                  <Typography variant="body1" gutterBottom>
+                    {new Date(subCategory.updatedAt).toLocaleString()}
+                  </Typography>
+
+                  <Typography variant="subtitle2" fontWeight="bold">
+                    Thumbnail:
+                  </Typography>
+                  {subCategory.thumbnail ? (
+                    <Box
+                      component="img"
+                      src={subCategory.thumbnail}
+                      alt="Thumbnail"
+                      sx={{
+                        width: 140,
+                        height: 140,
+                        borderRadius: 2,
+                        border: "1px solid #ddd",
+                        objectFit: "cover",
+                        mt: 1,
+                      }}
+                    />
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      No thumbnail available
+                    </Typography>
+                  )}
+                </Paper>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
 
         {/* Delete Confirmation Dialog */}
         <Dialog
           open={deleteDialogOpen}
           onClose={() => setDeleteDialogOpen(false)}
         >
-          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogTitle fontWeight="bold">Delete Sub-Category</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              Are you sure you want to delete this sub-category? This action
-              cannot be undone.
+              Are you sure you want to permanently delete this sub-category?
+              This action cannot be undone.
             </DialogContentText>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-            <Button color="error" onClick={handleDelete}>
+            <Button color="error" variant="contained" onClick={handleDelete}>
               Delete
             </Button>
           </DialogActions>

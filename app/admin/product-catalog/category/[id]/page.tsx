@@ -5,18 +5,28 @@ import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
-  Paper,
+  Card,
+  CardHeader,
+  CardContent,
   CircularProgress,
   IconButton,
   Alert,
   Button,
   Dialog,
-  DialogActions,
+  DialogTitle,
   DialogContent,
   DialogContentText,
-  DialogTitle,
+  DialogActions,
+  Chip,
+  Grid,
+  Divider,
 } from "@mui/material";
-import { ArrowBack, Edit, Delete } from "@mui/icons-material";
+import {
+  ArrowBack,
+  Edit,
+  Delete,
+  Image as ImageIcon,
+} from "@mui/icons-material";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface Category {
@@ -27,7 +37,6 @@ interface Category {
   archive: boolean;
   createdAt: string;
   updatedAt: string;
-  __v: number;
 }
 
 const CategoryDetailsPage: React.FC = () => {
@@ -45,7 +54,7 @@ const CategoryDetailsPage: React.FC = () => {
 
     const fetchCategory = async () => {
       try {
-        const response = await fetch(
+        const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/categories/${id}`,
           {
             headers: {
@@ -55,11 +64,11 @@ const CategoryDetailsPage: React.FC = () => {
           }
         );
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch category data");
+        if (!res.ok) {
+          throw new Error("Failed to fetch category");
         }
 
-        const data: Category = await response.json();
+        const data: Category = await res.json();
         setCategory(data);
       } catch (err: any) {
         setError(err.message);
@@ -73,7 +82,7 @@ const CategoryDetailsPage: React.FC = () => {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(
+      const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/categories/${id}`,
         {
           method: "DELETE",
@@ -84,7 +93,7 @@ const CategoryDetailsPage: React.FC = () => {
         }
       );
 
-      if (!response.ok) {
+      if (!res.ok) {
         throw new Error("Failed to delete category");
       }
 
@@ -95,6 +104,7 @@ const CategoryDetailsPage: React.FC = () => {
     }
   };
 
+  // Loading state
   if (loading) {
     return (
       <Box
@@ -103,11 +113,12 @@ const CategoryDetailsPage: React.FC = () => {
         alignItems="center"
         height="100vh"
       >
-        <CircularProgress />
+        <CircularProgress size={60} />
       </Box>
     );
   }
 
+  // Error state
   if (error) {
     return (
       <Box
@@ -121,6 +132,7 @@ const CategoryDetailsPage: React.FC = () => {
     );
   }
 
+  // Not found
   if (!category) {
     return (
       <Box
@@ -129,7 +141,7 @@ const CategoryDetailsPage: React.FC = () => {
         alignItems="center"
         height="100vh"
       >
-        <Alert severity="warning">No category data found</Alert>
+        <Alert severity="warning">No category found</Alert>
       </Box>
     );
   }
@@ -137,78 +149,122 @@ const CategoryDetailsPage: React.FC = () => {
   return (
     <>
       <Navbar label="Category" />
-      <Box p={4}>
+      <Box p={4} bgcolor="#f9fafb" minHeight="100vh">
         <Button
           startIcon={<ArrowBack />}
           onClick={() => router.back()}
-          sx={{ marginBottom: 2 }}
+          sx={{ mb: 3, textTransform: "none" }}
         >
           Back
         </Button>
 
-        <Paper elevation={3} sx={{ p: 4 }}>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Box>
-              <Typography variant="h4">{category.name}</Typography>
-              {/* <Typography color="text.secondary">
-              {category.archive ? "Archived" : "Active"}
-            </Typography> */}
-            </Box>
-            <Box>
-              <IconButton
-                color="primary"
-                onClick={() =>
-                  router.push(`/admin/product-catalog/category/edit?id=${id}`)
-                }
-              >
-                <Edit />
-              </IconButton>
-              <IconButton
-                color="error"
-                onClick={() => setDeleteDialogOpen(true)}
-              >
-                <Delete />
-              </IconButton>
-            </Box>
-          </Box>
+        <Card elevation={4} sx={{ borderRadius: 3 }}>
+          <CardHeader
+            title={
+              <Box display="flex" alignItems="center" gap={2}>
+                <Typography variant="h5" fontWeight={600}>
+                  {category.name}
+                </Typography>
+              </Box>
+            }
+            action={
+              <Box>
+                <IconButton
+                  color="primary"
+                  onClick={() =>
+                    router.push(`/admin/product-catalog/category/edit?id=${id}`)
+                  }
+                  sx={{ "&:hover": { bgcolor: "primary.light" } }}
+                >
+                  <Edit />
+                </IconButton>
+                <IconButton
+                  color="error"
+                  onClick={() => setDeleteDialogOpen(true)}
+                  sx={{ "&:hover": { bgcolor: "error.light" } }}
+                >
+                  <Delete />
+                </IconButton>
+              </Box>
+            }
+          />
 
-          <Box mt={3}>
-            <Typography>
-              <strong>ID:</strong> {category._id}
-            </Typography>
-            <Typography>
-              <strong>Description:</strong> {category.description}
-            </Typography>
-            <Typography>
-              <strong>Created At:</strong>{" "}
-              {new Date(category.createdAt).toLocaleString()}
-            </Typography>
-            <Typography>
-              <strong>Updated At:</strong>{" "}
-              {new Date(category.updatedAt).toLocaleString()}
-            </Typography>
-          </Box>
+          <CardContent>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="body2" fontWeight="bold" gutterBottom>
+                  Category ID:
+                </Typography>
+                <Typography variant="body1">{category._id}</Typography>
+              </Grid>
 
-          <Box mt={4}>
-            <Typography variant="h6" gutterBottom>
-              Thumbnail
-            </Typography>
-            {category.thumbnail ? (
-              <Box
-                component="img"
-                src={category.thumbnail}
-                alt="Thumbnail"
-                sx={{ maxWidth: 100 }}
-              />
-            ) : (
-              <Typography>No thumbnail available</Typography>
-            )}
-          </Box>
-        </Paper>
+              <Grid item xs={12}>
+                <Typography variant="body2" fontWeight="bold">
+                  Description:
+                </Typography>
+                <Typography variant="body1">
+                  {category.description || "—"}
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Typography variant="body2" fontWeight="bold">
+                  Created At:
+                </Typography>
+                <Typography variant="body1">
+                  {new Date(category.createdAt).toLocaleString()}
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Typography variant="body2" fontWeight="bold">
+                  Updated At:
+                </Typography>
+                <Typography variant="body1">
+                  {new Date(category.updatedAt).toLocaleString()}
+                </Typography>
+              </Grid>
+
+              {/* Thumbnail */}
+              <Grid item xs={12}>
+                <Typography variant="body2" fontWeight="bold">
+                  Thumbnail:
+                </Typography>
+                {category.thumbnail ? (
+                  <Box
+                    component="img"
+                    src={category.thumbnail}
+                    alt="Thumbnail"
+                    sx={{
+                      width: "100%",
+                      maxWidth: 200,
+                      borderRadius: 2,
+                      boxShadow: 2,
+                      mt: 1,
+                    }}
+                  />
+                ) : (
+                  <Box
+                    display="flex"
+                    justifyContent="center"
+                    alignItems="center"
+                    sx={{
+                      width: 120,
+                      height: 120,
+                      border: "1px dashed #ccc",
+                      borderRadius: 2,
+                      mt: 1,
+                    }}
+                  >
+                    <ImageIcon color="disabled" />
+                  </Box>
+                )}
+              </Grid>
+            </Grid>
+
+            <Divider sx={{ mt: 3 }} />
+          </CardContent>
+        </Card>
 
         {/* Delete Confirmation Dialog */}
         <Dialog
@@ -224,7 +280,7 @@ const CategoryDetailsPage: React.FC = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-            <Button color="error" onClick={handleDelete}>
+            <Button color="error" variant="contained" onClick={handleDelete}>
               Delete
             </Button>
           </DialogActions>

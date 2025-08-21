@@ -13,6 +13,9 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Divider,
+  Chip,
+  Grid,
 } from "@mui/material";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowBack, Edit, Delete } from "@mui/icons-material";
@@ -129,25 +132,51 @@ const WorkGroupDetails: React.FC = () => {
   return (
     <>
       <Navbar label="Work Groups" />
-      <Box p={4}>
+      <Box p={{ xs: 2, md: 4 }}>
+        {/* Back Button */}
         <Button
           startIcon={<ArrowBack />}
           onClick={() => router.back()}
-          sx={{ marginBottom: 2 }}
+          sx={{ mb: 2, fontWeight: 600 }}
         >
           Back
         </Button>
 
-        <Paper elevation={3} sx={{ p: 4 }}>
+        {/* WorkGroup Card */}
+        <Paper
+          elevation={4}
+          sx={{
+            p: 4,
+            borderRadius: 3,
+            backgroundColor: "#fff",
+          }}
+        >
           <Box
             display="flex"
             justifyContent="space-between"
             alignItems="center"
+            flexDirection={{ xs: "column", md: "row" }}
+            mb={2}
           >
-            <Typography variant="h4">{workGroup.name}</Typography>
+            {/* Avatar + Title */}
+            <Box display="flex" alignItems="center" gap={2}>
+              <Box>
+                <Typography variant="h5" fontWeight={700}>
+                  {workGroup.name}
+                </Typography>
+                <Chip
+                  label={workGroup.archive ? "Archived" : "Active"}
+                  color={workGroup.archive ? "default" : "success"}
+                  size="small"
+                />
+              </Box>
+            </Box>
+
+            {/* Action Icons */}
             <Box>
               <IconButton
                 color="primary"
+                sx={{ "&:hover": { bgcolor: "rgba(5, 54, 73, 0.08)" } }}
                 onClick={() =>
                   router.push(`/admin/work/work-group/edit?id=${id}`)
                 }
@@ -156,6 +185,7 @@ const WorkGroupDetails: React.FC = () => {
               </IconButton>
               <IconButton
                 color="error"
+                sx={{ "&:hover": { bgcolor: "rgba(244, 67, 54, 0.08)" } }}
                 onClick={() => setDeleteDialogOpen(true)}
               >
                 <Delete />
@@ -163,20 +193,37 @@ const WorkGroupDetails: React.FC = () => {
             </Box>
           </Box>
 
-          <Typography variant="body1" mt={2}>
-            <strong>Description:</strong> {workGroup.description}
-          </Typography>
-          {/* <Typography variant="body2" color="text.secondary" mt={2}>
-          <strong>Status:</strong> {workGroup.archive ? "Archived" : "Active"}
-        </Typography> */}
-          <Typography variant="body2" color="text.secondary">
-            <strong>Created At:</strong>{" "}
-            {new Date(workGroup.createdAt).toLocaleString()}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            <strong>Updated At:</strong>{" "}
-            {new Date(workGroup.updatedAt).toLocaleString()}
-          </Typography>
+          <Divider sx={{ mb: 3 }} />
+
+          {/* WorkGroup Details */}
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <Typography variant="body2" color="textSecondary">
+                Description
+              </Typography>
+              <Typography variant="body1" fontWeight={500}>
+                {workGroup.description || "No description provided"}
+              </Typography>
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" color="textSecondary">
+                Created At
+              </Typography>
+              <Typography variant="body1" fontWeight={500}>
+                {new Date(workGroup.createdAt).toLocaleString()}
+              </Typography>
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" color="textSecondary">
+                Updated At
+              </Typography>
+              <Typography variant="body1" fontWeight={500}>
+                {new Date(workGroup.updatedAt).toLocaleString()}
+              </Typography>
+            </Grid>
+          </Grid>
         </Paper>
 
         {/* Delete Confirmation Dialog */}
@@ -184,16 +231,21 @@ const WorkGroupDetails: React.FC = () => {
           open={deleteDialogOpen}
           onClose={() => setDeleteDialogOpen(false)}
         >
-          <DialogTitle>Delete Work Group</DialogTitle>
+          <DialogTitle fontWeight={700}>Confirm Delete</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              Are you sure you want to delete this work group? This action is
-              irreversible.
+              Are you sure you want to delete this work group? This action
+              cannot be undone.
             </DialogContentText>
           </DialogContent>
-          <DialogActions>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
             <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-            <Button color="error" onClick={handleDelete}>
+            <Button
+              color="error"
+              variant="contained"
+              sx={{ borderRadius: 2, textTransform: "none" }}
+              onClick={handleDelete}
+            >
               Delete
             </Button>
           </DialogActions>

@@ -14,6 +14,9 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Divider,
+  Grid,
+  Chip,
 } from "@mui/material";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowBack, Edit, Delete } from "@mui/icons-material";
@@ -149,25 +152,35 @@ const ShopDetailsPage: React.FC = () => {
         <Button
           startIcon={<ArrowBack />}
           onClick={() => router.back()}
-          sx={{ marginBottom: 2 }}
+          sx={{ mb: 3 }}
         >
           Back
         </Button>
 
-        <Paper elevation={3} sx={{ p: 4 }}>
+        <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+          {/* Header Section */}
           <Box
             display="flex"
             justifyContent="space-between"
             alignItems="center"
+            mb={2}
           >
             <Box>
-              <Typography variant="h4">
+              <Typography variant="h4" fontWeight="bold">
                 {shop.firstName} {shop.lastName}
               </Typography>
-              <Typography color="text.secondary">
-                {shop.archive ? "Archived" : "Active"} —{" "}
-                {shop.enabled ? "Enabled" : "Disabled"}
-              </Typography>
+              <Box mt={1} display="flex" gap={1}>
+                <Chip
+                  label={shop.archive ? "Archived" : "Active"}
+                  color={shop.archive ? "default" : "success"}
+                  size="small"
+                />
+                <Chip
+                  label={shop.enabled ? "Enabled" : "Disabled"}
+                  color={shop.enabled ? "success" : "warning"}
+                  size="small"
+                />
+              </Box>
             </Box>
             <Box>
               <IconButton
@@ -187,61 +200,126 @@ const ShopDetailsPage: React.FC = () => {
             </Box>
           </Box>
 
-          <Box mt={3}>
-            <Typography>
-              <strong>ID:</strong> {shop._id}
-            </Typography>
-            <Typography>
-              <strong>First Name:</strong> {shop.firstName}
-            </Typography>
-            <Typography>
-              <strong>Last name:</strong> {shop.lastName}
-            </Typography>
-            <Typography>
-              <strong>Username:</strong> {shop.username}
-            </Typography>
-            <Typography>
-              <strong>Email:</strong> {shop.email}
-            </Typography>
-            <Typography>
-              <strong>Phone:</strong> {shop.phone}
-            </Typography>
-            <Typography>
-              <strong>Owner Name:</strong> {shop.ownerName}
-            </Typography>
-            <Typography>
-              <strong>Address:</strong> {shop.address}
-            </Typography>
-            <Typography>
-              <strong>Country:</strong> {shop.countryName ?? "Not set"}
-            </Typography>
-            <Typography>
-              <strong>State:</strong> {shop.stateName ?? "Not set"}
-            </Typography>
-            <Typography>
-              <strong>City:</strong> {shop.cityName ?? "Not set"}
-            </Typography>
-            <Typography>
-              <strong>Category:</strong> {shop.categoryName ?? "Not set"}
-            </Typography>
-            <Typography>
-              <strong>Subcategory:</strong> {shop.subCategoryName ?? "Not set"}
-            </Typography>
-            <Typography>
-              <strong>Role:</strong>{" "}
-              {Array.isArray(shop.role) ? shop.role.join(", ") : "Not set"}
-            </Typography>
-            <Typography>
-              <strong>Created At:</strong>{" "}
-              {new Date(shop.createdAt).toLocaleString()}
-            </Typography>
-            <Typography>
-              <strong>Updated At:</strong>{" "}
-              {new Date(shop.updatedAt).toLocaleString()}
-            </Typography>
-          </Box>
+          <Divider sx={{ my: 3 }} />
+
+          {/* Profile Info */}
+          <Typography variant="h6" fontWeight="bold" gutterBottom>
+            Profile Information
+          </Typography>
+          <Grid container spacing={2} mb={3}>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>ID:</strong> {shop._id}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Username:</strong> {shop.username}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Email:</strong> {shop.email}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Phone:</strong> {shop.phone}
+              </Typography>
+            </Grid>
+          </Grid>
+
+          <Divider sx={{ my: 3 }} />
+
+          {/* Business Info */}
+          <Typography variant="h6" fontWeight="bold" gutterBottom>
+            Business Information
+          </Typography>
+
+          <Grid container spacing={2} mb={3}>
+            {/* Left Column - 4 items */}
+            <Grid item xs={12} sm={6}>
+              <Grid container direction="column" spacing={2}>
+                <Grid item>
+                  <Typography>
+                    <strong>Owner Name:</strong> {shop.ownerName || "Not set"}
+                  </Typography>
+                </Grid>
+                <Grid item>
+                  <Typography>
+                    <strong>Address:</strong> {shop.address || "Not set"}
+                  </Typography>
+                </Grid>
+                <Grid item>
+                  <Typography>
+                    <strong>Country:</strong> {shop.countryName ?? "Not set"}
+                  </Typography>
+                </Grid>
+                <Grid item>
+                  <Typography>
+                    <strong>State:</strong> {shop.stateName ?? "Not set"}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* Right Column - 3 items */}
+            <Grid item xs={12} sm={6}>
+              <Grid container direction="column" spacing={2}>
+                <Grid item>
+                  <Typography>
+                    <strong>City:</strong> {shop.cityName ?? "Not set"}
+                  </Typography>
+                </Grid>
+                <Grid item>
+                  <Typography>
+                    <strong>Category:</strong> {shop.categoryName ?? "Not set"}
+                  </Typography>
+                </Grid>
+                <Grid item>
+                  <Typography>
+                    <strong>Subcategory:</strong>{" "}
+                    {shop.subCategoryName ?? "Not set"}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Grid>
+          </Grid>
+
+          <Divider sx={{ my: 3 }} />
+
+          {/* Role & Metadata */}
+          <Typography variant="h6" fontWeight="bold" gutterBottom>
+            Metadata
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Role:</strong>{" "}
+                {Array.isArray(shop.role) ? shop.role.join(", ") : "Not set"}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Keycloak ID:</strong> {shop.keycloakId}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Created At:</strong>{" "}
+                {new Date(shop.createdAt).toLocaleString()}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography>
+                <strong>Updated At:</strong>{" "}
+                {new Date(shop.updatedAt).toLocaleString()}
+              </Typography>
+            </Grid>
+          </Grid>
         </Paper>
 
+        {/* Delete Confirmation Dialog */}
         <Dialog
           open={deleteDialogOpen}
           onClose={() => setDeleteDialogOpen(false)}

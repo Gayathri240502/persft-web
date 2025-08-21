@@ -1,12 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Menu,
-  MenuItem,
-  Divider,
-  Avatar,
-} from "@mui/material";
+import { Menu, MenuItem, Divider, Avatar } from "@mui/material";
 import {
   ExpandMore as ExpandMoreIcon,
   ExitToApp as LogoutIcon,
@@ -35,10 +30,8 @@ export default function Navbar({ label }: NavbarProps) {
 
   const updateUserDetails = () => {
     if (session && isAuthenticated) {
-      // Get details from NextAuth session
       const sessionData = session as any;
 
-      // Try to decode the JWT token for additional details
       let decodedData = null;
       if (token && token !== "client-side-token") {
         decodedData = decodeJwt(token);
@@ -52,14 +45,20 @@ export default function Navbar({ label }: NavbarProps) {
           "User",
         email:
           decodedData?.email || sessionData?.user?.email || "user@example.com",
-        role:
-          role ||
-          decodedData?.realm_access?.roles[0] ||
-          sessionData?.roles ||
-          "Member",
+        role: (() => {
+          const roles =
+            role ||
+            decodedData?.realm_access?.roles ||
+            sessionData?.roles ||
+            [];
+
+          if (roles.includes("admin")) return "admin";
+          if (roles.includes("merchant")) return "merchant";
+          if (roles.length > 0) return roles[0];
+          return "Member";
+        })(),
       });
     } else {
-      // Clear user details if not authenticated
       setUserDetails({
         name: "",
         email: "",
@@ -104,19 +103,6 @@ export default function Navbar({ label }: NavbarProps) {
       .join("")
       .toUpperCase()
       .slice(0, 2); // Limit to 2 characters
-  };
-
-  const getRoleColor = (role: string) => {
-    switch (role.toLowerCase()) {
-      case "admin":
-        return "bg-red-100 text-red-800";
-      case "manager":
-        return "bg-blue-100 text-blue-800";
-      case "user":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
   };
 
   // Don't render if not authenticated
@@ -267,7 +253,7 @@ export default function Navbar({ label }: NavbarProps) {
                       </p>
                       {userDetails.role && (
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${getRoleColor(userDetails.role)}`}
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1 `}
                         >
                           {userDetails.role}
                         </span>

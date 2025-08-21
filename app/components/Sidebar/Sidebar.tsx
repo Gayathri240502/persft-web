@@ -1,5 +1,4 @@
 "use client";
-
 import {
   ChevronLeftCircle,
   ChevronDown as ChevronDownIcon,
@@ -12,6 +11,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Tooltip } from "@mui/material";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import { decodeJwt } from "@/app/containers/utils/session/DecodeToken";
 
 interface MenuItem {
   _id: string;
@@ -179,7 +179,6 @@ const MenuItemComponent = memo(
             >
               {renderIcon(item.image)}
             </div>
-
             {sidebarOpen && (
               <>
                 <span className="text-sm flex-1 truncate font-medium">
@@ -205,7 +204,6 @@ const MenuItemComponent = memo(
     );
   }
 );
-
 MenuItemComponent.displayName = "MenuItemComponent";
 
 export default function Sidebar() {
@@ -243,7 +241,6 @@ export default function Sidebar() {
       .sort((a, b) => {
         const indexA = PREFERRED_ORDER.indexOf(a.name as any);
         const indexB = PREFERRED_ORDER.indexOf(b.name as any);
-
         if (indexA >= 0 && indexB >= 0) {
           return indexA - indexB;
         }
@@ -263,7 +260,6 @@ export default function Sidebar() {
       if (item.pathname && pathName === item.pathname) {
         return true;
       }
-
       if (
         item.pathname &&
         pathName.includes(item.pathname) &&
@@ -271,11 +267,9 @@ export default function Sidebar() {
       ) {
         return true;
       }
-
       const children = childMenus.filter(
         (child) => child.parentId === item._id
       );
-
       return children.some(
         (child) =>
           child.pathname &&
@@ -289,7 +283,6 @@ export default function Sidebar() {
   useEffect(() => {
     if (menus.length > 0) {
       const newOpenSubMenus = { ...openSubMenus };
-
       parentMenus.forEach((parent) => {
         const children = childMenus.filter(
           (child) => child.parentId === parent._id
@@ -297,12 +290,10 @@ export default function Sidebar() {
         const isActive = children.some(
           (child) => child.pathname && pathName.includes(child.pathname)
         );
-
         if (isActive) {
           newOpenSubMenus[parent._id] = true;
         }
       });
-
       setOpenSubMenus(newOpenSubMenus);
     }
   }, [menus, pathName, parentMenus, childMenus]);
@@ -321,8 +312,26 @@ export default function Sidebar() {
     }
 
     try {
+      const decoded = decodeJwt(token);
+
+      // normalize: either from decoded or passed-in
+      const roles = decoded?.realm_access?.roles || role || [];
+
+      // pick role: prefer "admin", else "merchant", else first meaningful
+      let effectiveRole = "none";
+
+      if (roles.includes("admin")) {
+        effectiveRole = "admin";
+      } else if (roles.includes("merchant")) {
+        effectiveRole = "merchant";
+      } else {
+        effectiveRole = roles[1] || roles[0] || "none";
+      }
+
+      console.log("effectiveRole:", effectiveRole);
+
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/menus/role/admin`,
+        `${process.env.NEXT_PUBLIC_API_URL}/menus/role/${effectiveRole}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -345,7 +354,7 @@ export default function Sidebar() {
     } finally {
       setLoading(false);
     }
-  }, [token, authLoading, isAuthenticated]);
+  }, [token, authLoading, isAuthenticated, role]);
 
   useEffect(() => {
     if (pathName !== "/login" && !authLoading) {
@@ -357,7 +366,6 @@ export default function Sidebar() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
-
       if (
         isOpen &&
         sidebarRef.current &&
@@ -368,7 +376,6 @@ export default function Sidebar() {
         const isTooltipClick = (target as Element).closest?.(
           ".MuiTooltip-root, .MuiTooltip-popper, [role='tooltip']"
         );
-
         if (!isTooltipClick) {
           closeSidebar();
         }
@@ -392,7 +399,6 @@ export default function Sidebar() {
         closeSidebar();
       }
     };
-
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, isMobile, closeSidebar]);
@@ -414,7 +420,6 @@ export default function Sidebar() {
           ? item.pathname
           : `/${item.pathname}`;
         router.push(path);
-
         if (isMobile) {
           closeSidebar();
         }
@@ -430,7 +435,6 @@ export default function Sidebar() {
           ? child.pathname
           : `/${child.pathname}`;
         router.push(path);
-
         if (isMobile) {
           closeSidebar();
         }
@@ -483,15 +487,17 @@ export default function Sidebar() {
       {/* Sidebar */}
       <aside
         ref={sidebarRef}
-        className={`
-          fixed top-0 left-0 h-full bg-white shadow-xl z-50 flex flex-col border-r border-gray-200
-          transition-all duration-${ANIMATION_DURATION} ease-in-out
-          ${
-            isMobile
-              ? `w-${SIDEBAR_WIDTH.EXPANDED}px ${isOpen ? "translate-x-0" : "-translate-x-full"}`
-              : `${isOpen ? `w-${SIDEBAR_WIDTH.EXPANDED}px` : `w-${SIDEBAR_WIDTH.COLLAPSED}px`} translate-x-0`
-          }
-        `}
+        className={`fixed top-0 left-0 h-full bg-white shadow-xl z-50 flex flex-col border-r border-gray-200 transition-all duration-${ANIMATION_DURATION} ease-in-out ${
+          isMobile
+            ? `w-${SIDEBAR_WIDTH.EXPANDED}px ${
+                isOpen ? "translate-x-0" : "-translate-x-full"
+              }`
+            : `${
+                isOpen
+                  ? `w-${SIDEBAR_WIDTH.EXPANDED}px`
+                  : `w-${SIDEBAR_WIDTH.COLLAPSED}px`
+              } translate-x-0`
+        }`}
         style={{
           width: isMobile
             ? `${SIDEBAR_WIDTH.EXPANDED}px`
@@ -547,7 +553,6 @@ export default function Sidebar() {
                 const hasChildren = children.length > 0;
                 const isActive = isMenuActive(item, childMenus);
                 const isSubmenuOpen = openSubMenus[item._id];
-
                 return (
                   <li key={item._id} className="relative">
                     <MenuItemComponent
@@ -558,14 +563,12 @@ export default function Sidebar() {
                       sidebarOpen={isOpen}
                       onMenuClick={handleMenuClick}
                     />
-
                     {/* Submenu */}
                     {hasChildren && isSubmenuOpen && isOpen && (
                       <ul className="mt-1 ml-6 pl-3 border-l-2 border-gray-100 space-y-1">
                         {children.map((child) => {
                           const isChildActive =
                             child.pathname && pathName === child.pathname;
-
                           return (
                             <li key={child._id} className="relative">
                               <Tooltip
@@ -618,7 +621,7 @@ export default function Sidebar() {
         {isOpen && (
           <div className="border-t border-gray-200 p-4 bg-gray-50 flex-shrink-0">
             <div className="text-xs text-gray-500 text-center">
-              Admin Panel v2.0
+              Admin Panel v5.0
             </div>
           </div>
         )}

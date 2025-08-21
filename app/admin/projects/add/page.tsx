@@ -66,6 +66,7 @@ const CreateProject = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState<string | null>(null);
   const [selectedFileName, setSelectedFileName] = useState("No file selected");
+   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -100,27 +101,41 @@ const CreateProject = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFileName(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
+const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    const maxSize = 60 * 1024; // 60KB
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
 
-        // Strip the data URL prefix to get only base64 string
-        const base64String = result.split(",")[1];
-
-        setFormData((prev) => ({
-          ...prev,
-          thumbnail: file,
-          thumbnailBase64: base64String, // now it's just base64
-          thumbnailPreview: result, // still use full string for image preview
-        }));
-      };
-      reader.readAsDataURL(file);
+    if (!allowedTypes.includes(file.type)) {
+      setError("Only JPG, JPEG, and PNG files are allowed.");
+      setSelectedFileName("Invalid file type");
+      return;
     }
-  };
+
+    if (file.size > maxSize) {
+      setError("File size exceeds 60KB.");
+      setSelectedFileName("File too large");
+      return;
+    }
+
+    setSelectedFileName(file.name);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+
+      setFormData((prev) => ({
+        ...prev,
+        thumbnail: file,
+        thumbnailBase64: base64String,
+        thumbnailPreview: base64String, // 🔧 Set preview here
+      }));
+    };
+    reader.readAsDataURL(file);
+    setError(null); // Clear error if everything is valid
+  }
+};
+
 
   const handleResidenceSelection = (residenceId: string) => {
     setFormData((prev) => {

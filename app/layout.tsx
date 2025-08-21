@@ -4,6 +4,7 @@ import "./globals.css";
 import Providers from "./Provider";
 import Sidebar from "./components/Sidebar/Sidebar";
 import { getSession } from "./auth";
+import CheckSession from "./CheckSession";
 import LocalizationProviderWrapper from "../app/components/providers/LocalizationProviderWrapper";
 
 // import Footer from "./components/navbar/Footer";
@@ -43,15 +44,13 @@ export default async function RootLayout({
       >
         <Providers session={session}>
           <div className="flex min-h-screen w-screen">
-            {/* Sidebar - will handle its own authentication checks */}
             <Sidebar />
-
-            {/* Main content area */}
             <main className="flex-1 overflow-auto">
-              <LocalizationProviderWrapper>
-                {/* Wrap children in CheckSession for route protection */}
-                {children}
-              </LocalizationProviderWrapper>
+              <CheckSession>
+                <LocalizationProviderWrapper>
+                  {children}
+                </LocalizationProviderWrapper>
+              </CheckSession>
             </main>
           </div>
         </Providers>

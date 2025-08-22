@@ -13,11 +13,13 @@ import {
 } from "@/app/containers/utils/session/CheckSession";
 import { decodeJwt } from "@/app/containers/utils/session/DecodeToken";
 import TicketBadge from "@/app/components/TicketsButton/button";
+import { useRouter } from "next/navigation";
 interface NavbarProps {
   label: string;
 }
 
 export default function Navbar({ label }: NavbarProps) {
+  const router = useRouter();
   const { data: session, status } = useSession();
   const { token, role, isAuthenticated } = useTokenAndRole();
 
@@ -263,7 +265,15 @@ export default function Navbar({ label }: NavbarProps) {
                 </div>
 
                 <Divider sx={{ my: 1 }} />
-
+                <MenuItem
+                  onClick={() => {
+                    router.push("/profile");
+                  }}
+                  className="text-blue-600 hover:bg-red-50 hover:text-red-700"
+                >
+                  <LogoutIcon fontSize="small" className="mr-3" />
+                  <span className="text-sm font-medium">Edit Profile</span>
+                </MenuItem>
                 <MenuItem
                   onClick={handleLogout}
                   className="text-red-600 hover:bg-red-50 hover:text-red-700"

@@ -60,7 +60,11 @@ export const authOptions: AuthOptions = {
           }
         );
 
-        if (!response.ok) return null;
+        if (!response.ok) {
+          const errData = await response.json().catch(() => null);
+          const message = errData?.message || "Invalid username or password";
+          throw new Error(message); // passes to client as result.error
+        }
         const user = await response.json();
         const decoded: any = jwtDecode(user.access_token);
 

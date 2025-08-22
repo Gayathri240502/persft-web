@@ -723,7 +723,7 @@ export default function ProjectDetails() {
             boxShadow: "0 8px 32px rgba(5, 54, 73, 0.3)",
           }}
         >
-          Continue to Payment →
+          Continue to Dashboard →
         </Button>
       </motion.div>
     </div>

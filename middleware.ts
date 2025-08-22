@@ -6,13 +6,17 @@ export function middleware(request: NextRequest) {
   const token =
     request.cookies.get("next-auth.session-token")?.value ||
     request.cookies.get("__Secure-next-auth.session-token")?.value;
-  const isLoginPage = request.nextUrl.pathname === "/login";
 
-  if (isLoginPage && token && !isTokenExpired(token)) {
+  const { pathname } = request.nextUrl;
+
+  const isAuthPage =
+    pathname === "/login" || pathname === "/forgot-credentials";
+
+  if (isAuthPage && token && !isTokenExpired(token)) {
     return NextResponse.redirect(new URL("/admin/dashboard", request.url));
   }
 
-  if (!token && !isLoginPage) {
+  if (!token && !isAuthPage) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 

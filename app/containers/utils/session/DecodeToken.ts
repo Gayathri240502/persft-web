@@ -1,5 +1,6 @@
 interface DecodedToken {
   name: string;
+  sub: string;
   email: string;
   preferred_username: string;
   given_name: string;

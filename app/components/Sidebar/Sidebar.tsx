@@ -454,7 +454,14 @@ export default function Sidebar() {
   }, []);
 
   // Don't render anything while loading or on login page or if not authenticated
-  if (loading || authLoading || pathName === "/login" || !isAuthenticated) {
+  if (
+    loading ||
+    authLoading ||
+    pathName === "/login" ||
+    pathName === "/verification" ||
+    pathName === "/forgot-credentials" ||
+    !isAuthenticated
+  ) {
     return null;
   }
 

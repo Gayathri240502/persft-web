@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { GetApp as DownloadIcon } from "@mui/icons-material";
+
 interface Product {
   productId: string;
   productName: string;
@@ -31,6 +32,7 @@ interface Product {
   poAvailable: boolean;
   id?: string;
   sn?: number;
+  workOrderId?: string;
 }
 
 // debounce hook
@@ -95,7 +97,7 @@ const Products = () => {
       if (Array.isArray(data.products)) {
         const mapped = data.products.map((p: Product, idx: number) => ({
           ...p,
-          id: p.productId,
+          id: `${p.workOrderId}_${p.productId}`, // unique ID
           sn: page * pageSize + idx + 1,
         }));
         setProducts(mapped);
@@ -160,7 +162,7 @@ const Products = () => {
       headerName: "PO Available",
       flex: 1,
       renderCell: (params) =>
-        params.value ? (
+        params.row.poAvailable && params.row.poStatus === "generated" ? (
           <IconButton
             size="small"
             onClick={() => handleDownloadPO(params.row.productId)}

@@ -398,7 +398,7 @@ const RecentProductsCard = ({ products }: { products: Product[] }) => (
     </Box>
     <Box sx={{ maxHeight: 300, overflowY: "auto" }}>
       {products.slice(0, 5).map((product, index) => (
-        <Box key={product.productId}>
+        <Box key={`${product.productId}-${index}`}>
           <Box
             sx={{
               display: "flex",

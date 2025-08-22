@@ -25,7 +25,8 @@ import {
 import Navbar from "@/app/components/navbar/navbar";
 
 export default function EditProfile() {
-  const { token, isAuthenticated } = useTokenAndRole();
+  const { token, isAuthenticated, role } = useTokenAndRole();
+  console.log("User role:", role);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [formValues, setFormValues] = useState({});
@@ -49,20 +50,44 @@ export default function EditProfile() {
     return (
       <Typography>Failed to decode token. Please log in again.</Typography>
     );
-  const userID = decodedToken.sub;
+
+  const decoded = decodeJwt(token);
+  const roles = decoded?.realm_access?.roles || decoded?.roles || [];
+  const isAdmin = roles.includes("admin");
+  const isVendor = roles.includes("vendor") || roles.includes("merchant");
+  const userID = decoded?.sub || decoded?.user_id || decoded?.id;
 
   useEffect(() => {
     async function fetchUserProfile() {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/users/${userID}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        let response;
+
+        if (isAdmin) {
+          // Admin uses the regular API
+          response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/users/${userID}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+        } else if (isVendor) {
+          // Vendor uses the kiosk API
+          response = await fetch(
+            `${process.env.NEXT_PUBLIC_KIOSK_API_URL}/auth/profile`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+        } else {
+          throw new Error("Unauthorized role");
+        }
+
         if (!response.ok) throw new Error("Failed to fetch user profile");
         const profileData = await response.json();
         setProfile(profileData);
@@ -73,14 +98,22 @@ export default function EditProfile() {
         setLoading(false);
       }
     }
-    fetchUserProfile();
-  }, [userID, token]);
+
+    if (userID || isVendor) {
+      fetchUserProfile();
+    }
+  }, [userID, token, isAdmin, isVendor]);
 
   const handleChange = (e) => {
     setFormValues({ ...formValues, [e.target.name]: e.target.value });
   };
 
   const handleSaveProfile = async () => {
+    if (!isAdmin) {
+      alert("Only admins can edit profile information");
+      return;
+    }
+
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/users/${userID}`,
@@ -99,6 +132,7 @@ export default function EditProfile() {
       alert("Profile updated successfully");
     } catch (error) {
       console.error("Error updating profile:", error);
+      alert("Failed to update profile");
     }
   };
 
@@ -108,26 +142,45 @@ export default function EditProfile() {
 
   const handlePasswordSave = async () => {
     if (!passwordValues.currentPassword || !passwordValues.newPassword) return;
+
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/change-password`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId: userID,
-            ...passwordValues,
-          }),
-        }
-      );
+      let response;
+
+      if (isAdmin) {
+        response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/change-password`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userId: userID,
+              ...passwordValues,
+            }),
+          }
+        );
+      } else if (isVendor) {
+        response = await fetch(
+          `${process.env.NEXT_PUBLIC_KIOSK_API_URL}/auth/change-password`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(passwordValues),
+          }
+        );
+      }
+
       if (!response.ok) throw new Error("Failed to change password");
       alert("Password changed successfully");
       setPasswordValues({ currentPassword: "", newPassword: "" });
     } catch (error) {
       console.error("Error changing password:", error);
+      alert("Failed to change password");
     }
   };
 
@@ -146,11 +199,11 @@ export default function EditProfile() {
             {/* Title */}
             <Grid item xs={12}>
               <Typography variant="h5" fontWeight="bold">
-                Edit Profile
+                Edit Profile {isVendor && "(Vendor - Password Only)"}
               </Typography>
             </Grid>
 
-            {/* First Name */}
+            {/* First Name - show for both admin and vendor */}
             <Grid item xs={12} sm={6}>
               <TextField
                 label="First Name"
@@ -158,10 +211,11 @@ export default function EditProfile() {
                 value={formValues.firstName || ""}
                 onChange={handleChange}
                 fullWidth
+                disabled={isVendor} // Read-only for vendors
               />
             </Grid>
 
-            {/* Last Name */}
+            {/* Last Name - show for both admin and vendor */}
             <Grid item xs={12} sm={6}>
               <TextField
                 label="Last Name"
@@ -169,25 +223,27 @@ export default function EditProfile() {
                 value={formValues.lastName || ""}
                 onChange={handleChange}
                 fullWidth
+                disabled={isVendor} // Read-only for vendors
               />
             </Grid>
 
-            {/* Username */}
-            <Grid item xs={12}>
-              <TextField
-                label="Username"
-                name="username"
-                value={formValues.username || ""}
-                fullWidth
-                disabled
-              />
-            </Grid>
+            {/* Username - only show for admin */}
+            {isAdmin && (
+              <Grid item xs={12}>
+                <TextField
+                  label="Username"
+                  name="username"
+                  value={formValues.username || ""}
+                  fullWidth
+                  disabled
+                />
+              </Grid>
+            )}
 
-            {/* Email */}
+            {/* Email - show for both admin and vendor */}
             <Grid item xs={12}>
               <Grid container spacing={2} alignItems="center">
-                {/* Email Field */}
-                <Grid item xs={8}>
+                <Grid item xs={!profile?.isEmailVerified ? 8 : 12}>
                   <TextField
                     label="Email"
                     name="email"
@@ -208,7 +264,7 @@ export default function EditProfile() {
                   />
                 </Grid>
 
-                {/* Verify Button */}
+                {/* Verify Button - show for both admin and vendor if not verified */}
                 {!profile?.isEmailVerified && (
                   <Grid item xs={4}>
                     <Button
@@ -225,11 +281,10 @@ export default function EditProfile() {
               </Grid>
             </Grid>
 
-            {/* Phone */}
+            {/* Phone - show for both admin and vendor */}
             <Grid item xs={12}>
               <Grid container spacing={2} alignItems="center">
-                {/* Phone Field */}
-                <Grid item xs={8}>
+                <Grid item xs={!profile?.isPhoneVerified ? 8 : 12}>
                   <TextField
                     label="Phone"
                     name="phone"
@@ -250,7 +305,7 @@ export default function EditProfile() {
                   />
                 </Grid>
 
-                {/* Verify Button */}
+                {/* Verify Button - show for both admin and vendor if not verified */}
                 {!profile?.isPhoneVerified && (
                   <Grid item xs={4}>
                     <Button
@@ -266,28 +321,31 @@ export default function EditProfile() {
                 )}
               </Grid>
             </Grid>
-            {/* Save / Cancel Buttons */}
-            <Grid container spacing={2} justifyContent="flex-start" m={2}>
-              <Grid item>
-                <Button
-                  variant="contained"
-                  startIcon={<SaveIcon />}
-                  color="primary"
-                  onClick={handleSaveProfile}
-                >
-                  Save Profile
-                </Button>
+
+            {/* Save / Cancel Buttons - only for admin */}
+            {isAdmin && (
+              <Grid container spacing={2} justifyContent="flex-start" m={2}>
+                <Grid item>
+                  <Button
+                    variant="contained"
+                    startIcon={<SaveIcon />}
+                    color="primary"
+                    onClick={handleSaveProfile}
+                  >
+                    Save Profile
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Button
+                    variant="outlined"
+                    color="warning"
+                    onClick={() => router.push("/admin/dashboard")}
+                  >
+                    Cancel
+                  </Button>
+                </Grid>
               </Grid>
-              <Grid item>
-                <Button
-                  variant="outlined"
-                  color="warning"
-                  onClick={() => router.push("/admin/dashboard")} // Example cancel action
-                >
-                  Cancel
-                </Button>
-              </Grid>
-            </Grid>
+            )}
 
             {/* Divider */}
             <Grid item xs={12}>
@@ -367,6 +425,19 @@ export default function EditProfile() {
                 Update Password
               </Button>
             </Grid>
+
+            {/* Cancel button for vendor */}
+            {isVendor && (
+              <Grid item xs={12}>
+                <Button
+                  variant="outlined"
+                  color="warning"
+                  onClick={() => router.push("/vendor/dashboard")}
+                >
+                  Cancel
+                </Button>
+              </Grid>
+            )}
           </Grid>
         </Paper>
       </Box>

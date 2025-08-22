@@ -25,12 +25,14 @@ type FormDataType = {
   name: string;
   description: string;
   coohomUrl: string;
-  thumbnail: File | null; // <-- changed here
+  thumbnail: File | null;
   thumbnailBase64: string;
   thumbnailPreview: string;
   residenceType: string;
   roomType: string;
   theme: string;
+  budgetCategory: string;
+  price: number | string;
 };
 
 const EditDesignType = () => {
@@ -39,9 +41,10 @@ const EditDesignType = () => {
   const designId = searchParams.get("id");
   const router = useRouter();
 
-  const [residences, setResidences] = useState([]);
-  const [rooms, setRooms] = useState([]);
-  const [themes, setThemes] = useState([]);
+  const [residences, setResidences] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [themes, setThemes] = useState<any[]>([]);
+  const [budgetCategories, setBudgetCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState<FormDataType>({
@@ -54,6 +57,8 @@ const EditDesignType = () => {
     residenceType: "",
     roomType: "",
     theme: "",
+    budgetCategory: "",
+    price: "",
   });
 
   const [errors, setErrors] = useState({
@@ -63,6 +68,8 @@ const EditDesignType = () => {
     roomType: "",
     theme: "",
     thumbnail: "",
+    budgetCategory: "",
+    price: "",
   });
 
   const [apiError, setApiError] = useState("");
@@ -81,6 +88,8 @@ const EditDesignType = () => {
     if (!formData.name.trim()) {
       newErrors.name = "Name should not be empty";
       isValid = false;
+    } else {
+      newErrors.name = "";
     }
 
     if (!formData.coohomUrl.trim()) {
@@ -89,21 +98,44 @@ const EditDesignType = () => {
     } else if (!urlRegex.test(formData.coohomUrl)) {
       newErrors.coohomUrl = "Coohom URL must be a valid URL";
       isValid = false;
+    } else {
+      newErrors.coohomUrl = "";
     }
 
     if (!mongoIdRegex.test(formData.residenceType)) {
       newErrors.residenceType = "Select valid residence type";
       isValid = false;
+    } else {
+      newErrors.residenceType = "";
     }
 
     if (!mongoIdRegex.test(formData.roomType)) {
       newErrors.roomType = "Select valid room type";
       isValid = false;
+    } else {
+      newErrors.roomType = "";
     }
 
     if (!mongoIdRegex.test(formData.theme)) {
       newErrors.theme = "Select valid theme";
       isValid = false;
+    } else {
+      newErrors.theme = "";
+    }
+
+    if (!mongoIdRegex.test(formData.budgetCategory)) {
+      newErrors.budgetCategory = "Select valid budget category";
+      isValid = false;
+    } else {
+      newErrors.budgetCategory = "";
+    }
+
+    const price = Number(formData.price);
+    if (!formData.price || isNaN(price) || price <= 0) {
+      newErrors.price = "Please enter a valid price greater than 0";
+      isValid = false;
+    } else {
+      newErrors.price = "";
     }
 
     setErrors(newErrors);
@@ -121,17 +153,11 @@ const EditDesignType = () => {
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
-  // Convert base64 string to displayable image URL
   const convertBase64ToImageUrl = (base64String: string) => {
     if (!base64String) return "";
-
-    // If it's already a data URL, return as is
     if (base64String.startsWith("data:image/")) {
       return base64String;
     }
-
-    // If it's just the base64 part, add the data URL prefix
-    // Assume JPEG format if not specified (you can modify this based on your needs)
     return `data:image/jpeg;base64,${base64String}`;
   };
 
@@ -141,7 +167,6 @@ const EditDesignType = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!allowedFileTypes.includes(file.type)) {
       setErrors((prev) => ({
         ...prev,
@@ -150,7 +175,6 @@ const EditDesignType = () => {
       return;
     }
 
-    // Validate file size
     if (file.size > maxFileSize) {
       setErrors((prev) => ({
         ...prev,
@@ -160,29 +184,23 @@ const EditDesignType = () => {
     }
 
     try {
-      // Convert file to base64
       const reader = new FileReader();
       reader.onload = () => {
         const base64Result = reader.result as string;
-
         setFormData((prev) => ({
           ...prev,
           thumbnail: file,
           thumbnailBase64: base64Result,
           thumbnailPreview: base64Result,
         }));
-
-        // Clear any previous errors
         setErrors((prev) => ({ ...prev, thumbnail: "" }));
       };
-
       reader.onerror = () => {
         setErrors((prev) => ({
           ...prev,
           thumbnail: "Failed to process image. Please try again.",
         }));
       };
-
       reader.readAsDataURL(file);
     } catch (error) {
       setErrors((prev) => ({
@@ -195,25 +213,29 @@ const EditDesignType = () => {
   const fetchData = async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const [designRes, resRes, roomRes, themeRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/designs/${designId}`, {
-          headers,
-        }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/residence-types`, {
-          headers,
-        }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/room-types`, { headers }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/themes`, { headers }),
-      ]);
+      const [designRes, resRes, roomRes, themeRes, budgetRes] =
+        await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/designs/${designId}`, {
+            headers,
+          }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/residence-types`, {
+            headers,
+          }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/room-types`, { headers }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/themes`, { headers }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/budget-categories`, {
+            headers,
+          }),
+        ]);
 
       const designData = await designRes.json();
       const residencesData = await resRes.json();
       const roomsData = await roomRes.json();
       const themesData = await themeRes.json();
+      const budgetData = await budgetRes.json();
 
       const combination = designData.combinations?.[0] || {};
 
-      // Convert backend base64 to displayable format
       const thumbnailPreview = designData.thumbnail
         ? convertBase64ToImageUrl(designData.thumbnail)
         : designData.thumbnailUrl || "";
@@ -224,16 +246,35 @@ const EditDesignType = () => {
         coohomUrl: designData.coohomUrl || "",
         thumbnail: null,
         thumbnailBase64: designData.thumbnail || "",
-        thumbnailPreview: thumbnailPreview,
+        thumbnailPreview,
         residenceType: combination.residenceType?._id || "",
         roomType: combination.roomType?._id || "",
         theme: combination.theme?._id || "",
+        budgetCategory: designData.budgetCategory || "",
+        price: designData.price || "",
       });
 
-      setResidences(residencesData.residenceTypes);
-      setRooms(roomsData.roomTypes);
-      setThemes(themesData.themes);
+      // ✅ Fixed: Ensure all arrays are properly set with fallbacks
+      setResidences(
+        Array.isArray(residencesData.residenceTypes)
+          ? residencesData.residenceTypes
+          : []
+      );
+      setRooms(Array.isArray(roomsData.roomTypes) ? roomsData.roomTypes : []);
+      setThemes(Array.isArray(themesData.themes) ? themesData.themes : []);
+
+      // ✅ Fixed: Handle different possible response structures for budget categories
+      let budgetCategoriesArray = [];
+      if (Array.isArray(budgetData)) {
+        budgetCategoriesArray = budgetData;
+      } else if (Array.isArray(budgetData.budgetCategories)) {
+        budgetCategoriesArray = budgetData.budgetCategories;
+      } else if (budgetData.data && Array.isArray(budgetData.data)) {
+        budgetCategoriesArray = budgetData.data;
+      }
+      setBudgetCategories(budgetCategoriesArray);
     } catch (err) {
+      console.error("Error fetching data:", err);
       setApiError("Error fetching data");
     } finally {
       setLoading(false);
@@ -241,17 +282,22 @@ const EditDesignType = () => {
   };
 
   useEffect(() => {
-    if (designId) fetchData();
-  }, [designId]);
+    if (designId && token) {
+      fetchData();
+    }
+  }, [designId, token]);
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
+    setLoading(true);
     try {
       const payload = {
         name: formData.name,
         description: formData.description.trim() || "N/A",
         coohomUrl: formData.coohomUrl,
+        budgetCategory: formData.budgetCategory,
+        price: Number(formData.price),
         combinations: [
           {
             residenceType: formData.residenceType,
@@ -276,15 +322,35 @@ const EditDesignType = () => {
         }
       );
 
-      if (!response.ok) throw new Error("Failed to update design");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update design");
+      }
+
       setSuccess(true);
       router.push("/admin/home-catalog/design");
     } catch (err) {
-      setApiError("Failed to submit form");
+      console.error("Submit error:", err);
+      setApiError(err instanceof Error ? err.message : "Failed to submit form");
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) return <CircularProgress />;
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "50vh",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -294,6 +360,7 @@ const EditDesignType = () => {
           Edit Design Type
         </Typography>
 
+        {/* Name */}
         <TextField
           label="Name"
           name="name"
@@ -306,6 +373,7 @@ const EditDesignType = () => {
           required
         />
 
+        {/* Coohom URL */}
         <TextField
           label="Coohom URL"
           name="coohomUrl"
@@ -318,6 +386,7 @@ const EditDesignType = () => {
           required
         />
 
+        {/* Description */}
         <TextField
           label="Description"
           name="description"
@@ -329,7 +398,22 @@ const EditDesignType = () => {
           onChange={handleInputChange}
         />
 
-        {/* Thumbnail Upload Section */}
+        {/* Price */}
+        <TextField
+          label="Price"
+          name="price"
+          type="number"
+          fullWidth
+          sx={{ mb: 3 }}
+          value={formData.price}
+          onChange={handleInputChange}
+          error={!!errors.price}
+          helperText={errors.price}
+          required
+          inputProps={{ min: 0, step: 0.01 }}
+        />
+
+        {/* Thumbnail Upload */}
         <Box sx={{ mb: 3 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
             <Button
@@ -373,7 +457,6 @@ const EditDesignType = () => {
             </Typography>
           )}
 
-          {/* Thumbnail Preview */}
           {formData.thumbnailPreview && (
             <Box sx={{ mb: 2 }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
@@ -389,17 +472,14 @@ const EditDesignType = () => {
                   border: "1px solid #ddd",
                   objectFit: "cover",
                 }}
-                onError={(e) => {
-                  console.error("Error loading thumbnail preview");
-                  // You can set a fallback image here if needed
-                }}
               />
             </Box>
           )}
         </Box>
 
+        {/* Dropdowns */}
         <Grid container spacing={3}>
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={3}>
             <FormControl fullWidth error={!!errors.residenceType}>
               <InputLabel required>Residence Type</InputLabel>
               <Select
@@ -407,7 +487,6 @@ const EditDesignType = () => {
                 onChange={(e) =>
                   handleSelectChange("residenceType", e.target.value as string)
                 }
-                label="Residence Type *"
               >
                 {residences.map((res: any) => (
                   <MenuItem key={res._id} value={res._id}>
@@ -421,7 +500,7 @@ const EditDesignType = () => {
             </FormControl>
           </Grid>
 
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={3}>
             <FormControl fullWidth error={!!errors.roomType}>
               <InputLabel required>Room Type</InputLabel>
               <Select
@@ -429,7 +508,6 @@ const EditDesignType = () => {
                 onChange={(e) =>
                   handleSelectChange("roomType", e.target.value as string)
                 }
-                label="Room Type *"
               >
                 {rooms.map((room: any) => (
                   <MenuItem key={room._id} value={room._id}>
@@ -443,7 +521,7 @@ const EditDesignType = () => {
             </FormControl>
           </Grid>
 
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={3}>
             <FormControl fullWidth error={!!errors.theme}>
               <InputLabel required>Theme</InputLabel>
               <Select
@@ -451,16 +529,35 @@ const EditDesignType = () => {
                 onChange={(e) =>
                   handleSelectChange("theme", e.target.value as string)
                 }
-                label="Theme *"
               >
-                {Array.isArray(themes) &&
-                  themes.map((theme: any) => (
-                    <MenuItem key={theme._id} value={theme._id}>
-                      {theme.name}
-                    </MenuItem>
-                  ))}
+                {themes.map((theme: any) => (
+                  <MenuItem key={theme._id} value={theme._id}>
+                    {theme.name}
+                  </MenuItem>
+                ))}
               </Select>
               {errors.theme && <FormHelperText>{errors.theme}</FormHelperText>}
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={3}>
+            <FormControl fullWidth error={!!errors.budgetCategory}>
+              <InputLabel required>Budget Category</InputLabel>
+              <Select
+                value={formData.budgetCategory}
+                onChange={(e) =>
+                  handleSelectChange("budgetCategory", e.target.value as string)
+                }
+              >
+                {budgetCategories.map((b) => (
+                  <MenuItem key={b._id} value={b._id}>
+                    {b.name}
+                  </MenuItem>
+                ))}
+              </Select>
+              {errors.budgetCategory && (
+                <FormHelperText>{errors.budgetCategory}</FormHelperText>
+              )}
             </FormControl>
           </Grid>
         </Grid>
@@ -471,8 +568,16 @@ const EditDesignType = () => {
           </Typography>
         )}
 
+        {success && (
+          <Typography sx={{ mt: 2, color: "success.main" }}>
+            Design updated successfully!
+          </Typography>
+        )}
+
         <Box sx={{ mt: 4, display: "flex", gap: 2 }}>
-          <ReusableButton onClick={handleSubmit}>Update</ReusableButton>
+          <ReusableButton onClick={handleSubmit} disabled={loading}>
+            {loading ? <CircularProgress size={20} /> : "Update"}
+          </ReusableButton>
           <CancelButton href="/admin/home-catalog/design">Cancel</CancelButton>
         </Box>
       </Box>

@@ -37,6 +37,8 @@ interface FormData {
   thumbnailBase64: string;
   thumbnailPreview: string;
   combinations: Combination[];
+  budgetCategory: string;
+  price: string;
 }
 
 const AddDesignType = () => {
@@ -46,6 +48,7 @@ const AddDesignType = () => {
   const [residences, setResidences] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
   const [themes, setThemes] = useState<any[]>([]);
+  const [budgetCategories, setBudgetCategories] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [existingThumbnail, setExistingThumbnail] = useState<string>(""); // Track existing thumbnail from backend
 
@@ -63,6 +66,8 @@ const AddDesignType = () => {
         theme: "",
       },
     ],
+    budgetCategory: "",
+    price: "",
   });
 
   const [errors, setErrors] = useState({
@@ -73,6 +78,8 @@ const AddDesignType = () => {
     theme: "",
     thumbnail: "",
     combinations: "",
+    budgetCategory: "",
+    price: "",
   });
 
   const [apiError, setApiError] = useState("");
@@ -105,6 +112,8 @@ const AddDesignType = () => {
       theme: "",
       thumbnail: "",
       combinations: "",
+      budgetCategory: "",
+      price: "",
     };
 
     let isValid = true;
@@ -121,6 +130,21 @@ const AddDesignType = () => {
       isValid = false;
     } else if (!urlRegex.test(formData.coohomUrl)) {
       newErrors.coohomUrl = "Invalid URL format";
+      isValid = false;
+    }
+
+    // Budget Category validation
+    if (!formData.budgetCategory) {
+      newErrors.budgetCategory = "Budget Category is required";
+      isValid = false;
+    }
+
+    // Price validation
+    if (!formData.price.trim()) {
+      newErrors.price = "Price is required";
+      isValid = false;
+    } else if (isNaN(Number(formData.price)) || Number(formData.price) < 0) {
+      newErrors.price = "Please enter a valid positive number";
       isValid = false;
     }
 
@@ -297,27 +321,61 @@ const AddDesignType = () => {
         "Content-Type": "application/json",
       };
 
-      const [residencesRes, roomsRes, themesRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/residence-types`, {
-          headers,
-        }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/room-types`, { headers }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/themes`, { headers }),
-      ]);
+      const [residencesRes, roomsRes, themesRes, budgetCategoriesRes] =
+        await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/residence-types`, {
+            headers,
+          }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/room-types`, { headers }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/themes`, { headers }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/budget-categories`, {
+            headers,
+          }),
+        ]);
 
-      if (!residencesRes.ok || !roomsRes.ok || !themesRes.ok) {
+      if (
+        !residencesRes.ok ||
+        !roomsRes.ok ||
+        !themesRes.ok ||
+        !budgetCategoriesRes.ok
+      ) {
         throw new Error("Failed to fetch dropdown data");
       }
 
-      const [residencesData, roomsData, themesData] = await Promise.all([
-        residencesRes.json(),
-        roomsRes.json(),
-        themesRes.json(),
-      ]);
+      const [residencesData, roomsData, themesData, budgetCategoriesData] =
+        await Promise.all([
+          residencesRes.json(),
+          roomsRes.json(),
+          themesRes.json(),
+          budgetCategoriesRes.json(),
+        ]);
+
+      console.log("Budget categories response:", budgetCategoriesData); // Debug log
 
       setResidences(residencesData.residenceTypes || []);
       setRooms(roomsData.roomTypes || []);
       setThemes(themesData.themes || []);
+
+      // Handle budget categories response more robustly
+      if (Array.isArray(budgetCategoriesData)) {
+        setBudgetCategories(budgetCategoriesData);
+      } else if (
+        budgetCategoriesData.budgetCategories &&
+        Array.isArray(budgetCategoriesData.budgetCategories)
+      ) {
+        setBudgetCategories(budgetCategoriesData.budgetCategories);
+      } else if (
+        budgetCategoriesData.data &&
+        Array.isArray(budgetCategoriesData.data)
+      ) {
+        setBudgetCategories(budgetCategoriesData.data);
+      } else {
+        setBudgetCategories([]);
+        console.warn(
+          "Budget categories data is not in expected format:",
+          budgetCategoriesData
+        );
+      }
     } catch (err: any) {
       setApiError(err.message || "Error fetching dropdown data");
     }
@@ -359,6 +417,8 @@ const AddDesignType = () => {
             theme: "",
           },
         ],
+        budgetCategory: designData.budgetCategory || "",
+        price: designData.price ? designData.price.toString() : "",
       });
 
       // Set existing thumbnail for display
@@ -412,6 +472,8 @@ const AddDesignType = () => {
           roomType: combo.roomType,
           theme: combo.theme,
         })),
+        budgetCategory: formData.budgetCategory,
+        price: Number(formData.price),
       };
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/designs`, {
@@ -506,6 +568,52 @@ const AddDesignType = () => {
           value={formData.description}
           onChange={handleInputChange}
         />
+
+        {/* Budget Category and Price Section */}
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <InputLabel required>Budget Category</InputLabel>
+              <Select
+                value={formData.budgetCategory}
+                onChange={(e) => {
+                  setFormData({
+                    ...formData,
+                    budgetCategory: e.target.value as string,
+                  });
+                  setErrors({ ...errors, budgetCategory: "" });
+                }}
+                label="Budget Category *"
+                error={!!errors.budgetCategory}
+              >
+                {Array.isArray(budgetCategories) &&
+                  budgetCategories.map((category) => (
+                    <MenuItem key={category._id} value={category._id}>
+                      {category.name}
+                    </MenuItem>
+                  ))}
+              </Select>
+              {errors.budgetCategory && (
+                <FormHelperText error>{errors.budgetCategory}</FormHelperText>
+              )}
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Price"
+              name="price"
+              type="number"
+              fullWidth
+              value={formData.price}
+              onChange={handleInputChange}
+              error={!!errors.price}
+              helperText={errors.price}
+              required
+              inputProps={{ min: 0, step: "0.01" }}
+            />
+          </Grid>
+        </Grid>
 
         <Box sx={{ mb: 3 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>

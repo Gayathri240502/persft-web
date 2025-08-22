@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
@@ -16,7 +16,7 @@ import CancelButton from "@/app/components/CancelButton";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
-const EditResidenceType = () => {
+const EditBudgetCategoryPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { token } = useTokenAndRole();
@@ -30,10 +30,8 @@ const EditResidenceType = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
-  const [residenceTypes, setResidenceTypes] = useState<
-    { _id: string; name: string }[]
-  >([]);
 
+  // ✅ Fetch existing budget category
   useEffect(() => {
     if (!id) {
       setInitialLoading(false);
@@ -43,7 +41,7 @@ const EditResidenceType = () => {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/residence-types/${id}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/budget-categories/${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -53,18 +51,17 @@ const EditResidenceType = () => {
         );
 
         if (!response.ok) {
-          throw new Error("Failed to fetch residence type details.");
+          throw new Error("Failed to fetch budget category details.");
         }
 
         const data = await response.json();
-        const residenceType = data.data || data;
+        const category = data.data || data;
 
-        setName(residenceType.name || "");
-        setDescription(residenceType.description || "");
-        setThumbnail(residenceType.thumbnail || "");
-        setResidenceTypes(residenceType.residenceTypes || []);
+        setName(category.name || "");
+        setDescription(category.description || "");
+        setThumbnail(category.thumbnail || "");
         setSelectedFileName(
-          residenceType.thumbnail ? "Existing Thumbnail" : "No file selected"
+          category.thumbnail ? "Existing Thumbnail" : "No file selected"
         );
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error fetching data");
@@ -76,6 +73,7 @@ const EditResidenceType = () => {
     fetchData();
   }, [id, token]);
 
+  // ✅ File upload handler with validation
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -97,21 +95,21 @@ const EditResidenceType = () => {
       setSelectedFileName(file.name);
       const reader = new FileReader();
       reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setThumbnail(base64String);
+        setThumbnail(reader.result as string);
       };
       reader.readAsDataURL(file);
-      setError(null); // Clear error if everything is valid
+      setError(null);
     }
   };
 
+  // ✅ Form validation
   const validateForm = () => {
-    if (!name) return (setError("Name is required"), false);
-    // description is optional; no validation
+    if (!name.trim()) return (setError("Name is required"), false);
     setError(null);
     return true;
   };
 
+  // ✅ Submit handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -120,13 +118,13 @@ const EditResidenceType = () => {
 
     try {
       const payload = {
-        name,
+        name: name.trim(),
         description: description.trim() || "N/A",
         thumbnail,
       };
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/residence-types/${id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/budget-categories/${id}`,
         {
           method: "PUT",
           headers: {
@@ -138,10 +136,10 @@ const EditResidenceType = () => {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to update residence type.");
+        throw new Error("Failed to update budget category.");
       }
 
-      router.push("/admin/home-catalog/residence-types");
+      router.push("/admin/home-catalog/budget-category");
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Unexpected error occurred"
@@ -153,10 +151,10 @@ const EditResidenceType = () => {
 
   return (
     <>
-      <Navbar label="Residence Types" />
+      <Navbar label="Budget Categories" />
       <Box sx={{ p: 3 }} component="form" onSubmit={handleSubmit}>
         <Typography variant="h5" sx={{ mb: 2 }}>
-          Edit Residence Type
+          Edit Budget Category
         </Typography>
 
         {error && (
@@ -189,23 +187,6 @@ const EditResidenceType = () => {
               sx={{ mb: 3 }}
             />
 
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1">
-                Mapped Residence Types:
-              </Typography>
-              {residenceTypes.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  No residence types available
-                </Typography>
-              ) : (
-                residenceTypes.map((type) => (
-                  <Typography key={type._id} variant="body2">
-                    - {type.name}
-                  </Typography>
-                ))
-              )}
-            </Box>
-
             <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
               <Button
                 variant="outlined"
@@ -226,7 +207,7 @@ const EditResidenceType = () => {
             </Box>
 
             <Typography variant="caption" sx={{ color: "#999" }}>
-              Accepted formats: JPG, JPEG, PNG. Max size: 60kb.
+              Accepted formats: JPG, JPEG, PNG. Max size: 60KB.
             </Typography>
 
             {thumbnail && (
@@ -248,7 +229,7 @@ const EditResidenceType = () => {
                   "Update"
                 )}
               </ReusableButton>
-              <CancelButton href="/admin/home-catalog/residence-types">
+              <CancelButton href="/admin/home-catalog/budget-category">
                 Cancel
               </CancelButton>
             </Box>
@@ -259,4 +240,4 @@ const EditResidenceType = () => {
   );
 };
 
-export default EditResidenceType;
+export default EditBudgetCategoryPage;

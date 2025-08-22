@@ -37,8 +37,11 @@ const DesignTypeDetails = () => {
       roomType: { name: string };
       theme: { name: string };
     }[];
+    budgetCategory?: string;
+    price?: number;
   } | null>(null);
 
+  const [budgetCategoryName, setBudgetCategoryName] = useState<string>(""); // new state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -60,6 +63,7 @@ const DesignTypeDetails = () => {
           "Content-Type": "application/json",
         };
 
+        // 1️⃣ Fetch design details
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/designs/${designId}`,
           { headers }
@@ -77,9 +81,26 @@ const DesignTypeDetails = () => {
           name: designData.name,
           description: designData.description,
           coohomUrl: designData.coohomUrl,
-          thumbnailUrl: designData.thumbnail, // base64 string
+          thumbnailUrl: designData.thumbnail,
           combinations: designData.combinations || [],
+          budgetCategory: designData.budgetCategory,
+          price: designData.price,
         });
+
+        // 2️⃣ Fetch budget category details if exists
+        if (designData.budgetCategory) {
+          const budgetRes = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/budget-categories/${designData.budgetCategory}`,
+            { headers }
+          );
+
+          if (budgetRes.ok) {
+            const budgetData = await budgetRes.json();
+            setBudgetCategoryName(budgetData.name || "N/A");
+          } else {
+            setBudgetCategoryName("N/A");
+          }
+        }
       } catch (err: any) {
         setError(err.message || "Failed to fetch design details.");
       } finally {
@@ -172,7 +193,7 @@ const DesignTypeDetails = () => {
             onClick={() => router.back()}
             sx={{ marginBottom: 2 }}
           >
-            Back       
+            Back
           </Button>
 
           <Box>
@@ -224,23 +245,37 @@ const DesignTypeDetails = () => {
               </Typography>
             </Grid>
 
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={6}>
               <Typography variant="body1">
                 <strong>Residence Type:</strong>{" "}
                 {combination?.residenceType?.name || "N/A"}
               </Typography>
             </Grid>
 
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={6}>
               <Typography variant="body1">
                 <strong>Room Type:</strong>{" "}
                 {combination?.roomType?.name || "N/A"}
               </Typography>
             </Grid>
 
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={6}>
               <Typography variant="body1">
                 <strong>Theme:</strong> {combination?.theme?.name || "N/A"}
+              </Typography>
+            </Grid>
+
+            {/* Budget Category & Price */}
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body1">
+                <strong>Budget Category:</strong> {budgetCategoryName || "N/A"}
+              </Typography>
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body1">
+                <strong>Price:</strong>{" "}
+                {designDetails.price ? `₹${designDetails.price}` : "N/A"}
               </Typography>
             </Grid>
           </Grid>

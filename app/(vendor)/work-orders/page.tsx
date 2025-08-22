@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useCallback, useEffect } from "react";
 import Navbar from "@/app/components/navbar/navbar";
 import {
@@ -102,6 +103,7 @@ const WorkOrders = () => {
     } catch (err: any) {
       setError(err.message || "Something went wrong.");
       setWorkOrders([]);
+      setRowCount(0);
     } finally {
       setLoading(false);
     }
@@ -133,11 +135,13 @@ const WorkOrders = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    return dateString
+      ? new Date(dateString).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })
+      : "-";
   };
 
   const Columns: GridColDef[] = [
@@ -149,8 +153,8 @@ const WorkOrders = () => {
       flex: 0.8,
       renderCell: (params) => (
         <Chip
-          label={params.value}
-          color={getStatusColor(params.value)}
+          label={params.value || "-"}
+          color={getStatusColor(params.value || "")}
           size="small"
           variant="outlined"
         />
@@ -237,12 +241,9 @@ const WorkOrders = () => {
             autoHeight
             disableColumnMenu={isSmallScreen}
             loading={loading}
-            getRowId={(row) => row.id}
+            getRowId={(row) => row.id || row.workOrderId}
             disableRowSelectionOnClick
             hideFooterSelectedRowCount
-            searchValue={search}
-            onSearchChange={handleSearchChange}
-            searchPlaceholder="Search work orders..."
           />
         </Box>
       </Box>

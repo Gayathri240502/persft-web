@@ -2,10 +2,10 @@
 
 import React, {
   useEffect,
-  useCallback,
   useState,
   useMemo,
   useRef,
+  useCallback,
 } from "react";
 import Navbar from "@/app/components/navbar/navbar";
 import {
@@ -44,19 +44,15 @@ interface Project {
   sn?: number;
 }
 
-// Industry standard debounce hook with proper cleanup
+// Debounce hook
 const useDebounce = (value: string, delay: number) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // Clear existing timeout
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-
-    // Set new timeout
     timeoutRef.current = setTimeout(() => setDebouncedValue(value), delay);
 
-    // Cleanup function
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
@@ -70,9 +66,9 @@ const Projects = () => {
   const router = useRouter();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // State management
+  // State
   const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search, 500); // 500ms delay for better UX
+  const debouncedSearch = useDebounce(search, 500);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
     pageSize: 10,
@@ -83,8 +79,8 @@ const Projects = () => {
   const [error, setError] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Component mount tracking for cleanup
   const mountedRef = useRef(true);
   useEffect(() => {
     return () => {
@@ -96,87 +92,81 @@ const Projects = () => {
 
   // Reset to first page when search changes
   useEffect(() => {
-    setPaginationModel((prev) => ({
-      ...prev,
-      page: 0,
-    }));
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
   }, [debouncedSearch]);
 
-  // Fetch projects with proper error handling and cleanup
-  const fetchProjects = useCallback(async () => {
-    const { page, pageSize } = paginationModel;
-    setLoading(true);
-    setError("");
-
-    try {
-      const queryParams = new URLSearchParams({
-        page: String(page + 1),
-        limit: String(pageSize),
-        _ts: Date.now().toString(), // Cache buster
-      });
-
-      // Add search parameter if exists
-      if (debouncedSearch.trim()) {
-        queryParams.append("search", debouncedSearch.trim());
-      }
-
-      const finalUrl = `${process.env.NEXT_PUBLIC_API_URL}/projects?${queryParams}`;
-      console.log("Fetching projects with search:", debouncedSearch);
-      console.log("Final URL:", finalUrl);
-
-      const response = await fetch(finalUrl, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch data. Status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log("API Result:", result);
-
-      // Only update state if component is still mounted
-      if (mountedRef.current) {
-        if (Array.isArray(result.projects)) {
-          const formatted = result.projects.map(
-            (item: Project, index: number) => ({
-              ...item,
-              id: item._id,
-              sn: page * pageSize + index + 1,
-            })
-          );
-
-          setProjects(formatted);
-          setRowCount(
-            result.totalDocs ||
-              result.totalCount ||
-              result.total ||
-              formatted.length
-          );
-        } else {
-          setProjects([]);
-          setRowCount(0);
-        }
-      }
-    } catch (err: any) {
-      console.error("Error fetching projects:", err);
-      if (mountedRef.current) {
-        setError(err.message || "Something went wrong.");
-      }
-    } finally {
-      if (mountedRef.current) setLoading(false);
-    }
-  }, [paginationModel, debouncedSearch, token]);
-
-  // Fetch data when dependencies change
+  // Fetch projects
   useEffect(() => {
-    if (token) fetchProjects();
-  }, [fetchProjects, token]);
+    if (!token) return;
 
-  // Event handlers with useCallback for performance
+    const fetchProjects = async () => {
+      const { page, pageSize } = paginationModel;
+      setLoading(true);
+      setError("");
+
+      try {
+        const queryParams = new URLSearchParams({
+          page: String(page + 1),
+          limit: String(pageSize),
+          _ts: Date.now().toString(),
+        });
+
+        if (debouncedSearch.trim()) {
+          queryParams.append("search", debouncedSearch.trim());
+        }
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/projects?${queryParams}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch data. Status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (mountedRef.current) {
+          if (Array.isArray(result.projects)) {
+            const formatted = result.projects.map(
+              (item: Project, index: number) => ({
+                ...item,
+                id: item._id,
+                sn: page * pageSize + index + 1,
+              })
+            );
+
+            setProjects(formatted);
+            setRowCount(
+              result.totalDocs ||
+                result.totalCount ||
+                result.total ||
+                formatted.length
+            );
+          } else {
+            setProjects([]);
+            setRowCount(0);
+          }
+        }
+      } catch (err: any) {
+        console.error("Error fetching projects:", err);
+        if (mountedRef.current) {
+          setError(err.message || "Something went wrong.");
+        }
+      } finally {
+        if (mountedRef.current) setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, [paginationModel, debouncedSearch, token, refreshKey]);
+
+  // Event handlers
   const handleAdd = useCallback(() => {
     router.push("/admin/projects/add");
   }, [router]);
@@ -216,7 +206,7 @@ const Projects = () => {
         throw new Error(`Failed to delete project. Status: ${response.status}`);
       }
 
-      await fetchProjects();
+      setRefreshKey((prev) => prev + 1); // 🔄 trigger refetch
       handleDeleteCancel();
     } catch (err: any) {
       console.error("Error deleting project:", err);
@@ -224,9 +214,9 @@ const Projects = () => {
     } finally {
       setLoading(false);
     }
-  }, [projectToDelete, token, fetchProjects, handleDeleteCancel]);
+  }, [projectToDelete, token, handleDeleteCancel]);
 
-  // Memoized columns for performance
+  // Columns
   const columns: GridColDef[] = useMemo(
     () => [
       { field: "sn", headerName: "SN", flex: 0.5 },

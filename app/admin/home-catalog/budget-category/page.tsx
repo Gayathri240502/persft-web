@@ -190,7 +190,7 @@ const BudgetCategories = () => {
 
   const handleView = useCallback(
     (id: string) => {
-      router.push(`/admin/home-catalog/budget-category/view/${id}`);
+      router.push(`/admin/home-catalog/budget-category/${id}`);
     },
     [router]
   );

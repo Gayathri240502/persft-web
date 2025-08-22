@@ -179,7 +179,7 @@ const WorkOrderDetail = () => {
       headerName: "PO Available",
       flex: 1,
       renderCell: (params) =>
-        params.value ? (
+        params.row.poAvailable && params.row.poStatus === "generated" ? (
           <IconButton
             size="small"
             onClick={() => handleDownloadPO(params.row.productId)}

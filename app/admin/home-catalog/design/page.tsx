@@ -327,7 +327,6 @@ const DesignType = () => {
             searchPlaceholder="Search Designs..."
             addButtonText="Add"
             getRowId={(row) => row.id}
-            // Add these props for better UX
             disableRowSelectionOnClick
             hideFooterSelectedRowCount
           />

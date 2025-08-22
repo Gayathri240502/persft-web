@@ -27,7 +27,7 @@ const LoginForm = () => {
     if (result?.error) {
       setError(result.error);
     } else {
-      router.push("/admin/dashboard");
+      router.push("/verification");
     }
     setLoading(false);
   };
@@ -63,24 +63,34 @@ const LoginForm = () => {
           >
             Password
           </label>
-          <div className="relative">
-            <input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              required
-            />
-            <div className="absolute inset-y-0 right-2 flex items-center">
-              <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                className="focus:outline-none text-gray-600"
-              >
-                {showPassword ? <VisibilityOff /> : <Visibility />}
-              </button>
-            </div>
+        </div>
+        <div className="relative">
+          <input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="mt-1 block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            required
+          />
+          <div className="absolute inset-y-0 right-2 flex items-center">
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="focus:outline-none text-gray-600"
+            >
+              {showPassword ? <VisibilityOff /> : <Visibility />}
+            </button>
+          </div>
+
+          <div className="text-sm mt-5">
+            Forgot Credentials ?{" "}
+            <a
+              href="/forgot-credentials"
+              className="text-blue-500 hover:underline"
+            >
+              click here
+            </a>
           </div>
         </div>
 

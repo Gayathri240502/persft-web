@@ -99,7 +99,6 @@ const DesignType = () => {
         limit: String(pageSize),
       });
 
-      // Only add search term if it's not empty after trimming
       if (debouncedSearch.trim()) {
         queryParams.append("searchTerm", debouncedSearch.trim());
       }
@@ -111,7 +110,6 @@ const DesignType = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          // Add signal for request cancellation if needed
           signal: AbortSignal.timeout(10000), // 10 second timeout
         }
       );

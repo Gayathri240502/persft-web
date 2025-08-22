@@ -266,7 +266,7 @@ const CombinedProductsPage = () => {
           <div className="space-y-4">
             {products.map((product, idx) => (
               <div
-                key={product.productId || idx}
+                key={`${product.productId}-${idx}`}
                 className={`border rounded-lg p-6 shadow-sm bg-white hover:shadow-md transition-shadow ${
                   product.isMatched
                     ? "border-gray-200"
@@ -362,7 +362,7 @@ const CombinedProductsPage = () => {
                           </option>
                           {merchants.map((m, idx2) => (
                             <option
-                              key={m.keycloakId || idx2}
+                              key={`${m.keycloakId || m.merchantId}-${idx2}`}
                               value={m.keycloakId}
                             >
                               {m.businessName ||

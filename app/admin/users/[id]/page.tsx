@@ -213,8 +213,8 @@ const UserViewPage: React.FC = () => {
           {/* User Details */}
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
-              <Typography variant="body2" color="textSecondary">
-                First Name
+              <Typography variant="body2" fontWeight="bold">
+                First Name:
               </Typography>
               <Typography variant="body1" fontWeight={500}>
                 {user.firstName}
@@ -222,8 +222,8 @@ const UserViewPage: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <Typography variant="body2" color="textSecondary">
-                Last Name
+              <Typography variant="body2" fontWeight="bold">
+                Last Name:
               </Typography>
               <Typography variant="body1" fontWeight={500}>
                 {user.lastName}
@@ -231,8 +231,8 @@ const UserViewPage: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <Typography variant="body2" color="textSecondary">
-                Email
+              <Typography variant="body2" fontWeight="bold">
+                Email:
               </Typography>
               <Typography variant="body1" fontWeight={500}>
                 {user.email}
@@ -240,8 +240,8 @@ const UserViewPage: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <Typography variant="body2" color="textSecondary">
-                Phone
+              <Typography variant="body2" fontWeight="bold">
+                Phone:
               </Typography>
               <Typography variant="body1" fontWeight={500}>
                 {user.phone}
@@ -249,8 +249,8 @@ const UserViewPage: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <Typography variant="body2" color="textSecondary">
-                Role
+              <Typography variant="body2" fontWeight="bold">
+                Role:
               </Typography>
               <Typography variant="body1" fontWeight={500}>
                 {user.role.join(", ")}
@@ -258,8 +258,30 @@ const UserViewPage: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <Typography variant="body2" color="textSecondary">
-                Created At
+              <Typography variant="body2" fontWeight="bold">
+                Phone Verified:
+              </Typography>
+              <Chip
+                label={user.isPhoneVerified ? "Verified" : "Not Verified"}
+                color={user.isPhoneVerified ? "success" : "warning"}
+                size="small"
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" fontWeight="bold">
+                Email Verified:
+              </Typography>
+              <Chip
+                label={user.isEmailVerified ? "Verified" : "Not Verified"}
+                color={user.isEmailVerified ? "success" : "warning"}
+                size="small"
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" fontWeight="bold">
+                Created At:
               </Typography>
               <Typography variant="body1" fontWeight={500}>
                 {new Date(user.createdAt).toLocaleString()}
@@ -267,8 +289,8 @@ const UserViewPage: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <Typography variant="body2" color="textSecondary">
-                Updated At
+              <Typography variant="body2" fontWeight="bold">
+                Updated At:
               </Typography>
               <Typography variant="body1" fontWeight={500}>
                 {new Date(user.updatedAt).toLocaleString()}

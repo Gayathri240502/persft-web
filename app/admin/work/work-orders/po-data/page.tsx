@@ -4,14 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import Navbar from "@/app/components/navbar/navbar";
-import {
-  Card,
-  CardContent,
-  Typography,
-  CircularProgress,
-  Divider,
-  Chip,
-} from "@mui/material";
+import { Typography, CircularProgress, Divider, Paper } from "@mui/material";
 
 interface Item {
   productId: string;
@@ -107,16 +100,16 @@ const PODataPage = () => {
   return (
     <>
       <Navbar label="PO Data" />
-      <div className="p-6 max-w-5xl mx-auto space-y-6">
-        <Typography variant="h4" className="font-bold">
-          Purchase Order Details
-        </Typography>
+      <div className="min-h-screen p-6  bg-gray-50">
+        <Paper elevation={4} className="p-6 space-y-6">
+          <Typography variant="h4" className="font-bold mb-4">
+            Purchase Order Details
+          </Typography>
 
-        {poData ? (
-          <>
-            {/* PO Information */}
-            <Card>
-              <CardContent>
+          {poData ? (
+            <>
+              {/* PO Information */}
+              <section>
                 <Typography variant="h6" className="mb-2 font-semibold">
                   PO Information
                 </Typography>
@@ -134,12 +127,12 @@ const PODataPage = () => {
                 <p>
                   <b>Total Amount:</b> ₹{poData.totalAmount}
                 </p>
-              </CardContent>
-            </Card>
+              </section>
 
-            {/* Merchant Details */}
-            <Card>
-              <CardContent>
+              <Divider />
+
+              {/* Merchant Details */}
+              <section>
                 <Typography variant="h6" className="mb-2 font-semibold">
                   Merchant Details
                 </Typography>
@@ -152,12 +145,12 @@ const PODataPage = () => {
                 <p>
                   <b>Contact Info:</b> {poData.merchantDetails.contactInfo}
                 </p>
-              </CardContent>
-            </Card>
+              </section>
 
-            {/* Work Order Details */}
-            <Card>
-              <CardContent>
+              <Divider />
+
+              {/* Work Order Details */}
+              <section>
                 <Typography variant="h6" className="mb-2 font-semibold">
                   Work Order Details
                 </Typography>
@@ -182,12 +175,12 @@ const PODataPage = () => {
                     poData.workOrderDetails.expectedCompletionDate
                   ).toLocaleDateString()}
                 </p>
-              </CardContent>
-            </Card>
+              </section>
 
-            {/* Items Table */}
-            <Card>
-              <CardContent>
+              <Divider />
+
+              {/* Items Table */}
+              <section className="overflow-x-auto">
                 <Typography variant="h6" className="mb-2 font-semibold">
                   Items
                 </Typography>
@@ -233,12 +226,12 @@ const PODataPage = () => {
                 ) : (
                   <div className="text-gray-500">No items available.</div>
                 )}
-              </CardContent>
-            </Card>
+              </section>
 
-            {/* Metadata */}
-            <Card>
-              <CardContent>
+              <Divider />
+
+              {/* Metadata */}
+              <section>
                 <Typography variant="h6" className="mb-2 font-semibold">
                   Metadata
                 </Typography>
@@ -249,15 +242,12 @@ const PODataPage = () => {
                   <b>Generated At:</b>{" "}
                   {new Date(poData.metadata.generatedAt).toLocaleString()}
                 </p>
-                <p>
-                  <b>Version:</b> {poData.metadata.version}
-                </p>
-              </CardContent>
-            </Card>
-          </>
-        ) : (
-          <div className="text-gray-600">No PO data found.</div>
-        )}
+              </section>
+            </>
+          ) : (
+            <div className="text-gray-600">No PO data found.</div>
+          )}
+        </Paper>
       </div>
     </>
   );

@@ -66,7 +66,7 @@ const CreateProject = () => {
     combinations: [{ residenceType: "", roomType: "", theme: "", design: "" }],
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [apiError, setApiError] = useState<string | null>(null);
+  const [setApiError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch hierarchical data
@@ -240,7 +240,6 @@ const CreateProject = () => {
       if (!res.ok)
         throw new Error(result.message || "Failed to create project");
 
-      alert("Project created successfully!");
       router.push("/admin/projects");
     } catch (err: any) {
       console.error(err);
@@ -343,11 +342,6 @@ const CreateProject = () => {
         <Typography variant="h6" sx={{ mb: 2 }}>
           Design Combinations
         </Typography>
-        {errors.combinations && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {errors.combinations}
-          </Alert>
-        )}
 
         {formData.combinations.map((combo, idx) => {
           const selectedResidence = selectionOptions.find(
@@ -474,12 +468,6 @@ const CreateProject = () => {
             Add Another Combination
           </Button>
         </Box>
-
-        {apiError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {apiError}
-          </Alert>
-        )}
 
         <Box sx={{ mt: 4, display: "flex", gap: 2 }}>
           <ReusableButton onClick={handleSubmit} disabled={isSubmitting}>

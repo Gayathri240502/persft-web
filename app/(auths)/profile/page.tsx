@@ -24,13 +24,48 @@ import {
 } from "@mui/icons-material";
 import Navbar from "@/app/components/navbar/navbar";
 
+export interface DecodedToken {
+  sub?: string;
+  user_id?: string;
+  id?: string;
+  realm_access?: {
+    roles?: string[];
+  };
+  roles?: string[];
+}
+
+// Define a new interface for the profile form data
+export interface ProfileFormValues {
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  email?: string;
+  phone?: string;
+  isEmailVerified?: boolean;
+  isPhoneVerified?: boolean;
+}
+
+// Define a new interface for the password form data
+export interface PasswordFormValues {
+  currentPassword?: string;
+  newPassword?: string;
+}
+
+// Define a new interface for the profile data fetched from the API
+export interface UserProfile extends ProfileFormValues {
+  // Add any other properties from your API response
+}
+
 export default function EditProfile() {
   const { token, isAuthenticated, role } = useTokenAndRole();
   console.log("User role:", role);
-  const [profile, setProfile] = useState(null);
+  // Type the profile state
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [formValues, setFormValues] = useState({});
-  const [passwordValues, setPasswordValues] = useState({
+  // Type the formValues state with the new interface
+  const [formValues, setFormValues] = useState<ProfileFormValues>({});
+  // Type the passwordValues state with the new interface
+  const [passwordValues, setPasswordValues] = useState<PasswordFormValues>({
     currentPassword: "",
     newPassword: "",
   });
@@ -45,13 +80,13 @@ export default function EditProfile() {
   if (!token)
     return <Typography>Invalid session. Please log in again.</Typography>;
 
-  const decodedToken = decodeJwt(token);
+  const decodedToken: DecodedToken | null = decodeJwt(token);
   if (!decodedToken)
     return (
       <Typography>Failed to decode token. Please log in again.</Typography>
     );
 
-  const decoded = decodeJwt(token);
+  const decoded = decodedToken;
   const roles = decoded?.realm_access?.roles || decoded?.roles || [];
   const isAdmin = roles.includes("admin");
   const isVendor = roles.includes("vendor") || roles.includes("merchant");
@@ -63,7 +98,6 @@ export default function EditProfile() {
         let response;
 
         if (isAdmin) {
-          // Admin uses the regular API
           response = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/users/${userID}`,
             {
@@ -74,7 +108,6 @@ export default function EditProfile() {
             }
           );
         } else if (isVendor) {
-          // Vendor uses the kiosk API
           response = await fetch(
             `${process.env.NEXT_PUBLIC_KIOSK_API_URL}/auth/profile`,
             {
@@ -104,7 +137,7 @@ export default function EditProfile() {
     }
   }, [userID, token, isAdmin, isVendor]);
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormValues({ ...formValues, [e.target.name]: e.target.value });
   };
 
@@ -136,7 +169,7 @@ export default function EditProfile() {
     }
   };
 
-  const handlePasswordChange = (e) => {
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPasswordValues({ ...passwordValues, [e.target.name]: e.target.value });
   };
 
@@ -175,7 +208,7 @@ export default function EditProfile() {
         );
       }
 
-      if (!response.ok) throw new Error("Failed to change password");
+      if (!response?.ok) throw new Error("Failed to change password");
       alert("Password changed successfully");
       setPasswordValues({ currentPassword: "", newPassword: "" });
     } catch (error) {
@@ -184,7 +217,7 @@ export default function EditProfile() {
     }
   };
 
-  const togglePasswordVisibility = (field) => {
+  const togglePasswordVisibility = (field: "current" | "new") => {
     setShowPassword((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 

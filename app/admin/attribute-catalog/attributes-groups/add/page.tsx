@@ -67,7 +67,7 @@ const AddAttributeGroups = () => {
 
   const handleSubmit = async () => {
     const selected = Object.entries(selectedAttributes)
-      .filter(([_, isChecked]) => isChecked)
+      .filter(([, isChecked]) => isChecked)
       .map(([id], index) => ({
         attribute: id,
         order: index,

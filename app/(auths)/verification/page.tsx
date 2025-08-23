@@ -1,9 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import {
-  clearSession,
-  useTokenAndRole,
-} from "@/app/containers/utils/session/CheckSession";
+import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { useRouter } from "next/navigation";
 import {
   Button,
@@ -267,7 +264,12 @@ export default function ProjectDetails() {
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center gap-4"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "1rem",
+          }}
         >
           <CircularProgress size={60} sx={{ color: "#053649" }} />
           <Typography variant="h6" color="#053649" fontWeight={600}>
@@ -284,7 +286,7 @@ export default function ProjectDetails() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md"
+          style={{ width: "100%", maxWidth: "28rem" }}
         >
           <Card className="shadow-xl border-0">
             <CardContent className="p-8 text-center">
@@ -353,7 +355,7 @@ export default function ProjectDetails() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="w-full max-w-lg"
+          style={{ width: "100%", maxWidth: "32rem" }}
         >
           <Card className="shadow-2xl border-0 overflow-hidden">
             <CardContent className="p-0">
@@ -567,7 +569,7 @@ export default function ProjectDetails() {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="mt-4"
+                      style={{ marginTop: "1rem" }}
                     >
                       <Alert severity={messageType}>{message}</Alert>
                     </motion.div>
@@ -588,7 +590,7 @@ export default function ProjectDetails() {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        style={{ width: "100%", maxWidth: "28rem" }}
       >
         <Card className="shadow-2xl border-0 overflow-hidden">
           <CardContent className="p-0">
@@ -700,12 +702,17 @@ export default function ProjectDetails() {
 
       {/* Floating Action Button */}
       <motion.div
-        className="fixed bottom-6 right-6 z-50"
         initial={{ opacity: 0, scale: 0.8, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.5 }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
+        style={{
+          position: "fixed",
+          bottom: "1.5rem",
+          right: "1.5rem",
+          zIndex: 50,
+        }}
       >
         <Button
           variant="contained"

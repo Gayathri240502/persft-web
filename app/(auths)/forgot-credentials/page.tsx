@@ -109,7 +109,7 @@ export default function ForgotPasswordAndUsername() {
       );
       return false;
     }
-    if (password !== confirmPassword) {
+    if (password !== confirmPassword && confirmPassword.length > 0) {
       setPasswordError("Passwords do not match");
       return false;
     }
@@ -127,13 +127,18 @@ export default function ForgotPasswordAndUsername() {
       setOtpError("OTP must be 6 digits");
       return false;
     }
+    if (!/^\d{6}$/.test(otpValue)) {
+      setOtpError("OTP must contain only numbers");
+      return false;
+    }
     setOtpError("");
     return true;
   };
 
   // Timer effect
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: NodeJS.Timeout | null = null;
+    let expiryInterval: NodeJS.Timeout | null = null;
 
     if (timeLeft > 0) {
       interval = setInterval(() => {
@@ -148,24 +153,22 @@ export default function ForgotPasswordAndUsername() {
     }
 
     if (expiryTime > 0) {
-      const expiryInterval = setInterval(() => {
+      expiryInterval = setInterval(() => {
         const now = Date.now();
         if (now >= expiryTime) {
           setMessage("OTP has expired. Please request a new one.");
           setMessageType("warning");
           setCurrentStep(0);
           setExpiryTime(0);
-          clearInterval(expiryInterval);
+          if (expiryInterval) clearInterval(expiryInterval);
         }
       }, 1000);
-
-      return () => {
-        clearInterval(interval);
-        clearInterval(expiryInterval);
-      };
     }
 
-    return () => clearInterval(interval);
+    return () => {
+      if (interval) clearInterval(interval);
+      if (expiryInterval) clearInterval(expiryInterval);
+    };
   }, [timeLeft, expiryTime]);
 
   // Reset form when tab changes
@@ -229,8 +232,10 @@ export default function ForgotPasswordAndUsername() {
       if (data.expiryMinutes) {
         setExpiryTime(Date.now() + data.expiryMinutes * 60 * 1000);
       }
-    } catch (err: any) {
-      showMessage(err.message, "error");
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An unexpected error occurred";
+      showMessage(errorMessage, "error");
     } finally {
       setLoading(false);
     }
@@ -262,8 +267,10 @@ export default function ForgotPasswordAndUsername() {
       setCurrentStep(2);
 
       setTimeout(() => router.push("/login"), 2000);
-    } catch (err: any) {
-      showMessage(err.message, "error");
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An unexpected error occurred";
+      showMessage(errorMessage, "error");
     } finally {
       setLoading(false);
     }
@@ -291,8 +298,10 @@ export default function ForgotPasswordAndUsername() {
       setCurrentStep(1);
 
       setTimeout(() => router.push("/login"), 2000);
-    } catch (err: any) {
-      showMessage(err.message, "error");
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An unexpected error occurred";
+      showMessage(errorMessage, "error");
     } finally {
       setLoading(false);
     }
@@ -305,8 +314,13 @@ export default function ForgotPasswordAndUsername() {
     }
   };
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: TabType) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: TabType) => {
     setTab(newValue);
+  };
+
+  const getCurrentExpirySeconds = (): number => {
+    if (expiryTime <= 0) return 0;
+    return Math.max(0, Math.floor((expiryTime - Date.now()) / 1000));
   };
 
   return (
@@ -315,7 +329,7 @@ export default function ForgotPasswordAndUsername() {
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="w-full max-w-lg"
+        style={{ width: "100%", maxWidth: "32rem" }}
       >
         <Card className="shadow-2xl border-0 overflow-hidden backdrop-blur-sm bg-white/95">
           <CardContent className="p-0">
@@ -351,7 +365,7 @@ export default function ForgotPasswordAndUsername() {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="mb-6"
+                  style={{ marginBottom: "1.5rem" }}
                 >
                   <Tabs
                     value={tab}
@@ -389,7 +403,7 @@ export default function ForgotPasswordAndUsername() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-6"
+                style={{ marginBottom: "1.5rem" }}
               >
                 <Stepper
                   activeStep={currentStep}
@@ -538,12 +552,7 @@ export default function ForgotPasswordAndUsername() {
                             <div className="flex items-center gap-1">
                               <Timer fontSize="small" />
                               <span className="font-mono font-bold">
-                                {formatTime(
-                                  Math.max(
-                                    0,
-                                    Math.floor((expiryTime - Date.now()) / 1000)
-                                  )
-                                )}
+                                {formatTime(getCurrentExpirySeconds())}
                               </span>
                             </div>
                           </div>
@@ -793,7 +802,8 @@ export default function ForgotPasswordAndUsername() {
                           loading ||
                           !newPassword ||
                           !confirmPassword ||
-                          !!passwordError
+                          !!passwordError ||
+                          newPassword !== confirmPassword
                         }
                         fullWidth
                         size="large"
@@ -859,7 +869,7 @@ export default function ForgotPasswordAndUsername() {
                     initial={{ opacity: 0, scale: 0.95, y: -10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                    className="mt-6"
+                    style={{ marginTop: "1.5rem" }}
                   >
                     <Alert
                       severity={messageType}

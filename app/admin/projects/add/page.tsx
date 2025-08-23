@@ -12,7 +12,6 @@ import {
   MenuItem,
   Grid,
   IconButton,
-  Alert,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -66,7 +65,7 @@ const CreateProject = () => {
     combinations: [{ residenceType: "", roomType: "", theme: "", design: "" }],
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [setApiError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch hierarchical data

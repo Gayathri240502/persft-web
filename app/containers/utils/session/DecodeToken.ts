@@ -1,15 +1,19 @@
 interface DecodedToken {
   name: string;
-  sub: string;
   email: string;
   preferred_username: string;
   given_name: string;
   family_name: string;
   exp: number;
-  realm_access: {
+  realm_access?: {
     roles: string[];
   };
+  roles?: string[]; // add this line
+  sub?: string;
+  user_id?: string;
+  id?: string;
 }
+
 export function decodeJwt(token: string): DecodedToken | null {
   try {
     if (!token || token.split(".").length !== 3) {

@@ -35,7 +35,8 @@ interface User {
   archive: boolean;
   createdAt: string;
   updatedAt: string;
-  __v: number;
+  isPhoneVerified?: boolean; // ✅ Added
+  isEmailVerified?: boolean; // ✅ Added}
 }
 
 const UserViewPage: React.FC = () => {

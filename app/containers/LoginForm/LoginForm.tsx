@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
@@ -18,7 +18,7 @@ const LoginForm = () => {
     if (loading) return;
 
     setLoading(true);
-    setError(null);
+    setError(null); // clear old error
 
     try {
       const result = await signIn("credentials", {
@@ -30,7 +30,6 @@ const LoginForm = () => {
       if (!result) {
         setError("Unexpected error. Please try again.");
       } else if (result.error) {
-        // Map raw errors to friendly text
         let message = "Login failed. Please try again.";
         if (result.error.toLowerCase().includes("credentials")) {
           message = "Invalid username or password.";
@@ -41,12 +40,20 @@ const LoginForm = () => {
       } else {
         setError("Authentication failed. Try again later.");
       }
-    } catch (err) {
+    } catch {
       setError("Network error. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
   };
+
+  // Auto-hide error after 5s
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   return (
     <div className="mx-auto p-4 max-w-md">
@@ -67,7 +74,10 @@ const LoginForm = () => {
             id="username"
             type="text"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => {
+              setUsername(e.target.value);
+              setError(null);
+            }}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#05344c] focus:border-[#05344c]"
             required
           />
@@ -86,7 +96,10 @@ const LoginForm = () => {
               id="password"
               type={showPassword ? "text" : "password"}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setError(null);
+              }}
               className="mt-1 block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#05344c] focus:border-[#05344c]"
               required
             />
@@ -116,7 +129,7 @@ const LoginForm = () => {
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded text-sm">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded text-sm transition-opacity duration-500">
             {error}
           </div>
         )}

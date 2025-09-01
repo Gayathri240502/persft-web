@@ -49,7 +49,7 @@ const AddSubCategory = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [thumbnail, setThumbnail] = useState(""); // base64 string
-  const [selectedFileName, setSelectedFileName] = useState("No file selected");
+  const [selectedFileName, setSelectedFileName] = useState(""); // empty initially
 
   useEffect(() => {
     const fetchData = async () => {
@@ -113,13 +113,15 @@ const AddSubCategory = () => {
 
       if (!allowedTypes.includes(file.type)) {
         setError("Only JPG, JPEG, and PNG files are allowed.");
-        setSelectedFileName("Invalid file type");
+        setSelectedFileName(""); // clear name
+        setThumbnail("");
         return;
       }
 
       if (file.size > maxSize) {
         setError("File size exceeds 60KB.");
-        setSelectedFileName("File too large");
+        setSelectedFileName(""); // clear name
+        setThumbnail("");
         return;
       }
 
@@ -133,7 +135,6 @@ const AddSubCategory = () => {
       setError(null); // Clear error if everything is valid
     }
   };
-
 
   const validateForm = () => {
     if (
@@ -158,6 +159,7 @@ const AddSubCategory = () => {
     const finalData = {
       ...formData,
       description: formData.description.trim() || "N/A",
+      thumbnail: thumbnail || "", // save empty string if no file
     };
 
     if (!validateForm()) {
@@ -250,7 +252,7 @@ const AddSubCategory = () => {
               <input type="file" hidden onChange={handleThumbnailChange} />
             </Button>
             <Typography variant="body2" sx={{ color: "#666" }}>
-              {selectedFileName}
+              {selectedFileName || "No Image"} {/* ✅ updated */}
             </Typography>
           </Box>
         </Box>

@@ -57,8 +57,8 @@ const AddBudgetCategoryPage = () => {
       return;
     }
 
-    if (!name.trim() || !description.trim()) {
-      setError("Please fill all required fields.");
+    if (!name.trim()) {
+      setError("Name is required.");
       return;
     }
 
@@ -75,9 +75,9 @@ const AddBudgetCategoryPage = () => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            name,
-            description,
-            thumbnail,
+            name: name.trim(),
+            description: description.trim() || "NA", // optional, default to "NA"
+            thumbnail: thumbnail || null, // optional, default to null
           }),
         }
       );
@@ -151,7 +151,7 @@ const AddBudgetCategoryPage = () => {
               <input type="file" hidden onChange={handleThumbnailChange} />
             </Button>
             <Typography variant="body2" sx={{ color: "#666" }}>
-              {selectedFileName}
+              {selectedFileName || "No Image"} {/* default if empty */}
             </Typography>
           </Box>
 

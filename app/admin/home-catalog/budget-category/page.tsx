@@ -24,11 +24,13 @@ import { useRouter } from "next/navigation";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
+import Image from "next/image"; // ✅ added for thumbnail rendering
 
 interface BudgetCategory {
   _id: string;
   name: string;
   description: string;
+  thumbnail?: string; // ✅ added thumbnail field
   createdAt: string;
   updatedAt: string;
   id?: string;
@@ -172,8 +174,8 @@ const BudgetCategories = () => {
         error.name === "AbortError"
           ? "Delete request timeout. Please try again."
           : error instanceof Error
-            ? error.message
-            : "Failed to delete category"
+          ? error.message
+          : "Failed to delete category"
       );
     } finally {
       setLoading(false);
@@ -207,6 +209,25 @@ const BudgetCategories = () => {
       { field: "sn", headerName: "SN", width: 70 },
       { field: "name", headerName: "Name", flex: 1 },
       { field: "description", headerName: "Description", flex: 1 },
+      {
+        field: "thumbnail",
+        headerName: "Thumbnail",
+        flex: 1,
+        renderCell: (params: GridRenderCellParams) =>
+          params.row.thumbnail ? (
+            <Image
+              src={params.row.thumbnail}
+              alt="thumbnail"
+              width={50}
+              height={50}
+              style={{ borderRadius: "4px", objectFit: "cover" }}
+            />
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              No Image
+            </Typography>
+          ),
+      },
       {
         field: "createdAt",
         headerName: "Created At",

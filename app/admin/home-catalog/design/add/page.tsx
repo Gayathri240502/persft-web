@@ -24,20 +24,24 @@ import { useRouter } from "next/navigation";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface SelectionOption {
-  id: string;
+  id?: string;   // optional
+  _id?: string;  // optional
   name: string;
   roomTypes?: {
-    id: string;
+    id?: string;
+    _id?: string;
     name: string;
     themes?: {
-      id: string;
+      id?: string;
+      _id?: string;
       name: string;
     }[];
   }[];
 }
 
+
 interface BudgetCategory {
-  _id: string;
+  _id?: string;  // optional
   name: string;
 }
 

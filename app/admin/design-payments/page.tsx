@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
@@ -13,9 +13,14 @@ import {
   Alert,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { GridColDef, GridPaginationModel, DataGrid } from "@mui/x-data-grid";
-import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
+import {
+  GridColDef,
+  GridPaginationModel,
+  DataGrid,
+  GridSortModel,
+  GridSortDirection,
+} from "@mui/x-data-grid";
 
 interface DesignPayment {
   _id: string;
@@ -43,7 +48,6 @@ function useDebounce<T>(value: T, delay: number): T {
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedValue(value), delay);
-
     return () => clearTimeout(handler);
   }, [value, delay]);
 
@@ -69,67 +73,127 @@ const DesignPayments = () => {
 
   const debouncedSearchText = useDebounce(searchText, 500); // 500ms debounce
 
+  // Sorting
+  const [sortModel, setSortModel] = useState<GridSortModel>([
+    { field: "createdAt", sort: "desc" as GridSortDirection },
+  ]);
+
   const { token } = useTokenAndRole();
 
+  // helper to detect a 24-char hex id (common Mongo _id)
+  const looksLikeObjectId = (s: string) => /^[a-fA-F0-9]{24}$/.test(s);
+
   const fetchPayments = async () => {
+    setError(null);
+
+    if (!token) {
+      setError("Missing auth token. Please log in again.");
+      return;
+    }
+
     if (isValid === "") {
       setError("Please select validity status before searching.");
       return;
     }
 
     setLoading(true);
-    setError(null);
 
     try {
       const page = paginationModel.page + 1;
       const limit = paginationModel.pageSize;
-      const sortField = "createdAt";
-      const sortOrder = "desc";
 
       const params = new URLSearchParams();
       params.append("page", page.toString());
       params.append("limit", limit.toString());
-      params.append("sortField", sortField);
-      params.append("sortOrder", sortOrder);
       params.append("isValid", isValid);
 
-      if (debouncedSearchText.trim()) {
-        params.append("customerId", debouncedSearchText.trim());
-        params.append("projectId", debouncedSearchText.trim());
+      // sorting fields from DataGrid sortModel
+      const sortField = sortModel[0]?.field || "createdAt";
+      const sortOrder = sortModel[0]?.sort || "desc";
+      params.append("sortField", sortField);
+      params.append("sortOrder", sortOrder);
+
+      const trimmed = debouncedSearchText?.trim() ?? "";
+
+      if (trimmed) {
+        if (looksLikeObjectId(trimmed)) {
+          // If user entered an ID-like string, send it as exact filters.
+          // (Do NOT also send `search` to avoid conflicts on backend.)
+          params.append("customerId", trimmed);
+          params.append("projectId", trimmed);
+        } else {
+          // For normal free-text searches, use `search` param which the API uses
+          params.append("search", trimmed);
+        }
       }
 
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/design-payments?${params.toString()}`;
+      const url = `${
+        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || ""
+      }/design-payments?${params.toString()}`;
+
+      // DEBUG logs
+      console.debug("[DesignPayments] Fetch URL:", url);
+      console.debug(
+        "[DesignPayments] Request headers: Authorization:",
+        token ? "present" : "missing"
+      );
 
       const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
       });
 
-      if (!res.ok) throw new Error("Failed to fetch design payments");
+      console.debug("[DesignPayments] Response status:", res.status, res.statusText);
 
-      const data = await res.json();
+      const text = await res.text();
+      let data: any;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (err) {
+        throw new Error(`Invalid JSON response: ${text}`);
+      }
+
+      if (!res.ok) {
+        const serverMsg = data?.message || JSON.stringify(data);
+        throw new Error(`API error ${res.status}: ${serverMsg}`);
+      }
+
+      const paymentsArray = data.payments || data.data?.payments || data.items || [];
+      const total =
+        data.total ??
+        data.count ??
+        data.totalPages ??
+        data.data?.total ??
+        (Array.isArray(paymentsArray) ? paymentsArray.length : 0);
 
       const startIndex = (page - 1) * limit;
-      const formatted = data.payments.map(
-        (item: DesignPayment, index: number) => ({
+      const formatted = (paymentsArray || []).map(
+        (item: any, index: number) => ({
           ...item,
-          id: item._id,
+          id: item._id ?? item.id,
           sn: startIndex + index + 1,
         })
       );
 
       setPayments(formatted);
-      setRowCount(data.total || 0);
+      setRowCount(Number(total) || 0);
     } catch (e) {
+      console.error("[DesignPayments] Fetch error:", e);
       setError(e instanceof Error ? e.message : "Unknown error");
+      setPayments([]);
+      setRowCount(0);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch on mount and whenever paginationModel, isValid, or debouncedSearchText changes
   useEffect(() => {
     fetchPayments();
-  }, [paginationModel, isValid, debouncedSearchText]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paginationModel, isValid, debouncedSearchText, sortModel]);
 
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", width: 70 },
@@ -139,8 +203,8 @@ const DesignPayments = () => {
       flex: 0.5,
       renderCell: (params) => (
         <Typography variant="body2" sx={{ color: theme.palette.primary.main }}>
-          <a href={`/admin/design-payments/${params.row._id}`}>
-            {params.row._id}
+          <a href={`/admin/design-payments/${params.row._id || params.row.id}`}>
+            {params.row._id || params.row.id}
           </a>
         </Typography>
       ),
@@ -163,18 +227,13 @@ const DesignPayments = () => {
           ? params.row.project.name
           : "Unknown Project",
     },
-    // { field: "validUntil", headerName: "Valid Until", flex: 1 },
-    // { field: "createdAt", headerName: "Created At", flex: 1 },
+    { field: "createdAt", headerName: "Created At", flex: 0.6 },
   ];
 
   return (
     <>
       <Navbar label="Design Payments" />
       <Box sx={{ p: 3 }}>
-        {/* <Typography variant="h5" gutterBottom>
-          Design Payments
-        </Typography> */}
-
         {/* Filters */}
         <Box
           sx={{
@@ -200,11 +259,11 @@ const DesignPayments = () => {
           </FormControl>
 
           <TextField
-            label="Search Customer or Project ID"
+            label="Search (Name, Email, IDs, etc)"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Search by Customer ID or Project ID"
-            sx={{ minWidth: 300 }}
+            placeholder="Search by name, email, order ID, payment ID, customer/project ID"
+            sx={{ minWidth: 400 }}
           />
         </Box>
 
@@ -228,6 +287,9 @@ const DesignPayments = () => {
               onPaginationModelChange={setPaginationModel}
               pageSizeOptions={[5, 10, 25, 50, 100]}
               paginationMode="server"
+              sortingMode="server"
+              sortModel={sortModel}
+              onSortModelChange={setSortModel}
               autoHeight
               disableRowSelectionOnClick
             />

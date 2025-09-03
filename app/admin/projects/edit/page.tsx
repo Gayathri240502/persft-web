@@ -64,9 +64,17 @@ interface ProjectSelectionFromApi {
 interface ProjectDataFromApi {
   name: string;
   description: string;
-  thumbnailUrl?: string;
+ thumbnail?: string;       // base64 string
+  thumbnailUrl?: string; 
   selections: ProjectSelectionFromApi[];
 }
+
+const convertBase64ToImageUrl = (base64String: string) => {
+  if (!base64String) return "";
+  if (base64String.startsWith("data:image/")) return base64String;
+  return `data:image/jpeg;base64,${base64String}`;
+};
+
 
 const EditProject = () => {
   const { token } = useTokenAndRole();
@@ -118,12 +126,17 @@ const EditProject = () => {
             originalId: s._id,
           })) || [];
 
+          const thumbnailPreview = projectData.thumbnail
+  ? convertBase64ToImageUrl(projectData.thumbnail)
+  : projectData.thumbnailUrl || "";
+
+
         setFormData({
           name: projectData.name || "",
           description: projectData.description || "",
           thumbnail: null,
-          thumbnailBase64: "",
-          thumbnailPreview: projectData.thumbnailUrl || "",
+          thumbnailBase64: projectData.thumbnailUrl || "",
+          thumbnailPreview,
           combinations:
             processedCombinations.length > 0
               ? processedCombinations
@@ -462,15 +475,13 @@ const EditProject = () => {
                       }
                       disabled={!combo.theme}
                     >
-                      {selectedTheme?.designs?.map((d, designIdx) => (
-                        <MenuItem
-                          key={`design-${selectedTheme.id}-${d.id}-${designIdx}`} // FIX: Use a unique key
-                          value={d.id}
-                        >
-                          {d.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
+                        {[...(new Map((selectedTheme?.designs || []).map(d => [d.id, d])).values())]
+    .map((d) => (
+      <MenuItem key={`design-${selectedTheme?.id}-${d.id}`} value={d.id}>
+        {d.name}
+      </MenuItem>
+    ))}
+</Select>
                   </FormControl>
                 </Grid>
               </Grid>

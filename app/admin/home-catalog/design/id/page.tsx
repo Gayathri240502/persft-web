@@ -175,7 +175,7 @@ const DesignTypeDetails = () => {
     );
   }
 
-  const combination = designDetails.combinations[0];
+  // const combination = designDetails.combinations[0];
 
   return (
     <>
@@ -245,25 +245,41 @@ const DesignTypeDetails = () => {
               </Typography>
             </Grid>
 
-            <Grid item xs={12} sm={6}>
-              <Typography variant="body1">
-                <strong>Residence Type:</strong>{" "}
-                {combination?.residenceType?.name || "N/A"}
-              </Typography>
-            </Grid>
+            <Grid item xs={12}>
+  <Typography variant="h6" gutterBottom>
+    Combinations
+  </Typography>
+</Grid>
 
-            <Grid item xs={12} sm={6}>
-              <Typography variant="body1">
-                <strong>Room Type:</strong>{" "}
-                {combination?.roomType?.name || "N/A"}
-              </Typography>
-            </Grid>
+{designDetails.combinations.length > 0 ? (
+  designDetails.combinations.map((combination, index) => (
+    <Grid container spacing={2} key={index} sx={{ mb: 2, pl: 2 }}>
+      <Grid item xs={12} sm={4}>
+        <Typography variant="body1">
+          <strong>Residence Type:</strong>{" "}
+          {combination.residenceType?.name || "N/A"}
+        </Typography>
+      </Grid>
+      <Grid item xs={12} sm={4}>
+        <Typography variant="body1">
+          <strong>Room Type:</strong>{" "}
+          {combination.roomType?.name || "N/A"}
+        </Typography>
+      </Grid>
+      <Grid item xs={12} sm={4}>
+        <Typography variant="body1">
+          <strong>Theme:</strong>{" "}
+          {combination.theme?.name || "N/A"}
+        </Typography>
+      </Grid>
+    </Grid>
+  ))
+) : (
+  <Grid item xs={12}>
+    <Typography variant="body2">No combinations available</Typography>
+  </Grid>
+)}
 
-            <Grid item xs={12} sm={6}>
-              <Typography variant="body1">
-                <strong>Theme:</strong> {combination?.theme?.name || "N/A"}
-              </Typography>
-            </Grid>
 
             {/* Budget Category & Price */}
             <Grid item xs={12} sm={6}>

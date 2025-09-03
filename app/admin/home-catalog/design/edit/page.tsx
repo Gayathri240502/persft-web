@@ -49,8 +49,8 @@ const EditDesignType = () => {
   const router = useRouter();
 
   const [residences, setResidences] = useState<any[]>([]);
-  const [rooms, setRooms] = useState<any[]>([]);
-  const [themes, setThemes] = useState<any[]>([]);
+  const [allRooms, setAllRooms] = useState<any[]>([]);
+  const [allThemes, setAllThemes] = useState<any[]>([]);
   const [budgetCategories, setBudgetCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -208,6 +208,24 @@ const EditDesignType = () => {
     reader.readAsDataURL(file);
   };
 
+  // Helper function to get available rooms for a residence type
+  const getAvailableRooms = (residenceTypeId: string) => {
+    const residence = residences.find(res => res.id === residenceTypeId);
+    return residence ? residence.roomTypes : [];
+  };
+
+  // Helper function to get available themes for a room type
+  const getAvailableThemes = (roomTypeId: string) => {
+    // Find the room type across all residences
+    for (const residence of residences) {
+      const room = residence.roomTypes.find((room: any) => room.id === roomTypeId);
+      if (room) {
+        return room.themes;
+      }
+    }
+    return [];
+  };
+
   const fetchData = async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
@@ -227,12 +245,30 @@ const EditDesignType = () => {
         budgetRes.json(),
       ]);
 
-      // Populate selection tree
-      setResidences(selectionTreeData || []);
-      const allRooms = selectionTreeData.flatMap((res: any) => res.roomTypes || []);
-      setRooms(allRooms);
-      const allThemes = allRooms.flatMap((room: any) => room.themes || []);
-      setThemes(allThemes);
+      // Store selection tree data with proper structure
+      const formattedResidences = selectionTreeData.map((res: any) => ({
+        id: res.id,
+        name: res.name,
+        roomTypes: res.roomTypes.map((room: any) => ({
+          id: room.id,
+          name: room.name,
+          residenceType: res.id, // Add reference to parent residence
+          themes: room.themes.map((theme: any) => ({
+            id: theme.id,
+            name: theme.name,
+            roomType: room.id // Add reference to parent room
+          }))
+        }))
+      }));
+
+      setResidences(formattedResidences);
+      
+      // Flatten all rooms and themes for easier lookup
+      const allRoomsFlat = formattedResidences.flatMap((res: any) => res.roomTypes);
+      const allThemesFlat = allRoomsFlat.flatMap((room: any) => room.themes);
+      
+      setAllRooms(allRoomsFlat);
+      setAllThemes(allThemesFlat);
 
       setBudgetCategories(
         Array.isArray(budgetData)
@@ -252,7 +288,9 @@ const EditDesignType = () => {
         thumbnailBase64: designData.thumbnail || "",
         thumbnailPreview,
         budgetCategory: designData.budgetCategory || "",
-        price: designData.price || "",
+        price: designData.price !== undefined && designData.price !== null
+          ? designData.price
+          : "",
         combinations:
           designData.combinations?.map((c: any) => ({
             residenceType: c.residenceType?._id || "",
@@ -480,7 +518,7 @@ const EditDesignType = () => {
                   }
                 >
                   {residences.map((res: any) => (
-                    <MenuItem key={res._id} value={res._id}>
+                    <MenuItem key={res.id} value={res.id}>
                       {res.name}
                     </MenuItem>
                   ))}
@@ -505,14 +543,13 @@ const EditDesignType = () => {
                       e.target.value as string
                     )
                   }
+                  disabled={!comb.residenceType}
                 >
-                  {rooms
-                    .filter((room: any) => room.residenceType === comb.residenceType)
-                    .map((room: any) => (
-                      <MenuItem key={room._id} value={room._id}>
-                        {room.name}
-                      </MenuItem>
-                    ))}
+                  {getAvailableRooms(comb.residenceType).map((room: any) => (
+                    <MenuItem key={room.id} value={room.id}>
+                      {room.name}
+                    </MenuItem>
+                  ))}
                 </Select>
                 {errors[`roomType_${index}`] && (
                   <FormHelperText>{errors[`roomType_${index}`]}</FormHelperText>
@@ -532,14 +569,13 @@ const EditDesignType = () => {
                       e.target.value as string
                     )
                   }
+                  disabled={!comb.roomType}
                 >
-                  {themes
-                    .filter((theme: any) => theme.roomType === comb.roomType)
-                    .map((theme: any) => (
-                      <MenuItem key={theme._id} value={theme._id}>
-                        {theme.name}
-                      </MenuItem>
-                    ))}
+                  {getAvailableThemes(comb.roomType).map((theme: any) => (
+                    <MenuItem key={theme.id} value={theme.id}>
+                      {theme.name}
+                    </MenuItem>
+                  ))}
                 </Select>
                 {errors[`theme_${index}`] && (
                   <FormHelperText>{errors[`theme_${index}`]}</FormHelperText>

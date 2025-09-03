@@ -24,8 +24,8 @@ import { useRouter } from "next/navigation";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface SelectionOption {
-  id?: string;   // optional
-  _id?: string;  // optional
+  id?: string;
+  _id?: string;
   name: string;
   roomTypes?: {
     id?: string;
@@ -39,9 +39,8 @@ interface SelectionOption {
   }[];
 }
 
-
 interface BudgetCategory {
-  _id?: string;  // optional
+  _id?: string;
   name: string;
 }
 
@@ -67,8 +66,12 @@ const AddDesignType = () => {
   const router = useRouter();
   const { token } = useTokenAndRole();
 
-  const [selectionOptions, setSelectionOptions] = useState<SelectionOption[]>([]);
-  const [budgetCategories, setBudgetCategories] = useState<BudgetCategory[]>([]);
+  const [selectionOptions, setSelectionOptions] = useState<SelectionOption[]>(
+    []
+  );
+  const [budgetCategories, setBudgetCategories] = useState<BudgetCategory[]>(
+    []
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -94,11 +97,18 @@ const AddDesignType = () => {
   const [apiError, setApiError] = useState<string>("");
 
   // URL validation regex
-const urlRegex = /^(https?:\/\/)([\w.-]+)(\/[\w\-./?%&=]*)?$/;
-  
+  const urlRegex = /^(https?:\/\/)([\w.-]+)(\/[\w\-./?%&=]*)?$/;
+
   // Allowed file types
   const allowedFileTypes = ["image/jpeg", "image/png", "image/jpg"];
   const maxFileSize = 60 * 1024; // 60kb
+
+  // Helper function to convert base64 to image URL
+  const convertBase64ToImageUrl = (base64String: string): string => {
+    if (!base64String) return "";
+    if (base64String.startsWith("data:image/")) return base64String;
+    return `data:image/jpeg;base64,${base64String}`;
+  };
 
   // Fetch hierarchical data and budget categories
   useEffect(() => {
@@ -119,7 +129,8 @@ const urlRegex = /^(https?:\/\/)([\w.-]+)(\/[\w\-./?%&=]*)?$/;
           }),
         ]);
 
-        if (!hierarchyRes.ok) throw new Error("Failed to fetch selection options");
+        if (!hierarchyRes.ok)
+          throw new Error("Failed to fetch selection options");
         if (!budgetRes.ok) throw new Error("Failed to fetch budget categories");
 
         const [hierarchyData, budgetData] = await Promise.all([
@@ -127,19 +138,23 @@ const urlRegex = /^(https?:\/\/)([\w.-]+)(\/[\w\-./?%&=]*)?$/;
           budgetRes.json(),
         ]);
 
-        // Handle hierarchy data - direct array from /designs/selection-tree
         setSelectionOptions(hierarchyData);
 
-        // Handle budget categories - flexible response format
         if (Array.isArray(budgetData)) {
           setBudgetCategories(budgetData);
-        } else if (budgetData.budgetCategories && Array.isArray(budgetData.budgetCategories)) {
+        } else if (
+          budgetData.budgetCategories &&
+          Array.isArray(budgetData.budgetCategories)
+        ) {
           setBudgetCategories(budgetData.budgetCategories);
         } else if (budgetData.data && Array.isArray(budgetData.data)) {
           setBudgetCategories(budgetData.data);
         } else {
           setBudgetCategories([]);
-          console.warn("Budget categories data is not in expected format:", budgetData);
+          console.warn(
+            "Budget categories data is not in expected format:",
+            budgetData
+          );
         }
       } catch (err: any) {
         console.error("Error fetching data:", err);
@@ -158,17 +173,16 @@ const urlRegex = /^(https?:\/\/)([\w.-]+)(\/[\w\-./?%&=]*)?$/;
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
-    // Clear errors when user starts typing
+
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
-  // File upload handler
-const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
+  // File upload handler - Fixed base64 conversion
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     // Validate file type
     if (!allowedFileTypes.includes(file.type)) {
@@ -188,21 +202,25 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       return;
     }
 
-    // Convert to base64
-  const reader = new FileReader();
-  reader.onload = () => {
-    if (reader.result) {
-      setFormData((prev) => ({
-        ...prev,
-        thumbnail: file,
-        thumbnailBase64: (reader.result as string).split(",")[1] || "",
-        thumbnailPreview: reader.result as string,
-      }));
-      setErrors((prev) => ({ ...prev, thumbnail: "" }));
-    }
+    // Convert to base64 - Fixed implementation
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (reader.result) {
+        const base64String = reader.result as string;
+        // Extract only the base64 part (without data:image/...;base64, prefix)
+        const base64Data = base64String.split(",")[1] || "";
+
+        setFormData((prev) => ({
+          ...prev,
+          thumbnail: file,
+          thumbnailBase64: base64Data, // Store clean base64
+          thumbnailPreview: base64String, // Store full data URL for preview
+        }));
+        setErrors((prev) => ({ ...prev, thumbnail: "" }));
+      }
+    };
+    reader.readAsDataURL(file);
   };
-  reader.readAsDataURL(file);
-};
 
   const handleRemoveImage = () => {
     setFormData((prev) => ({
@@ -223,7 +241,6 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newCombinations = [...formData.combinations];
     newCombinations[index] = { ...newCombinations[index], [field]: value };
 
-    // Reset dependent fields when parent changes
     if (field === "residenceType") {
       newCombinations[index].roomType = "";
       newCombinations[index].theme = "";
@@ -232,8 +249,7 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     }
 
     setFormData((prev) => ({ ...prev, combinations: newCombinations }));
-    
-    // Clear combination errors
+
     if (errors.combinations) {
       setErrors((prev) => ({ ...prev, combinations: "" }));
     }
@@ -268,42 +284,37 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Name validation
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
     }
 
-    // Coohom URL validation
     if (!formData.coohomUrl.trim()) {
       newErrors.coohomUrl = "Coohom URL is required";
     } else if (!urlRegex.test(formData.coohomUrl)) {
       newErrors.coohomUrl = "Invalid URL format";
     }
 
-    // Budget Category validation
     if (!formData.budgetCategory) {
       newErrors.budgetCategory = "Budget Category is required";
     }
 
-    // Price validation
     if (!formData.price.trim()) {
       newErrors.price = "Price is required";
     } else if (isNaN(Number(formData.price)) || Number(formData.price) < 0) {
       newErrors.price = "Please enter a valid positive number";
     }
 
-    // Thumbnail validation (optional but recommended)
     if (!formData.thumbnailBase64) {
       newErrors.thumbnail = "Thumbnail is recommended";
     }
 
-    // Combinations validation
     if (formData.combinations.length === 0) {
       newErrors.combinations = "At least one combination is required";
     } else {
       for (const combo of formData.combinations) {
         if (!combo.residenceType || !combo.roomType || !combo.theme) {
-          newErrors.combinations = "Complete all selections in each combination";
+          newErrors.combinations =
+            "Complete all selections in each combination";
           break;
         }
       }
@@ -313,7 +324,7 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Submit handler
+  // Submit handler - Fixed payload
   const handleSubmit = async () => {
     if (!validateForm()) {
       setApiError("Please fix the validation errors above");
@@ -328,7 +339,7 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         name: formData.name.trim(),
         description: formData.description.trim() || "N/A",
         coohomUrl: formData.coohomUrl.trim(),
-        thumbnail: formData.thumbnailBase64,
+        thumbnail: formData.thumbnailBase64, // Send clean base64
         combinations: formData.combinations.map((combo) => ({
           residenceType: combo.residenceType,
           roomType: combo.roomType,
@@ -338,14 +349,17 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         price: Number(formData.price),
       };
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/designs`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/designs`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       const result = await response.json();
 
@@ -353,7 +367,6 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         throw new Error(result.message || "Failed to create design");
       }
 
-      // Success - redirect to designs list
       router.push("/admin/home-catalog/design");
     } catch (err: any) {
       console.error("Submit error:", err);
@@ -374,13 +387,19 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
   // Get available options for dropdowns
   const getAvailableRoomTypes = (residenceTypeId: string) => {
-    const residence = selectionOptions.find((r) => r.id === residenceTypeId);
+    const residence = selectionOptions.find(
+      (r) => (r.id || r._id) === residenceTypeId
+    );
     return residence?.roomTypes || [];
   };
 
   const getAvailableThemes = (residenceTypeId: string, roomTypeId: string) => {
-    const residence = selectionOptions.find((r) => r.id === residenceTypeId);
-    const roomType = residence?.roomTypes?.find((rt) => rt.id === roomTypeId);
+    const residence = selectionOptions.find(
+      (r) => (r.id || r._id) === residenceTypeId
+    );
+    const roomType = residence?.roomTypes?.find(
+      (rt) => (rt.id || rt._id) === roomTypeId
+    );
     return roomType?.themes || [];
   };
 
@@ -408,7 +427,7 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           <Typography variant="h6" sx={{ mb: 2 }}>
             Basic Information
           </Typography>
-          
+
           <TextField
             label="Design Name"
             name="name"
@@ -453,7 +472,7 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           <Typography variant="h6" sx={{ mb: 2 }}>
             Pricing Information
           </Typography>
-          
+
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
               <FormControl fullWidth error={!!errors.budgetCategory}>
@@ -504,7 +523,7 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           <Typography variant="h6" sx={{ mb: 2 }}>
             Thumbnail Image
           </Typography>
-          
+
           <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
             <Button
               variant="outlined"
@@ -594,8 +613,13 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           )}
 
           {formData.combinations.map((combo, index) => {
-            const availableRoomTypes = getAvailableRoomTypes(combo.residenceType);
-            const availableThemes = getAvailableThemes(combo.residenceType, combo.roomType);
+            const availableRoomTypes = getAvailableRoomTypes(
+              combo.residenceType
+            );
+            const availableThemes = getAvailableThemes(
+              combo.residenceType,
+              combo.roomType
+            );
 
             return (
               <Box
@@ -609,7 +633,10 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                   backgroundColor: "#fafafa",
                 }}
               >
-                <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: "medium" }}>
+                <Typography
+                  variant="subtitle1"
+                  sx={{ mb: 2, fontWeight: "medium" }}
+                >
                   Combination {index + 1}
                 </Typography>
 
@@ -644,7 +671,10 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                         label="Residence Type *"
                       >
                         {selectionOptions.map((residence) => (
-                          <MenuItem key={residence._id || residence.id} value={residence._id || residence.id}>
+                          <MenuItem
+                            key={residence._id || residence.id}
+                            value={residence._id || residence.id}
+                          >
                             {residence.name}
                           </MenuItem>
                         ))}
@@ -668,7 +698,10 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                         disabled={!combo.residenceType}
                       >
                         {availableRoomTypes.map((room) => (
-                          <MenuItem key={room._id || room.id} value={room._id || room.id}>
+                          <MenuItem
+                            key={room._id || room.id}
+                            value={room._id || room.id}
+                          >
                             {room.name}
                           </MenuItem>
                         ))}
@@ -692,7 +725,10 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                         disabled={!combo.roomType}
                       >
                         {availableThemes.map((theme) => (
-                          <MenuItem key={theme._id || theme.id} value={theme._id || theme.id}>
+                          <MenuItem
+                            key={theme._id || theme.id}
+                            value={theme._id || theme.id}
+                          >
                             {theme.name}
                           </MenuItem>
                         ))}
@@ -728,21 +764,19 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         )}
 
         {/* Action Buttons */}
-        <Box 
-          sx={{ 
-            mt: 4, 
+        <Box
+          sx={{
+            mt: 4,
             pt: 3,
             borderTop: "1px solid #e0e0e0",
-            display: "flex", 
+            display: "flex",
             gap: 2,
-            justifyContent: "flex-end"
+            justifyContent: "flex-end",
           }}
         >
-          <CancelButton href="/admin/home-catalog/design">
-            Cancel
-          </CancelButton>
-          <ReusableButton 
-            onClick={handleSubmit} 
+          <CancelButton href="/admin/home-catalog/design">Cancel</CancelButton>
+          <ReusableButton
+            onClick={handleSubmit}
             disabled={isSubmitting}
             sx={{ minWidth: 120 }}
           >

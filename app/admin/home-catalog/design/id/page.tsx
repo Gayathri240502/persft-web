@@ -25,6 +25,11 @@ const DesignTypeDetails = () => {
   const searchParams = useSearchParams();
   const designId = searchParams.get("id");
   const router = useRouter();
+  const convertBase64ToImageUrl = (base64String: string) => {
+    if (!base64String) return "";
+    if (base64String.startsWith("data:image/")) return base64String;
+    return `data:image/jpeg;base64,${base64String}`;
+  };
 
   const [designDetails, setDesignDetails] = useState<{
     _id: string;
@@ -81,7 +86,10 @@ const DesignTypeDetails = () => {
           name: designData.name,
           description: designData.description,
           coohomUrl: designData.coohomUrl,
-          thumbnailUrl: designData.thumbnail,
+          thumbnailUrl:
+            convertBase64ToImageUrl(designData.thumbnail) ||
+            designData.thumbnailUrl ||
+            "",
           combinations: designData.combinations || [],
           budgetCategory: designData.budgetCategory,
           price: designData.price,
@@ -246,40 +254,40 @@ const DesignTypeDetails = () => {
             </Grid>
 
             <Grid item xs={12}>
-  <Typography variant="h6" gutterBottom>
-    Combinations
-  </Typography>
-</Grid>
+              <Typography variant="h6" gutterBottom>
+                Combinations
+              </Typography>
+            </Grid>
 
-{designDetails.combinations.length > 0 ? (
-  designDetails.combinations.map((combination, index) => (
-    <Grid container spacing={2} key={index} sx={{ mb: 2, pl: 2 }}>
-      <Grid item xs={12} sm={4}>
-        <Typography variant="body1">
-          <strong>Residence Type:</strong>{" "}
-          {combination.residenceType?.name || "N/A"}
-        </Typography>
-      </Grid>
-      <Grid item xs={12} sm={4}>
-        <Typography variant="body1">
-          <strong>Room Type:</strong>{" "}
-          {combination.roomType?.name || "N/A"}
-        </Typography>
-      </Grid>
-      <Grid item xs={12} sm={4}>
-        <Typography variant="body1">
-          <strong>Theme:</strong>{" "}
-          {combination.theme?.name || "N/A"}
-        </Typography>
-      </Grid>
-    </Grid>
-  ))
-) : (
-  <Grid item xs={12}>
-    <Typography variant="body2">No combinations available</Typography>
-  </Grid>
-)}
-
+            {designDetails.combinations.length > 0 ? (
+              designDetails.combinations.map((combination, index) => (
+                <Grid container spacing={2} key={index} sx={{ mb: 2, pl: 2 }}>
+                  <Grid item xs={12} sm={4}>
+                    <Typography variant="body1">
+                      <strong>Residence Type:</strong>{" "}
+                      {combination.residenceType?.name || "N/A"}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <Typography variant="body1">
+                      <strong>Room Type:</strong>{" "}
+                      {combination.roomType?.name || "N/A"}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <Typography variant="body1">
+                      <strong>Theme:</strong> {combination.theme?.name || "N/A"}
+                    </Typography>
+                  </Grid>
+                </Grid>
+              ))
+            ) : (
+              <Grid item xs={12}>
+                <Typography variant="body2">
+                  No combinations available
+                </Typography>
+              </Grid>
+            )}
 
             {/* Budget Category & Price */}
             <Grid item xs={12} sm={6}>
@@ -302,9 +310,14 @@ const DesignTypeDetails = () => {
             </Typography>
             {designDetails.thumbnailUrl ? (
               <img
-                src={`${designDetails.thumbnailUrl}`}
+                src={designDetails.thumbnailUrl}
                 alt="Thumbnail"
-                style={{ width: 150, maxHeight: 150 }}
+                style={{
+                  width: 150,
+                  maxHeight: 150,
+                  borderRadius: 8,
+                  border: "1px solid #ddd",
+                }}
               />
             ) : (
               <Typography>No thumbnail available</Typography>

@@ -83,6 +83,12 @@ const DesignType = () => {
 
   // Debounced search with 500ms delay (industry standard for search)
   const debouncedSearch = useDebounce(search, 300);
+  // helper
+  const convertBase64ToImageUrl = (base64String: string) => {
+    if (!base64String) return "";
+    if (base64String.startsWith("data:image/")) return base64String;
+    return `data:image/jpeg;base64,${base64String}`;
+  };
 
   // Memoized fetch function to prevent unnecessary re-renders
   const fetchDesigns = useCallback(async () => {
@@ -128,6 +134,8 @@ const DesignType = () => {
           selections: Array.isArray(item.selections) ? item.selections : [],
           id: item._id,
           sn: page * pageSize + index + 1,
+          thumbnail:
+            convertBase64ToImageUrl(item.thumbnail) || item.thumbnailUrl || "", // normalize
         }));
 
         setDesigns(typesWithId);
@@ -240,7 +248,7 @@ const DesignType = () => {
                 objectFit: "cover",
                 borderRadius: 4,
               }}
-              loading="lazy" // Optimize image loading
+              loading="lazy"
             />
           ) : (
             <Typography variant="body2" color="text.secondary">
@@ -248,6 +256,7 @@ const DesignType = () => {
             </Typography>
           ),
       },
+
       {
         field: "action",
         headerName: "Action",

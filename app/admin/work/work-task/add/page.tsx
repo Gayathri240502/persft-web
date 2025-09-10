@@ -186,7 +186,7 @@ const WorkTaskForm = () => {
         </Box>
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-          <Typography>PO Days:</Typography>
+          <Typography>Work Commencement Day:</Typography>
           <TextField
             type="number"
             name="poDays"

@@ -61,6 +61,10 @@ const AddBudgetCategoryPage = () => {
       setError("Name is required.");
       return;
     }
+     if (!thumbnail) {
+    setError("Thumbnail is required.");
+    return;
+  }
 
     setLoading(true);
     setError(null);
@@ -77,7 +81,7 @@ const AddBudgetCategoryPage = () => {
           body: JSON.stringify({
             name: name.trim(),
             description: description.trim() || "NA", // optional, default to "NA"
-            thumbnail: thumbnail || null, // optional, default to null
+          thumbnail: thumbnail, // ✅ now required
           }),
         }
       );
@@ -158,6 +162,12 @@ const AddBudgetCategoryPage = () => {
           <Typography variant="caption" sx={{ color: "#999" }}>
             Accepted formats: JPG, JPEG, PNG. Max size: 60KB.
           </Typography>
+
+           {error && (
+    <Typography variant="body2" sx={{ color: "red" }}>
+      {error}
+    </Typography>
+  )}
 
           {thumbnail && (
             <Box sx={{ mb: 3 }}>

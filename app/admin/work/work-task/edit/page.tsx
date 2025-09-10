@@ -270,7 +270,7 @@ const EditWorkTask = () => {
 
         <TextField
           name="poDays"
-          label="PO Days"
+          label="Work Commencement Day"
           type="number"
           fullWidth
           sx={{ mb: 3 }}

@@ -193,7 +193,7 @@ const WorkTasksPage = () => {
     },
     { field: "targetDays", headerName: "Target Days", flex: 0.8 },
     { field: "bufferDays", headerName: "Buffer Days", flex: 0.8 },
-    { field: "poDays", headerName: "PO Days", flex: 0.8 },
+    { field: "poDays", headerName: "Work Commencement Day", flex: 0.8 },
     {
       field: "actions",
       headerName: "Actions",

@@ -735,7 +735,7 @@ const WorkOrderDetailsPage = () => {
                                     variant="caption"
                                     color="text.secondary"
                                   >
-                                    PO Days: {task.poDays} | Products:{" "}
+                                    Work Commencement Day: {task.poDays} | Products:{" "}
                                     {task.productCount}
                                   </Typography>
                                   {task.poStatus && (

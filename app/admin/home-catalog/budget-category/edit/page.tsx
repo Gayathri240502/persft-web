@@ -103,11 +103,22 @@ const EditBudgetCategoryPage = () => {
   };
 
   // ✅ Form validation
-  const validateForm = () => {
-    if (!name.trim()) return (setError("Name is required"), false);
-    setError(null);
-    return true;
-  };
+ // ✅ Form validation
+const validateForm = () => {
+  if (!name.trim()) {
+    setError("Name is required");
+    return false;
+  }
+
+  if (!thumbnail) {
+    setError("Thumbnail is required");
+    return false;
+  }
+
+  setError(null);
+  return true;
+};
+
 
   // ✅ Submit handler
   const handleSubmit = async (e: React.FormEvent) => {

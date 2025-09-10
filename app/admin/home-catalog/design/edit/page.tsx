@@ -110,6 +110,11 @@ const EditDesignType = () => {
       isValid = false;
     }
 
+    if (!formData.thumbnailBase64) {
+      newErrors.thumbnail = "Thumbnail is required";
+      isValid = false;
+    }
+
     formData.combinations.forEach((comb, idx) => {
       if (!mongoIdRegex.test(comb.residenceType)) {
         newErrors[`residenceType_${idx}`] = "Select valid residence type";
@@ -143,7 +148,6 @@ const EditDesignType = () => {
     const newCombinations = [...formData.combinations];
     newCombinations[index][field] = value;
 
-    // Reset dependent fields if necessary
     if (field === "residenceType") newCombinations[index].roomType = "";
     if (field === "roomType") newCombinations[index].theme = "";
 
@@ -208,15 +212,12 @@ const EditDesignType = () => {
     reader.readAsDataURL(file);
   };
 
-  // Helper function to get available rooms for a residence type
   const getAvailableRooms = (residenceTypeId: string) => {
-    const residence = residences.find(res => res.id === residenceTypeId);
+    const residence = residences.find((res) => res.id === residenceTypeId);
     return residence ? residence.roomTypes : [];
   };
 
-  // Helper function to get available themes for a room type
   const getAvailableThemes = (roomTypeId: string) => {
-    // Find the room type across all residences
     for (const residence of residences) {
       const room = residence.roomTypes.find((room: any) => room.id === roomTypeId);
       if (room) {
@@ -245,28 +246,26 @@ const EditDesignType = () => {
         budgetRes.json(),
       ]);
 
-      // Store selection tree data with proper structure
       const formattedResidences = selectionTreeData.map((res: any) => ({
         id: res.id,
         name: res.name,
         roomTypes: res.roomTypes.map((room: any) => ({
           id: room.id,
           name: room.name,
-          residenceType: res.id, // Add reference to parent residence
+          residenceType: res.id,
           themes: room.themes.map((theme: any) => ({
             id: theme.id,
             name: theme.name,
-            roomType: room.id // Add reference to parent room
-          }))
-        }))
+            roomType: room.id,
+          })),
+        })),
       }));
 
       setResidences(formattedResidences);
-      
-      // Flatten all rooms and themes for easier lookup
+
       const allRoomsFlat = formattedResidences.flatMap((res: any) => res.roomTypes);
       const allThemesFlat = allRoomsFlat.flatMap((room: any) => room.themes);
-      
+
       setAllRooms(allRoomsFlat);
       setAllThemes(allThemesFlat);
 
@@ -287,10 +286,14 @@ const EditDesignType = () => {
         thumbnail: null,
         thumbnailBase64: designData.thumbnail || "",
         thumbnailPreview,
-        budgetCategory: designData.budgetCategory || "",
-        price: designData.price !== undefined && designData.price !== null
-          ? designData.price
-          : "",
+        budgetCategory:
+          typeof designData.budgetCategory === "object"
+            ? designData.budgetCategory?._id || ""
+            : designData.budgetCategory || "",
+        price:
+          designData.price !== undefined && designData.price !== null
+            ? String(designData.price)
+            : "",
         combinations:
           designData.combinations?.map((c: any) => ({
             residenceType: c.residenceType?._id || "",
@@ -587,7 +590,6 @@ const EditDesignType = () => {
               <IconButton
                 color="error"
                 onClick={() => removeCombination(index)}
-                disabled={formData.combinations.length === 1}
               >
                 <DeleteIcon />
               </IconButton>
@@ -599,28 +601,25 @@ const EditDesignType = () => {
           variant="outlined"
           startIcon={<AddIcon />}
           onClick={addCombination}
+          sx={{ mb: 3 }}
         >
           Add Combination
         </Button>
 
-        {/* Error / Success */}
         {apiError && (
-          <Typography sx={{ mt: 2, color: "error.main" }}>
+          <Typography color="error" sx={{ mb: 2 }}>
             {apiError}
           </Typography>
         )}
         {success && (
-          <Typography sx={{ mt: 2, color: "success.main" }}>
+          <Typography color="success" sx={{ mb: 2 }}>
             Design updated successfully!
           </Typography>
         )}
 
-        {/* Actions */}
-        <Box sx={{ mt: 4, display: "flex", gap: 2 }}>
-          <ReusableButton onClick={handleSubmit} disabled={loading}>
-            {loading ? <CircularProgress size={20} /> : "Update"}
-          </ReusableButton>
-          <CancelButton href="/admin/home-catalog/design">Cancel</CancelButton>
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <ReusableButton label="Update" onClick={handleSubmit} />
+          <CancelButton onClick={() => router.push("/admin/home-catalog/design")} />
         </Box>
       </Box>
     </>

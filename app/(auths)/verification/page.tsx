@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import {
-  clearSession,
+  // clearSession,
   useTokenAndRole,
 } from "@/app/containers/utils/session/CheckSession";
 import { useRouter } from "next/navigation";

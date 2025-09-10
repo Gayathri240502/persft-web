@@ -4,7 +4,6 @@ import Navbar from "@/app/components/navbar/navbar";
 import {
   Box,
   Typography,
-  TextField,
   useMediaQuery,
   IconButton,
   CircularProgress,
@@ -26,6 +25,7 @@ import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 interface Merchant {
   _id: string;
+  vendorId?: string; // ✅ Added vendorId
   firstName: string;
   lastName: string;
   username: string;
@@ -68,11 +68,11 @@ const Merchant = () => {
   const [error, setError] = useState("");
   const { token } = useTokenAndRole();
 
+  // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
     }, 300);
-
     return () => clearTimeout(timer);
   }, [search]);
 
@@ -90,7 +90,7 @@ const Merchant = () => {
       const queryParams = new URLSearchParams({
         page: String(page + 1),
         limit: String(pageSize),
-        search: debouncedSearch,
+        ...(debouncedSearch && { searchTerm: debouncedSearch }),
       });
 
       const response = await fetch(
@@ -109,16 +109,18 @@ const Merchant = () => {
 
       const result: MerchantResponse = await response.json();
 
-      if (
-        !Array.isArray(result.merchants) ||
-        typeof result.total !== "number"
-      ) {
+      if (!Array.isArray(result.merchants) || typeof result.total !== "number") {
         throw new Error("Invalid response structure");
       }
 
       const dataWithSN = result.merchants.map((merchant, index) => ({
         ...merchant,
-        id: merchant._id,
+        vendorId:
+          merchant.vendorId ||
+          (merchant as any).vendor_id ||
+          (merchant as any).vendor?.id ||
+          "-",
+        id: merchant._id || merchant.keycloakId,
         sn: page * pageSize + index + 1,
       }));
 
@@ -177,6 +179,7 @@ const Merchant = () => {
 
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", flex: 0.4 },
+    { field: "_id", headerName: "Vendor ID", flex: 0.8 }, // ✅ Added Vendor ID column
     { field: "firstName", headerName: "First Name", flex: 0.8 },
     { field: "lastName", headerName: "Last Name", flex: 0.8 },
     { field: "username", headerName: "Username", flex: 1 },
@@ -207,7 +210,7 @@ const Merchant = () => {
             color="primary"
             size="small"
             onClick={() =>
-              router.push(`/admin/vendors/merchants/${params.row.keycloakId}`)
+              router.push(`/admin/vendors/merchants/${params.row.keycloakId || params.row._id}`)
             }
           >
             <Visibility />
@@ -217,7 +220,7 @@ const Merchant = () => {
             size="small"
             onClick={() =>
               router.push(
-                `/admin/vendors/merchants/edit?id=${params.row.keycloakId}`
+                `/admin/vendors/merchants/edit?id=${params.row.keycloakId || params.row._id}`
               )
             }
           >
@@ -226,7 +229,7 @@ const Merchant = () => {
           <IconButton
             color="error"
             size="small"
-            onClick={() => handleDeleteClick(params.row.keycloakId)}
+            onClick={() => handleDeleteClick(params.row.keycloakId || params.row._id)}
           >
             <Delete fontSize="small" />
           </IconButton>
@@ -245,7 +248,7 @@ const Merchant = () => {
           </Alert>
         )}
 
-        <Box>
+        <Box sx={{ position: "relative", minHeight: "400px" }}>
           {loading && (
             <Box
               sx={{
@@ -269,11 +272,9 @@ const Merchant = () => {
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
             pageSizeOptions={[5, 10, 25, 100]}
-            autoHeight
             loading={loading}
             disableColumnMenu={isSmallScreen}
             getRowId={(row) => row.id}
-            // Make sure StyledDataGrid handles these or remove if not supported
             onAdd={handleAdd}
             onSearch={handleSearchChange}
             searchPlaceholder="Search Merchants..."
@@ -281,7 +282,7 @@ const Merchant = () => {
         </Box>
 
         <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-          <DialogTitle>Delete</DialogTitle>
+          <DialogTitle>Delete Merchant</DialogTitle>
           <DialogContent>
             <DialogContentText>
               Are you sure you want to delete this merchant? This action cannot

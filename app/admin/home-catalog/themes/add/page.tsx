@@ -124,18 +124,22 @@ const AddTheme = () => {
     }
   };
 
-  const validateForm = () => {
-    if (!formData.name) {
-      setError("Name is required");
-      return false;
-    }
-    if (formData.roomTypes.length === 0) {
-      setError("Select at least one room type");
-      return false;
-    }
-    setError(null);
-    return true;
-  };
+const validateForm = () => {
+  if (!formData.name.trim()) {
+    setError("Name is required");
+    return false;
+  }
+  if (!formData.thumbnail) {
+    setError("Thumbnail is required");
+    return false;
+  }
+  if (formData.roomTypes.length === 0) {
+    setError("Select at least one room type");
+    return false;
+  }
+  setError(null);
+  return true;
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

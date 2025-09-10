@@ -303,10 +303,10 @@ const AddDesignType = () => {
     } else if (isNaN(Number(formData.price)) || Number(formData.price) < 0) {
       newErrors.price = "Please enter a valid positive number";
     }
+if (!formData.thumbnailBase64) {
+  newErrors.thumbnail = "Thumbnail is required";
+}
 
-    if (!formData.thumbnailBase64) {
-      newErrors.thumbnail = "Thumbnail is recommended";
-    }
 
     if (formData.combinations.length === 0) {
       newErrors.combinations = "At least one combination is required";

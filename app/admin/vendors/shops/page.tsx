@@ -28,6 +28,7 @@ import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
 interface Shop {
   _id: string;
+  vendorId: string; // ✅ Added Vendor ID
   firstName: string;
   lastName: string;
   username: string;
@@ -98,11 +99,13 @@ const Shop = () => {
       const result: ShopResponse = await response.json();
 
       if (Array.isArray(result.shops)) {
-        const dataWithSN = result.shops.map((shop, index) => ({
-          ...shop,
-          id: shop._id || shop.keycloakId,
-          sn: page * pageSize + index + 1,
-        }));
+       const dataWithSN = result.shops.map((shop, index) => ({
+  ...shop,
+  vendorId: shop.vendorId || shop.vendor_id || shop.vendor?.id || "-", // fallback mapping
+  id: shop._id || shop.keycloakId,
+  sn: page * pageSize + index + 1,
+}));
+
 
         setRows(dataWithSN);
         setRowCount(result.total || 0);
@@ -175,6 +178,7 @@ const Shop = () => {
 
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", flex: 0.4 },
+    { field: "_id", headerName: "Vendor ID", flex: 0.8 }, // ✅ New column
     { field: "firstName", headerName: "First Name", flex: 0.8 },
     { field: "lastName", headerName: "Last Name", flex: 0.8 },
     { field: "username", headerName: "Username", flex: 1 },

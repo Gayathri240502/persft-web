@@ -25,6 +25,7 @@ import Navbar from "@/app/components/navbar/navbar";
 
 interface Shop {
   _id: string;
+  vendorId?: string; // ✅ Added vendorId
   firstName: string;
   lastName: string;
   username: string;
@@ -209,7 +210,8 @@ const ShopDetailsPage: React.FC = () => {
           <Grid container spacing={2} mb={3}>
             <Grid item xs={12} sm={6}>
               <Typography>
-                <strong>ID:</strong> {shop._id}
+                <strong>Vendor ID:</strong>{" "}
+                {shop.vendorId || shop._id /* ✅ fallback */}
               </Typography>
             </Grid>
             <Grid item xs={12} sm={6}>

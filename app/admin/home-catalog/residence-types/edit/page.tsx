@@ -105,12 +105,18 @@ const EditResidenceType = () => {
     }
   };
 
-  const validateForm = () => {
-    if (!name) return (setError("Name is required"), false);
-    // description is optional; no validation
-    setError(null);
-    return true;
-  };
+const validateForm = () => {
+  if (!name.trim()) {
+    setError("Name is required.");
+    return false;
+  }
+  if (!thumbnail) {
+    setError("Thumbnail is required.");
+    return false;
+  }
+  return true;
+};
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

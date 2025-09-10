@@ -131,13 +131,22 @@ const AddRoomType = () => {
   };
 
 
-  const validateForm = () => {
-    if (!formData.name || formData.residenceTypes.length === 0) {
-      setError("Name and at least one residence type are required.");
-      return false;
-    }
-    return true;
-  };
+const validateForm = () => {
+  if (!formData.name.trim()) {
+    setError("Name is required.");
+    return false;
+  }
+  if (!thumbnail) {
+    setError("Thumbnail is required.");
+    return false;
+  }
+  if (formData.residenceTypes.length === 0) {
+    setError("At least one residence type must be selected.");
+    return false;
+  }
+  return true;
+};
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

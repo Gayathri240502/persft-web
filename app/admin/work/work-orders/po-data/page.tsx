@@ -194,7 +194,7 @@ const PODataPage = () => {
                         <th className="px-3 py-2 border">Quantity</th>
                         <th className="px-3 py-2 border">Target Days</th>
                         <th className="px-3 py-2 border">Buffer Days</th>
-                        <th className="px-3 py-2 border">PO Days</th>
+                        <th className="px-3 py-2 border">Work Commencement Day</th>
                       </tr>
                     </thead>
                     <tbody>

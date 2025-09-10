@@ -172,7 +172,7 @@ const WorkOrderDetail = () => {
     { field: "workTaskName", headerName: "Work Task", flex: 1 },
     { field: "targetDays", headerName: "Target Days", flex: 0.5 },
     { field: "bufferDays", headerName: "Buffer Days", flex: 0.5 },
-    { field: "poDays", headerName: "PO Days", flex: 0.5 },
+    { field: "poDays", headerName: "Work Commencement Day", flex: 0.5 },
     { field: "poStatus", headerName: "PO Status", flex: 1 },
     {
       field: "poAvailable",

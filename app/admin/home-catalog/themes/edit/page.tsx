@@ -126,17 +126,22 @@ const EditThemeType = () => {
   };
 
   const validateForm = () => {
-    if (!name) {
-      setError("Name is required");
-      return false;
-    }
-    if (selectedRooms.length === 0) {
-      setError("Select at least one room type");
-      return false;
-    }
-    setError(null);
-    return true;
-  };
+  if (!name) {
+    setError("Name is required");
+    return false;
+  }
+  if (selectedRooms.length === 0) {
+    setError("Select at least one room type");
+    return false;
+  }
+  if (!thumbnail) {
+    setError("Thumbnail is required");
+    return false;
+  }
+  setError(null);
+  return true;
+};
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

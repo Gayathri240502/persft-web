@@ -194,7 +194,7 @@ const WorkTaskDetails: React.FC = () => {
               <strong>Buffer Days:</strong> {workTask.bufferDays}
             </Typography>
             <Typography variant="body1" sx={{ mb: 1 }}>
-              <strong>PO Days:</strong> {workTask.poDays}
+              <strong>Work Commencement Day:</strong> {workTask.poDays}
             </Typography>
           </Box>
 

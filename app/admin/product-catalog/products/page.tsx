@@ -110,14 +110,15 @@ const Products = () => {
   const { token } = useTokenAndRole();
   const debouncedSearch = useDebounce(search, 300);
 
+  // ✅ Updated columns with direct field names
   const columns: GridColDef[] = [
     { field: "sn", headerName: "SN", width: 70 },
-    { field: "name", headerName: "Name", flex: 1 },
-    { field: "sku", headerName: "SKU", flex: 1 },
+    { field: "name", headerName: "Product Name", flex: 1 },
+    { field: "coohomId", headerName: "Coohom ID", flex: 1 },
+    { field: "categoryName", headerName: "Category", flex: 1 },
+    { field: "subCategoryName", headerName: "Sub Category", flex: 1 },
     { field: "price", headerName: "Price", flex: 1 },
-    { field: "brand", headerName: "Brand", flex: 1 },
-    { field: "modelName", headerName: "Model Name", flex: 1 },
-    { field: "description", headerName: "Description", flex: 1 },
+    { field: "makeModel", headerName: "Make & Model", flex: 1 },
     {
       field: "action",
       headerName: "Action",
@@ -169,7 +170,7 @@ const Products = () => {
       const queryParams = new URLSearchParams({
         page: String(page + 1),
         limit: String(pageSize),
-        search: debouncedSearch, // ✅ correct
+        search: debouncedSearch,
       });
 
       const res = await fetch(
@@ -186,10 +187,14 @@ const Products = () => {
 
       const data: ProductResponse = await res.json();
 
+      // ✅ Correctly formatting the data with new properties
       const formattedProducts = data.products.map((item, index) => ({
         ...item,
         id: item._id,
         sn: page * pageSize + index + 1,
+        categoryName: item.category?.name ?? "",
+        subCategoryName: item.subCategory?.name ?? "",
+        makeModel: [ item.modelName].filter(Boolean).join(" "),
       }));
 
       setProducts(formattedProducts);

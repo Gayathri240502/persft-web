@@ -617,10 +617,12 @@ const EditDesignType = () => {
           </Typography>
         )}
 
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <ReusableButton label="Update" onClick={handleSubmit} />
-          <CancelButton onClick={() => router.push("/admin/home-catalog/design")} />
-        </Box>
+       <Box sx={{ display: "flex", gap: 2 }}>
+    <ReusableButton onClick={handleSubmit}>Update</ReusableButton>
+    <CancelButton onClick={() => router.push("/admin/home-catalog/design")}>
+        Cancel
+    </CancelButton>
+</Box>
       </Box>
     </>
   );

@@ -53,7 +53,6 @@ export interface PasswordFormValues {
 
 // Define a new interface for the profile data fetched from the API
 export interface UserProfile extends ProfileFormValues {
-  // Add any other properties from your API response
 }
 
 export default function EditProfile() {

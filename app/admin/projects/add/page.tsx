@@ -20,7 +20,9 @@ import CancelButton from "@/app/components/CancelButton";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { useRouter } from "next/navigation";
 import Navbar from "@/app/components/navbar/navbar";
+import { jwtDecode } from "jwt-decode";
 
+// Interfaces
 interface SelectionOption {
   id: string;
   name: string;
@@ -49,6 +51,13 @@ interface FormData {
   }[];
 }
 
+interface TokenPayload {
+  residenceTypes?: string[];
+  roomTypes?: string[];
+  themes?: string[];
+  designs?: string[];
+}
+
 const CreateProject = () => {
   const { token } = useTokenAndRole();
   const router = useRouter();
@@ -67,8 +76,21 @@ const CreateProject = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [allowed, setAllowed] = useState<TokenPayload | null>(null);
 
-  // Fetch hierarchical data
+  // Decode token to get allowed selections
+  useEffect(() => {
+    if (token) {
+      try {
+        const decoded: TokenPayload = jwtDecode(token);
+        setAllowed(decoded);
+      } catch (err) {
+        console.error("Invalid token", err);
+      }
+    }
+  }, [token]);
+
+  // Fetch hierarchical data and filter by allowed selections
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -79,7 +101,7 @@ const CreateProject = () => {
         if (!res.ok) throw new Error("Failed to fetch selection options");
         const data = await res.json();
 
-        // Deduplicate themes and designs
+        // Deduplicate & clean
         const cleaned = data.map((res: SelectionOption) => ({
           ...res,
           roomTypes: res.roomTypes?.map((room) => ({
@@ -99,13 +121,43 @@ const CreateProject = () => {
           })),
         }));
 
-        setSelectionOptions(cleaned);
+        // Filter by token permissions
+        const filtered = cleaned
+          .filter((res: SelectionOption) =>
+            allowed?.residenceTypes
+              ? allowed.residenceTypes.includes(res.id)
+              : true
+          )
+          .map((res: SelectionOption) => ({
+            ...res,
+            roomTypes: res.roomTypes
+              ?.filter((room) =>
+                allowed?.roomTypes ? allowed.roomTypes.includes(room.id) : true
+              )
+              .map((room) => ({
+                ...room,
+                themes: room.themes
+                  ?.filter((theme) =>
+                    allowed?.themes ? allowed.themes.includes(theme.id) : true
+                  )
+                  .map((theme) => ({
+                    ...theme,
+                    designs: theme.designs?.filter((design) =>
+                      allowed?.designs
+                        ? allowed.designs.includes(design.id)
+                        : true
+                    ),
+                  })),
+              })),
+          }));
+
+        setSelectionOptions(filtered);
       } catch (err) {
         console.error(err);
       }
     };
-    fetchData();
-  }, [token]);
+    if (token) fetchData();
+  }, [token, allowed]);
 
   // Input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,7 +179,7 @@ const CreateProject = () => {
     const reader = new FileReader();
     reader.onloadend = () => {
       if (typeof reader.result === "string") {
-        const base64 = reader.result.split(",")[1]; // Only Base64 part
+        const base64 = reader.result.split(",")[1];
         setFormData((prev) => ({
           ...prev,
           thumbnail: file,
@@ -223,7 +275,7 @@ const CreateProject = () => {
       };
 
       if (formData.thumbnailBase64) {
-        payload.thumbnail = formData.thumbnailBase64; // Only Base64 string
+        payload.thumbnail = formData.thumbnailBase64;
       }
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/projects`, {

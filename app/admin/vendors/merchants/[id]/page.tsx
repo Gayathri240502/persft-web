@@ -23,6 +23,20 @@ import { ArrowBack, Edit, Delete } from "@mui/icons-material";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import Navbar from "@/app/components/navbar/navbar";
 
+interface Contact {
+  name: string;
+  mobile: string;
+  email: string;
+}
+
+interface BankDetails {
+  bankName: string;
+  accountNumber: string;
+  ifscCode: string;
+  accountHolderName: string;
+  branch: string;
+}
+
 interface Merchant {
   _id: string;
   firstName: string;
@@ -37,8 +51,24 @@ interface Merchant {
   updatedAt: string;
   businessName: string;
   address: string;
-  categoryName: string;
-  subCategoryName: string;
+  pincode?: string;
+  state?: string;
+  country?: string;
+  typeOfEntity?: string;
+  panNumber?: string;
+  gstNumber?: string;
+  categoryName?: string;
+  subCategoryName?: string;
+  authorizedSignatory?: Contact;
+  accountsContact?: Contact;
+  deliveryContact?: Contact;
+  bankAccountDetails?: BankDetails;
+  gstPercentage?: number;
+  otherTaxes?: number;
+  packagingCharges?: number;
+  insuranceCharges?: number;
+  deliveryCharges?: number;
+  installationCharges?: number;
 }
 
 const MerchantDetailsPage: React.FC = () => {
@@ -70,15 +100,13 @@ const MerchantDetailsPage: React.FC = () => {
 
         const data = await res.json();
 
-        const mergedMerchant: Merchant = {
-          ...data.merchant._doc,
-          businessName: data.merchant.businessName ?? "",
-          address: data.merchant.address ?? "",
-          categoryName: data.merchant.categoryName ?? "",
-          subCategoryName: data.merchant.subCategoryName ?? "",
-        };
-
-        setMerchant(mergedMerchant);
+        setMerchant({
+          ...data.merchant,
+          authorizedSignatory: data.merchant.authorizedSignatory || {},
+          accountsContact: data.merchant.accountsContact || {},
+          deliveryContact: data.merchant.deliveryContact || {},
+          bankAccountDetails: data.merchant.bankAccountDetails || {},
+        });
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -111,44 +139,94 @@ const MerchantDetailsPage: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading)
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh"
-      >
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
         <CircularProgress />
       </Box>
     );
-  }
 
-  if (error) {
+  if (error)
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh"
-      >
-        <Alert severity="error">Error: {error}</Alert>
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <Alert severity="error">{error}</Alert>
       </Box>
     );
-  }
 
-  if (!merchant) {
+  if (!merchant)
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh"
-      >
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
         <Alert severity="warning">Merchant not found</Alert>
       </Box>
     );
-  }
+
+  const renderContact = (title: string, contact?: Contact) => (
+    <>
+      <Typography variant="h6" fontWeight="bold" gutterBottom>
+        {title}
+      </Typography>
+      <Grid container spacing={2} mb={2}>
+        <Grid item xs={12} sm={4}>
+          <Typography>
+            <strong>Name:</strong> {contact?.name || "Not set"}
+          </Typography>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Typography>
+            <strong>Mobile:</strong> {contact?.mobile || "Not set"}
+          </Typography>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Typography>
+            <strong>Email:</strong> {contact?.email || "Not set"}
+          </Typography>
+        </Grid>
+      </Grid>
+    </>
+  );
+
+  const renderBankDetails = (bank?: BankDetails) => (
+    <>
+      <Typography variant="h6" fontWeight="bold" gutterBottom>
+        Bank Account Details
+      </Typography>
+      <Grid container spacing={2} mb={2}>
+        {bank &&
+          Object.entries(bank).map(([key, value]) => (
+            <Grid item xs={12} sm={6} key={key}>
+              <Typography>
+                <strong>{key.replace(/([A-Z])/g, " $1")}:</strong> {value || "Not set"}
+              </Typography>
+            </Grid>
+          ))}
+      </Grid>
+    </>
+  );
+
+  const renderCharges = () => (
+    <>
+      <Typography variant="h6" fontWeight="bold" gutterBottom>
+        Charges & Taxes
+      </Typography>
+      <Grid container spacing={2} mb={2}>
+        {[
+          "gstPercentage",
+          "otherTaxes",
+          "packagingCharges",
+          "insuranceCharges",
+          "deliveryCharges",
+          "installationCharges",
+        ].map((key) => (
+          <Grid item xs={12} sm={4} key={key}>
+            <Typography>
+              <strong>{key.replace(/([A-Z])/g, " $1")}:</strong>{" "}
+              {(merchant as any)[key] ?? "Not set"}
+            </Typography>
+          </Grid>
+        ))}
+      </Grid>
+    </>
+  );
 
   return (
     <>
@@ -164,12 +242,7 @@ const MerchantDetailsPage: React.FC = () => {
 
         <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
           {/* Header Section */}
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            mb={2}
-          >
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
             <Box>
               <Typography variant="h4" fontWeight="bold">
                 {merchant.firstName} {merchant.lastName}
@@ -196,10 +269,7 @@ const MerchantDetailsPage: React.FC = () => {
               >
                 <Edit />
               </IconButton>
-              <IconButton
-                color="error"
-                onClick={() => setDeleteDialogOpen(true)}
-              >
+              <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
                 <Delete />
               </IconButton>
             </Box>
@@ -211,54 +281,34 @@ const MerchantDetailsPage: React.FC = () => {
           <Typography variant="h6" fontWeight="bold" gutterBottom>
             Business Information
           </Typography>
-          <Grid container spacing={2} mb={3}>
-            <Grid item xs={12} sm={6}>
-              <Typography>
-                <strong>Business Name:</strong>{" "}
-                {merchant.businessName || "Not set"}
-              </Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography>
-                <strong>Category:</strong> {merchant.categoryName || "Not set"}
-              </Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography>
-                <strong>Subcategory:</strong>{" "}
-                {merchant.subCategoryName || "Not set"}
-              </Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography>
-                <strong>Address:</strong> {merchant.address || "Not set"}
-              </Typography>
-            </Grid>
+          <Grid container spacing={2} mb={2}>
+            {[
+              ["Business Name", merchant.businessName],
+              ["Category", merchant.categoryName],
+              ["Subcategory", merchant.subCategoryName],
+              ["Address", merchant.address],
+              ["Pincode", merchant.pincode],
+              ["State", merchant.state],
+              ["Country", merchant.country],
+              ["Type of Entity", merchant.typeOfEntity],
+              ["PAN Number", merchant.panNumber],
+              ["GST Number", merchant.gstNumber],
+            ].map(([label, value]) => (
+              <Grid item xs={12} sm={6} key={label as string}>
+                <Typography>
+                  <strong>{label}:</strong> {value || "Not set"}
+                </Typography>
+              </Grid>
+            ))}
           </Grid>
 
           <Divider sx={{ my: 3 }} />
 
-          {/* Contact Info */}
-          <Typography variant="h6" fontWeight="bold" gutterBottom>
-            Contact Information
-          </Typography>
-          <Grid container spacing={2} mb={3}>
-            <Grid item xs={12} sm={6}>
-              <Typography>
-                <strong>Email:</strong> {merchant.email}
-              </Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography>
-                <strong>Phone:</strong> {merchant.phone}
-              </Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography>
-                <strong>Username:</strong> {merchant.username}
-              </Typography>
-            </Grid>
-          </Grid>
+          {renderContact("Authorized Signatory", merchant.authorizedSignatory)}
+          {renderContact("Accounts Contact", merchant.accountsContact)}
+          {renderContact("Delivery Contact", merchant.deliveryContact)}
+          {renderBankDetails(merchant.bankAccountDetails)}
+          {renderCharges()}
 
           <Divider sx={{ my: 3 }} />
 
@@ -275,9 +325,7 @@ const MerchantDetailsPage: React.FC = () => {
             <Grid item xs={12} sm={6}>
               <Typography>
                 <strong>Role:</strong>{" "}
-                {Array.isArray(merchant.role)
-                  ? merchant.role.join(", ")
-                  : "Not set"}
+                {Array.isArray(merchant.role) ? merchant.role.join(", ") : "Not set"}
               </Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -296,10 +344,7 @@ const MerchantDetailsPage: React.FC = () => {
         </Paper>
 
         {/* Delete Confirmation Dialog */}
-        <Dialog
-          open={deleteDialogOpen}
-          onClose={() => setDeleteDialogOpen(false)}
-        >
+        <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
           <DialogTitle>Confirm Delete</DialogTitle>
           <DialogContent>
             <DialogContentText>

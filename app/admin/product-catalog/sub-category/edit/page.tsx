@@ -36,15 +36,15 @@ const EditSubCategory = () => {
   const [category, setCategory] = useState<string>("");
   const [name, setName] = useState<string>("");
   const [description, setDescription] = useState<string>("");
+  const [hsnCode, setHsnCode] = useState<string>("");
   const [thumbnail, setThumbnail] = useState<string>("");
-  const [selectedAttributeGroups, setSelectedAttributeGroups] = useState<
-    string[]
-  >([]);
+  const [selectedAttributeGroups, setSelectedAttributeGroups] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedFileName, setSelectedFileName] = useState("No file selected");
 
+  // Fetch categories, attribute groups, and sub-category details
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
@@ -83,23 +83,19 @@ const EditSubCategory = () => {
         );
 
         setAttributeGroups(
-          (attributeGroupsData?.data ?? attributeGroupsData).map(
-            (attr: any) => ({
-              id: attr._id ?? attr.id,
-              name: attr.name,
-            })
-          )
+          (attributeGroupsData?.data ?? attributeGroupsData).map((attr: any) => ({
+            id: attr._id ?? attr.id,
+            name: attr.name,
+          }))
         );
 
         const sub = subCategoryData?.data ?? subCategoryData;
 
         setName(sub.name ?? "");
         setDescription(sub.description ?? "");
+        setHsnCode(sub.hsnCode ?? "");
         setThumbnail(sub.thumbnail ?? "");
-        setSelectedFileName(
-          sub.thumbnail ? "Existing Thumbnail" : "No file selected"
-        );
-
+        setSelectedFileName(sub.thumbnail ? "Existing Thumbnail" : "No file selected");
         setCategory(sub.category?._id ?? sub.category ?? "");
 
         const attrIds = (sub.attributeGroups ?? []).map((ag: any) =>
@@ -145,47 +141,43 @@ const EditSubCategory = () => {
       setSelectedFileName(file.name);
       const reader = new FileReader();
       reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setThumbnail(base64String);
+        setThumbnail(reader.result as string);
       };
       reader.readAsDataURL(file);
-      setError(null); // Clear error if everything is valid
+      setError(null); // Clear error if valid
     }
   };
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !category) {
-      setError("Name and category are required.");
+
+    if (!name || !category || !hsnCode || selectedAttributeGroups.length === 0) {
+      setError("Name, category, HSN Code, and at least one attribute group are required.");
       return;
     }
 
-    const validAttributeGroupIds =
-      selectedAttributeGroups.filter(isValidObjectId);
-    const finalDescription = description?.trim() ? description.trim() : "N/A";
+    const validAttributeGroupIds = selectedAttributeGroups.filter(isValidObjectId);
+    const finalDescription = description?.trim() || "N/A";
 
     setLoading(true);
     setError(null);
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/sub-categories/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            name,
-            description: finalDescription,
-            thumbnail,
-            category,
-            attributeGroups: validAttributeGroupIds,
-          }),
-        }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sub-categories/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name,
+          description: finalDescription,
+          hsnCode,
+          thumbnail,
+          category,
+          attributeGroups: validAttributeGroupIds,
+        }),
+      });
 
       if (!res.ok) {
         const result = await res.json();
@@ -210,7 +202,7 @@ const EditSubCategory = () => {
 
   return (
     <>
-      <Navbar label="Sub Category" />
+      <Navbar label="Edit Sub Category" />
       <Box component="form" onSubmit={handleSubmit} sx={{ p: 3 }}>
         <Typography variant="h5" sx={{ mb: 2 }}>
           Edit Sub Category
@@ -227,7 +219,7 @@ const EditSubCategory = () => {
           <Select
             value={category}
             label="Category"
-            onChange={(e) => setCategory(e.target.value)}
+            onChange={(e) => { setCategory(e.target.value); setError(null); }}
           >
             <MenuItem value="">
               <em>Select a category</em>
@@ -244,7 +236,7 @@ const EditSubCategory = () => {
           label="Name"
           fullWidth
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => { setName(e.target.value); setError(null); }}
           sx={{ mb: 3 }}
         />
 
@@ -255,6 +247,14 @@ const EditSubCategory = () => {
           fullWidth
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+          sx={{ mb: 3 }}
+        />
+
+        <TextField
+          label="HSN Code"
+          fullWidth
+          value={hsnCode}
+          onChange={(e) => setHsnCode(e.target.value)}
           sx={{ mb: 3 }}
         />
 
@@ -270,12 +270,7 @@ const EditSubCategory = () => {
             }}
           >
             Upload Thumbnail
-            <input
-              type="file"
-              hidden
-              accept="image/*"
-              onChange={handleThumbnailChange}
-            />
+            <input type="file" hidden accept="image/*" onChange={handleThumbnailChange} />
           </Button>
           <Typography variant="body2" sx={{ color: "#666" }}>
             {selectedFileName}
@@ -286,7 +281,7 @@ const EditSubCategory = () => {
           Accepted formats: JPG, JPEG, PNG. Max size: 60KB.
         </Typography>
 
-        {thumbnail ? (
+        {thumbnail && (
           <Box sx={{ mt: 2, mb: 3 }}>
             <Typography variant="subtitle2" sx={{ color: "#666" }}>
               Current Image:
@@ -297,17 +292,13 @@ const EditSubCategory = () => {
               style={{ width: 200, borderRadius: 8 }}
             />
           </Box>
-        ) : (
-          <Typography variant="body2" sx={{ color: "#666", mb: 3 }}>
-            No image available
-          </Typography>
         )}
 
+        <Typography variant="h6" sx={{ mb: 1 }}>
+          Attribute Groups
+        </Typography>
         <Grid container spacing={2}>
           <Grid item xs={12}>
-            <Typography variant="h6" sx={{ mb: 1 }}>
-              Attribute Groups
-            </Typography>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
               {attributeGroups.map((group) => (
                 <FormControlLabel
@@ -327,15 +318,9 @@ const EditSubCategory = () => {
 
         <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
           <ReusableButton type="submit" disabled={loading}>
-            {loading ? (
-              <CircularProgress size={24} color="inherit" />
-            ) : (
-              "Update"
-            )}
+            {loading ? <CircularProgress size={24} color="inherit" /> : "Update"}
           </ReusableButton>
-          <CancelButton href="/admin/product-catalog/sub-category">
-            Cancel
-          </CancelButton>
+          <CancelButton href="/admin/product-catalog/sub-category">Cancel</CancelButton>
         </Box>
       </Box>
     </>

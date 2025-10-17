@@ -14,7 +14,6 @@ import {
   MenuItem,
   CircularProgress,
   Alert,
-  SelectChangeEvent,
 } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
@@ -36,6 +35,40 @@ const AddMerchant = () => {
     address: "",
     category: "",
     subCategory: "",
+    pincode: "",
+    state: "",
+    country: "",
+    typeOfEntity: "",
+    panNumber: "",
+    gstNumber: "",
+    authorizedSignatory: {
+      name: "",
+      mobile: "",
+      email: "",
+    },
+    accountsContact: {
+      name: "",
+      mobile: "",
+      email: "",
+    },
+    deliveryContact: {
+      name: "",
+      mobile: "",
+      email: "",
+    },
+    bankAccountDetails: {
+      bankName: "",
+      accountNumber: "",
+      ifscCode: "",
+      accountHolderName: "",
+      branch: "",
+    },
+    gstPercentage: "",
+    otherTaxes: "",
+    packagingCharges: "",
+    insuranceCharges: "",
+    deliveryCharges: "",
+    installationCharges: "",
   });
 
   const [categories, setCategories] = useState<any[]>([]);
@@ -52,15 +85,29 @@ const AddMerchant = () => {
     }));
   };
 
-  const handleSelectChange = (e: SelectChangeEvent<string>) => {
+  // ✅ Fixed TypeScript-safe nested change handler
+  const handleNestedChange = (
+    section: keyof typeof formData,
+    field: string,
+    value: string
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [section]: {
+        ...(prev[section] as Record<string, any>),
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleSelectChange = (e: any) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-      ...(name === "category" && { subCategory: "" }), // Reset sub-category when category changes
+      ...(name === "category" && { subCategory: "" }),
     }));
 
-    // Fetch sub-categories only if a category is selected
     if (name === "category" && value) {
       fetchSubCategories(value);
     }
@@ -75,7 +122,6 @@ const AddMerchant = () => {
         }
       );
       const data = await res.json();
-      console.log("Categories Response:", data);
       setCategories(data.categories || []);
     } catch (err) {
       console.error("Error fetching categories", err);
@@ -84,7 +130,6 @@ const AddMerchant = () => {
 
   const fetchSubCategories = async (categoryId: string) => {
     if (!categoryId) return;
-
     setSubCategoriesLoading(true);
     try {
       const res = await fetch(
@@ -94,7 +139,6 @@ const AddMerchant = () => {
         }
       );
       const data = await res.json();
-      console.log("Subcategories Response:", data);
       setSubCategories(data.subCategories || []);
     } catch (err) {
       console.error("Error fetching sub-categories", err);
@@ -108,9 +152,7 @@ const AddMerchant = () => {
   }, []);
 
   useEffect(() => {
-    if (formData.category) {
-      fetchSubCategories(formData.category);
-    }
+    if (formData.category) fetchSubCategories(formData.category);
   }, [formData.category]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -157,6 +199,7 @@ const AddMerchant = () => {
 
         <form onSubmit={handleSubmit}>
           <Grid container spacing={3}>
+            {/* Basic Details */}
             <Grid item xs={12} md={6}>
               <TextField
                 label="First Name"
@@ -166,7 +209,6 @@ const AddMerchant = () => {
                 fullWidth
               />
             </Grid>
-
             <Grid item xs={12} md={6}>
               <TextField
                 label="Last Name"
@@ -176,8 +218,7 @@ const AddMerchant = () => {
                 fullWidth
               />
             </Grid>
-
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6}>
               <TextField
                 label="Username"
                 name="username"
@@ -186,8 +227,7 @@ const AddMerchant = () => {
                 fullWidth
               />
             </Grid>
-
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6}>
               <TextField
                 label="Email"
                 name="email"
@@ -196,8 +236,7 @@ const AddMerchant = () => {
                 fullWidth
               />
             </Grid>
-
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6}>
               <TextField
                 label="Phone"
                 name="phone"
@@ -206,18 +245,16 @@ const AddMerchant = () => {
                 fullWidth
               />
             </Grid>
-
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6}>
               <TextField
                 label="Password"
                 name="password"
+                type="password"
                 value={formData.password}
                 onChange={handleInputChange}
                 fullWidth
-                type="password"
               />
             </Grid>
-
             <Grid item xs={12}>
               <TextField
                 label="Business Name"
@@ -227,7 +264,6 @@ const AddMerchant = () => {
                 fullWidth
               />
             </Grid>
-
             <Grid item xs={12}>
               <TextField
                 label="Address"
@@ -238,6 +274,7 @@ const AddMerchant = () => {
               />
             </Grid>
 
+            {/* Category & SubCategory */}
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
                 <InputLabel>Category</InputLabel>
@@ -247,19 +284,14 @@ const AddMerchant = () => {
                   name="category"
                   label="Category"
                 >
-                  {categories.length > 0 ? (
-                    categories.map((category) => (
-                      <MenuItem key={category._id} value={category._id}>
-                        {category.name}
-                      </MenuItem>
-                    ))
-                  ) : (
-                    <MenuItem disabled>No categories available</MenuItem>
-                  )}
+                  {categories.map((c) => (
+                    <MenuItem key={c._id} value={c._id}>
+                      {c.name}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </Grid>
-
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
                 <InputLabel>SubCategory</InputLabel>
@@ -274,30 +306,190 @@ const AddMerchant = () => {
                     <MenuItem disabled>
                       <CircularProgress size={24} />
                     </MenuItem>
-                  ) : subCategories.length > 0 ? (
-                    subCategories.map((subCategory) => (
-                      <MenuItem key={subCategory._id} value={subCategory._id}>
-                        {subCategory.name}
+                  ) : (
+                    subCategories.map((s) => (
+                      <MenuItem key={s._id} value={s._id}>
+                        {s.name}
                       </MenuItem>
                     ))
-                  ) : (
-                    <MenuItem disabled>No subcategories available</MenuItem>
                   )}
                 </Select>
               </FormControl>
             </Grid>
+
+            {/* Additional Business Info */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Pincode"
+                name="pincode"
+                value={formData.pincode}
+                onChange={handleInputChange}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="State"
+                name="state"
+                value={formData.state}
+                onChange={handleInputChange}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Country"
+                name="country"
+                value={formData.country}
+                onChange={handleInputChange}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Type of Entity"
+                name="typeOfEntity"
+                value={formData.typeOfEntity}
+                onChange={handleInputChange}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="PAN Number"
+                name="panNumber"
+                value={formData.panNumber}
+                onChange={handleInputChange}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="GST Number"
+                name="gstNumber"
+                value={formData.gstNumber}
+                onChange={handleInputChange}
+                fullWidth
+              />
+            </Grid>
+          </Grid>
+
+          {/* Authorized Signatory */}
+          <Divider sx={{ my: 4 }} />
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Authorized Signatory
+          </Typography>
+          <Grid container spacing={3}>
+            {["name", "mobile", "email"].map((f) => (
+              <Grid item xs={12} md={4} key={f}>
+                <TextField
+                  label={f.charAt(0).toUpperCase() + f.slice(1)}
+                  value={formData.authorizedSignatory[f as keyof typeof formData.authorizedSignatory]}
+                  onChange={(e) =>
+                    handleNestedChange("authorizedSignatory", f, e.target.value)
+                  }
+                  fullWidth
+                />
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* Accounts Contact */}
+          <Divider sx={{ my: 4 }} />
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Accounts Contact
+          </Typography>
+          <Grid container spacing={3}>
+            {["name", "mobile", "email"].map((f) => (
+              <Grid item xs={12} md={4} key={f}>
+                <TextField
+                  label={f.charAt(0).toUpperCase() + f.slice(1)}
+                  value={formData.accountsContact[f as keyof typeof formData.accountsContact]}
+                  onChange={(e) =>
+                    handleNestedChange("accountsContact", f, e.target.value)
+                  }
+                  fullWidth
+                />
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* Delivery Contact */}
+          <Divider sx={{ my: 4 }} />
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Delivery Contact
+          </Typography>
+          <Grid container spacing={3}>
+            {["name", "mobile", "email"].map((f) => (
+              <Grid item xs={12} md={4} key={f}>
+                <TextField
+                  label={f.charAt(0).toUpperCase() + f.slice(1)}
+                  value={formData.deliveryContact[f as keyof typeof formData.deliveryContact]}
+                  onChange={(e) =>
+                    handleNestedChange("deliveryContact", f, e.target.value)
+                  }
+                  fullWidth
+                />
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* Bank Account Details */}
+          <Divider sx={{ my: 4 }} />
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Bank Account Details
+          </Typography>
+          <Grid container spacing={3}>
+            {Object.keys(formData.bankAccountDetails).map((f) => (
+              <Grid item xs={12} md={6} key={f}>
+                <TextField
+                  label={f.charAt(0).toUpperCase() + f.slice(1)}
+                  value={
+                    formData.bankAccountDetails[
+                      f as keyof typeof formData.bankAccountDetails
+                    ]
+                  }
+                  onChange={(e) =>
+                    handleNestedChange("bankAccountDetails", f, e.target.value)
+                  }
+                  fullWidth
+                />
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* Charges Section */}
+          <Divider sx={{ my: 4 }} />
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Charges & Taxes
+          </Typography>
+          <Grid container spacing={3}>
+            {[
+              "gstPercentage",
+              "otherTaxes",
+              "packagingCharges",
+              "insuranceCharges",
+              "deliveryCharges",
+              "installationCharges",
+            ].map((f) => (
+              <Grid item xs={12} md={4} key={f}>
+                <TextField
+                  label={f.replace(/([A-Z])/g, " $1").trim()}
+                  name={f}
+                  value={formData[f as keyof typeof formData]}
+                  onChange={handleInputChange}
+                  fullWidth
+                />
+              </Grid>
+            ))}
           </Grid>
 
           <Divider sx={{ my: 4 }} />
-
           <Box sx={{ display: "flex", gap: 2 }}>
             <ReusableButton type="submit" loading={loading}>
               Submit
             </ReusableButton>
-            <CancelButton href="/admin/vendors/merchants">
-              {" "}
-              Cancel{" "}
-            </CancelButton>
+            <CancelButton href="/admin/vendors/merchants">Cancel</CancelButton>
           </Box>
         </form>
       </Box>

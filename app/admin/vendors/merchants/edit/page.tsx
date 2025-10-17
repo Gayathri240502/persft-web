@@ -24,6 +24,20 @@ import CancelButton from "@/app/components/CancelButton";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import Navbar from "@/app/components/navbar/navbar";
 
+interface Contact {
+  name: string;
+  mobile: string;
+  email: string;
+}
+
+interface BankDetails {
+  bankName: string;
+  accountNumber: string;
+  ifscCode: string;
+  accountHolderName: string;
+  branch: string;
+}
+
 interface Category {
   _id: string;
   name: string;
@@ -46,6 +60,22 @@ interface MerchantForm {
   address: string;
   category: string;
   subCategory: string;
+  pincode: string;
+  state: string;
+  country: string;
+  typeOfEntity: string;
+  panNumber: string;
+  gstNumber: string;
+  authorizedSignatory: Contact;
+  accountsContact: Contact;
+  deliveryContact: Contact;
+  bankAccountDetails: BankDetails;
+  gstPercentage: number;
+  otherTaxes: number;
+  packagingCharges: number;
+  insuranceCharges: number;
+  deliveryCharges: number;
+  installationCharges: number;
 }
 
 const EditMerchant = () => {
@@ -54,10 +84,8 @@ const EditMerchant = () => {
   const { token } = useTokenAndRole();
 
   const merchantId = useMemo(() => searchParams.get("id"), [searchParams]);
-  const keycloakId = useMemo(
-    () => searchParams.get("keycloakId"),
-    [searchParams]
-  );
+  const keycloakId = useMemo(() => searchParams.get("keycloakId"), [searchParams]);
+  const missingId = !merchantId && !keycloakId;
 
   const [formData, setFormData] = useState<MerchantForm>({
     firstName: "",
@@ -71,18 +99,37 @@ const EditMerchant = () => {
     address: "",
     category: "",
     subCategory: "",
+    pincode: "",
+    state: "",
+    country: "",
+    typeOfEntity: "",
+    panNumber: "",
+    gstNumber: "",
+    authorizedSignatory: { name: "", mobile: "", email: "" },
+    accountsContact: { name: "", mobile: "", email: "" },
+    deliveryContact: { name: "", mobile: "", email: "" },
+    bankAccountDetails: {
+      bankName: "",
+      accountNumber: "",
+      ifscCode: "",
+      accountHolderName: "",
+      branch: "",
+    },
+    gstPercentage: 0,
+    otherTaxes: 0,
+    packagingCharges: 0,
+    insuranceCharges: 0,
+    deliveryCharges: 0,
+    installationCharges: 0,
   });
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [loadingCategories, setLoadingCategories] = useState(true);
-  const [loadingSubCategories, setLoadingSubCategories] = useState(false);
   const [loadingMerchant, setLoadingMerchant] = useState(true);
 
-  const missingId = !merchantId && !keycloakId;
-
+  // FETCH merchant details
   useEffect(() => {
     if (missingId) return;
 
@@ -100,30 +147,18 @@ const EditMerchant = () => {
           }
         );
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to fetch merchant");
-        }
+        if (!response.ok) throw new Error("Failed to fetch merchant");
+        const data = await response.json();
+        const merchant = data.merchant || data;
 
-        const responseData = await response.json();
-        const rawMerchant = responseData.merchant || responseData;
-        const merchant = rawMerchant._doc
-          ? { ...rawMerchant._doc, ...rawMerchant }
-          : rawMerchant;
-
-        setFormData({
-          firstName: merchant.firstName || "",
-          lastName: merchant.lastName || "",
-          username: merchant.username || "",
-          email: merchant.email || "",
-          phone: merchant.phone || "",
-          password: "",
-          enabled: merchant.enabled ?? true,
-          businessName: merchant.businessName || "",
-          address: merchant.address || "",
-          category: merchant.category || "",
-          subCategory: merchant.subCategory || "",
-        });
+        setFormData((prev) => ({
+          ...prev,
+          ...merchant,
+          authorizedSignatory: merchant.authorizedSignatory || prev.authorizedSignatory,
+          accountsContact: merchant.accountsContact || prev.accountsContact,
+          deliveryContact: merchant.deliveryContact || prev.deliveryContact,
+          bankAccountDetails: merchant.bankAccountDetails || prev.bankAccountDetails,
+        }));
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -134,113 +169,77 @@ const EditMerchant = () => {
     fetchMerchant();
   }, [merchantId, keycloakId, token, missingId]);
 
+  // FETCH categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        setLoadingCategories(true);
-        const response = await fetch(
+        const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/merchants/dropdown/categories`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to fetch categories");
-        }
-
-        const data = await response.json();
+        const data = await res.json();
         setCategories(data.categories || []);
       } catch (err: any) {
         setError(err.message);
-      } finally {
-        setLoadingCategories(false);
       }
     };
-
     fetchCategories();
   }, [token]);
 
+  // FETCH subcategories
   useEffect(() => {
-    if (!formData.category) {
-      setSubCategories([]);
-      setFormData((prev) => ({ ...prev, subCategory: "" }));
-      return;
-    }
-
+    if (!formData.category) return;
     const fetchSubCategories = async () => {
       try {
-        setLoadingSubCategories(true);
-        const response = await fetch(
+        const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/merchants/dropdown/subcategories/${formData.category}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to fetch subcategories");
-        }
-
-        const data = await response.json();
-        setSubCategories(data.subCategories || data.categories || []);
+        const data = await res.json();
+        setSubCategories(data.subCategories || []);
       } catch (err: any) {
         setError(err.message);
-      } finally {
-        setLoadingSubCategories(false);
       }
     };
-
     fetchSubCategories();
   }, [formData.category, token]);
 
+  // Handle input changes (supports nested fields)
   const handleChange = (
-    e:
-      | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-      | SelectChangeEvent<string>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<string>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-      ...(name === "category" ? { subCategory: "" } : {}),
-    }));
+    const nestedPath = name.split(".");
+    if (nestedPath.length === 2) {
+      const [parent, child] = nestedPath;
+      setFormData((prev) => ({
+        ...prev,
+        [parent]: {
+          ...(prev as any)[parent],
+          [child]: value,
+        },
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
+  // Submit
   const handleSubmit = async () => {
-    if (missingId) {
-      setError("No merchant ID or Keycloak ID provided");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
     try {
-      const payload = { ...formData };
-      if (!payload.password) {
-        delete (payload as any).password;
-      }
+      setLoading(true);
       const id = keycloakId || merchantId;
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/merchants/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/merchants/${id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update merchant");
-      }
+      if (!response.ok) throw new Error("Failed to update merchant");
 
       router.push("/admin/vendors/merchants");
     } catch (err: any) {
@@ -250,68 +249,10 @@ const EditMerchant = () => {
     }
   };
 
-  const renderTextField = (label: string, name: keyof MerchantForm) => (
-    <TextField
-      fullWidth
-      label={label}
-      name={name}
-      value={formData[name]}
-      onChange={handleChange}
-      sx={{ mb: 2 }}
-    />
-  );
-
-  const renderSelect = (
-    label: string,
-    value: string,
-    name: keyof MerchantForm,
-    options: { _id: string; name: string }[],
-    loading = false,
-    disabled = false
-  ) => (
-    <FormControl fullWidth sx={{ mb: 2 }} disabled={disabled || loading}>
-      <InputLabel>{label}</InputLabel>
-      <Select name={name} value={value} label={label} onChange={handleChange}>
-        {loading ? (
-          <MenuItem disabled>Loading...</MenuItem>
-        ) : options.length === 0 ? (
-          <MenuItem disabled>No {label.toLowerCase()} available</MenuItem>
-        ) : (
-          options.map((opt) => (
-            <MenuItem key={opt._id} value={opt._id}>
-              {opt.name}
-            </MenuItem>
-          ))
-        )}
-      </Select>
-    </FormControl>
-  );
-
-  if (missingId) {
-    return (
-      <Box sx={{ p: 4 }}>
-        <Alert severity="error">
-          No merchant ID or Keycloak ID provided. Please select a valid
-          merchant.
-        </Alert>
-        <CancelButton href="/admin/vendors/merchants">
-          Back to Merchants
-        </CancelButton>
-      </Box>
-    );
-  }
-
   if (loadingMerchant) {
     return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "300px",
-        }}
-      >
-        <CircularProgress size={24} />
+      <Box display="flex" justifyContent="center" alignItems="center" height="300px">
+        <CircularProgress />
         <Typography sx={{ ml: 2 }}>Loading merchant data...</Typography>
       </Box>
     );
@@ -319,93 +260,171 @@ const EditMerchant = () => {
 
   return (
     <>
-      <Navbar label="Merchants" />
+      <Navbar label="Edit Merchant" />
       <Box sx={{ p: 4 }}>
         <Typography variant="h5" sx={{ mb: 3 }}>
-          Edit Merchant
+          Edit Merchant Details
         </Typography>
 
         {error && (
-          <Alert
-            severity="error"
-            sx={{ mb: 2 }}
-            action={
-              <Button
-                color="inherit"
-                size="small"
-                onClick={() => window.location.reload()}
-              >
-                Retry
-              </Button>
-            }
-          >
+          <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
 
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            {renderTextField("First Name", "firstName")}
-          </Grid>
-          <Grid item xs={12} md={6}>
-            {renderTextField("Last Name", "lastName")}
-          </Grid>
-          <Grid item xs={12} md={6}>
-            {renderTextField("Username", "username")}
-          </Grid>
-          <Grid item xs={12} md={6}>
-            {renderTextField("Email", "email")}
-          </Grid>
-          <Grid item xs={12} md={6}>
-            {renderTextField("Phone", "phone")}
-          </Grid>
+        <Grid container spacing={2}>
+          {/* Basic Info */}
+          <Grid item xs={12} md={6}>{/* Each Field */}</Grid>
 
-          <Grid item xs={12} md={6}>
-            {renderTextField("Business Name", "businessName")}
-          </Grid>
-          <Grid item xs={12} md={6}>
-            {renderTextField("Address", "address")}
-          </Grid>
-          <Grid item xs={12} md={6}>
-            {renderSelect(
-              "Category",
-              formData.category,
-              "category",
-              categories,
-              loadingCategories
-            )}
-          </Grid>
-          <Grid item xs={12} md={6}>
-            {renderSelect(
-              "Sub Category",
-              formData.subCategory,
-              "subCategory",
-              subCategories,
-              loadingSubCategories,
-              !formData.category
-            )}
-          </Grid>
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={formData.enabled}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    enabled: e.target.checked,
-                  }))
-                }
+          {[
+            "firstName",
+            "lastName",
+            "username",
+            "email",
+            "phone",
+            "businessName",
+            "address",
+            "pincode",
+            "state",
+            "country",
+            "typeOfEntity",
+            "panNumber",
+            "gstNumber",
+          ].map((field) => (
+            <Grid item xs={12} md={6} key={field}>
+              <TextField
+                fullWidth
+                label={field.replace(/([A-Z])/g, " $1")}
+                name={field}
+                value={(formData as any)[field] || ""}
+                onChange={handleChange}
               />
-            }
-            label={formData.enabled ? "Active" : "Inactive"}
-          />
+            </Grid>
+          ))}
+
+          {/* Category Dropdown */}
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <InputLabel>Category</InputLabel>
+              <Select name="category" value={formData.category} onChange={handleChange}>
+                {categories.map((c) => (
+                  <MenuItem key={c._id} value={c._id}>
+                    {c.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          {/* Subcategory Dropdown */}
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <InputLabel>Sub Category</InputLabel>
+              <Select name="subCategory" value={formData.subCategory} onChange={handleChange}>
+                {subCategories.map((sc) => (
+                  <MenuItem key={sc._id} value={sc._id}>
+                    {sc.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12}>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="h6">Authorized Signatory</Typography>
+          </Grid>
+
+          {["name", "mobile", "email"].map((key) => (
+            <Grid item xs={12} md={4} key={key}>
+              <TextField
+                fullWidth
+                label={key}
+                name={`authorizedSignatory.${key}`}
+                value={formData.authorizedSignatory[key as keyof Contact]}
+                onChange={handleChange}
+              />
+            </Grid>
+          ))}
+
+          <Grid item xs={12}>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="h6">Accounts Contact</Typography>
+          </Grid>
+
+          {["name", "mobile", "email"].map((key) => (
+            <Grid item xs={12} md={4} key={key}>
+              <TextField
+                fullWidth
+                label={key}
+                name={`accountsContact.${key}`}
+                value={formData.accountsContact[key as keyof Contact]}
+                onChange={handleChange}
+              />
+            </Grid>
+          ))}
+
+          <Grid item xs={12}>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="h6">Delivery Contact</Typography>
+          </Grid>
+
+          {["name", "mobile", "email"].map((key) => (
+            <Grid item xs={12} md={4} key={key}>
+              <TextField
+                fullWidth
+                label={key}
+                name={`deliveryContact.${key}`}
+                value={formData.deliveryContact[key as keyof Contact]}
+                onChange={handleChange}
+              />
+            </Grid>
+          ))}
+
+          <Grid item xs={12}>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="h6">Bank Account Details</Typography>
+          </Grid>
+
+          {Object.keys(formData.bankAccountDetails).map((key) => (
+            <Grid item xs={12} md={6} key={key}>
+              <TextField
+                fullWidth
+                label={key}
+                name={`bankAccountDetails.${key}`}
+                value={(formData.bankAccountDetails as any)[key]}
+                onChange={handleChange}
+              />
+            </Grid>
+          ))}
+
+          <Grid item xs={12}>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="h6">Charges & Taxes</Typography>
+          </Grid>
+
+          {[
+            "gstPercentage",
+            "otherTaxes",
+            "packagingCharges",
+            "insuranceCharges",
+            "deliveryCharges",
+            "installationCharges",
+          ].map((key) => (
+            <Grid item xs={12} md={4} key={key}>
+              <TextField
+                fullWidth
+                label={key.replace(/([A-Z])/g, " $1")}
+                type="number"
+                name={key}
+                value={(formData as any)[key]}
+                onChange={handleChange}
+              />
+            </Grid>
+          ))}
         </Grid>
 
         <Divider sx={{ my: 4 }} />
-
         <Box sx={{ display: "flex", gap: 2 }}>
           <ReusableButton onClick={handleSubmit} disabled={loading}>
             {loading ? <CircularProgress size={20} /> : "Update"}

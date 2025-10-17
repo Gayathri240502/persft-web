@@ -42,6 +42,7 @@ const AddSubCategory = () => {
     thumbnail: "",
     category: "",
     attributeGroups: [] as string[],
+    hsnCode: "", // NEW
   });
 
   const [categories, setCategories] = useState<Category[]>([]);
@@ -51,6 +52,7 @@ const AddSubCategory = () => {
   const [thumbnail, setThumbnail] = useState(""); // base64 string
   const [selectedFileName, setSelectedFileName] = useState(""); // empty initially
 
+  // Fetch categories and attribute groups
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -82,6 +84,7 @@ const AddSubCategory = () => {
     fetchData();
   }, [token]);
 
+  // Handle input changes
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -113,14 +116,14 @@ const AddSubCategory = () => {
 
       if (!allowedTypes.includes(file.type)) {
         setError("Only JPG, JPEG, and PNG files are allowed.");
-        setSelectedFileName(""); // clear name
+        setSelectedFileName("");
         setThumbnail("");
         return;
       }
 
       if (file.size > maxSize) {
         setError("File size exceeds 60KB.");
-        setSelectedFileName(""); // clear name
+        setSelectedFileName("");
         setThumbnail("");
         return;
       }
@@ -132,18 +135,20 @@ const AddSubCategory = () => {
         setThumbnail(base64String);
       };
       reader.readAsDataURL(file);
-      setError(null); // Clear error if everything is valid
+      setError(null);
     }
   };
 
+  // Validate required fields
   const validateForm = () => {
     if (
       !formData.name ||
       !formData.category ||
-      formData.attributeGroups.length === 0
+      formData.attributeGroups.length === 0 ||
+      !formData.hsnCode
     ) {
       setError(
-        "Name, category, and at least one attribute group are required."
+        "Name, category, HSN Code, and at least one attribute group are required."
       );
       return false;
     }
@@ -151,21 +156,22 @@ const AddSubCategory = () => {
     return true;
   };
 
+  // Submit form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    const finalData = {
-      ...formData,
-      description: formData.description.trim() || "N/A",
-      thumbnail: thumbnail || "", // save empty string if no file
-    };
-
     if (!validateForm()) {
       setLoading(false);
       return;
     }
+
+    const finalData = {
+      ...formData,
+      description: formData.description.trim() || "N/A",
+      thumbnail: thumbnail || "",
+    };
 
     try {
       const response = await fetch(
@@ -236,6 +242,15 @@ const AddSubCategory = () => {
           sx={{ mb: 3 }}
         />
 
+        <TextField
+          label="HSN Code"
+          name="hsnCode"
+          value={formData.hsnCode}
+          onChange={handleInputChange}
+          fullWidth
+          sx={{ mb: 3 }}
+        />
+
         <Box sx={{ mb: 3 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <Button
@@ -252,7 +267,7 @@ const AddSubCategory = () => {
               <input type="file" hidden onChange={handleThumbnailChange} />
             </Button>
             <Typography variant="body2" sx={{ color: "#666" }}>
-              {selectedFileName || "No Image"} {/* ✅ updated */}
+              {selectedFileName || "No Image"}
             </Typography>
           </Box>
         </Box>

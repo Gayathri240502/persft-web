@@ -18,16 +18,22 @@ import {
   DialogContentText,
   DialogActions,
   Grid,
-  Chip,
-  Divider,
   Paper,
-  Tooltip,
+  Divider,
 } from "@mui/material";
 import { ArrowBack, Edit, Delete } from "@mui/icons-material";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
 interface SubCategory {
-  [key: string]: any; // dynamic to handle all fields
+  _id: string;
+  name: string;
+  description?: string;
+  category?: { _id: string; name: string };
+  attributeGroups?: Array<{ _id: string; name: string }>;
+  thumbnail?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  hsnCode?: string;
 }
 
 const SubCategoryDetailsPage: React.FC = () => {
@@ -60,9 +66,9 @@ const SubCategoryDetailsPage: React.FC = () => {
         }
 
         const data = await response.json();
-        setSubCategory(data);
+        setSubCategory(data?.data ?? data);
       } catch (err: any) {
-        setError(err.message);
+        setError(err.message || "An error occurred");
       } finally {
         setLoading(false);
       }
@@ -91,18 +97,13 @@ const SubCategoryDetailsPage: React.FC = () => {
       setDeleteDialogOpen(false);
       router.push("/admin/product-catalog/sub-category");
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Delete failed");
     }
   };
 
   if (loading) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh"
-      >
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
         <CircularProgress />
       </Box>
     );
@@ -110,25 +111,15 @@ const SubCategoryDetailsPage: React.FC = () => {
 
   if (error) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh"
-      >
-        <Alert severity="error">Error: {error}</Alert>
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <Alert severity="error">{error}</Alert>
       </Box>
     );
   }
 
   if (!subCategory) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh"
-      >
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
         <Alert severity="warning">No sub-category found</Alert>
       </Box>
     );
@@ -136,7 +127,7 @@ const SubCategoryDetailsPage: React.FC = () => {
 
   return (
     <>
-      <Navbar label="Sub Category" />
+      <Navbar label="Sub Category Details" />
       <Box p={4}>
         <Button
           startIcon={<ArrowBack />}
@@ -146,31 +137,24 @@ const SubCategoryDetailsPage: React.FC = () => {
           Back
         </Button>
 
-        <Card elevation={4} sx={{ borderRadius: 3, p: 2 }}>
+        <Card elevation={4} sx={{ borderRadius: 3 }}>
           <CardHeader
             title={
-              <Box display="flex" alignItems="center" gap={2}>
-                <Typography variant="h5" fontWeight="bold">
-                  {subCategory.name}
-                </Typography>
-              </Box>
+              <Typography variant="h5" fontWeight="bold">
+                {subCategory.name}
+              </Typography>
             }
             action={
               <Box>
                 <IconButton
                   color="primary"
                   onClick={() =>
-                    router.push(
-                      `/admin/product-catalog/sub-category/edit?id=${id}`
-                    )
+                    router.push(`/admin/product-catalog/sub-category/edit?id=${id}`)
                   }
                 >
                   <Edit />
                 </IconButton>
-                <IconButton
-                  color="error"
-                  onClick={() => setDeleteDialogOpen(true)}
-                >
+                <IconButton color="error" onClick={() => setDeleteDialogOpen(true)}>
                   <Delete />
                 </IconButton>
               </Box>
@@ -204,6 +188,17 @@ const SubCategoryDetailsPage: React.FC = () => {
                     {subCategory.description || "—"}
                   </Typography>
 
+                  {subCategory.hsnCode && (
+                    <>
+                      <Typography variant="subtitle2" fontWeight="bold">
+                        HSN Code:
+                      </Typography>
+                      <Typography variant="body1" gutterBottom>
+                        {subCategory.hsnCode}
+                      </Typography>
+                    </>
+                  )}
+
                   <Typography variant="subtitle2" fontWeight="bold">
                     Category:
                   </Typography>
@@ -218,12 +213,10 @@ const SubCategoryDetailsPage: React.FC = () => {
                   </Typography>
                   {subCategory.attributeGroups?.length ? (
                     <Box display="flex" flexDirection="column" gap={1} mt={1}>
-                      {subCategory.attributeGroups.map((group: any) => (
-                        <Box key={group._id}>
-                          <Typography variant="body1">
-                            {group.name} ({group._id})
-                          </Typography>
-                        </Box>
+                      {subCategory.attributeGroups.map((group) => (
+                        <Typography key={group._id} variant="body1">
+                          {group.name} ({group._id})
+                        </Typography>
                       ))}
                     </Box>
                   ) : (
@@ -241,14 +234,18 @@ const SubCategoryDetailsPage: React.FC = () => {
                     Created At:
                   </Typography>
                   <Typography variant="body1" gutterBottom>
-                    {new Date(subCategory.createdAt).toLocaleString()}
+                    {subCategory.createdAt
+                      ? new Date(subCategory.createdAt).toLocaleString()
+                      : "—"}
                   </Typography>
 
                   <Typography variant="subtitle2" fontWeight="bold">
                     Updated At:
                   </Typography>
                   <Typography variant="body1" gutterBottom>
-                    {new Date(subCategory.updatedAt).toLocaleString()}
+                    {subCategory.updatedAt
+                      ? new Date(subCategory.updatedAt).toLocaleString()
+                      : "—"}
                   </Typography>
 
                   <Typography variant="subtitle2" fontWeight="bold">

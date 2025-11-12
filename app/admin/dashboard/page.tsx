@@ -32,10 +32,12 @@ import {
   clearSession,
   useTokenAndRole,
 } from "@/app/containers/utils/session/CheckSession";
-import { clear } from "console";
 import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
-// Admin interfaces
+/* -----------------------
+   Types & Interfaces
+   ----------------------- */
 interface Order {
   orderId: string;
   customerEmail: string;
@@ -53,21 +55,20 @@ interface DashboardData {
   recentOrders: Order[];
 }
 
-// Merchant interfaces
 interface Product {
   productId: string;
   productName: string;
-  obsBrandGoodId: string;
-  coohomId: string;
-  workGroupName: string;
-  workTaskName: string;
-  targetDays: number;
-  bufferDays: number;
-  poDays: number;
-  assignedAt: string;
-  assignedByName: string;
-  poStatus: string;
-  poAvailable: boolean;
+  obsBrandGoodId?: string;
+  coohomId?: string;
+  workGroupName?: string;
+  workTaskName?: string;
+  targetDays?: number;
+  bufferDays?: number;
+  poDays?: number;
+  assignedAt?: string;
+  assignedByName?: string;
+  poStatus?: string;
+  poAvailable?: boolean;
 }
 
 interface ProductsResponse {
@@ -81,11 +82,11 @@ interface ProductsResponse {
 interface WorkOrder {
   workOrderId: string;
   status: string;
-  expectedStartDate: string;
-  expectedCompletionDate: string;
-  assignedProducts: Product[];
-  totalAssignedProducts: number;
-  createdAt: string;
+  expectedStartDate?: string;
+  expectedCompletionDate?: string;
+  assignedProducts?: Product[];
+  totalAssignedProducts?: number;
+  createdAt?: string;
 }
 
 interface WorkOrdersResponse {
@@ -105,6 +106,9 @@ interface MerchantDashboardData {
   recentWorkOrders: WorkOrder[];
 }
 
+/* -----------------------
+   Small UI components
+   ----------------------- */
 const StatCard = ({
   title,
   value,
@@ -115,7 +119,7 @@ const StatCard = ({
 }: {
   title: string;
   value: string | number;
-  icon: typeof ShoppingCart;
+  icon: React.ElementType;
   bgGradient: string;
   subtitle?: string;
   trend?: string;
@@ -143,7 +147,6 @@ const StatCard = ({
         position: "relative",
       }}
     >
-      {/* Background decoration */}
       <Box
         sx={{
           position: "absolute",
@@ -223,11 +226,11 @@ const StatCard = ({
   </Card>
 );
 
-// Admin Quick Insights
 const AdminQuickInsightCard = ({ stats }: { stats: DashboardData | null }) => {
-  const completionRate = stats
-    ? ((stats.completedOrders / stats.totalOrders) * 100).toFixed(1)
-    : "0";
+  const completionRate =
+    stats && stats.totalOrders > 0
+      ? ((stats.completedOrders / stats.totalOrders) * 100).toFixed(1)
+      : "0";
 
   return (
     <Paper
@@ -272,7 +275,6 @@ const AdminQuickInsightCard = ({ stats }: { stats: DashboardData | null }) => {
   );
 };
 
-// Merchant Quick Insights
 const MerchantQuickInsightCard = ({
   stats,
 }: {
@@ -326,7 +328,6 @@ const MerchantQuickInsightCard = ({
   );
 };
 
-// Admin Recent Orders
 const RecentOrdersCard = ({ orders }: { orders: Order[] }) => (
   <Paper elevation={2} sx={{ p: 3, borderRadius: 3, height: "100%" }}>
     <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
@@ -387,7 +388,6 @@ const RecentOrdersCard = ({ orders }: { orders: Order[] }) => (
   </Paper>
 );
 
-// Merchant Recent Products
 const RecentProductsCard = ({ products }: { products: Product[] }) => (
   <Paper elevation={2} sx={{ p: 3, borderRadius: 3, height: "100%" }}>
     <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
@@ -420,14 +420,16 @@ const RecentProductsCard = ({ products }: { products: Product[] }) => (
             </Box>
             <Box sx={{ textAlign: "right", mr: 2 }}>
               <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                {product.targetDays} days
+                {product.targetDays ?? "-"} days
               </Typography>
               <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                {new Date(product.assignedAt).toLocaleDateString("en-IN")}
+                {product.assignedAt
+                  ? new Date(product.assignedAt).toLocaleDateString("en-IN")
+                  : "-"}
               </Typography>
             </Box>
             <Chip
-              label={product.poStatus}
+              label={product.poStatus ?? "N/A"}
               size="small"
               color={
                 product.poStatus === "generated"
@@ -446,10 +448,14 @@ const RecentProductsCard = ({ products }: { products: Product[] }) => (
   </Paper>
 );
 
-const DesignOrdersDashboard = () => {
+/* -----------------------
+   Main Component
+   ----------------------- */
+const DesignOrdersDashboard: React.FC = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const { token } = useTokenAndRole();
+  const router = useRouter();
 
   const [adminStats, setAdminStats] = useState<DashboardData | null>(null);
   const [merchantStats, setMerchantStats] =
@@ -458,99 +464,177 @@ const DesignOrdersDashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string>("");
 
-  // Determine user role
+  /* -----------------------
+     Redirect when token missing
+     ----------------------- */
   useEffect(() => {
-    if (token) {
-      const decoded = decodeJwt(token);
-      const roles: string[] =
-        decoded?.realm_access?.roles || decoded?.roles || [];
+    if (!token) {
+      // clear local session data and sign out
+      try {
+        clearSession();
+      } catch (e) {
+        // ignore
+      }
+      // use next-auth signOut for cleanup then navigate
+      signOut({ redirect: false }).finally(() => {
+        router.replace("/login");
+      });
+    }
+  }, [token, router]);
+
+  /* -----------------------
+     Robust role detection
+     ----------------------- */
+  useEffect(() => {
+    if (!token) {
+      setUserRole("");
+      return;
+    }
+
+    try {
+      const decoded: any = decodeJwt(token);
+      console.debug("Decoded token for role detection:", decoded);
+
+      // Collect roles from common places: realm_access.roles, roles, resource_access.<client>.roles
+      const realmRoles: string[] = decoded?.realm_access?.roles || [];
+      const topRoles: string[] = decoded?.roles || [];
+      const resourceRoles: string[] = Object.values(
+        decoded?.resource_access || {}
+      ).flatMap((r: any) => r?.roles || []);
+
+      const roles = Array.from(
+        new Set([...realmRoles, ...topRoles, ...resourceRoles])
+      ).map((r) => String(r).toLowerCase());
 
       if (roles.includes("admin")) {
         setUserRole("admin");
-      } else if (roles.includes("merchant")) {
+      } else if (roles.includes("merchant") || roles.includes("vendor")) {
         setUserRole("merchant");
+      } else {
+        // fallback: substring match
+        if (roles.some((r) => r.includes("admin"))) setUserRole("admin");
+        else if (
+          roles.some((r) => r.includes("merchant") || r.includes("vendor"))
+        )
+          setUserRole("merchant");
+        else setUserRole("");
       }
+    } catch (err) {
+      console.error("Role detection failed:", err);
+      setUserRole("");
     }
   }, [token]);
 
-  // Fetch admin stats
+  /* -----------------------
+     Unauthorized handler
+     ----------------------- */
+  const handleUnauthorized = useCallback(() => {
+    try {
+      clearSession();
+    } catch (e) {
+      // ignore
+    }
+    // signOut without redirect then use router replace
+    signOut({ redirect: false }).finally(() => {
+      router.replace("/login");
+    });
+  }, [router]);
+
+  /* -----------------------
+     Fetchers
+     ----------------------- */
   const fetchAdminStats = useCallback(async () => {
     if (!token) return;
-
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/design-orders/statistics`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/admin/design-orders/statistics`;
+      console.debug("Fetching admin stats from", url);
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (res.status === 401) {
+        console.warn("Admin stats unauthorized (401).");
+        handleUnauthorized();
+        return;
+      }
 
       if (!res.ok) {
-        throw new Error(`Error ${res.status}: ${res.statusText}`);
+        const text = await res.text();
+        throw new Error(`Admin API ${res.status}: ${text || res.statusText}`);
       }
-      if (res.status === 401) {
-        clearSession();
-        window.location.href = "/login"; // or kiosk logout page
-      }
-      const data = await res.json();
+
+      const data: DashboardData = await res.json();
       setAdminStats(data);
     } catch (err) {
       console.error("Fetch admin stats error:", err);
       throw err;
     }
-  }, [token]);
+  }, [token, handleUnauthorized]);
 
-  // Fetch merchant stats
   const fetchMerchantStats = useCallback(async () => {
     if (!token) return;
-
     try {
-      // Fetch products
-      const productsRes = await fetch(
-        `${process.env.NEXT_PUBLIC_VENDOR_URL}/merchant-portal/products?page=1&limit=100`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const vendorBase = process.env.NEXT_PUBLIC_VENDOR_URL;
+      console.debug("Vendor base URL:", vendorBase);
 
+      const productsUrl = `${vendorBase}/merchant-portal/products?page=1&limit=100`;
+      console.debug("Fetching products from", productsUrl);
+      const productsRes = await fetch(productsUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.debug(
+        "productsRes.status",
+        productsRes.status,
+        productsRes.statusText
+      );
+      if (productsRes.status === 401) {
+        console.warn("Products API unauthorized (401).");
+        handleUnauthorized();
+        return;
+      }
       if (!productsRes.ok) {
+        const text = await productsRes.text();
         throw new Error(
-          `Error ${productsRes.status}: ${productsRes.statusText}`
+          `Products API ${productsRes.status}: ${text || productsRes.statusText}`
         );
       }
-      if (productsRes.status === 401) {
-        clearSession();
-        window.location.href = "/login"; // or kiosk logout page
-      }
-
       const productsData: ProductsResponse = await productsRes.json();
 
-      // Fetch work orders
-      const workOrdersRes = await fetch(
-        `${process.env.NEXT_PUBLIC_VENDOR_URL}/merchant-portal/work-orders?page=1&limit=100`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const workOrdersUrl = `${vendorBase}/merchant-portal/work-orders?page=1&limit=100`;
+      console.debug("Fetching work orders from", workOrdersUrl);
+      const workOrdersRes = await fetch(workOrdersUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
+      console.debug(
+        "workOrdersRes.status",
+        workOrdersRes.status,
+        workOrdersRes.statusText
+      );
+      if (workOrdersRes.status === 401) {
+        console.warn("WorkOrders API unauthorized (401).");
+        handleUnauthorized();
+        return;
+      }
       if (!workOrdersRes.ok) {
+        const text = await workOrdersRes.text();
         throw new Error(
-          `Error ${workOrdersRes.status}: ${workOrdersRes.statusText}`
+          `WorkOrders API ${workOrdersRes.status}: ${text || workOrdersRes.statusText}`
         );
       }
-
       const workOrdersData: WorkOrdersResponse = await workOrdersRes.json();
 
-      // Calculate stats
+      // build merchant dashboard
       const activeWorkOrders = workOrdersData.workOrders.filter(
         (wo) => wo.status === "active"
       ).length;
@@ -572,12 +656,13 @@ const DesignOrdersDashboard = () => {
       console.error("Fetch merchant stats error:", err);
       throw err;
     }
-  }, [token]);
+  }, [token, handleUnauthorized]);
 
-  // Main fetch function
+  /* -----------------------
+     Orchestrator
+     ----------------------- */
   const fetchStats = useCallback(async () => {
     if (!token || !userRole) return;
-
     setLoading(true);
     setError(null);
 
@@ -586,6 +671,8 @@ const DesignOrdersDashboard = () => {
         await fetchAdminStats();
       } else if (userRole === "merchant") {
         await fetchMerchantStats();
+      } else {
+        setError("Unknown role. Cannot load dashboard.");
       }
     } catch (err) {
       setError(
@@ -597,16 +684,16 @@ const DesignOrdersDashboard = () => {
   }, [token, userRole, fetchAdminStats, fetchMerchantStats]);
 
   useEffect(() => {
-    if (userRole) {
-      fetchStats();
-    }
-  }, [fetchStats, userRole]);
+    fetchStats();
+    // intentionally not adding fetchStats to deps beyond necessary - it's memoized
+  }, [userRole, token, fetchStats]);
 
+  /* -----------------------
+     Render guards & UI
+     ----------------------- */
   if (!token) {
-    useEffect(() => {
-      signOut({ callbackUrl: "/login" });
-    }, []);
-    return null; // nothing rendered, user is redirected
+    // redirect in effect above. Show nothing while it happens.
+    return null;
   }
 
   if (loading) {
@@ -625,7 +712,30 @@ const DesignOrdersDashboard = () => {
     );
   }
 
-  // Admin Dashboard
+  if (error) {
+    return (
+      <>
+        <Navbar label="Dashboard" />
+        <Box sx={{ p: { xs: 2, sm: 3, md: 4 }, minHeight: "60vh" }}>
+          <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+            {error}
+          </Alert>
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            minHeight="40vh"
+          >
+            <Typography>
+              Unable to load dashboard. Check logs for details.
+            </Typography>
+          </Box>
+        </Box>
+      </>
+    );
+  }
+
+  // Admin UI
   if (userRole === "admin") {
     return (
       <>
@@ -637,17 +747,6 @@ const DesignOrdersDashboard = () => {
             minHeight: "100vh",
           }}
         >
-          {error && (
-            <Alert
-              severity="error"
-              sx={{ mb: 3, borderRadius: 2 }}
-              onClose={() => setError(null)}
-            >
-              {error}
-            </Alert>
-          )}
-
-          {/* Header */}
           <Box sx={{ mb: 4 }}>
             <Typography
               variant="h4"
@@ -662,7 +761,6 @@ const DesignOrdersDashboard = () => {
             </Typography>
           </Box>
 
-          {/* Stats Cards */}
           <Grid container spacing={3} sx={{ mb: 4 }}>
             <Grid item xs={12} sm={6} lg={2.4}>
               <StatCard
@@ -711,7 +809,6 @@ const DesignOrdersDashboard = () => {
             </Grid>
           </Grid>
 
-          {/* Insights and Recent Orders */}
           <Grid container spacing={3}>
             <Grid item xs={12} md={4}>
               <AdminQuickInsightCard stats={adminStats} />
@@ -725,7 +822,7 @@ const DesignOrdersDashboard = () => {
     );
   }
 
-  // Merchant Dashboard
+  // Merchant UI
   if (userRole === "merchant") {
     return (
       <>
@@ -737,17 +834,6 @@ const DesignOrdersDashboard = () => {
             minHeight: "100vh",
           }}
         >
-          {error && (
-            <Alert
-              severity="error"
-              sx={{ mb: 3, borderRadius: 2 }}
-              onClose={() => setError(null)}
-            >
-              {error}
-            </Alert>
-          )}
-
-          {/* Header */}
           <Box sx={{ mb: 4 }}>
             <Typography
               variant="h4"
@@ -762,7 +848,6 @@ const DesignOrdersDashboard = () => {
             </Typography>
           </Box>
 
-          {/* Stats Cards */}
           <Grid container spacing={3} sx={{ mb: 4 }}>
             <Grid item xs={12} sm={6} lg={3}>
               <StatCard
@@ -802,7 +887,6 @@ const DesignOrdersDashboard = () => {
             </Grid>
           </Grid>
 
-          {/* Insights and Recent Products */}
           <Grid container spacing={3}>
             <Grid item xs={12} md={4}>
               <MerchantQuickInsightCard stats={merchantStats} />
@@ -818,7 +902,7 @@ const DesignOrdersDashboard = () => {
     );
   }
 
-  // Fallback for unknown roles
+  // Fallback
   return (
     <>
       <Navbar label="Dashboard" />

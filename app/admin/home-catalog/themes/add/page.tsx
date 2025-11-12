@@ -17,10 +17,7 @@ import CancelButton from "@/app/components/CancelButton";
 import { useRouter } from "next/navigation";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
-interface RoomType {
-  _id: string;
-  name: string;
-}
+type RoomType = { id: string; name: string };
 
 const AddTheme = () => {
   const router = useRouter();
@@ -43,8 +40,8 @@ const AddTheme = () => {
     const fetchRoomTypes = async () => {
       try {
         setLoadingRoomTypes(true);
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/room-types`,
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/themes/room-types`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -53,25 +50,33 @@ const AddTheme = () => {
           }
         );
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch room types: ${response.status}`);
-        }
+        if (!res.ok)
+          throw new Error(`Failed to fetch room types: ${res.status}`);
 
-        const result = await response.json();
-        const types = result.roomTypes || [];
+        const raw = await res.json();
+        const list = Array.isArray(raw) ? raw : raw?.roomTypes || [];
 
-        setRoomTypeList(types);
-      } catch (error) {
-        console.error("Fetch error:", error);
+        const normalized: RoomType[] = list
+          .map((t: any) => ({
+            id: t?.id ?? t?._id,
+            name: t?.name,
+          }))
+          .filter((t: RoomType) => Boolean(t.id && t.name));
+
+        setRoomTypeList(normalized);
+        setError(null);
+      } catch (err) {
+        console.error("Fetch error:", err);
         setError(
-          error instanceof Error ? error.message : "Failed to fetch room types"
+          err instanceof Error ? err.message : "Failed to fetch room types"
         );
+        setRoomTypeList([]);
       } finally {
         setLoadingRoomTypes(false);
       }
     };
 
-    fetchRoomTypes();
+    if (token) fetchRoomTypes();
   }, [token]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -87,59 +92,59 @@ const AddTheme = () => {
     setFormData((prev) => ({
       ...prev,
       roomTypes: checked
-        ? [...prev.roomTypes, value]
+        ? Array.from(new Set([...prev.roomTypes, value]))
         : prev.roomTypes.filter((type) => type !== value),
     }));
   };
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const maxSize = 60 * 1024; // 60KB
-      const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
+    if (!file) return;
 
-      if (!allowedTypes.includes(file.type)) {
-        setError("Only JPG, JPEG, and PNG files are allowed.");
-        setSelectedFileName("Invalid file type");
-        return;
-      }
+    const maxSize = 60 * 1024; // 60KB
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
 
-      if (file.size > maxSize) {
-        setError("File size exceeds 60KB.");
-        setSelectedFileName("File too large");
-        return;
-      }
-
-      setSelectedFileName(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setFormData((prev) => ({
-          ...prev,
-          thumbnail: base64String,
-        }));
-      };
-      reader.readAsDataURL(file);
-      setError(null); // Clear error if everything is valid
+    if (!allowedTypes.includes(file.type)) {
+      setError("Only JPG, JPEG, and PNG files are allowed.");
+      setSelectedFileName("Invalid file type");
+      return;
     }
+
+    if (file.size > maxSize) {
+      setError("File size exceeds 60KB.");
+      setSelectedFileName("File too large");
+      return;
+    }
+
+    setSelectedFileName(file.name);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setFormData((prev) => ({
+        ...prev,
+        thumbnail: base64String,
+      }));
+    };
+    reader.readAsDataURL(file);
+    setError(null);
   };
 
-const validateForm = () => {
-  if (!formData.name.trim()) {
-    setError("Name is required");
-    return false;
-  }
-  if (!formData.thumbnail) {
-    setError("Thumbnail is required");
-    return false;
-  }
-  if (formData.roomTypes.length === 0) {
-    setError("Select at least one room type");
-    return false;
-  }
-  setError(null);
-  return true;
-};
+  const validateForm = () => {
+    if (!formData.name.trim()) {
+      setError("Name is required");
+      return false;
+    }
+    if (!formData.thumbnail) {
+      setError("Thumbnail is required");
+      return false;
+    }
+    if (formData.roomTypes.length === 0) {
+      setError("Select at least one room type");
+      return false;
+    }
+    setError(null);
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -169,9 +174,7 @@ const validateForm = () => {
         }
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to create theme");
-      }
+      if (!response.ok) throw new Error("Failed to create theme");
 
       router.push("/admin/home-catalog/themes");
     } catch (err) {
@@ -186,7 +189,7 @@ const validateForm = () => {
   return (
     <>
       <Navbar label="Theme" />
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ p: 3 }} component="form" onSubmit={handleSubmit}>
         <Typography variant="h5" sx={{ mb: 2 }}>
           Add New Theme
         </Typography>
@@ -223,7 +226,12 @@ const validateForm = () => {
             }}
           >
             Upload Thumbnail
-            <input type="file" hidden onChange={handleThumbnailChange} />
+            <input
+              type="file"
+              hidden
+              accept="image/png,image/jpeg,image/jpg"
+              onChange={handleThumbnailChange}
+            />
           </Button>
           <Typography variant="body2" sx={{ color: "#666" }}>
             {selectedFileName}
@@ -253,11 +261,11 @@ const validateForm = () => {
           ) : roomTypeList.length > 0 ? (
             roomTypeList.map((room) => (
               <FormControlLabel
-                key={room._id}
+                key={room.id}
                 control={
                   <Checkbox
-                    value={room._id}
-                    checked={formData.roomTypes.includes(room._id)}
+                    value={room.id}
+                    checked={formData.roomTypes.includes(room.id)}
                     onChange={handleCheckboxChange}
                   />
                 }
@@ -276,7 +284,11 @@ const validateForm = () => {
         )}
 
         <Box sx={{ display: "flex", gap: 2 }}>
-          <ReusableButton onClick={handleSubmit} disabled={loading}>
+          <ReusableButton
+            type="submit"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
             {loading ? "Submitting..." : "Submit"}
           </ReusableButton>
           <CancelButton href="/admin/home-catalog/themes">Cancel</CancelButton>

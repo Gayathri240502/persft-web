@@ -17,10 +17,7 @@ import CancelButton from "@/app/components/CancelButton";
 import { useRouter } from "next/navigation";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
-interface ResidenceType {
-  _id: string;
-  name: string;
-}
+type ResidenceType = { id: string; name: string };
 
 const AddRoomType = () => {
   const router = useRouter();
@@ -29,7 +26,6 @@ const AddRoomType = () => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    thumbnail: "",
     residenceTypes: [] as string[],
   });
 
@@ -48,7 +44,7 @@ const AddRoomType = () => {
       try {
         setLoadingResidenceTypes(true);
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/residence-types`,
+          `${process.env.NEXT_PUBLIC_API_URL}/room-types/residence-types`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -63,9 +59,23 @@ const AddRoomType = () => {
           );
         }
 
-        const result = await response.json();
-        const types = result.residenceTypes || [];
-        setResidenceTypeList(types);
+        const raw = await response.json();
+        type ApiResidenceType = { id?: string; _id?: string; name?: string };
+
+        const list: unknown = Array.isArray(raw)
+          ? raw
+          : (raw.residenceTypes ?? raw.data ?? []);
+
+        const normalized: ResidenceType[] = (list as ApiResidenceType[])
+          .map((t) => ({
+            id: t.id ?? t._id ?? "",
+            name: t.name ?? "",
+          }))
+          .filter((t): t is ResidenceType => t.id !== "" && t.name !== "");
+
+        setResidenceTypeList(normalized);
+
+        setError(null);
       } catch (error) {
         console.error("Fetch error:", error);
         setError(
@@ -73,12 +83,13 @@ const AddRoomType = () => {
             ? error.message
             : "Failed to fetch residence types"
         );
+        setResidenceTypeList([]);
       } finally {
         setLoadingResidenceTypes(false);
       }
     };
 
-    fetchResidenceTypes();
+    if (token) fetchResidenceTypes();
   }, [token]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,7 +105,7 @@ const AddRoomType = () => {
     setFormData((prev) => ({
       ...prev,
       residenceTypes: checked
-        ? [...prev.residenceTypes, value]
+        ? Array.from(new Set([...prev.residenceTypes, value]))
         : prev.residenceTypes.filter((type) => type !== value),
     }));
   };
@@ -103,50 +114,49 @@ const AddRoomType = () => {
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const maxSize = 60 * 1024; // 60KB
-      const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
+    if (!file) return;
 
-      if (!allowedTypes.includes(file.type)) {
-        setError("Only JPG, JPEG, and PNG files are allowed.");
-        setSelectedFileName("Invalid file type");
-        return;
-      }
+    const maxSize = 60 * 1024; // 60KB
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
 
-      if (file.size > maxSize) {
-        setError("File size exceeds 60KB.");
-        setSelectedFileName("File too large");
-        return;
-      }
-
-      setSelectedFileName(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setThumbnail(base64String);
-      };
-      reader.readAsDataURL(file);
-      setError(null); // Clear error if everything is valid
+    if (!allowedTypes.includes(file.type)) {
+      setError("Only JPG, JPEG, and PNG files are allowed.");
+      setSelectedFileName("Invalid file type");
+      return;
     }
+
+    if (file.size > maxSize) {
+      setError("File size exceeds 60KB.");
+      setSelectedFileName("File too large");
+      return;
+    }
+
+    setSelectedFileName(file.name);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setThumbnail(base64String);
+    };
+    reader.readAsDataURL(file);
+    setError(null);
   };
 
-
-const validateForm = () => {
-  if (!formData.name.trim()) {
-    setError("Name is required.");
-    return false;
-  }
-  if (!thumbnail) {
-    setError("Thumbnail is required.");
-    return false;
-  }
-  if (formData.residenceTypes.length === 0) {
-    setError("At least one residence type must be selected.");
-    return false;
-  }
-  return true;
-};
-
+  const validateForm = () => {
+    if (!formData.name.trim()) {
+      setError("Name is required.");
+      return false;
+    }
+    if (!thumbnail) {
+      setError("Thumbnail is required.");
+      return false;
+    }
+    if (formData.residenceTypes.length === 0) {
+      setError("At least one residence type must be selected.");
+      return false;
+    }
+    setError(null);
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,9 +169,10 @@ const validateForm = () => {
     }
 
     const payload = {
-      ...formData,
+      name: formData.name,
       description: formData.description.trim() || "N/A",
-      thumbnail: thumbnail,
+      thumbnail,
+      residenceTypes: formData.residenceTypes,
     };
 
     try {
@@ -178,7 +189,8 @@ const validateForm = () => {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to create room type");
+        const msg = await response.text().catch(() => "");
+        throw new Error(msg || "Failed to create room type");
       }
 
       router.push("/admin/home-catalog/room-types");
@@ -231,7 +243,12 @@ const validateForm = () => {
             }}
           >
             Upload Thumbnail
-            <input type="file" hidden onChange={handleThumbnailChange} />
+            <input
+              type="file"
+              hidden
+              accept="image/png,image/jpeg,image/jpg"
+              onChange={handleThumbnailChange}
+            />
           </Button>
           <Typography variant="body2" sx={{ color: "#666" }}>
             {selectedFileName}
@@ -258,17 +275,17 @@ const validateForm = () => {
           {loadingResidenceTypes ? (
             <Typography>Loading residence types...</Typography>
           ) : residenceTypeList.length > 0 ? (
-            residenceTypeList.map((residence) => (
+            residenceTypeList.map((res) => (
               <FormControlLabel
-                key={residence._id}
+                key={res.id}
                 control={
                   <Checkbox
-                    value={residence._id}
-                    checked={formData.residenceTypes.includes(residence._id)}
+                    value={res.id}
+                    checked={formData.residenceTypes.includes(res.id)}
                     onChange={handleCheckboxChange}
                   />
                 }
-                label={residence.name}
+                label={res.name}
               />
             ))
           ) : (

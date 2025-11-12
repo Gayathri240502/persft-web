@@ -18,6 +18,8 @@ import CancelButton from "@/app/components/CancelButton";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
+type ResidenceType = { id: string; name: string };
+
 const EditRoomType = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -28,7 +30,7 @@ const EditRoomType = () => {
   const [description, setDescription] = useState("");
   const [thumbnail, setThumbnail] = useState<string>("");
   const [selectedFileName, setSelectedFileName] = useState("No file selected");
-  const [residenceTypes, setResidenceTypes] = useState<any[]>([]);
+  const [residenceTypes, setResidenceTypes] = useState<ResidenceType[]>([]);
   const [selectedResidences, setSelectedResidences] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -42,19 +44,28 @@ const EditRoomType = () => {
 
     const fetchData = async () => {
       try {
+        // Fetch residence types
         const resResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/residence-types`,
+          `${process.env.NEXT_PUBLIC_API_URL}/room-types/residence-types`,
           {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
           }
         );
+        if (!resResponse.ok)
+          throw new Error("Failed to fetch residence types.");
+        const rawRes = await resResponse.json();
+        const resList = Array.isArray(rawRes)
+          ? rawRes
+          : rawRes.residenceTypes || rawRes.data || [];
+        const normalizedRes: ResidenceType[] = resList
+          .map((r: any) => ({ id: r?.id ?? r?._id, name: r?.name }))
+          .filter((r: ResidenceType) => r.id && r.name);
+        setResidenceTypes(normalizedRes);
 
-        const residenceData = await resResponse.json();
-        const resTypes = Array.isArray(residenceData?.residenceTypes)
-          ? residenceData.residenceTypes
-          : residenceData.data || residenceData || [];
-        setResidenceTypes(resTypes);
-
+        // Fetch room-type by id
         const roomResponse = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/room-types/${id}`,
           {
@@ -64,7 +75,7 @@ const EditRoomType = () => {
             },
           }
         );
-
+        if (!roomResponse.ok) throw new Error("Failed to fetch room type.");
         const roomData = await roomResponse.json();
         const room = roomData.data || roomData;
 
@@ -75,13 +86,15 @@ const EditRoomType = () => {
           room.thumbnail ? "Existing Thumbnail" : "No file selected"
         );
 
-        if (Array.isArray(room.residenceTypes)) {
-          setSelectedResidences(room.residenceTypes.map((res: any) => res._id));
-        } else if (Array.isArray(room.residences)) {
-          setSelectedResidences(room.residences);
-        }
+        // Normalize selected residences from the room
+        const selected: string[] = Array.isArray(room.residenceTypes)
+          ? room.residenceTypes.map((x: any) => x?.id ?? x?._id ?? x)
+          : Array.isArray(room.residences)
+            ? room.residences.map((x: any) => x?.id ?? x?._id ?? x)
+            : [];
+        setSelectedResidences(selected.filter(Boolean));
       } catch (err) {
-        setError("Failed to load data");
+        setError(err instanceof Error ? err.message : "Failed to load data");
       } finally {
         setInitialLoading(false);
       }
@@ -92,33 +105,31 @@ const EditRoomType = () => {
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const maxSize = 60 * 1024; // 60KB
-      const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
+    if (!file) return;
 
-      if (!allowedTypes.includes(file.type)) {
-        setError("Only JPG, JPEG, and PNG files are allowed.");
-        setSelectedFileName("Invalid file type");
-        return;
-      }
+    const maxSize = 60 * 1024; // 60KB
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
 
-      if (file.size > maxSize) {
-        setError("File size exceeds 60KB.");
-        setSelectedFileName("File too large");
-        return;
-      }
-
-      setSelectedFileName(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setThumbnail(base64String);
-      };
-      reader.readAsDataURL(file);
-      setError(null); // Clear error if everything is valid
+    if (!allowedTypes.includes(file.type)) {
+      setError("Only JPG, JPEG, and PNG files are allowed.");
+      setSelectedFileName("Invalid file type");
+      return;
     }
-  };
 
+    if (file.size > maxSize) {
+      setError("File size exceeds 60KB.");
+      setSelectedFileName("File too large");
+      return;
+    }
+
+    setSelectedFileName(file.name);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setThumbnail(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    setError(null);
+  };
 
   const toggleResidenceSelection = (resId: string) => {
     setSelectedResidences((prev) =>
@@ -129,22 +140,21 @@ const EditRoomType = () => {
   };
 
   const validateForm = () => {
-  if (!name.trim()) {
-    setError("Name is required");
-    return false;
-  }
-  if (selectedResidences.length === 0) {
-    setError("Select at least one residence type");
-    return false;
-  }
-  if (!thumbnail) {
-    setError("Thumbnail is required");
-    return false;
-  }
-  setError(null);
-  return true;
-};
-
+    if (!name.trim()) {
+      setError("Name is required");
+      return false;
+    }
+    if (selectedResidences.length === 0) {
+      setError("Select at least one residence type");
+      return false;
+    }
+    if (!thumbnail) {
+      setError("Thumbnail is required");
+      return false;
+    }
+    setError(null);
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -171,12 +181,16 @@ const EditRoomType = () => {
         }
       );
 
+      const maybeJson = await response.json().catch(() => null);
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || "Failed to update room type");
+        const msg =
+          (maybeJson && (maybeJson.message || maybeJson.error)) ||
+          "Failed to update room type";
+        throw new Error(msg);
       }
 
       router.push("/admin/home-catalog/room-types");
+      router.refresh();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Unexpected error occurred"
@@ -188,7 +202,7 @@ const EditRoomType = () => {
 
   return (
     <>
-      <Navbar label=" Room Types" />
+      <Navbar label="Room Types" />
       <Box sx={{ p: 3 }} component="form" onSubmit={handleSubmit}>
         <Typography variant="h5" sx={{ mb: 2 }}>
           Edit Room Type
@@ -236,7 +250,12 @@ const EditRoomType = () => {
                 }}
               >
                 Upload Thumbnail
-                <input type="file" hidden onChange={handleThumbnailChange} />
+                <input
+                  type="file"
+                  hidden
+                  accept="image/png,image/jpeg,image/jpg"
+                  onChange={handleThumbnailChange}
+                />
               </Button>
               <Typography variant="body2" sx={{ color: "#666" }}>
                 {selectedFileName}
@@ -265,18 +284,22 @@ const EditRoomType = () => {
             <Box
               sx={{ mb: 3, display: "flex", flexDirection: "column", gap: 1 }}
             >
-              {residenceTypes.map((res) => (
-                <FormControlLabel
-                  key={res._id}
-                  control={
-                    <Checkbox
-                      checked={selectedResidences.includes(res._id)}
-                      onChange={() => toggleResidenceSelection(res._id)}
-                    />
-                  }
-                  label={res.name}
-                />
-              ))}
+              {residenceTypes.length > 0 ? (
+                residenceTypes.map((res) => (
+                  <FormControlLabel
+                    key={res.id}
+                    control={
+                      <Checkbox
+                        checked={selectedResidences.includes(res.id)}
+                        onChange={() => toggleResidenceSelection(res.id)}
+                      />
+                    }
+                    label={res.name}
+                  />
+                ))
+              ) : (
+                <Typography>No residence types available</Typography>
+              )}
             </Box>
 
             <Box sx={{ display: "flex", gap: 2 }}>

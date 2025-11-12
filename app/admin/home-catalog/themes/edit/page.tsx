@@ -18,6 +18,11 @@ import CancelButton from "@/app/components/CancelButton";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 
+interface RoomType {
+  id: string;
+  name: string;
+}
+
 const EditThemeType = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -28,7 +33,7 @@ const EditThemeType = () => {
   const [description, setDescription] = useState("");
   const [thumbnail, setThumbnail] = useState<string>("");
   const [selectedFileName, setSelectedFileName] = useState("No file selected");
-  const [roomTypes, setRoomTypes] = useState<any[]>([]);
+  const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -42,6 +47,7 @@ const EditThemeType = () => {
 
     const fetchData = async () => {
       try {
+        // Fetch theme details
         const themeRes = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/themes/${id}`,
           {
@@ -61,22 +67,37 @@ const EditThemeType = () => {
         setSelectedFileName("Existing Thumbnail");
 
         const roomIds = (theme.roomTypes || []).map(
-          (room: any) => room._id || room
+          (room: any) => room._id ?? room.id ?? room
         );
         setSelectedRooms(roomIds);
 
+        // Fetch room types
         const roomsRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/room-types`,
+          `${process.env.NEXT_PUBLIC_API_URL}/themes/room-types`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
             },
           }
         );
 
-        const roomData = await roomsRes.json();
-        const roomList = roomData.data || roomData.roomTypes || [];
-        setRoomTypes(roomList);
+        if (!roomsRes.ok) throw new Error("Failed to fetch room types.");
+        const rawRooms = await roomsRes.json();
+        type ApiRoom = { id?: string; _id?: string; name?: string };
+
+        const list: unknown = Array.isArray(rawRooms)
+          ? rawRooms
+          : (rawRooms.data ?? rawRooms.roomTypes ?? []);
+
+        const normalizedRooms: RoomType[] = (list as ApiRoom[])
+          .map((t) => ({
+            id: t.id ?? t._id ?? "",
+            name: t.name ?? "",
+          }))
+          .filter((t): t is RoomType => t.id !== "" && t.name !== "");
+
+        setRoomTypes(normalizedRooms);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Something went wrong.");
       } finally {
@@ -89,33 +110,32 @@ const EditThemeType = () => {
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const maxSize = 60 * 1024; // 60KB
-      const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
+    if (!file) return;
 
-      if (!allowedTypes.includes(file.type)) {
-        setError("Only JPG, JPEG, and PNG files are allowed.");
-        setSelectedFileName("Invalid file type");
-        return;
-      }
+    const maxSize = 60 * 1024; // 60KB
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
 
-      if (file.size > maxSize) {
-        setError("File size exceeds 60KB.");
-        setSelectedFileName("File too large");
-        return;
-      }
-
-      setSelectedFileName(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setThumbnail(base64String);
-      };
-      reader.readAsDataURL(file);
-      setError(null); // Clear error if everything is valid
+    if (!allowedTypes.includes(file.type)) {
+      setError("Only JPG, JPEG, and PNG files are allowed.");
+      setSelectedFileName("Invalid file type");
+      return;
     }
-  };
 
+    if (file.size > maxSize) {
+      setError("File size exceeds 60KB.");
+      setSelectedFileName("File too large");
+      return;
+    }
+
+    setSelectedFileName(file.name);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setThumbnail(base64String);
+    };
+    reader.readAsDataURL(file);
+    setError(null);
+  };
 
   const toggleRoomSelection = (roomId: string) => {
     setSelectedRooms((prev) =>
@@ -126,22 +146,21 @@ const EditThemeType = () => {
   };
 
   const validateForm = () => {
-  if (!name) {
-    setError("Name is required");
-    return false;
-  }
-  if (selectedRooms.length === 0) {
-    setError("Select at least one room type");
-    return false;
-  }
-  if (!thumbnail) {
-    setError("Thumbnail is required");
-    return false;
-  }
-  setError(null);
-  return true;
-};
-
+    if (!name.trim()) {
+      setError("Name is required");
+      return false;
+    }
+    if (selectedRooms.length === 0) {
+      setError("Select at least one room type");
+      return false;
+    }
+    if (!thumbnail) {
+      setError("Thumbnail is required");
+      return false;
+    }
+    setError(null);
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -169,8 +188,6 @@ const EditThemeType = () => {
       );
 
       const result = await response.json();
-      console.log("UPDATE RESPONSE", result);
-
       if (!response.ok) throw new Error(result.message || "Update failed");
 
       await router.push("/admin/home-catalog/themes");
@@ -234,7 +251,12 @@ const EditThemeType = () => {
                 }}
               >
                 Upload Thumbnail
-                <input type="file" hidden onChange={handleThumbnailChange} />
+                <input
+                  type="file"
+                  hidden
+                  accept="image/png,image/jpeg,image/jpg"
+                  onChange={handleThumbnailChange}
+                />
               </Button>
               <Typography variant="body2" sx={{ color: "#666" }}>
                 {selectedFileName}
@@ -262,18 +284,22 @@ const EditThemeType = () => {
             <Box
               sx={{ mb: 3, display: "flex", flexDirection: "column", gap: 1 }}
             >
-              {roomTypes.map((room) => (
-                <FormControlLabel
-                  key={room._id}
-                  control={
-                    <Checkbox
-                      checked={selectedRooms.includes(room._id)}
-                      onChange={() => toggleRoomSelection(room._id)}
-                    />
-                  }
-                  label={room.name}
-                />
-              ))}
+              {roomTypes.length > 0 ? (
+                roomTypes.map((room) => (
+                  <FormControlLabel
+                    key={room.id}
+                    control={
+                      <Checkbox
+                        checked={selectedRooms.includes(room.id)}
+                        onChange={() => toggleRoomSelection(room.id)}
+                      />
+                    }
+                    label={room.name}
+                  />
+                ))
+              ) : (
+                <Typography>No room types available</Typography>
+              )}
             </Box>
 
             <Box sx={{ display: "flex", gap: 2 }}>

@@ -121,6 +121,7 @@ interface WorkOrder {
   workOrderId: string;
   designOrderId: string;
   customerId: string;
+  customerUsername: string;
   status: string;
   currentPhase: string;
   overallProgress: number;
@@ -546,6 +547,11 @@ const WorkOrderDetailsPage = () => {
                     icon={<PersonIcon fontSize="small" color="primary" />}
                   />
                   <LabelValue
+                    label="Customer Username"
+                    value={workOrder.customerUsername}
+                    icon={<PersonIcon fontSize="small" color="primary" />}
+                  />
+                  <LabelValue
                     label="Current Phase"
                     value={workOrder.currentPhase}
                     icon={<WorkOutlineIcon fontSize="small" color="primary" />}
@@ -735,8 +741,8 @@ const WorkOrderDetailsPage = () => {
                                     variant="caption"
                                     color="text.secondary"
                                   >
-                                    Work Commencement Day: {task.poDays} | Products:{" "}
-                                    {task.productCount}
+                                    Work Commencement Day: {task.poDays} |
+                                    Products: {task.productCount}
                                   </Typography>
                                   {task.poStatus && (
                                     <Chip

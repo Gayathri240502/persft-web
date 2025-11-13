@@ -120,6 +120,14 @@ export default function ProjectDetails() {
         const res = await fetch(`${API_URL}/auth/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        if (res.status === 404) {
+          router.push("/admin/dashboard");
+          return;
+        }
+        if (res.status === 403) {
+          router.push("/admin/dashboard");
+          return;
+        }
         if (!res.ok) throw new Error("Failed to fetch user details");
         const data = await res.json();
         setUserDetails(data);
@@ -338,9 +346,9 @@ export default function ProjectDetails() {
   if (!userDetails) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-        <Typography variant="h5" color="textSecondary" fontWeight={500}>
+        {/* <Typography variant="h5" color="textSecondary" fontWeight={500}>
           No user details found
-        </Typography>
+        </Typography> */}
       </div>
     );
   }

@@ -38,6 +38,7 @@ const PREFERRED_ORDER = [
   "Orders",
   "Tickets",
   "Users",
+  "Service Charges",
   "Settings",
 ] as const;
 

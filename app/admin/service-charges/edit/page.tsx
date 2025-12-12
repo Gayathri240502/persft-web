@@ -69,9 +69,7 @@ const EditServiceCharge = () => {
     displayOrder: 1,
   });
 
-  // -------------------------------
-  // Fetch dropdown data
-  // -------------------------------
+  
   const fetchDropdowns = async () => {
     try {
       const [typesRes, methodsRes] = await Promise.all([
@@ -105,9 +103,7 @@ const EditServiceCharge = () => {
     }
   };
 
-  // -------------------------------
-  // Fetch existing service charge by ID
-  // -------------------------------
+  
   const fetchData = async () => {
     if (!id || !token) return;
 
@@ -150,9 +146,6 @@ const EditServiceCharge = () => {
     }
   };
 
-  // -------------------------------
-  // Handle input changes
-  // -------------------------------
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<string>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });

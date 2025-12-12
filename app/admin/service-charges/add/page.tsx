@@ -63,16 +63,13 @@ const AddServiceCharge = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Helper to normalize different API shapes
   const mapToOption = (m: any): Option => {
-    // API might return { value, label } or { name, description } or simple strings
     if (typeof m === "string") return { value: m, label: m };
     const value = m.value ?? m.name ?? "";
     const label = m.label ?? m.description ?? m.name ?? value;
     return { value, label };
   };
 
-  // Fetch dropdown options with robust error handling
   const fetchDropdowns = async () => {
     if (!token) return;
     setLoadingEnums(true);
@@ -100,14 +97,11 @@ const AddServiceCharge = () => {
       const typesData = await typesRes.json();
       const methodsData = await methodsRes.json();
 
-      // Map & dedupe types (could be string[] or object[])
       const typesObjects: Option[] = (typesData || []).map(mapToOption);
       const uniqueTypes = Array.from(new Map(typesObjects.map((t) => [t.value, t])).values());
 
-      // Map methods (API returns objects like { value, label, description })
       const methodsObjects: Option[] = (methodsData || []).map(mapToOption);
 
-      // If methods array is empty, it's an error scenario we surface to user
       if (!methodsObjects.length) {
         throw new Error("No calculation methods returned from server");
       }
@@ -115,7 +109,6 @@ const AddServiceCharge = () => {
       setTypes(uniqueTypes);
       setMethods(methodsObjects);
 
-      // Ensure current formData.calculationMethod is valid; if not, pick first method
       const currentMethodValue = formData.calculationMethod;
       const hasCurrent = methodsObjects.some((m) => m.value === currentMethodValue);
       if (!hasCurrent) {
@@ -131,14 +124,12 @@ const AddServiceCharge = () => {
 
   useEffect(() => {
     fetchDropdowns();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<string>
   ) => {
     const { name, value } = e.target as any;
-    // For number fields that come as strings, keep as string here; convert on submit
     setFormData({ ...formData, [name]: value });
   };
 
@@ -168,7 +159,6 @@ const AddServiceCharge = () => {
     try {
       const payload: any = { ...formData };
 
-      // if (payload.value !== undefined && payload.value !== "") payload.value = Number(payload.value);
       if (payload.perSqftRate !== undefined && payload.perSqftRate !== "") payload.perSqftRate = Number(payload.perSqftRate);
       if (payload.displayOrder !== undefined && payload.displayOrder !== "") payload.displayOrder = Number(payload.displayOrder);
 
@@ -176,7 +166,6 @@ const AddServiceCharge = () => {
 
       const cleanPricing: { [key: string]: number } = {};
       for (const key in payload.pricing) {
-        // only include numeric, otherwise NaN will be sent
         const num = Number(payload.pricing[key]);
         if (!Number.isNaN(num)) cleanPricing[key] = num;
       }
@@ -221,7 +210,6 @@ const AddServiceCharge = () => {
         label={label}
         onChange={handleChange as any}
       >
-        {/* Optional empty option so placeholder shows when nothing is selected */}
         <MenuItem value="">
           <em>None</em>
         </MenuItem>

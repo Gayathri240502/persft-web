@@ -13,11 +13,13 @@ import {
   DialogTitle,
   Button,
   Chip,
+  Card,
+  CardContent,
 } from "@mui/material";
 
 import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import { useRouter } from "next/navigation";
-import { Edit, Delete, ToggleOn, ToggleOff, Visibility } from "@mui/icons-material";
+import { Edit, Delete, ToggleOn, ToggleOff, Visibility, Save } from "@mui/icons-material";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import StyledDataGrid from "@/app/components/StyledDataGrid/StyledDataGrid";
 
@@ -27,19 +29,23 @@ interface ServiceCharge {
   name: string;
   type: string;
   calculationMethod: string;
-
-  // 🟢 Newly added based on API response
   pricing?: Record<string, number>;
   perSqftRate?: number;
   value?: number;
   percentageBase?: string;
-
   isActive: boolean;
   id?: string;
   sn?: number;
-
-  // computed field
   dynamicValue?: string;
+}
+
+interface ServiceChargeStats {
+  totalCharges: number;
+  mandatoryCount: number;
+  optionalCount: number;
+  activeCount: number;
+  inactiveCount: number;
+  byCalculationMethod: Record<string, number>;
 }
 
 const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/service-charges`;
@@ -66,6 +72,8 @@ const ServiceChargesPage = () => {
   const [items, setItems] = useState<ServiceCharge[]>([]);
   const [rowCount, setRowCount] = useState(0);
 
+  const [stats, setStats] = useState<ServiceChargeStats | null>(null);
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ServiceCharge | null>(null);
 
@@ -78,18 +86,14 @@ const ServiceChargesPage = () => {
     setPaginationModel((prev) => ({ ...prev, page: 0 }));
   }, [debouncedSearch]);
 
-  // Format dynamic value column based on calculation method
   const computeDisplayValue = (item: ServiceCharge) => {
     switch (item.calculationMethod) {
       case "flat_rate":
         return `2BHK: ₹${item.pricing?.["2bhk"] || 0}, 3BHK: ₹${item.pricing?.["3bhk"] || 0}`;
-
       case "per_sqft":
         return `${item.perSqftRate || 0} / sqft`;
-
       case "percentage":
         return `${item.value || 0}% of ${item.percentageBase?.replace("_", " ")}`;
-
       default:
         return "-";
     }
@@ -98,13 +102,11 @@ const ServiceChargesPage = () => {
   const fetchItems = useCallback(
     async (currentPaginationModel: GridPaginationModel, searchTerm: string) => {
       if (!token) return;
-
       setLoading(true);
       setError(null);
 
       try {
         const { page, pageSize } = currentPaginationModel;
-
         const query = new URLSearchParams({
           page: String(page + 1),
           limit: String(pageSize),
@@ -118,19 +120,15 @@ const ServiceChargesPage = () => {
           },
         });
 
-        if (!res.ok) {
-          throw new Error(`API Error: ${res.status} ${res.statusText}`);
-        }
-
+        if (!res.ok) throw new Error(`API Error: ${res.status} ${res.statusText}`);
         const result = await res.json();
 
-        const mapped =
-          result.data?.map((item: ServiceCharge, index: number) => ({
-            ...item,
-            id: item._id,
-            sn: page * pageSize + index + 1,
-            dynamicValue: computeDisplayValue(item), //💥 FIXED
-          })) || [];
+        const mapped = result.data?.map((item: ServiceCharge, index: number) => ({
+          ...item,
+          id: item._id,
+          sn: page * pageSize + index + 1,
+          dynamicValue: computeDisplayValue(item),
+        })) || [];
 
         setItems(mapped);
         setRowCount(result.total || 0);
@@ -143,36 +141,40 @@ const ServiceChargesPage = () => {
     [token]
   );
 
+  const fetchStats = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/stats`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to fetch stats");
+      const data: ServiceChargeStats = await res.json();
+      setStats(data);
+    } catch {
+      setError("Failed to load service charge statistics");
+    }
+  }, [token]);
+
   useEffect(() => {
     fetchItems(paginationModel, debouncedSearch);
-  }, [paginationModel, debouncedSearch, fetchItems]);
+    fetchStats();
+  }, [paginationModel, debouncedSearch, fetchItems, fetchStats]);
 
-  const handlePaginationChange = (model: GridPaginationModel) => {
-    setPaginationModel(model);
-  };
-
+  const handlePaginationChange = (model: GridPaginationModel) => setPaginationModel(model);
   const handleAdd = () => router.push("/admin/service-charges/add");
-
   const handleEdit = (id: string) => router.push(`/admin/service-charges/edit?id=${id}`);
-
-  const handleViewDetails = (id: string) => {
-    router.push(`/admin/service-charges/${id}`);
-  };
+  const handleViewDetails = (id: string) => router.push(`/admin/service-charges/${id}`);
 
   const handleToggle = async (id: string) => {
     if (!token) return;
     try {
       const res = await fetch(`${API_BASE_URL}/${id}/toggle`, {
         method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       });
-
-      if (!res.ok) throw new Error(`Toggle failed`);
-
+      if (!res.ok) throw new Error("Toggle failed");
       fetchItems(paginationModel, debouncedSearch);
+      fetchStats();
     } catch {
       setError("Failed to update active status.");
     }
@@ -190,19 +192,35 @@ const ServiceChargesPage = () => {
 
   const handleDeleteConfirm = async () => {
     if (!selectedItem || !token) return;
-
     try {
       const res = await fetch(`${API_BASE_URL}/${selectedItem._id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-
       if (!res.ok) throw new Error("Delete failed");
-
       fetchItems(paginationModel, debouncedSearch);
+      fetchStats();
       handleDeleteCancel();
     } catch {
       setError("Failed to delete service charge.");
+    }
+  };
+
+  // ✅ Save Order / Reorder
+  const handleSaveOrder = async () => {
+    if (!token) return;
+    try {
+      const orderedIds = items.map((item) => item._id);
+      const res = await fetch(`${API_BASE_URL}/reorder`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ orderedIds }),
+      });
+      if (!res.ok) throw new Error("Failed to save order");
+      fetchItems(paginationModel, debouncedSearch);
+      alert("Order saved successfully");
+    } catch {
+      setError("Failed to save order");
     }
   };
 
@@ -215,25 +233,14 @@ const ServiceChargesPage = () => {
       { field: "name", headerName: "Name", flex: 1.2 },
       { field: "type", headerName: "Type", flex: 1 },
       { field: "calculationMethod", headerName: "Calculation", flex: 1 },
-
-      {
-        field: "dynamicValue",
-        headerName: " Pricing",
-        flex: 1.5,
-      },
-
+      { field: "dynamicValue", headerName: " Pricing", flex: 1.5 },
       {
         field: "isActive",
         headerName: "Status",
         flex: 0.8,
         renderCell: (params) =>
-          params.value ? (
-            <Chip label="Active" color="success" size="small" />
-          ) : (
-            <Chip label="Inactive" color="default" size="small" />
-          ),
+          params.value ? <Chip label="Active" color="success" size="small" /> : <Chip label="Inactive" color="default" size="small" />,
       },
-
       {
         field: "actions",
         headerName: "Actions",
@@ -241,61 +248,127 @@ const ServiceChargesPage = () => {
         flex: 1.5,
         renderCell: (params) => (
           <Box display="flex" gap={0.5}>
-            <IconButton
-              size="small"
-              color="info"
-              onClick={() => handleViewDetails(params.row._id)}
-              title="View Details"
-            >
+            <IconButton size="small" color="info" onClick={() => handleViewDetails(params.row._id)} title="View Details">
               <Visibility fontSize="small" />
             </IconButton>
-
-            <IconButton
-              size="small"
-              color="primary"
-              onClick={() => handleEdit(params.row._id)}
-              title="Edit"
-            >
+            <IconButton size="small" color="primary" onClick={() => handleEdit(params.row._id)} title="Edit">
               <Edit fontSize="small" />
             </IconButton>
-
-            <IconButton
-              size="small"
-              color={params.row.isActive ? "warning" : "success"}
-              onClick={() => handleToggle(params.row._id)}
-              title={params.row.isActive ? "Deactivate" : "Activate"}
-            >
-              {params.row.isActive ? (
-                <ToggleOff fontSize="small" />
-              ) : (
-                <ToggleOn fontSize="small" />
-              )}
+            <IconButton size="small" color={params.row.isActive ? "warning" : "success"} onClick={() => handleToggle(params.row._id)} title={params.row.isActive ? "Deactivate" : "Activate"}>
+              {params.row.isActive ? <ToggleOff fontSize="small" /> : <ToggleOn fontSize="small" />}
             </IconButton>
-
-            <IconButton
-              size="small"
-              color="error"
-              onClick={() => handleDeleteClick(params.row)}
-              title="Delete"
-            >
+            <IconButton size="small" color="error" onClick={() => handleDeleteClick(params.row)} title="Delete">
               <Delete fontSize="small" />
             </IconButton>
           </Box>
         ),
       },
     ],
-    []
+    [paginationModel, debouncedSearch]
   );
 
   return (
     <>
       <Navbar label="Service Charges" />
       <Box sx={{ p: 3 }}>
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
+        {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>{error}</Alert>}
+
+        {/* Stats Section */}
+        {/* Stats Section with Background Colors */}
+{stats && (
+  <Box mb={3} display="flex" gap={2} flexWrap="wrap">
+    <Card sx={{ minWidth: 150, flex: 1, borderRadius: 2, boxShadow: 3, bgcolor: '#1976d2', color: 'white' }}>
+      <CardContent>
+        <Typography variant="subtitle2" fontWeight={600}>
+          Total Charges
+        </Typography>
+        <Typography variant="h6" fontWeight={700}>
+          {stats.totalCharges}
+        </Typography>
+      </CardContent>
+    </Card>
+
+    <Card sx={{ minWidth: 150, flex: 1, borderRadius: 2, boxShadow: 3, bgcolor: '#0288d1', color: 'white' }}>
+      <CardContent>
+        <Typography variant="subtitle2" fontWeight={600}>
+          Mandatory
+        </Typography>
+        <Typography variant="h6" fontWeight={700}>
+          {stats.mandatoryCount}
+        </Typography>
+      </CardContent>
+    </Card>
+
+    <Card sx={{ minWidth: 150, flex: 1, borderRadius: 2, boxShadow: 3, bgcolor: '#ffa000', color: 'white' }}>
+      <CardContent>
+        <Typography variant="subtitle2" fontWeight={600}>
+          Optional
+        </Typography>
+        <Typography variant="h6" fontWeight={700}>
+          {stats.optionalCount}
+        </Typography>
+      </CardContent>
+    </Card>
+
+    <Card sx={{ minWidth: 150, flex: 1, borderRadius: 2, boxShadow: 3, bgcolor: '#2e7d32', color: 'white' }}>
+      <CardContent>
+        <Typography variant="subtitle2" fontWeight={600}>
+          Active
+        </Typography>
+        <Typography variant="h6" fontWeight={700}>
+          {stats.activeCount}
+        </Typography>
+      </CardContent>
+    </Card>
+
+    <Card sx={{ minWidth: 150, flex: 1, borderRadius: 2, boxShadow: 3, bgcolor: '#d32f2f', color: 'white' }}>
+      <CardContent>
+        <Typography variant="subtitle2" fontWeight={600}>
+          Inactive
+        </Typography>
+        <Typography variant="h6" fontWeight={700}>
+          {stats.inactiveCount}
+        </Typography>
+      </CardContent>
+    </Card>
+
+    {Object.entries(stats.byCalculationMethod).map(([method, count]) => (
+      <Card
+        key={method}
+        sx={{
+          minWidth: 150,
+          flex: 1,
+          borderRadius: 2,
+          boxShadow: 3,
+          bgcolor:
+            method === "flat_rate"
+              ? "#1565c0"
+              : method === "per_sqft"
+              ? "#0288d1"
+              : "#6a1b9a",
+          color: "white",
+        }}
+      >
+        <CardContent>
+          <Typography variant="subtitle2" fontWeight={600}>
+            {method.replace("_", " ")}
+          </Typography>
+          <Typography variant="h6" fontWeight={700}>
+            {count}
+          </Typography>
+        </CardContent>
+      </Card>
+    ))}
+  </Box>
+)}
+
+
+        {/* Save Reorder Button */}
+        <Box mb={2} display="flex" justifyContent="flex-end">
+          <Button variant="contained" startIcon={<Save />} onClick={handleSaveOrder}>
+            Save Order
+          </Button>
+        </Box>
 
         <StyledDataGrid
           rows={items}
@@ -319,16 +392,11 @@ const ServiceChargesPage = () => {
         <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
           <DialogTitle>Confirm Delete</DialogTitle>
           <DialogContent>
-            <Typography>
-              Do you really want to delete the service charge "
-              {selectedItem?.name}"?
-            </Typography>
+            <Typography>Do you really want to delete the service charge "{selectedItem?.name}"?</Typography>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleDeleteCancel}>Cancel</Button>
-            <Button color="error" variant="contained" onClick={handleDeleteConfirm}>
-              Delete
-            </Button>
+            <Button color="error" variant="contained" onClick={handleDeleteConfirm}>Delete</Button>
           </DialogActions>
         </Dialog>
       </Box>

@@ -12,6 +12,12 @@ import Link from "next/link";
 import { Tooltip } from "@mui/material";
 import { useTokenAndRole } from "@/app/containers/utils/session/CheckSession";
 import { decodeJwt } from "@/app/containers/utils/session/DecodeToken";
+import localMenus from "../../../menus_data.json";
+import projectManagerMenus from "../../../menus_project_manager.json";
+import financeMenus from "../../../menus_finance.json";
+import designerMenus from "../../../menus_designer.json";
+import vendorMenus from "../../../menus_vendor.json";
+import supportMenus from "../../../menus_support.json";
 
 interface MenuItem {
   _id: string;
@@ -21,6 +27,7 @@ interface MenuItem {
   image?: string;
   role: string;
   parentId: string | null;
+  parentName?: string | null;
   isCategory: boolean;
 }
 
@@ -38,7 +45,7 @@ const PREFERRED_ORDER = [
   "Orders",
   "Tickets",
   "Users",
-  "Service Charges",
+  "Service-Charges",
   "Settings",
 ] as const;
 
@@ -162,21 +169,19 @@ const MenuItemComponent = memo(
           )}
 
           <button
-            className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 group relative ${
-              isActive
-                ? "bg-blue-50 text-blue-700 font-medium shadow-sm border border-blue-200"
-                : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-            }`}
+            className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 group relative ${isActive
+              ? "bg-blue-50 text-blue-700 font-medium shadow-sm border border-blue-200"
+              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+              }`}
             onClick={() => onMenuClick(item, hasChildren)}
             aria-expanded={hasChildren ? isOpen : undefined}
             aria-haspopup={hasChildren ? "true" : undefined}
           >
             <div
-              className={`flex-shrink-0 w-6 flex justify-center transition-colors duration-200 ${
-                isActive
-                  ? "text-blue-600"
-                  : "text-gray-500 group-hover:text-gray-700"
-              }`}
+              className={`flex-shrink-0 w-6 flex justify-center transition-colors duration-200 ${isActive
+                ? "text-blue-600"
+                : "text-gray-500 group-hover:text-gray-700"
+                }`}
             >
               {renderIcon(item.image)}
             </div>
@@ -187,13 +192,11 @@ const MenuItemComponent = memo(
                 </span>
                 {hasChildren && (
                   <ChevronDownIcon
-                    className={`flex-shrink-0 transition-transform duration-200 ${
-                      isOpen ? "rotate-180" : ""
-                    } ${
-                      isActive
+                    className={`flex-shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""
+                      } ${isActive
                         ? "text-blue-600"
                         : "text-gray-400 group-hover:text-gray-600"
-                    }`}
+                      }`}
                     size={16}
                   />
                 )}
@@ -238,7 +241,7 @@ export default function Sidebar() {
   // Memoized menu calculations
   const { parentMenus, childMenus } = useMemo(() => {
     const parents = menus
-      .filter((item) => item.parentId === null)
+      .filter((item) => !item.parentId && (!item.parentName || item.parentName === ""))
       .sort((a, b) => {
         const indexA = PREFERRED_ORDER.indexOf(a.name as any);
         const indexB = PREFERRED_ORDER.indexOf(b.name as any);
@@ -250,34 +253,49 @@ export default function Sidebar() {
         return a.order - b.order;
       });
 
-    const children = menus.filter((item) => item.parentId !== null);
+    const children = menus.filter((item) => !!item.parentId || (item.parentName && item.parentName !== ""));
 
     return { parentMenus: parents, childMenus: children };
   }, [menus]);
 
+  const resolvePath = useCallback((item: MenuItem) => {
+    if (!item.pathname) return null;
+    if (item.pathname.startsWith("/")) return item.pathname;
+    if (item.pathname.startsWith("#")) {
+      // Custom mapping for parent navigation (e.g., #homecatalog -> /admin/home-catalog)
+      return `/admin/${item.name.toLowerCase().replace(/ /g, "-")}`;
+    }
+    return `/${item.pathname}`;
+  }, []);
+
   // Function to determine if a menu item or its children are active
   const isMenuActive = useCallback(
     (item: MenuItem, childMenus: MenuItem[]) => {
-      if (item.pathname && pathName === item.pathname) {
+      const mappedPath = resolvePath(item);
+      if (mappedPath && pathName === mappedPath) {
         return true;
       }
       if (
-        item.pathname &&
-        pathName.includes(item.pathname) &&
-        item.pathname !== "/"
+        mappedPath &&
+        pathName.startsWith(mappedPath) &&
+        mappedPath !== "/" &&
+        mappedPath !== "/admin"
       ) {
         return true;
       }
       const children = childMenus.filter(
-        (child) => child.parentId === item._id
+        (child) =>
+          (item._id && child.parentId === item._id) ||
+          (item.name && child.parentName === item.name)
       );
       return children.some(
-        (child) =>
-          child.pathname &&
-          (pathName === child.pathname || pathName.includes(child.pathname))
+        (child) => {
+          const childPath = resolvePath(child);
+          return childPath && (pathName === childPath || pathName.startsWith(childPath));
+        }
       );
     },
-    [pathName]
+    [pathName, resolvePath]
   );
 
   // Auto-open submenus for active parent items
@@ -286,18 +304,23 @@ export default function Sidebar() {
       const newOpenSubMenus = { ...openSubMenus };
       parentMenus.forEach((parent) => {
         const children = childMenus.filter(
-          (child) => child.parentId === parent._id
+          (child) =>
+            (parent._id && child.parentId === parent._id) ||
+            (parent.name && child.parentName === parent.name)
         );
         const isActive = children.some(
-          (child) => child.pathname && pathName.includes(child.pathname)
+          (child) => {
+            const childPath = resolvePath(child);
+            return childPath && pathName.startsWith(childPath);
+          }
         );
         if (isActive) {
-          newOpenSubMenus[parent._id] = true;
+          newOpenSubMenus[parent._id || parent.name] = true;
         }
       });
       setOpenSubMenus(newOpenSubMenus);
     }
-  }, [menus, pathName, parentMenus, childMenus]);
+  }, [menus, pathName, parentMenus, childMenus, resolvePath]);
 
   const fetchMenus = useCallback(async () => {
     if (menusCache.current) {
@@ -306,52 +329,170 @@ export default function Sidebar() {
       return;
     }
 
-    // Wait for authentication to complete
     if (authLoading || !isAuthenticated || !token) {
       setLoading(false);
       return;
     }
 
     try {
-      const decoded = decodeJwt(token);
-
-      // normalize: either from decoded or passed-in
+      const decoded: any = decodeJwt(token);
       const roles = decoded?.realm_access?.roles || role || [];
-
-      // pick role: prefer "admin", else "merchant", else first meaningful
       let effectiveRole = "none";
 
       if (roles.includes("admin")) {
         effectiveRole = "admin";
       } else if (roles.includes("merchant")) {
         effectiveRole = "merchant";
+      } else if (roles.includes("project_manager")) {
+        // Force use of local project manager menus, skipping API call
+        setMenus(projectManagerMenus as any[]);
+        menusCache.current = projectManagerMenus as any[];
+        setLoading(false);
+        return;
+      } else if (roles.includes("finance")) {
+        // Force use of local finance menus, skipping API call
+        setMenus(financeMenus as any[]);
+        menusCache.current = financeMenus as any[];
+        setLoading(false);
+        return;
+      } else if (roles.includes("designer")) {
+        // Force use of local designer menus, skipping API call
+        setMenus(designerMenus as any[]);
+        menusCache.current = designerMenus as any[];
+        setLoading(false);
+        return;
+      } else if (roles.includes("vendor")) {
+        // Force use of local vendor menus, skipping API call
+        setMenus(vendorMenus as any[]);
+        menusCache.current = vendorMenus as any[];
+        setLoading(false);
+        return;
+      } else if (roles.includes("support")) {
+        // Force use of local support menus, skipping API call
+        setMenus(supportMenus as any[]);
+        menusCache.current = supportMenus as any[];
+        setLoading(false);
+        return;
       } else {
         effectiveRole = roles[1] || roles[0] || "none";
       }
 
-      console.log("effectiveRole:", effectiveRole);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL
+        ? `${process.env.NEXT_PUBLIC_API_URL}/menus/role/${effectiveRole}`
+        : null;
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/menus/role/${effectiveRole}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+      let apiData: MenuItem[] = [];
+
+      if (apiUrl) {
+        try {
+          const response = await fetch(apiUrl, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
+          if (response.ok) {
+            const data = await response.json().catch(() => []);
+
+            // Helper to flatten nested menu structure
+            const flattenMenus = (items: any[]): MenuItem[] => {
+              let result: MenuItem[] = [];
+              items.forEach(item => {
+                const { children, roles, ...rest } = item;
+                // Normalize role: API uses 'roles' array, local uses 'role' string
+                const newItem: any = {
+                  ...rest,
+                  role: roles && roles.length > 0 ? roles[0] : (rest.role || 'none')
+                };
+                result.push(newItem);
+                if (children && Array.isArray(children)) {
+                  result = result.concat(flattenMenus(children));
+                }
+              });
+              return result;
+            };
+
+            if (Array.isArray(data)) {
+              apiData = flattenMenus(data);
+            }
+          }
+        } catch (fetchErr) {
+          console.warn("Sidebar: API fetch network error:", fetchErr);
         }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data: MenuItem[] = await response.json();
-      setMenus(data);
-      menusCache.current = data;
+      // Merge Strategy: Prioritize API data if available.
+      // If API returns data, use it (merged with local for any missing props).
+      // If API fails/empty, fallback to localMenus.
+
+      let merged: MenuItem[] = [];
+
+      if (apiData.length > 0) {
+        // 1. Map API items to merged items (API + Local Config)
+        const apiMerged = apiData.map(apiItem => {
+          const localItem = (localMenus as any[]).find((l: any) => l.name === apiItem.name);
+          return { ...localItem, ...apiItem };
+        });
+
+        // 2. Find Local Partial items (items in localMenus that match the role but are NOT in API)
+        //    This ensures that if the API is incomplete for a role (e.g. admin), we fallback to local definitions
+        //    only for that specific role.
+        const localOnlyItems = (localMenus as any[]).filter(localItem => {
+          // Check if already in API
+          const existsInApi = apiData.some(apiItem => apiItem.name === localItem.name);
+          if (existsInApi) return false;
+
+          // Check if role matches
+          // localItem.role is a string. localMenus items usually have single 'role'.
+          // We compare against effectiveRole which we determined earlier.
+          return localItem.role === effectiveRole;
+        });
+
+        merged = [...apiMerged, ...localOnlyItems];
+      } else {
+        if (effectiveRole === "project_manager") {
+          merged = projectManagerMenus as any[];
+        } else if (effectiveRole === "finance") {
+          merged = financeMenus as any[];
+        } else if (effectiveRole === "designer") {
+          merged = designerMenus as any[];
+        } else if (effectiveRole === "vendor") {
+          merged = vendorMenus as any[];
+        } else if (effectiveRole === "support") {
+          merged = supportMenus as any[];
+        } else {
+          merged = localMenus as any[];
+        }
+      }
+
+      setMenus(merged);
+      menusCache.current = merged;
     } catch (error) {
-      console.error("Failed to fetch sidebar menus:", error);
-      // Clear cache on error
-      menusCache.current = null;
+      console.error("Failed to fetch sidebar menus, using local:", error);
+
+      const decoded: any = decodeJwt(token);
+      const roles = decoded?.realm_access?.roles || role || [];
+      const isProjectManager = roles.includes("project_manager");
+
+      if (isProjectManager) {
+        setMenus(projectManagerMenus as any[]);
+        menusCache.current = projectManagerMenus as any[];
+      } else if (roles.includes("finance")) {
+        setMenus(financeMenus as any[]);
+        menusCache.current = financeMenus as any[];
+      } else if (roles.includes("designer")) {
+        setMenus(designerMenus as any[]);
+        menusCache.current = designerMenus as any[];
+      } else if (roles.includes("vendor")) {
+        setMenus(vendorMenus as any[]);
+        menusCache.current = vendorMenus as any[];
+      } else if (roles.includes("support")) {
+        setMenus(supportMenus as any[]);
+        menusCache.current = supportMenus as any[];
+      } else {
+        setMenus(localMenus as any[]);
+        menusCache.current = localMenus as any[];
+      }
     } finally {
       setLoading(false);
     }
@@ -373,7 +514,6 @@ export default function Sidebar() {
         !sidebarRef.current.contains(target) &&
         isMobile
       ) {
-        // Don't close if clicking on tooltip or other floating elements
         const isTooltipClick = (target as Element).closest?.(
           ".MuiTooltip-root, .MuiTooltip-popper, [role='tooltip']"
         );
@@ -393,7 +533,6 @@ export default function Sidebar() {
     };
   }, [isOpen, isMobile, closeSidebar]);
 
-  // Handle escape key
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape" && isOpen && isMobile) {
@@ -405,9 +544,12 @@ export default function Sidebar() {
   }, [isOpen, isMobile, closeSidebar]);
 
   const getChildren = useCallback(
-    (parentId: string) =>
+    (parentId: string, name: string) =>
       childMenus
-        .filter((child) => child.parentId === parentId)
+        .filter((child) =>
+          (parentId && child.parentId === parentId) ||
+          (name && child.parentName === name)
+        )
         .sort((a, b) => a.order - b.order),
     [childMenus]
   );
@@ -415,33 +557,32 @@ export default function Sidebar() {
   const handleMenuClick = useCallback(
     (item: MenuItem, hasChildren: boolean) => {
       if (hasChildren) {
-        toggleSubMenu(item._id);
-      } else if (item.pathname) {
-        const path = item.pathname.startsWith("/")
-          ? item.pathname
-          : `/${item.pathname}`;
+        toggleSubMenu(item._id || item.name);
+        return; // Fixed: Don't navigate if it's a dropdown module
+      }
+
+      const path = resolvePath(item);
+      if (path) {
         router.push(path);
         if (isMobile) {
           closeSidebar();
         }
       }
     },
-    [toggleSubMenu, router, isMobile, closeSidebar]
+    [toggleSubMenu, router, isMobile, closeSidebar, resolvePath]
   );
 
   const handleChildMenuClick = useCallback(
     (child: MenuItem) => {
-      if (child.pathname) {
-        const path = child.pathname.startsWith("/")
-          ? child.pathname
-          : `/${child.pathname}`;
+      const path = resolvePath(child);
+      if (path) {
         router.push(path);
         if (isMobile) {
           closeSidebar();
         }
       }
     },
-    [router, isMobile, closeSidebar]
+    [router, isMobile, closeSidebar, resolvePath]
   );
 
   const renderIcon = useCallback((iconHtml?: string) => {
@@ -454,7 +595,6 @@ export default function Sidebar() {
     );
   }, []);
 
-  // Don't render anything while loading or on login page or if not authenticated
   if (
     loading ||
     authLoading ||
@@ -468,7 +608,6 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile Menu Button - Fixed positioning */}
       {isMobile && (
         <button
           className="fixed top-4 left-4 z-[60] w-10 h-10 bg-white border border-gray-300 rounded-lg flex items-center justify-center shadow-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
@@ -483,7 +622,6 @@ export default function Sidebar() {
         </button>
       )}
 
-      {/* Mobile Overlay */}
       {isMobile && isOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
@@ -492,20 +630,16 @@ export default function Sidebar() {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         ref={sidebarRef}
-        className={`fixed top-0 left-0 h-full bg-white shadow-xl z-50 flex flex-col border-r border-gray-200 transition-all duration-${ANIMATION_DURATION} ease-in-out ${
-          isMobile
-            ? `w-${SIDEBAR_WIDTH.EXPANDED}px ${
-                isOpen ? "translate-x-0" : "-translate-x-full"
-              }`
-            : `${
-                isOpen
-                  ? `w-${SIDEBAR_WIDTH.EXPANDED}px`
-                  : `w-${SIDEBAR_WIDTH.COLLAPSED}px`
-              } translate-x-0`
-        }`}
+        className={`fixed top-0 left-0 h-full bg-white shadow-xl z-50 flex flex-col border-r border-gray-200 transition-all duration-${ANIMATION_DURATION} ease-in-out ${isMobile
+          ? `w-${SIDEBAR_WIDTH.EXPANDED}px ${isOpen ? "translate-x-0" : "-translate-x-full"
+          }`
+          : `${isOpen
+            ? `w-${SIDEBAR_WIDTH.EXPANDED}px`
+            : `w-${SIDEBAR_WIDTH.COLLAPSED}px`
+          } translate-x-0`
+          }`}
         style={{
           width: isMobile
             ? `${SIDEBAR_WIDTH.EXPANDED}px`
@@ -514,7 +648,6 @@ export default function Sidebar() {
               : `${SIDEBAR_WIDTH.COLLAPSED}px`,
         }}
       >
-        {/* Desktop Toggle Button */}
         {!isMobile && (
           <button
             className="absolute -right-3 top-9 w-6 h-6 bg-white border border-gray-300 rounded-full flex items-center justify-center shadow-md hover:bg-gray-50 hover:shadow-lg z-10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -529,7 +662,6 @@ export default function Sidebar() {
           </button>
         )}
 
-        {/* Logo Section */}
         <div className="flex justify-center items-center py-4 border-b border-gray-200 bg-white flex-shrink-0">
           <Link
             href="/admin/dashboard"
@@ -546,7 +678,6 @@ export default function Sidebar() {
           </Link>
         </div>
 
-        {/* Navigation Menu */}
         <nav
           className="flex-1 overflow-y-auto py-4 min-h-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
           style={{
@@ -557,12 +688,12 @@ export default function Sidebar() {
           <div className="px-3">
             <ul className="space-y-1">
               {parentMenus.map((item) => {
-                const children = getChildren(item._id);
+                const children = getChildren(item._id, item.name);
                 const hasChildren = children.length > 0;
                 const isActive = isMenuActive(item, childMenus);
-                const isSubmenuOpen = openSubMenus[item._id];
+                const isSubmenuOpen = openSubMenus[item._id || item.name];
                 return (
-                  <li key={item._id} className="relative">
+                  <li key={item._id || item.name} className="relative">
                     <MenuItemComponent
                       item={item}
                       isActive={isActive}
@@ -571,14 +702,13 @@ export default function Sidebar() {
                       sidebarOpen={isOpen}
                       onMenuClick={handleMenuClick}
                     />
-                    {/* Submenu */}
                     {hasChildren && isSubmenuOpen && isOpen && (
                       <ul className="mt-1 ml-6 pl-3 border-l-2 border-gray-100 space-y-1">
                         {children.map((child) => {
-                          const isChildActive =
-                            child.pathname && pathName === child.pathname;
+                          const childPath = resolvePath(child);
+                          const isChildActive = childPath && pathName === childPath;
                           return (
-                            <li key={child._id} className="relative">
+                            <li key={child._id || child.name} className="relative">
                               <Tooltip
                                 title={!isOpen ? child.name : ""}
                                 placement="right"
@@ -587,20 +717,18 @@ export default function Sidebar() {
                                 leaveDelay={0}
                               >
                                 <button
-                                  className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 group ${
-                                    isChildActive
-                                      ? "bg-blue-100 text-blue-700 font-medium shadow-sm"
-                                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                                  }`}
+                                  className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 group ${isChildActive
+                                    ? "bg-blue-100 text-blue-700 font-medium shadow-sm"
+                                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                                    }`}
                                   onClick={() => handleChildMenuClick(child)}
                                 >
                                   {child.image && (
                                     <div
-                                      className={`flex-shrink-0 w-5 flex justify-center transition-colors duration-200 ${
-                                        isChildActive
-                                          ? "text-blue-600"
-                                          : "text-gray-500 group-hover:text-gray-700"
-                                      }`}
+                                      className={`flex-shrink-0 w-5 flex justify-center transition-colors duration-200 ${isChildActive
+                                        ? "text-blue-600"
+                                        : "text-gray-500 group-hover:text-gray-700"
+                                        }`}
                                     >
                                       {renderIcon(child.image)}
                                     </div>
@@ -625,7 +753,6 @@ export default function Sidebar() {
           </div>
         </nav>
 
-        {/* Footer */}
         {isOpen && (
           <div className="border-t border-gray-200 p-4 bg-gray-50 flex-shrink-0">
             <div className="text-xs text-gray-500 text-center">
@@ -635,7 +762,6 @@ export default function Sidebar() {
         )}
       </aside>
 
-      {/* Main Content Spacer - Desktop Only */}
       {!isMobile && (
         <div
           className="transition-all duration-300 flex-shrink-0"

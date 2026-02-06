@@ -194,8 +194,8 @@ const ThemesPage = () => {
       .flatMap((val) =>
         Array.isArray(val)
           ? val.map((sub) =>
-              typeof sub === "object" ? JSON.stringify(sub) : sub
-            )
+            typeof sub === "object" ? JSON.stringify(sub) : sub
+          )
           : typeof val === "object"
             ? JSON.stringify(val)
             : val

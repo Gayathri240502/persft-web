@@ -116,13 +116,13 @@ const RoomTypes = () => {
 
       const fetchedRoomTypes = Array.isArray(result.roomTypes)
         ? result.roomTypes.map((item: RoomType, index: number) => ({
-            ...item,
-            id: item._id,
-            sn: startIndex + index + 1,
-            residenceTypes: Array.isArray(item.residenceTypes)
-              ? item.residenceTypes
-              : [],
-          }))
+          ...item,
+          id: item._id,
+          sn: startIndex + index + 1,
+          residenceTypes: Array.isArray(item.residenceTypes)
+            ? item.residenceTypes
+            : [],
+        }))
         : [];
 
       setRoomTypes(fetchedRoomTypes);

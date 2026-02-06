@@ -39,6 +39,45 @@ export default function Navbar({ label }: NavbarProps) {
         decodedData = decodeJwt(token);
       }
 
+      const roles =
+        role ||
+        decodedData?.realm_access?.roles ||
+        sessionData?.roles ||
+        [];
+
+      let rawRole = "member";
+      let displayRole = "Member";
+
+      if (Array.isArray(roles)) {
+        const normalizedRoles = roles.map((r) =>
+          r?.toLowerCase().replace(/-/g, "_")
+        );
+
+        if (normalizedRoles.includes("admin")) {
+          rawRole = "admin";
+          displayRole = "Admin";
+        } else if (normalizedRoles.includes("project_manager")) {
+          rawRole = "admin";
+          displayRole = "Project Manager";
+        } else if (normalizedRoles.includes("designer")) {
+          rawRole = "admin";
+          displayRole = "Designer";
+        } else if (normalizedRoles.includes("finance")) {
+          rawRole = "admin";
+          displayRole = "Finance";
+        } else if (normalizedRoles.includes("support")) {
+          rawRole = "admin";
+          displayRole = "Support";
+        } else if (normalizedRoles.includes("merchant") || normalizedRoles.includes("vendor")) {
+          rawRole = "merchant";
+          displayRole = normalizedRoles.includes("vendor") ? "Vendor" : "Merchant";
+        }
+        else if (roles.length > 0) {
+          rawRole = roles[0];
+          displayRole = roles[0].charAt(0).toUpperCase() + roles[0].slice(1);
+        }
+      }
+
       setUserDetails({
         name:
           decodedData?.preferred_username ||
@@ -47,25 +86,18 @@ export default function Navbar({ label }: NavbarProps) {
           "User",
         email:
           decodedData?.email || sessionData?.user?.email || "user@example.com",
-        role: (() => {
-          const roles =
-            role ||
-            decodedData?.realm_access?.roles ||
-            sessionData?.roles ||
-            [];
-
-          if (roles.includes("admin")) return "admin";
-          if (roles.includes("merchant")) return "merchant";
-          if (roles.length > 0) return roles[0];
-          return "Member";
-        })(),
+        role: displayRole,
       });
+
+      // Store raw role in localStorage for sidebar to access
+      localStorage.setItem("userRole", rawRole);
     } else {
       setUserDetails({
         name: "",
         email: "",
         role: "",
       });
+      localStorage.removeItem("userRole");
     }
   };
 

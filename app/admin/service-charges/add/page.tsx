@@ -36,6 +36,7 @@ interface ServiceChargeForm {
 }
 
 interface Option {
+    value: string;
   label: string;
 }
 

@@ -62,13 +62,13 @@ function useDebounce<T>(value: T, delay: number): T {
 const getStatusColor = (status: string) => {
   const statusColors: {
     [key: string]:
-      | "default"
-      | "primary"
-      | "secondary"
-      | "error"
-      | "info"
-      | "success"
-      | "warning";
+    | "default"
+    | "primary"
+    | "secondary"
+    | "error"
+    | "info"
+    | "success"
+    | "warning";
   } = {
     created: "default",
     design_received: "info",

@@ -460,6 +460,8 @@ const DesignOrdersDashboard: React.FC = () => {
   const [adminStats, setAdminStats] = useState<DashboardData | null>(null);
   const [merchantStats, setMerchantStats] =
     useState<MerchantDashboardData | null>(null);
+  const [projectManagerStats, setProjectManagerStats] =
+    useState<MerchantDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string>("");
@@ -504,23 +506,25 @@ const DesignOrdersDashboard: React.FC = () => {
 
       const roles = Array.from(
         new Set([...realmRoles, ...topRoles, ...resourceRoles])
-      ).map((r) => String(r).toLowerCase());
+      ).map((r) => String(r).toLowerCase().replace(/-/g, "_"));
 
-      if (roles.includes("admin")) {
+      if (
+        roles.includes("admin") ||
+        roles.includes("project_manager") ||
+        roles.includes("designer") ||
+        roles.includes("finance") ||
+        roles.includes("support") ||
+        roles.includes("vendor")
+      ) {
         setUserRole("admin");
-      } else if (roles.includes("merchant") || roles.includes("vendor")) {
+      }
+      else if (roles.includes("merchant")) {
         setUserRole("merchant");
       } else {
-        // fallback: substring match
-        if (roles.some((r) => r.includes("admin"))) setUserRole("admin");
-        else if (
-          roles.some((r) => r.includes("merchant") || r.includes("vendor"))
-        )
-          setUserRole("merchant");
-        else setUserRole("");
+        setUserRole("");
       }
+
     } catch (err) {
-      console.error("Role detection failed:", err);
       setUserRole("");
     }
   }, [token]);
@@ -544,10 +548,18 @@ const DesignOrdersDashboard: React.FC = () => {
      Fetchers
      ----------------------- */
   const fetchAdminStats = useCallback(async () => {
-    if (!token) return;
+    if (!token) {
+      console.warn("[fetchAdminStats] No token found, skipping fetch.");
+      return;
+    }
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/admin/design-orders/statistics`;
-      console.debug("Fetching admin stats from", url);
+      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+      const url = `${baseUrl}/admin/design-orders/statistics`;
+
+      console.debug("[fetchAdminStats] Fetching from URL:", url);
+      // Log first few chars of token for debugging (SAFE: only first 10 chars)
+      console.debug("[fetchAdminStats] Token prefix:", token.substring(0, 10) + "...");
+
       const res = await fetch(url, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -555,21 +567,39 @@ const DesignOrdersDashboard: React.FC = () => {
         },
       });
 
+      console.debug("[fetchAdminStats] Response status:", res.status);
+
       if (res.status === 401) {
-        console.warn("Admin stats unauthorized (401).");
+        console.warn("[fetchAdminStats] Unauthorized (401).");
         handleUnauthorized();
         return;
       }
 
+      if (res.status === 403) {
+        console.warn("[fetchAdminStats] Access Forbidden (403). Using fallback empty stats.");
+        setAdminStats({
+          totalOrders: 0,
+          completedOrders: 0,
+          pendingOrders: 0,
+          cancelledOrders: 0,
+          totalRevenue: 0,
+          recentOrders: [],
+        });
+        setError(null);
+        return;
+      }
+
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`Admin API ${res.status}: ${text || res.statusText}`);
+        throw new Error(`Admin API ${res.status}: ${res.statusText}`);
       }
 
       const data: DashboardData = await res.json();
       setAdminStats(data);
-    } catch (err) {
-      console.error("Fetch admin stats error:", err);
+    } catch (err: any) {
+      if (err.message?.includes("403")) {
+        // Double check catch for secondary 403 scenarios
+        return;
+      }
       throw err;
     }
   }, [token, handleUnauthorized]);
@@ -652,9 +682,10 @@ const DesignOrdersDashboard: React.FC = () => {
       };
 
       setMerchantStats(merchantDashboardData);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Fetch merchant stats error:", err);
-      throw err;
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(`Merchant Data Error: ${msg}`);
     }
   }, [token, handleUnauthorized]);
 
@@ -662,21 +693,38 @@ const DesignOrdersDashboard: React.FC = () => {
      Orchestrator
      ----------------------- */
   const fetchStats = useCallback(async () => {
-    if (!token || !userRole) return;
+    if (!token) {
+      console.debug("fetchStats skipped: missing token");
+      return;
+    }
+    if (!userRole) {
+      console.debug("fetchStats skipped: missing userRole");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
+    console.debug(`fetchStats started for role: ${userRole}`);
+
     try {
-      if (userRole === "admin") {
+      if (
+        userRole === "admin" ||
+        userRole === "project_manager" ||
+        userRole === "designer" ||
+        userRole === "finance" ||
+        userRole === "support"
+      ) {
         await fetchAdminStats();
-      } else if (userRole === "merchant") {
+      } else if (userRole === "merchant" || userRole === "vendor") {
         await fetchMerchantStats();
       } else {
-        setError("Unknown role. Cannot load dashboard.");
+        setError("Invalid role");
       }
-    } catch (err) {
+    } catch (err: any) {
+      console.error("fetchStats orchestrator error:", err);
       setError(
-        err instanceof Error ? err.message : "Failed to load dashboard data"
+        err instanceof Error ? err.message : "An unexpected error occurred while loading dashboard statistics"
       );
     } finally {
       setLoading(false);
@@ -716,20 +764,19 @@ const DesignOrdersDashboard: React.FC = () => {
     return (
       <>
         <Navbar label="Dashboard" />
-        <Box sx={{ p: { xs: 2, sm: 3, md: 4 }, minHeight: "60vh" }}>
-          <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+        <Box
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="60vh"
+        >
+          <Typography color="error" variant="h6" gutterBottom>
+            Unable to load dashboard
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
             {error}
-          </Alert>
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight="40vh"
-          >
-            <Typography>
-              Unable to load dashboard. Check logs for details.
-            </Typography>
-          </Box>
+          </Typography>
         </Box>
       </>
     );
@@ -757,7 +804,7 @@ const DesignOrdersDashboard: React.FC = () => {
                 fontSize: { xs: "1.75rem", sm: "2.125rem" },
               }}
             >
-              Design Orders Dashboard
+              {userRole.charAt(0).toUpperCase() + userRole.slice(1).replace("_", " ")} Dashboard
             </Typography>
           </Box>
 
@@ -822,11 +869,12 @@ const DesignOrdersDashboard: React.FC = () => {
     );
   }
 
-  // Merchant UI
-  if (userRole === "merchant") {
+  // Merchant / Vendor UI
+  if (userRole === "merchant" || userRole === "vendor") {
+    const dashboardLabel = userRole === "vendor" ? "Vendor Dashboard" : "Merchant Dashboard";
     return (
       <>
-        <Navbar label="Vendor Dashboard" />
+        <Navbar label={dashboardLabel} />
         <Box
           sx={{
             p: { xs: 2, sm: 3, md: 4 },
@@ -844,7 +892,7 @@ const DesignOrdersDashboard: React.FC = () => {
                 fontSize: { xs: "1.75rem", sm: "2.125rem" },
               }}
             >
-              Welcome to Vendor Dashboard
+              Welcome to {userRole === "vendor" ? "Vendor" : "Merchant"} Dashboard
             </Typography>
           </Box>
 
@@ -902,7 +950,7 @@ const DesignOrdersDashboard: React.FC = () => {
     );
   }
 
-  // Fallback
+  // Fallback (for any other roles)
   return (
     <>
       <Navbar label="Dashboard" />

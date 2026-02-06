@@ -12,6 +12,11 @@ import {
   Alert,
   Select,
   InputAdornment,
+  FormControl,
+  InputLabel,
+  Checkbox,
+  ListItemText,
+  SelectChangeEvent,
 } from "@mui/material";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
@@ -27,9 +32,18 @@ interface FormDataType {
   phone: string;
   password: string;
   enabled: boolean;
-  role: ["admin"];
+  role: string[];
   countryCode: string;
 }
+
+const AVAILABLE_ROLES = [
+  "admin",
+  "project_manager",
+  "designer",
+  "finance",
+  "support",
+  "vendor",
+];
 
 const AddUser = () => {
   const router = useRouter();
@@ -43,7 +57,7 @@ const AddUser = () => {
     phone: "",
     password: "",
     enabled: true,
-    role: ["admin"],
+    role: [],
     countryCode: "+91", // default
   });
 
@@ -57,6 +71,16 @@ const AddUser = () => {
     setFormData((prev) => ({
       ...prev,
       [name as string]: value,
+    }));
+  };
+
+  const handleRoleChange = (event: SelectChangeEvent<string[]>) => {
+    const {
+      target: { value },
+    } = event;
+    setFormData((prev) => ({
+      ...prev,
+      role: typeof value === "string" ? value.split(",") : value,
     }));
   };
 
@@ -301,6 +325,28 @@ const AddUser = () => {
               value={formData.password}
               onChange={handleChange}
             />
+          </Grid>
+
+          <Grid item xs={12}>
+            <FormControl fullWidth>
+              <InputLabel id="role-select-label">User Roles</InputLabel>
+              <Select
+                labelId="role-select-label"
+                id="role-select"
+                multiple
+                value={formData.role}
+                onChange={handleRoleChange}
+                label="User Roles"
+                renderValue={(selected) => selected.join(", ")}
+              >
+                {AVAILABLE_ROLES.map((roleName) => (
+                  <MenuItem key={roleName} value={roleName}>
+                    <Checkbox checked={formData.role.indexOf(roleName) > -1} />
+                    <ListItemText primary={roleName} />
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
         </Grid>
 

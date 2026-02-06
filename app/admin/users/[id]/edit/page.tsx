@@ -14,7 +14,13 @@ import {
   Checkbox,
   FormControlLabel,
   Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  ListItemText,
 } from "@mui/material";
+import { SelectChangeEvent } from "@mui/material/Select";
 import Navbar from "@/app/components/navbar/navbar";
 import ReusableButton from "@/app/components/Button";
 import CancelButton from "@/app/components/CancelButton";
@@ -27,7 +33,17 @@ interface User {
   email: string;
   phone: string;
   enabled: boolean;
+  role: string[];
 }
+
+const AVAILABLE_ROLES = [
+  "admin",
+  "project_manager",
+  "designer",
+  "finance",
+  "support",
+  "vendor",
+];
 
 const UserEditPage: React.FC = () => {
   const [user, setUser] = useState<User>({
@@ -38,6 +54,7 @@ const UserEditPage: React.FC = () => {
     email: "",
     phone: "",
     enabled: false,
+    role: [],
   });
 
   const [loading, setLoading] = useState(true);
@@ -111,6 +128,16 @@ const UserEditPage: React.FC = () => {
     } catch (err: any) {
       setError(err.message);
     }
+  };
+
+  const handleRoleChange = (event: SelectChangeEvent<string[]>) => {
+    const {
+      target: { value },
+    } = event;
+    setUser((prev) => ({
+      ...prev,
+      role: typeof value === "string" ? value.split(",") : (value as string[]),
+    }));
   };
 
   const handleChangePassword = async () => {
@@ -263,6 +290,29 @@ const UserEditPage: React.FC = () => {
                 }
                 label="Enabled"
               />
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel id="role-select-label">User Roles</InputLabel>
+                <Select
+                  labelId="role-select-label"
+                  id="role-select"
+                  multiple
+                  value={user.role || []}
+                  onChange={handleRoleChange}
+                  label="User Roles"
+                  renderValue={(selected) => (selected as string[]).join(", ")}
+                >
+                  {AVAILABLE_ROLES.map((roleName) => (
+                    <MenuItem key={roleName} value={roleName}>
+                      <Checkbox
+                        checked={(user.role || []).indexOf(roleName) > -1}
+                      />
+                      <ListItemText primary={roleName} />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
           </Grid>
 

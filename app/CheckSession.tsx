@@ -12,20 +12,7 @@ export default function CheckSession({
   const { data: session, status } = useSession();
   const [unauthorized, setUnauthorized] = useState(false);
 
-  // Wrap fetch globally once
-  useEffect(() => {
-    const originalFetch = window.fetch;
-    window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-      const res = await originalFetch(input, init);
-      if (res.status === 401) {
-        signOut({ callbackUrl: "/login" });
-      }
-      return res;
-    };
-    return () => {
-      window.fetch = originalFetch;
-    };
-  }, []);
+
 
   useEffect(() => {
     if (
@@ -40,11 +27,23 @@ export default function CheckSession({
     if (status === "authenticated" && session?.user) {
       const token = (session as any).accessToken;
       if (token) {
-        const decoded = decodeJwt(token);
+        const decoded: any = decodeJwt(token);
         const roles: string[] =
           decoded?.realm_access?.roles || decoded?.roles || [];
-        const allowed = roles.includes("admin") || roles.includes("merchant");
-        if (!allowed) setUnauthorized(true);
+
+        const allowed =
+          roles.includes("admin") ||
+          roles.includes("merchant") ||
+          roles.includes("project_manager") ||
+          roles.includes("designer") ||
+          roles.includes("finance") ||
+          roles.includes("support") ||
+          roles.includes("vendor") ||
+          roles.some(r => String(r).toLowerCase().includes("project"));
+
+        if (!allowed) {
+          setUnauthorized(true);
+        }
       } else {
         setUnauthorized(true);
       }

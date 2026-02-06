@@ -122,8 +122,16 @@ const ResidenceTypePage = () => {
       setResidenceTypes(typesWithId);
       setRowCount(result.total || 0);
     } catch (err) {
-      console.error("Fetch error:", err);
-      setError(err instanceof Error ? err.message : "Failed to fetch data");
+      console.error("ResidenceTypePage: Fetch error detail:", {
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+        apiUrl: process.env.NEXT_PUBLIC_API_URL,
+      });
+      setError(
+        err instanceof Error
+          ? `Connection failed: ${err.message}. Please check if the API server is reachable at ${process.env.NEXT_PUBLIC_API_URL}`
+          : "Failed to fetch data due to a network error."
+      );
     } finally {
       setLoading(false);
     }

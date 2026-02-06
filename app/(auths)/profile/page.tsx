@@ -88,7 +88,14 @@ export default function EditProfile() {
   const decoded = decodedToken;
   const roles = decoded?.realm_access?.roles || decoded?.roles || [];
   const isAdmin = roles.includes("admin");
-  const isVendor = roles.includes("vendor") || roles.includes("merchant");
+  const isMerchant = roles.includes("merchant");
+  const isVendor = roles.includes("vendor");
+  const isProjectManager = roles.includes("project_manager") || roles.includes("project-manager");
+  const isDesigner = roles.includes("designer");
+  const isFinance = roles.includes("finance");
+  const isSupport = roles.includes("support");
+
+  const isStaff = isAdmin || isProjectManager || isDesigner || isFinance || isSupport;
   const userID = decoded?.sub || decoded?.user_id || decoded?.id;
 
   useEffect(() => {
@@ -96,7 +103,7 @@ export default function EditProfile() {
       try {
         let response;
 
-        if (isAdmin) {
+        if (isAdmin || isDesigner || isFinance || isSupport) {
           response = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/users/${userID}`,
             {
@@ -106,7 +113,7 @@ export default function EditProfile() {
               },
             }
           );
-        } else if (isVendor) {
+        } else if (isVendor || isProjectManager || isDesigner || isFinance || isSupport) {
           response = await fetch(
             `${process.env.NEXT_PUBLIC_KIOSK_API_URL}/auth/profile`,
             {
@@ -131,18 +138,18 @@ export default function EditProfile() {
       }
     }
 
-    if (userID || isVendor) {
+    if (userID || isVendor || isProjectManager || isDesigner || isFinance || isSupport) {
       fetchUserProfile();
     }
-  }, [userID, token, isAdmin, isVendor]);
+  }, [userID, token, isAdmin, isVendor, isProjectManager]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormValues({ ...formValues, [e.target.name]: e.target.value });
   };
 
   const handleSaveProfile = async () => {
-    if (!isAdmin) {
-      alert("Only admins can edit profile information");
+    if (!isStaff) {
+      alert("Only authorized staff can edit profile information");
       return;
     }
 
@@ -178,7 +185,7 @@ export default function EditProfile() {
     try {
       let response;
 
-      if (isAdmin) {
+      if (isStaff) {
         response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/auth/change-password`,
           {
@@ -231,7 +238,12 @@ export default function EditProfile() {
             {/* Title */}
             <Grid item xs={12}>
               <Typography variant="h5" fontWeight="bold">
-                Edit Profile {isVendor && "(Vendor - Password Only)"}
+                Edit Profile {isMerchant && "(Merchant - Password Only)"}
+                {isVendor && "(Vendor - Password Only)"}
+                {isProjectManager && "(Project Manager - Password Only)"}
+                {isDesigner && "(Designer)"}
+                {isFinance && "(Finance)"}
+                {isSupport && "(Support)"}
               </Typography>
             </Grid>
 
@@ -243,7 +255,7 @@ export default function EditProfile() {
                 value={formValues.firstName || ""}
                 onChange={handleChange}
                 fullWidth
-                disabled={isVendor} // Read-only for vendors
+                disabled={isMerchant || isVendor || isProjectManager || isDesigner || isFinance || isSupport} // Read-only for restricted roles
               />
             </Grid>
 
@@ -255,12 +267,12 @@ export default function EditProfile() {
                 value={formValues.lastName || ""}
                 onChange={handleChange}
                 fullWidth
-                disabled={isVendor} // Read-only for vendors
+                disabled={isMerchant || isVendor || isProjectManager} // Read-only for merchants, vendors and project managers
               />
             </Grid>
 
-            {/* Username - only show for admin */}
-            {isAdmin && (
+            {/* Username - only show for staff */}
+            {isStaff && (
               <Grid item xs={12}>
                 <TextField
                   label="Username"
@@ -354,8 +366,8 @@ export default function EditProfile() {
               </Grid>
             </Grid>
 
-            {/* Save / Cancel Buttons - only for admin */}
-            {isAdmin && (
+            {/* Save / Cancel Buttons - only for staff */}
+            {isStaff && (
               <Grid container spacing={2} justifyContent="flex-start" m={2}>
                 <Grid item>
                   <Button
@@ -458,13 +470,13 @@ export default function EditProfile() {
               </Button>
             </Grid>
 
-            {/* Cancel button for vendor */}
-            {isVendor && (
+            {/* Cancel button for vendor and project manager */}
+            {(isVendor || isProjectManager || isDesigner || isFinance || isSupport) && (
               <Grid item xs={12}>
                 <Button
                   variant="outlined"
                   color="warning"
-                  onClick={() => router.push("/vendor/dashboard")}
+                  onClick={() => router.push(isVendor ? "/vendor/dashboard" : "/admin/dashboard")}
                 >
                   Cancel
                 </Button>

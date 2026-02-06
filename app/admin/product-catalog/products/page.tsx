@@ -194,13 +194,22 @@ const Products = () => {
         sn: page * pageSize + index + 1,
         categoryName: item.category?.name ?? "",
         subCategoryName: item.subCategory?.name ?? "",
-        makeModel: [ item.modelName].filter(Boolean).join(" "),
+        makeModel: [item.modelName].filter(Boolean).join(" "),
       }));
 
       setProducts(formattedProducts);
       setRowCount(data.total);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      console.error("ProductsPage: Fetch error detail:", {
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+        apiUrl: process.env.NEXT_PUBLIC_API_URL,
+      });
+      setError(
+        err instanceof Error
+          ? `Connection failed: ${err.message}. Please check if the API server is reachable at ${process.env.NEXT_PUBLIC_API_URL}`
+          : "Failed to fetch data due to a network error."
+      );
     } finally {
       setLoading(false);
     }

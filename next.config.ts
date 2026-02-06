@@ -10,11 +10,19 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: "/api/v1/:path*",
+        destination: "http://[::1]:3903/api/v1/:path*",
+      },
+    ];
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },
   typescript: {
-    ignoreBuildErrors: false, // keep true if you still want errors to break build
+    ignoreBuildErrors: false,
   },
 };
 

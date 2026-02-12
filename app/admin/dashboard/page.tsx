@@ -508,17 +508,19 @@ const DesignOrdersDashboard: React.FC = () => {
         new Set([...realmRoles, ...topRoles, ...resourceRoles])
       ).map((r) => String(r).toLowerCase().replace(/-/g, "_"));
 
-      if (
-        roles.includes("admin") ||
-        roles.includes("project_manager") ||
-        roles.includes("designer") ||
-        roles.includes("finance") ||
-        roles.includes("support") ||
-        roles.includes("vendor")
-      ) {
+      if (roles.includes("admin")) {
         setUserRole("admin");
-      }
-      else if (roles.includes("merchant")) {
+      } else if (roles.includes("vendor")) {
+        setUserRole("vendor");
+      } else if (roles.includes("project_manager")) {
+        setUserRole("project_manager");
+      } else if (roles.includes("designer")) {
+        setUserRole("designer");
+      } else if (roles.includes("finance")) {
+        setUserRole("finance");
+      } else if (roles.includes("support")) {
+        setUserRole("support");
+      } else if (roles.includes("merchant")) {
         setUserRole("merchant");
       } else {
         setUserRole("");
@@ -713,10 +715,13 @@ const DesignOrdersDashboard: React.FC = () => {
         userRole === "project_manager" ||
         userRole === "designer" ||
         userRole === "finance" ||
-        userRole === "support"
+        userRole === "support" ||
+        userRole === "vendor"
       ) {
+        // These roles currently share the admin statistics API, 
+        // but we can distinguish them in the UI.
         await fetchAdminStats();
-      } else if (userRole === "merchant" || userRole === "vendor") {
+      } else if (userRole === "merchant") {
         await fetchMerchantStats();
       } else {
         setError("Invalid role");
@@ -782,8 +787,23 @@ const DesignOrdersDashboard: React.FC = () => {
     );
   }
 
-  // Admin UI
-  if (userRole === "admin") {
+  // Admin / Project Manager / Designer / Finance / Support UI
+  if (
+    userRole === "admin" ||
+    userRole === "project_manager" ||
+    userRole === "designer" ||
+    userRole === "finance" ||
+    userRole === "support" ||
+    userRole === "vendor"
+  ) {
+    const dashboardTitle =
+      userRole === "admin"
+        ? "Admin Dashboard"
+        : userRole
+          .split(/[_-]/)
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ") + " Dashboard";
+
     return (
       <>
         <Navbar label="Dashboard" />
@@ -804,7 +824,7 @@ const DesignOrdersDashboard: React.FC = () => {
                 fontSize: { xs: "1.75rem", sm: "2.125rem" },
               }}
             >
-              {userRole.charAt(0).toUpperCase() + userRole.slice(1).replace("_", " ")} Dashboard
+              {dashboardTitle}
             </Typography>
           </Box>
 
@@ -869,9 +889,9 @@ const DesignOrdersDashboard: React.FC = () => {
     );
   }
 
-  // Merchant / Vendor UI
-  if (userRole === "merchant" || userRole === "vendor") {
-    const dashboardLabel = userRole === "vendor" ? "Vendor Dashboard" : "Merchant Dashboard";
+  // Merchant UI
+  if (userRole === "merchant") {
+    const dashboardLabel = "Merchant Dashboard";
     return (
       <>
         <Navbar label={dashboardLabel} />
@@ -892,7 +912,7 @@ const DesignOrdersDashboard: React.FC = () => {
                 fontSize: { xs: "1.75rem", sm: "2.125rem" },
               }}
             >
-              Welcome to {userRole === "vendor" ? "Vendor" : "Merchant"} Dashboard
+              Welcome to Merchant Dashboard
             </Typography>
           </Box>
 
